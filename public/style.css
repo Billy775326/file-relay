@@ -33,26 +33,27 @@
   --ease: cubic-bezier(0.2, 0, 0, 1);
 }
 [data-theme='dark'] {
-  --bag: #171b12;
-  --paper: #232919;
-  --ink: #e9e5d0;
-  --line: #4a5340;
-  --muted: #a6ab93;
-  --stamp: #e08a4a;
+  /* 墨蓝夜航:藏蓝纸面,蓝橙互补,邮戳橙夜里最跳 */
+  --bag: #12161f;
+  --paper: #1a2130;
+  --ink: #e8e5d6;
+  --line: #46516b;
+  --muted: #a9b2c9;
+  --stamp: #e68d4f;
   --stamp-dark: #c9702f;
-  --ok: #85bd93;
-  --ok-soft: #26321f;
-  --danger: #d97e70;
-  --danger-soft: #38221c;
-  --warn: #d3a055;
-  --warn-soft: #33291a;
-  --rowbg: #2b3321;
-  --track: #1c2115;
-  --tkhead-bg: #31402f;
-  --tkhead-fg: #f0ecd9;
-  --hard: rgba(0, 0, 0, 0.55);
-  --hard-soft: rgba(0, 0, 0, 0.35);
-  --dots: rgba(233, 229, 208, 0.04);
+  --ok: #7fc79c;
+  --ok-soft: #254432;
+  --danger: #e08a7c;
+  --danger-soft: #462822;
+  --warn: #d9ab63;
+  --warn-soft: #413120;
+  --rowbg: #222b44;
+  --track: #151b28;
+  --tkhead-bg: #33415c;
+  --tkhead-fg: #f0eee0;
+  --hard: rgba(0, 0, 0, 0.5);
+  --hard-soft: rgba(0, 0, 0, 0.32);
+  --dots: rgba(232, 229, 214, 0.05);
 }
 
 * { box-sizing: border-box; }
