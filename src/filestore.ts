@@ -16,7 +16,7 @@ export type FileBackend = 'r2' | 'kv';
 
 export function fileMode(env: Env): FileBackend | null {
   if (env.BUCKET) return 'r2';
-  if (env.KV) return 'kv';
+  if (env.fileKV) return 'kv';
   return null;
 }
 
@@ -32,14 +32,14 @@ export function fileMaxSize(env: Env): number {
 
 /** 小存储模式:写入文件字节(KV put 接受 ArrayBuffer) */
 export async function putFileBytes(env: Env, key: string, bytes: ArrayBuffer): Promise<void> {
-  await env.KV!.put(key, bytes);
+  await env.fileKV!.put(key, bytes);
 }
 
 /** 取文件流:按键前缀路由到 KV 或 R2;不存在/后端未绑定返回 null(上层 410) */
 export async function readFileStream(env: Env, key: string): Promise<ReadableStream | null> {
   if (isKvFileKey(key)) {
-    if (!env.KV) return null;
-    return env.KV.get(key, 'stream');
+    if (!env.fileKV) return null;
+    return env.fileKV.get(key, 'stream');
   }
   if (!env.BUCKET) return null;
   const obj = await env.BUCKET.get(key);
@@ -50,7 +50,7 @@ export async function readFileStream(env: Env, key: string): Promise<ReadableStr
 export async function deleteFile(env: Env, key: string | null): Promise<void> {
   if (!key) return;
   if (isKvFileKey(key)) {
-    if (env.KV) await env.KV.delete(key);
+    if (env.fileKV) await env.fileKV.delete(key);
     return;
   }
   if (env.BUCKET) await env.BUCKET.delete(key);
