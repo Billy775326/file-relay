@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-"""file-relay 端到端测试: 文本 UTF-8 回环 + 12MB 双分片上传下载 sha256 校验"""
-import hashlib, io, json, os, sys, urllib.request
+"""file-relay 端到端测试:自动识别文件存储模式(R2 分片 / KV 直传),
+文本 UTF-8 回环 + 上传下载 sha256 校验 + 边界用例"""
+import hashlib, json, os, sys, urllib.request
+from urllib.parse import quote
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8787"
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -37,37 +39,56 @@ code1 = r["code"]
 st, r = call("POST", "/api/pickup", {"code": code1})
 check("取件返回原文", st == 200 and r.get("text") == text, f"st={st} got={r.get('text')!r}")
 
-print("== 2. 12MB 双分片上传/下载 ==")
-# 12MB: 10MB + 2MB,含随机不可压缩数据,中文文件名
-payload = os.urandom(12 * 1024 * 1024)
-fname = "测试 文件 (v1).bin"
-st, r = call("POST", "/api/uploads/init", {"filename": fname, "size": len(payload), "mime": "application/octet-stream", "expiry": "1d", "maxPickups": 5})
-check("init", st == 200 and r.get("parts") == 2, f"st={st} r={r}")
-upload_id, part_size, parts_n = r["uploadId"], r["partSize"], r["parts"]
+print("== 2. 模式探测 ==")
+st, cfg = call("GET", "/api/config")
+backend = cfg.get("fileBackend") if isinstance(cfg, dict) else None
+check("/api/config", st == 200 and backend in ("r2", "kv"), f"st={st} cfg={cfg}")
 
-etags = []
-for i in range(parts_n):
-    chunk = payload[i*part_size:(i+1)*part_size]
-    st, r = call("PUT", f"/api/uploads/{upload_id}/parts/{i+1}", raw=chunk, headers={"Content-Type": "application/octet-stream"})
-    check(f"分片{i+1}({len(chunk)//1024}KB)", st == 200 and isinstance(r.get("etag"), str), f"st={st} r={str(r)[:100]}")
-    etags.append({"partNumber": i+1, "etag": r["etag"]})
+if backend == "kv":
+    print("== 3. KV 小存储:直传 2MB 上传/下载 ==")
+    payload = os.urandom(2 * 1024 * 1024)
+    fname = quote("测试 文件 (kv直传).bin")
+    st, r = call("POST", f"/api/shares/file?filename={fname}&mime=application/octet-stream&expiry=1d&maxPickups=5", raw=payload)
+    check("直传创建", st == 201 and len(r.get("code", "")) == 6, f"st={st} r={r}")
+    code2 = r["code"]
+else:
+    print("== 3. R2 大存储:12MB 双分片上传/下载 ==")
+    payload = os.urandom(12 * 1024 * 1024)
+    fname = "测试 文件 (v1).bin"
+    st, r = call("POST", "/api/uploads/init", {"filename": fname, "size": len(payload), "mime": "application/octet-stream", "expiry": "1d", "maxPickups": 5})
+    check("init", st == 200 and r.get("parts") == 2, f"st={st} r={r}")
+    upload_id, part_size, parts_n = r["uploadId"], r["partSize"], r["parts"]
 
-st, r = call("POST", f"/api/uploads/{upload_id}/complete", {"parts": etags})
-check("complete", st == 200 and len(r.get("code", "")) == 6, f"st={st} r={r}")
-code2 = r["code"]
+    etags = []
+    for i in range(parts_n):
+        chunk = payload[i*part_size:(i+1)*part_size]
+        st, r = call("PUT", f"/api/uploads/{upload_id}/parts/{i+1}", raw=chunk, headers={"Content-Type": "application/octet-stream"})
+        check(f"分片{i+1}({len(chunk)//1024}KB)", st == 200 and isinstance(r.get("etag"), str), f"st={st} r={str(r)[:100]}")
+        etags.append({"partNumber": i+1, "etag": r["etag"]})
 
+    st, r = call("POST", f"/api/uploads/{upload_id}/complete", {"parts": etags})
+    check("complete", st == 200 and len(r.get("code", "")) == 6, f"st={st} r={r}")
+    code2 = r["code"]
+
+expect_name = "测试 文件 (kv直传).bin" if backend == "kv" else "测试 文件 (v1).bin"
 st, r = call("POST", "/api/pickup", {"code": code2})
-check("取件元数据", st == 200 and r.get("kind") == "file" and r.get("filename") == fname and r.get("pickupsLeft") == 5, f"st={st} r={r}")
+check("取件元数据", st == 200 and r.get("kind") == "file" and r.get("filename") == expect_name and r.get("pickupsLeft") == 5, f"st={st} r={r}")
 
 st, blob = call("GET", f"/api/pickup/{code2}/download")
 check("下载 sha256 一致", st == 200 and hashlib.sha256(blob).hexdigest() == hashlib.sha256(payload).hexdigest(), f"st={st} len={len(blob) if isinstance(blob, bytes) else '?'}")
 
-print("== 3. 边界:伪造分片序号 / 会话不存在 ==")
-st, r = call("PUT", "/api/uploads/not-exist/parts/1", raw=b"x")
-check("会话不存在404", st == 404, f"st={st}")
+print("== 4. 边界 ==")
+if backend == "kv":
+    st, r = call("POST", "/api/uploads/init", {"filename": "x", "size": 10, "expiry": "1d", "maxPickups": None})
+    check("小存储模式禁用分片接口", st == 400 and r.get("error") == "config", f"st={st} r={r}")
+    st, r = call("POST", "/api/shares/file?expiry=1d", raw=b"x")
+    check("缺文件名 400", st == 400, f"st={st}")
+else:
+    st, r = call("PUT", "/api/uploads/not-exist/parts/1", raw=b"x")
+    check("会话不存在404", st == 404, f"st={st}")
 
 st, r = call("POST", "/api/shares/text", {"text": "x", "expiry": "bad"})
 check("非法expiry 400", st == 400, f"st={st}")
 
-print(f"\n结果: {ok} pass / {fail} fail")
+print(f"\n结果({backend} 模式): {ok} pass / {fail} fail")
 sys.exit(1 if fail else 0)

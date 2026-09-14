@@ -2,8 +2,17 @@ import { Hono } from 'hono';
 import { num, type Env } from './types';
 import { err, parseExpiry, parseMaxPickups } from './util';
 import { getStore } from './store';
+import { fileMode } from './filestore';
 
 export const uploadRoutes = new Hono<{ Bindings: Env }>();
+
+// 分片上传仅大存储模式(R2)可用;小存储模式(KV)走 POST /api/shares/file 直传
+uploadRoutes.use('*', async (c, next) => {
+  if (fileMode(c.env) !== 'r2') {
+    return err(c, 400, 'config', '当前为小存储模式(KV),请使用直传接口 /api/shares/file');
+  }
+  await next();
+});
 
 /** 初始化分片上传:校验 → 预生成 r2_key → R2 createMultipartUpload → 落会话台账 */
 uploadRoutes.post('/init', async (c) => {
@@ -34,7 +43,7 @@ uploadRoutes.post('/init', async (c) => {
   const id = crypto.randomUUID(); // 会话 token,客户端只拿这个
   const r2Key = crypto.randomUUID(); // 预生成的对象键
 
-  const mpu = await c.env.BUCKET.createMultipartUpload(r2Key, {
+  const mpu = await c.env.BUCKET!.createMultipartUpload(r2Key, {
     httpMetadata: { contentType },
   });
 
@@ -71,7 +80,7 @@ uploadRoutes.put('/:id/parts/:n', async (c) => {
   if (!body) return err(c, 400, 'bad_request', '请求体为空');
 
   try {
-    const mpu = c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId);
+    const mpu = c.env.BUCKET!.resumeMultipartUpload(sess.r2Key, sess.uploadId);
     const part = await mpu.uploadPart(n, body);
     return c.json({ partNumber: part.partNumber, etag: part.etag });
   } catch {
@@ -107,7 +116,7 @@ uploadRoutes.post('/:id/complete', async (c) => {
 
   let obj: R2Object;
   try {
-    const mpu = c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId);
+    const mpu = c.env.BUCKET!.resumeMultipartUpload(sess.r2Key, sess.uploadId);
     obj = await mpu.complete(r2parts);
   } catch {
     return err(c, 400, 'bad_request', '合并分片失败,请重试');
@@ -115,7 +124,7 @@ uploadRoutes.post('/:id/complete', async (c) => {
 
   // 声明大小造假的最后一道闸
   if (obj.size !== sess.size) {
-    await c.env.BUCKET.delete(sess.r2Key);
+    await c.env.BUCKET!.delete(sess.r2Key);
     await store.deleteSession(id);
     return err(c, 400, 'bad_request', '文件大小校验失败');
   }
@@ -153,7 +162,7 @@ uploadRoutes.post('/:id/abort', async (c) => {
   const sess = await store.getSession(c.req.param('id'));
   if (sess) {
     try {
-      await c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId).abort();
+      await c.env.BUCKET!.resumeMultipartUpload(sess.r2Key, sess.uploadId).abort();
     } catch {
       // 已中止/不存在,忽略
     }

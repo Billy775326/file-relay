@@ -4,6 +4,7 @@ import type { Context } from 'hono';
 import type { Env } from './types';
 import { err } from './util';
 import { getStore, shareStatusOf } from './store';
+import { deleteFile } from './filestore';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
 
@@ -114,7 +115,7 @@ adminRoutes.get('/shares', async (c) => {
   });
 });
 
-/** 删除分享:按口令删(D1/KV 通吃),文件的先删 R2 对象再删元数据 */
+/** 删除分享:按口令删(D1/KV 通吃),文件的先删存储对象(R2/KV 按键前缀路由)再删元数据 */
 adminRoutes.delete('/shares/:code', async (c) => {
   const code = c.req.param('code');
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
@@ -123,7 +124,7 @@ adminRoutes.delete('/shares/:code', async (c) => {
   const rec = await store.getByCode(code);
   if (!rec) return err(c, 404, 'not_found', '分享不存在');
 
-  if (rec.kind === 'file' && rec.r2Key) await c.env.BUCKET.delete(rec.r2Key);
+  if (rec.kind === 'file') await deleteFile(c.env, rec.r2Key);
   await store.deleteByCode(code);
   return c.json({ ok: true });
 });

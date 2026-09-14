@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { num, type Env } from './types';
 import { err, parseExpiry, parseMaxPickups, contentDisposition } from './util';
 import { getStore, shareStatusOf } from './store';
+import { fileMode, fileMaxSize, KV_FILE_PREFIX, putFileBytes, deleteFile, readFileStream } from './filestore';
 import type { Context } from 'hono';
 
 export const shareRoutes = new Hono<{ Bindings: Env }>();
@@ -42,6 +43,69 @@ shareRoutes.post('/shares/text', async (c) => {
     },
     201,
   );
+});
+
+/**
+ * 小存储模式(KV)直传:整个文件作为请求体一次性上传(≤24MB,远低于 100MB 请求体限制)。
+ * 元数据走查询参数(文件名等需 URL 编码,中文友好)。
+ * 大存储模式(R2)请走 /api/uploads 分片流程,此端点返回 400。
+ */
+shareRoutes.post('/shares/file', async (c) => {
+  if (fileMode(c.env) !== 'kv') {
+    return err(c, 400, 'config', '当前为 R2 大存储模式,请使用分片上传(/api/uploads/init)');
+  }
+
+  const filename = c.req.query('filename')?.trim();
+  if (!filename) return err(c, 400, 'bad_request', '缺少 filename 查询参数');
+  const expMs = parseExpiry(c.req.query('expiry'));
+  if (expMs === undefined) return err(c, 400, 'bad_request', '有效期参数非法');
+  const pkRaw = c.req.query('maxPickups');
+  const mp = parseMaxPickups(pkRaw === undefined || pkRaw === '' ? null : Number(pkRaw));
+  if (mp === undefined) return err(c, 400, 'bad_request', '取件次数参数非法');
+
+  const maxSize = fileMaxSize(c.env);
+  const declared = Number(c.req.raw.headers.get('content-length') || 0);
+  if (declared && declared > maxSize) {
+    return err(c, 413, 'too_large', `文件超过上限 ${Math.floor(maxSize / 1024 / 1024)} MB`);
+  }
+
+  const bytes = await c.req.arrayBuffer();
+  if (bytes.byteLength < 1) return err(c, 400, 'bad_request', '文件内容为空');
+  if (bytes.byteLength > maxSize) {
+    return err(c, 413, 'too_large', `文件超过上限 ${Math.floor(maxSize / 1024 / 1024)} MB`);
+  }
+
+  const mime = c.req.query('mime')?.trim() || c.req.header('Content-Type')?.split(';')[0] || 'application/octet-stream';
+  const storageKey = KV_FILE_PREFIX + crypto.randomUUID();
+  const expireAt = expMs === null ? null : Date.now() + expMs;
+
+  // 先落文件再落元数据;元数据失败时回收文件键(补偿,防孤儿字节)
+  await putFileBytes(c.env, storageKey, bytes);
+  try {
+    const created = await getStore(c.env).createShare({
+      kind: 'file',
+      filename: filename.slice(0, 255),
+      size: bytes.byteLength,
+      mime,
+      r2Key: storageKey,
+      maxPickups: mp,
+      expireAt,
+    });
+    return c.json(
+      {
+        code: created.code,
+        kind: 'file',
+        size: bytes.byteLength,
+        expireAt,
+        maxPickups: mp,
+        pickupUrl: `/pickup?code=${created.code}`,
+      },
+      201,
+    );
+  } catch (e) {
+    await deleteFile(c.env, storageKey);
+    throw e;
+  }
 });
 
 /** 取件:文本查看即计数;文件只返回元数据(下载时才计数) */
@@ -113,12 +177,13 @@ shareRoutes.get('/pickup/:code/download', async (c) => {
     return downloadError(c, 410, 'gone', '文件不存在');
   }
 
-  const obj = await c.env.BUCKET.get(row.r2Key);
-  if (!obj || !obj.body) return downloadError(c, 410, 'gone', '文件已被清理');
+  // 按存储键前缀路由到 KV(小存储)或 R2(大存储)
+  const body = await readFileStream(c.env, row.r2Key);
+  if (!body) return downloadError(c, 410, 'gone', '文件已被清理');
 
-  return c.body(obj.body, 200, {
+  return c.body(body, 200, {
     'Content-Type': row.mime || 'application/octet-stream',
-    'Content-Length': String(obj.size),
+    'Content-Length': String(row.size),
     'Content-Disposition': contentDisposition(row.filename || 'file'),
     'Cache-Control': 'no-store',
   });

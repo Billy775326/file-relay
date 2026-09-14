@@ -23,12 +23,22 @@ const els = {
   resultMeta: $('#result-meta'),
 };
 
-const MAX_SIZE = 2 * 1024 * 1024 * 1024; // 与服务端 MAX_FILE_SIZE 对齐
+const MAX_SIZE_FALLBACK = 2 * 1024 * 1024 * 1024;
+let cfg = { fileBackend: 'r2', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config 加载后覆盖
+let MAX_SIZE = MAX_SIZE_FALLBACK;
 
 let file = null;
 let session = null; // 进行中的上传会话 { uploadId, partSize, parts }
 let currentXhr = null;
 let cancelled = false;
+
+/* 服务端配置:决定走分片上传(R2 大存储)还是单请求直传(KV 小存储) */
+(async () => {
+  try {
+    cfg = await api('/api/config');
+    MAX_SIZE = cfg.maxFileSize || MAX_SIZE_FALLBACK;
+  } catch { /* 保持默认 */ }
+})();
 
 /* ---------- tabs ---------- */
 $$('.tab').forEach((t) =>
@@ -81,7 +91,7 @@ document.addEventListener('paste', (e) => {
 function setFile(f) {
   if (session) return;
   if (f.size > MAX_SIZE) {
-    toast(`文件超过 2 GB 上限(${fmtBytes(f.size)})`, 'error');
+    toast(`文件超过 ${fmtBytes(MAX_SIZE)} 上限(${fmtBytes(f.size)})`, 'error');
     return;
   }
   if (f.size < 1) { toast('空文件不能分享', 'error'); return; }
@@ -154,12 +164,72 @@ function updateProgress(loaded, total, partIdx, parts) {
   }
   speedState.t = now;
   speedState.loaded = loaded;
-  els.progressText.textContent =
-    `${pct}% · ${fmtBytes(loaded)} / ${fmtBytes(total)} · ${fmtBytes(speedState.speed)}/s · 第 ${partIdx}/${parts} 片`;
+  els.progressText.textContent = parts <= 1
+    ? `${pct}% · ${fmtBytes(loaded)} / ${fmtBytes(total)} · ${fmtBytes(speedState.speed)}/s`
+    : `${pct}% · ${fmtBytes(loaded)} / ${fmtBytes(total)} · ${fmtBytes(speedState.speed)}/s · 第 ${partIdx}/${parts} 片`;
 }
 
 async function startUpload() {
   if (!file || session) return;
+  if (cfg.fileBackend === 'kv') return directUpload();
+  return multipartUpload();
+}
+
+/* ---------- 小存储模式(KV):单请求直传,失败整文件重发 ---------- */
+async function directUpload() {
+  const opts = readOptions();
+  setBusy(true);
+  cancelled = false;
+  speedState = { t: 0, loaded: 0, speed: 0 };
+  els.progress.hidden = false;
+  els.progressFill.style.width = '0%';
+  els.progressText.textContent = '上传中…';
+
+  const qs = new URLSearchParams({
+    filename: file.name,
+    mime: file.type || 'application/octet-stream',
+    expiry: opts.expiry,
+  });
+  if (opts.maxPickups !== null) qs.set('maxPickups', String(opts.maxPickups));
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (cancelled) { resetAfterUpload(); return; }
+    const res = await xhrJson('POST', `/api/shares/file?${qs}`, file, (loaded) =>
+      updateProgress(loaded, file.size, 1, 1),
+    );
+    if (res) {
+      els.progress.hidden = true;
+      showResult(res);
+      setBusy(false);
+      return;
+    }
+    els.progressText.textContent = `上传失败,重试 ${attempt + 1}/3…`;
+    await sleep([1000, 2000][attempt] || 4000);
+  }
+  if (!cancelled) toast('上传失败,请重试', 'error');
+  resetAfterUpload();
+}
+
+function xhrJson(method, url, blob, onProgress) {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    currentXhr = xhr;
+    xhr.open(method, url);
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }
+      }
+      resolve(null);
+    };
+    xhr.onerror = () => resolve(null);
+    xhr.onabort = () => resolve(null);
+    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);
+    xhr.send(blob);
+  });
+}
+
+/* ---------- 大存储模式(R2):分片上传 ---------- */
+async function multipartUpload() {
   const opts = readOptions();
   setBusy(true);
   speedState = { t: 0, loaded: 0, speed: 0 };

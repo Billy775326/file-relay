@@ -26,7 +26,7 @@ export function parseMaxPickups(v: unknown): number | null | undefined {
   return undefined;
 }
 
-export type ErrCode = 'not_found' | 'expired' | 'exhausted' | 'too_large' | 'bad_request' | 'unauthorized' | 'gone' | 'internal';
+export type ErrCode = 'not_found' | 'expired' | 'exhausted' | 'too_large' | 'bad_request' | 'unauthorized' | 'gone' | 'internal' | 'config';
 
 export function err(c: Context, status: 400 | 401 | 404 | 410 | 413 | 500, code: ErrCode, message: string) {
   return c.json({ error: code, message }, status);
