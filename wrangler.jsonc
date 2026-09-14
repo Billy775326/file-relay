@@ -10,9 +10,11 @@
     "binding": "ASSETS"
   },
 
-  "r2_buckets": [
-    { "binding": "BUCKET", "bucket_name": "file-relay" }
-  ],
+  // ── 文件存储:默认小存储模式(KV 直传,单文件 ≤24MB,整个部署只需一个 KV 命名空间)──
+  // 分享大文件为主时放开本块升级大存储模式(R2 分片,~2GB),免改代码:
+  // "r2_buckets": [
+  //   { "binding": "BUCKET", "bucket_name": "file-relay" }
+  // ],
 
   // ── 元数据库:默认 KV(部署最简,免建 D1);D1 为可选强一致后端 ──
   // 切 D1 模式:注释掉 kv_namespaces、放开下面 d1_databases 即可,无需改代码。

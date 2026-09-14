@@ -2,7 +2,8 @@ export interface Env {
   /** 元数据库二选一:KV(默认,免建 D1)或 D1(强一致);都绑定时优先 KV */
   KV?: KVNamespace;
   DB?: D1Database;
-  BUCKET: R2Bucket;
+  /** 文件存储二选一:绑 BUCKET = 大存储模式(R2 分片,~2GB);不绑 = 小存储模式(KV 直存,≤24MB,需绑 KV) */
+  BUCKET?: R2Bucket;
   ASSETS: Fetcher;
   ADMIN_TOKEN: string;
   // 以下均为 wrangler.jsonc vars,运行时是 string

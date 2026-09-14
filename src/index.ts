@@ -1,9 +1,11 @@
 import { Hono } from 'hono';
 import type { Env } from './types';
+import { num } from './types';
 import { uploadRoutes } from './upload';
 import { shareRoutes } from './share';
 import { adminRoutes } from './admin';
 import { runCleanup } from './cleanup';
+import { fileMode, fileMaxSize } from './filestore';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -16,6 +18,16 @@ app.use('/api/*', async (c, next) => {
 });
 
 app.get('/api/health', (c) => c.json({ ok: true }));
+
+/** 前端据此选择上传方式:fileBackend=r2 走分片,kv 走单请求直传 */
+app.get('/api/config', (c) =>
+  c.json({
+    fileBackend: fileMode(c.env) ?? 'none',
+    maxFileSize: fileMaxSize(c.env),
+    maxTextLength: num(c.env.MAX_TEXT_LENGTH, 65_536),
+    partSize: num(c.env.PART_SIZE, 10 * 1024 * 1024),
+  }),
+);
 app.route('/api/uploads', uploadRoutes);
 app.route('/api', shareRoutes);
 app.route('/api/admin', adminRoutes);
