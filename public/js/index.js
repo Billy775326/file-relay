@@ -375,7 +375,14 @@ async function submitText() {
 
 /* ---------- 结果卡片 ---------- */
 function showResult(res) {
-  els.resultCode.textContent = res.code;
+  /* 口令逐位渲染成瓦片,与取件页 OTP 风格呼应 */
+  els.resultCode.replaceChildren(
+    ...res.code.split('').map((d) => {
+      const s = document.createElement('span');
+      s.textContent = d;
+      return s;
+    }),
+  );
   const link = `${location.origin}/pickup?code=${res.code}`;
   els.resultLink.textContent = link;
   const meta = [];
