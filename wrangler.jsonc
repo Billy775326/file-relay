@@ -33,6 +33,7 @@
   },
 
   // 非敏感配置走 vars;ADMIN_TOKEN 走 secret(npx wrangler secret put ADMIN_TOKEN)
+  // 所有 var 都有代码兜底;PART_SIZE / SESSION_TTL_MS / MAX_PARTS 仅 R2 大存储模式用到,小存储(KV)模式可删
   "vars": {
     "MAX_FILE_SIZE": "2147483648",
     "MAX_TEXT_LENGTH": "65536",

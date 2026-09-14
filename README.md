@@ -118,13 +118,17 @@ npm run db:remote                          # 远端建表;本地调试用 npm ru
 
 ## 配置(wrangler.jsonc `vars`)
 
-| 变量 | 默认 | 说明 |
-|---|---|---|
-| MAX_FILE_SIZE | 2 GiB | 单文件上限 |
-| MAX_TEXT_LENGTH | 65536 | 文本字符上限 |
-| PART_SIZE | 10 MiB | 分片大小(非末片须 ≥5MB,<100MB 请求体限制) |
-| SESSION_TTL_MS | 24h | 孤儿分片会话判定 |
-| MAX_PARTS | 10000 | R2 分片数上限 |
+所有 var 都有代码兜底默认值,不设也能跑;标 ❌ 的仅 R2 大存储模式用到,小存储(KV)模式可整个删掉。
+
+| 变量 | 默认 | 适用 | 说明 |
+|---|---|---|---|
+| MAX_FILE_SIZE | 2 GiB | 两模式 | 单文件上限;KV 模式实际取 min(它, 24MB) |
+| MAX_TEXT_LENGTH | 65536 | 两模式 | 文本字符上限 |
+| PART_SIZE | 10 MiB | 仅 R2 ❌ | 分片大小(非末片须 ≥5MB,<100MB 请求体限制) |
+| SESSION_TTL_MS | 24h | 仅 R2 ❌ | 孤儿分片会话判定 |
+| MAX_PARTS | 10000 | 仅 R2 ❌ | R2 分片数上限 |
+
+ADMIN_TOKEN 为 secret(`npx wrangler secret put ADMIN_TOKEN`),任何模式都需要。
 
 ## 设计取舍(已知边界)
 
