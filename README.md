@@ -1,5 +1,7 @@
 # 📦 file-relay 文件中转站
 
+**简体中文** | [English](README.en.md)
+
 以取件码分享文件与文本的自托管服务,基于 Cloudflare 原生技术栈实现:**默认仅需 Workers 与一个 KV 命名空间**,免费套餐即可运行;有较大文件需求(>24MB)时可加装 R2。
 
 本项目为 [FileCodeBox](https://github.com/vastsa/FileCodeBox) 的 Cloudflare 等价替代:上传文件或文本,生成 6 位取件口令,对方凭口令取件。
@@ -272,3 +274,7 @@ test/         Python 端到端测试
 - **[Hono](https://github.com/honojs/hono)** —— 轻量高性能的边缘 Web 框架
 - **[Wrangler](https://github.com/cloudflare/workers-sdk)** / **[@cloudflare/workers-types](https://github.com/cloudflare/workers-types)** —— Cloudflare Workers 官方工具链与类型
 - 托管于 [Cloudflare Workers](https://workers.cloudflare.com/) / [Workers KV](https://developers.cloudflare.com/kv/) / [R2](https://developers.cloudflare.com/r2/)(可选)/ [D1](https://developers.cloudflare.com/d1/)(可选)
+
+## 许可证
+
+[MIT](LICENSE)
