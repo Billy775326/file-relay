@@ -1,4 +1,4 @@
-import { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme } from './common.js';
+import { $, $$, api, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme } from './common.js';
 
 initTheme();
 
@@ -9,6 +9,7 @@ const els = {
   fileInfo: $('#file-info'),
   fiName: $('#fi-name'),
   fiSize: $('#fi-size'),
+  fiIcon: $('.fi-icon'),
   fiRemove: $('#fi-remove'),
   textInput: $('#text-input'),
   textCounter: $('#text-counter'),
@@ -70,7 +71,7 @@ function readOptions() {
   return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk) };
 }
 
-/* ---------- 文件选择:点击 / 拖拽 / 粘贴 ---------- */
+/* ---------- 文件选择:点击 / 全窗口拖拽 / 智能粘贴 ---------- */
 els.dropzone.addEventListener('click', () => els.fileInput.click());
 els.dropzone.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); els.fileInput.click(); }
@@ -79,15 +80,43 @@ els.fileInput.addEventListener('change', () => {
   if (els.fileInput.files[0]) setFile(els.fileInput.files[0]);
   els.fileInput.value = '';
 });
-els.dropzone.addEventListener('dragover', (e) => { e.preventDefault(); els.dropzone.classList.add('dragover'); });
-els.dropzone.addEventListener('dragleave', () => els.dropzone.classList.remove('dragover'));
-els.dropzone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  els.dropzone.classList.remove('dragover');
-  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+
+function showTab(name) {
+  const t = $(`.tab[data-tab="${name}"]`);
+  if (t && !t.classList.contains('active')) t.click(); // 上传中时 tab 处理器自己会拒绝
+}
+
+/* 拖到页面任意位置都高亮并可放下(不再要求精确命中拖拽区) */
+let dragDepth = 0;
+window.addEventListener('dragenter', (e) => {
+  if (![...(e.dataTransfer?.types || [])].includes('Files')) return;
+  dragDepth++;
+  if (!session) els.dropzone.classList.add('dragover');
 });
+window.addEventListener('dragleave', () => {
+  if (--dragDepth <= 0) { dragDepth = 0; els.dropzone.classList.remove('dragover'); }
+});
+window.addEventListener('dragover', (e) => e.preventDefault());
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dragDepth = 0;
+  els.dropzone.classList.remove('dragover');
+  if (e.dataTransfer?.files?.[0]) setFile(e.dataTransfer.files[0]);
+});
+
+/* 粘贴智能路由:粘贴文件→文件页;文件页粘贴纯文本→自动切到文本页 */
 document.addEventListener('paste', (e) => {
-  if ($('#panel-text').hidden && e.clipboardData?.files?.[0]) setFile(e.clipboardData.files[0]);
+  if (e.target?.closest?.('textarea, input')) return; // 输入框内粘贴走默认行为
+  if (e.clipboardData?.files?.[0]) {
+    setFile(e.clipboardData.files[0]);
+    return;
+  }
+  const text = e.clipboardData?.getData('text/plain');
+  if (text && $('#panel-text').hidden) {
+    showTab('text');
+    els.textInput.value = text;
+    els.textInput.dispatchEvent(new Event('input'));
+  }
 });
 
 function setFile(f) {
@@ -97,7 +126,9 @@ function setFile(f) {
     return;
   }
   if (f.size < 1) { toast('空文件不能分享', 'error'); return; }
+  if ($('#panel-file').hidden) showTab('file');
   file = f;
+  els.fiIcon.textContent = iconFor(f.name, f.type);
   els.fiName.textContent = f.name;
   els.fiSize.textContent = `${fmtBytes(f.size)} · ${f.type || '未知类型'}`;
   els.fileInfo.hidden = false;
@@ -166,9 +197,16 @@ function updateProgress(loaded, total, partIdx, parts) {
   }
   speedState.t = now;
   speedState.loaded = loaded;
-  els.progressText.textContent = parts <= 1
-    ? `${pct}% · ${fmtBytes(loaded)} / ${fmtBytes(total)} · ${fmtBytes(speedState.speed)}/s`
-    : `${pct}% · ${fmtBytes(loaded)} / ${fmtBytes(total)} · ${fmtBytes(speedState.speed)}/s · 第 ${partIdx}/${parts} 片`;
+  let text = `${pct}% · ${fmtBytes(loaded)} / ${fmtBytes(total)} · ${fmtBytes(speedState.speed)}/s`;
+  if (speedState.speed > 1024 && loaded > 0 && loaded < total) {
+    text += ` · 剩余 ${fmtDuration((total - loaded) / speedState.speed)}`;
+  }
+  els.progressText.textContent = parts <= 1 ? text : `${text} · 第 ${partIdx}/${parts} 片`;
+}
+
+/** 等待态(初始化/重试间隔/合并分片):进度条叠加流光动画 */
+function setPending(on) {
+  els.progressFill.classList.toggle('pending', on);
 }
 
 async function startUpload() {
@@ -185,6 +223,7 @@ async function directUpload() {
   speedState = { t: 0, loaded: 0, speed: 0 };
   els.progress.hidden = false;
   els.progressFill.style.width = '0%';
+  setPending(false);
   els.progressText.textContent = '上传中…';
 
   const qs = new URLSearchParams({
@@ -196,6 +235,7 @@ async function directUpload() {
 
   for (let attempt = 0; attempt < 3; attempt++) {
     if (cancelled) { resetAfterUpload(); return; }
+    setPending(false);
     const res = await xhrJson('POST', `/api/shares/file?${qs}`, file, (loaded) =>
       updateProgress(loaded, file.size, 1, 1),
     );
@@ -205,6 +245,7 @@ async function directUpload() {
       setBusy(false);
       return;
     }
+    setPending(true);
     els.progressText.textContent = `上传失败,重试 ${attempt + 1}/3…`;
     await sleep([1000, 2000][attempt] || 4000);
   }
@@ -237,6 +278,7 @@ async function multipartUpload() {
   speedState = { t: 0, loaded: 0, speed: 0 };
   els.progress.hidden = false;
   els.progressFill.style.width = '0%';
+  setPending(true);
   els.progressText.textContent = '初始化…';
 
   try {
@@ -246,6 +288,7 @@ async function multipartUpload() {
     });
     session = init;
     cancelled = false;
+    setPending(false);
 
     const etags = [];
     let doneBytes = 0;
@@ -267,6 +310,8 @@ async function multipartUpload() {
     }
     if (cancelled) return;
 
+    els.progressFill.style.width = '100%';
+    setPending(true);
     els.progressText.textContent = '正在合并分片…';
     const res = await api(`/api/uploads/${init.uploadId}/complete`, {
       method: 'POST',
@@ -304,6 +349,7 @@ function setBusy(busy) {
 function resetAfterUpload() {
   session = null;
   els.progress.hidden = true;
+  setPending(false);
   setBusy(false);
 }
 
@@ -333,19 +379,17 @@ function showResult(res) {
   const link = `${location.origin}/pickup?code=${res.code}`;
   els.resultLink.textContent = link;
   const meta = [];
-  meta.push(res.expireAt ? `${fmtDate(res.expireAt)} 过期` : '永久有效');
+  meta.push(res.expireAt
+    ? `${fmtDuration((res.expireAt - Date.now()) / 1000)}后过期(${fmtDate(res.expireAt)})`
+    : '永久有效');
   meta.push(res.maxPickups === null || res.maxPickups === undefined ? '取件次数不限' : `可取 ${res.maxPickups} 次`);
   if (res.kind === 'file' && res.size) meta.push(fmtBytes(res.size));
   els.resultMeta.textContent = meta.join(' · ');
   els.result.hidden = false;
   els.result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-  $('#btn-copy-code').onclick = async () => {
-    (await copyText(res.code)) ? toast('口令已复制', 'ok') : toast('复制失败,请手动复制', 'error');
-  };
-  $('#btn-copy-link').onclick = async () => {
-    (await copyText(link)) ? toast('链接已复制', 'ok') : toast('复制失败,请手动复制', 'error');
-  };
+  $('#btn-copy-code').onclick = (e) => copyBtn(e.currentTarget, res.code, '口令');
+  $('#btn-copy-link').onclick = (e) => copyBtn(e.currentTarget, link, '链接');
   $('#btn-again').onclick = () => {
     hideResult();
     clearFile();
@@ -353,5 +397,16 @@ function showResult(res) {
     els.textCounter.textContent = '0 / 65536';
     els.btnText.disabled = true;
   };
+}
+
+/** 复制成功后按钮短暂变成"✓ 已复制" */
+async function copyBtn(btn, text, label) {
+  const ok = await copyText(text);
+  toast(ok ? `${label}已复制` : '复制失败,请手动复制', ok ? 'ok' : 'error');
+  if (!ok) return;
+  const orig = btn.textContent;
+  btn.textContent = '✓ 已复制';
+  btn.disabled = true;
+  setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1500);
 }
 function hideResult() { els.result.hidden = true; }

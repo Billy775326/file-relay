@@ -35,6 +35,37 @@ export function fmtDate(ms) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+/** 秒数人性化:用于上传剩余时间 / 过期倒计时 */
+export function fmtDuration(sec) {
+  if (!Number.isFinite(sec) || sec < 0) return '-';
+  if (sec < 1) return '不足 1 秒';
+  if (sec < 60) return `${Math.round(sec)} 秒`;
+  if (sec < 3600) {
+    const m = Math.floor(sec / 60);
+    const s = Math.round(sec % 60);
+    return s ? `${m} 分 ${s} 秒` : `${m} 分`;
+  }
+  if (sec < 86400) {
+    const h = Math.floor(sec / 3600);
+    const m = Math.round((sec % 3600) / 60);
+    return m ? `${h} 时 ${m} 分` : `${h} 时`;
+  }
+  return `${Math.round(sec / 86400)} 天`;
+}
+
+/** 按文件名/ MIME 挑一个直观图标(纯展示用) */
+export function iconFor(name = '', mime = '') {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '🖼️';
+  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '🎬';
+  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '🎵';
+  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '🗜️';
+  if (mime === 'application/pdf' || ext === 'pdf') return '📕';
+  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '📄';
+  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '🧩';
+  return '📦';
+}
+
 export async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);
@@ -74,10 +105,16 @@ export function toast(msg, type = 'info') {
 
 export function initTheme() {
   const btn = $('#theme-btn');
+  const meta = $('meta[name="theme-color"]');
+  const sync = () => {
+    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';
+  };
+  sync();
   btn?.addEventListener('click', () => {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     localStorage.setItem('theme', next);
     document.documentElement.dataset.theme = next;
+    sync();
   });
 }
 
@@ -86,7 +123,7 @@ export function el(tag, attrs = {}, ...children) {
   const n = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
     if (k === 'class') n.className = v;
-    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode') n.setAttribute(k, v);
+    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);
     else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);
     else n[k] = v;
   }

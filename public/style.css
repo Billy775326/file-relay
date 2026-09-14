@@ -344,8 +344,87 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 /* ============ 移动端 ============ */
 @media (max-width: 640px) {
   .card { padding: 16px; }
-  .code { font-size: 36px; letter-spacing: 8px; }
+  .code { font-size: 36px; letter-spacing: 8px; padding-left: 8px; }
   .code-input { font-size: 28px; letter-spacing: 12px; }
   .btn-row .btn { flex: 1; }
   th, td { padding: 8px 6px; }
+  .otp-row { gap: 6px; }
+  .otp-box { width: 42px; height: 54px; font-size: 24px; }
+  .row-between { flex-wrap: wrap; }
+}
+
+/* ============ 优化补充 ============ */
+
+/* 入场/强调动画 */
+@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+.card { animation: fade-up 0.35s ease both; }
+.result:not([hidden]) { animation: pop 0.3s ease both; }
+
+/* 错误抖动(取件口令输错时) */
+@keyframes shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(3px); }
+  30%, 50%, 70% { transform: translateX(-5px); }
+  40%, 60% { transform: translateX(5px); }
+}
+.shake { animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+
+/* 键盘焦点可见性 */
+.btn:focus-visible, .icon-btn:focus-visible, .tab:focus-visible,
+.seg button:focus-visible, a:focus-visible, .otp-box:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 取件页:6 格口令输入 */
+.otp-row { display: flex; gap: 8px; justify-content: center; margin: 4px 0 8px; }
+.otp-box {
+  width: 46px;
+  height: 58px;
+  padding: 0;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  caret-color: var(--accent);
+}
+.otp-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* 进度条:等待态(初始化/重试/合并分片)流光 */
+@keyframes pending-slide { from { background-position: 0 0; } to { background-position: 34px 0; } }
+.bar > div.pending {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0) 12px,
+    rgba(255, 255, 255, 0.28) 12px,
+    rgba(255, 255, 255, 0.28) 24px
+  );
+  background-size: 34px 34px;
+  animation: pending-slide 0.8s linear infinite;
+}
+
+/* 结果口令光学校正(letter-spacing 尾部空隙) */
+.code { padding-left: 12px; }
+
+/* 管理页:行悬停 / 等宽口令 / 翻页按钮组 */
+tbody tr:hover td { background: var(--accent-soft); }
+.mono { font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace; font-variant-numeric: tabular-nums; }
+.pager-btns { display: flex; gap: 8px; }
+
+/* iOS 安全区:toast 不被 home 条挡住 */
+#toast-host { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+
+/* 动画敏感用户 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

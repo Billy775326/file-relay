@@ -1,31 +1,70 @@
-import { $, api, fmtBytes, fmtDate, copyText, toast, initTheme, el } from './common.js';
+import { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js';
 
 initTheme();
 
-const input = $('#code-input');
+const boxes = $$('.otp-box');
+const row = $('#otp-row');
 const errorBox = $('#pickup-error');
 const resultCard = $('#pickup-result');
 let querying = false;
 
-input.addEventListener('input', () => {
-  input.value = input.value.replace(/\D/g, '').slice(0, 6);
+function value() {
+  return boxes.map((b) => b.value).join('');
+}
+
+/* 填入 1-6 位数字:够 6 位自动提交,否则聚焦到下一个空格 */
+function fill(digits) {
+  boxes.forEach((b, i) => { b.value = digits[i] || ''; });
   hideError();
-  if (input.value.length === 6 && !querying) submit();
-});
-input.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && input.value.length === 6 && !querying) submit();
+  if (digits.length === 6) {
+    boxes[5].focus();
+    if (!querying) submit();
+  } else {
+    boxes[Math.min(digits.length, 5)].focus();
+  }
+}
+
+boxes.forEach((box, i) => {
+  box.addEventListener('input', () => {
+    box.value = box.value.replace(/\D/g, '').slice(0, 1);
+    hideError();
+    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+    if (value().length === 6 && !querying) submit();
+  });
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !box.value && i > 0) {
+      e.preventDefault();
+      boxes[i - 1].value = '';
+      boxes[i - 1].focus();
+    } else if (e.key === 'ArrowLeft' && i > 0) {
+      boxes[i - 1].focus();
+    } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {
+      boxes[i + 1].focus();
+    } else if (e.key === 'Enter' && value().length === 6 && !querying) {
+      submit();
+    }
+  });
+  box.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const digits = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+    if (digits) fill(digits);
+  });
+  box.addEventListener('focus', () => box.select());
 });
 
 function showError(msg) {
   errorBox.textContent = msg;
   errorBox.hidden = false;
+  row.classList.remove('shake');
+  void row.offsetWidth; /* 强制 reflow,重启动画 */
+  row.classList.add('shake');
 }
 function hideError() {
   errorBox.hidden = true;
 }
 
 async function submit() {
-  const code = input.value;
+  const code = value();
   querying = true;
   hideError();
   resultCard.hidden = true;
@@ -67,7 +106,7 @@ function render(res, code) {
   } else {
     resultCard.append(
       el('div', { class: 'share-card' },
-        el('span', { class: 'sc-icon' }, '📦'),
+        el('span', { class: 'sc-icon' }, iconFor(res.filename, res.mime)),
         el('div', { class: 'sc-meta' },
           el('b', {}, res.filename || '未命名文件'),
           el('small', {}, `${fmtBytes(res.size)} · ${res.mime || '未知类型'}`),
@@ -92,13 +131,15 @@ function render(res, code) {
 
 function reset() {
   resultCard.hidden = true;
-  input.value = '';
-  input.focus();
+  boxes.forEach((b) => { b.value = ''; });
+  hideError();
+  boxes[0].focus();
 }
 
 /* 支持 /pickup?code=xxxxxx 带参进入 */
 const fromUrl = new URLSearchParams(location.search).get('code');
 if (fromUrl && /^\d{1,6}$/.test(fromUrl)) {
-  input.value = fromUrl.slice(0, 6);
-  if (input.value.length === 6) submit();
+  fill(fromUrl.slice(0, 6));
+} else {
+  boxes[0].focus();
 }

@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="文件中转站管理后台">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f6f7fb">
 <title>文件中转站 - 管理</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
 <link rel="stylesheet" href="/style.css">
@@ -48,9 +51,12 @@
         </table>
       </div>
       <div class="row-between">
-        <button id="btn-prev" class="btn small" disabled>上一页</button>
+        <div class="pager-btns">
+          <button id="btn-prev" class="btn small" disabled>上一页</button>
+          <button id="btn-next" class="btn small" disabled>下一页</button>
+        </div>
         <small class="muted" id="page-info"></small>
-        <button id="btn-next" class="btn small" disabled>下一页</button>
+        <button id="btn-refresh" class="btn small ghost">↻ 刷新</button>
       </div>
       <div class="admin-foot">
         <button id="btn-logout" class="btn ghost small">退出登录</button>
