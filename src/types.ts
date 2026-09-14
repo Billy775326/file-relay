@@ -4,7 +4,8 @@ export interface Env {
   DB?: D1Database;
   /** 文件存储二选一:绑 BUCKET = 大存储模式(R2 分片,~2GB);不绑 = 小存储模式(KV 直存,≤24MB,需绑 KV) */
   BUCKET?: R2Bucket;
-  ASSETS: Fetcher;
+  /** 静态资源绑定;单文件模式(内联资源)下不存在 */
+  ASSETS?: Fetcher;
   ADMIN_TOKEN: string;
   /** 可选 secret:自定义管理后台入口路径(如 /panel-x7k9);设置后 /admin 返回 404 */
   ADMIN_PATH?: string;

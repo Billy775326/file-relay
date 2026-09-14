@@ -2,5 +2,6 @@ node_modules/
 .wrangler/
 .dev.vars
 dist/
+src/inline-assets.gen.ts
 .admin-token.txt
 cookies.txt
