@@ -54,6 +54,8 @@ const DICT = {
 
     'result.ok': '✅ 分享成功,把口令发给对方',
     'result.okBatch': '✅ {0} 个文件分享成功',
+    'ticket.title': '取件凭证',
+    'ticket.no': '№ {0}',
     'qr.hint': '扫码直接取件',
     'label.code': '口令',
     'label.link': '链接',
@@ -185,6 +187,8 @@ const DICT = {
 
     'result.ok': '✅ Shared! Send the code to the recipient',
     'result.okBatch': '✅ {0} files shared successfully',
+    'ticket.title': 'PICKUP TICKET',
+    'ticket.no': '№ {0}',
     'qr.hint': 'Scan to pick up',
     'label.code': 'code',
     'label.link': 'link',

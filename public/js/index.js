@@ -457,6 +457,7 @@ function metaText(r) {
   return parts.join(' · ');
 }
 
+/* 结果卡片 = 取件凭证票据:票头(标题+№) → 票身(口令+二维码) → 撕票线 → 票脚(操作) */
 function buildResultCard(r, compact) {
   const link = `${location.origin}/pickup?code=${r.code}`;
   const qr = qrSvgFor(link);
@@ -471,9 +472,16 @@ function buildResultCard(r, compact) {
     col,
   );
   return el('div', { class: 'result' },
-    compact ? null : el('p', { class: 'result-title' }, t('result.ok')),
-    main,
-    el('div', { class: 'btn-row' },
+    el('div', { class: 'tk-head' },
+      el('span', {}, t('ticket.title')),
+      el('span', { class: 'tk-no' }, t('ticket.no', r.code)),
+    ),
+    el('div', { class: 'tk-body' },
+      compact ? null : el('p', { class: 'result-title' }, t('result.ok')),
+      main,
+    ),
+    el('div', { class: 'tk-tear' }),
+    el('div', { class: 'tk-foot' },
       el('button', { class: 'btn primary', type: 'button', onclick: (e) => copyBtn(e.currentTarget, r.code, t('label.code')) }, t('btn.copyCode')),
       el('button', { class: 'btn', type: 'button', onclick: (e) => copyBtn(e.currentTarget, link, t('label.link')) }, t('btn.copyLink')),
       compact ? null : el('button', { class: 'btn ghost', type: 'button', onclick: resetAll }, t('btn.again')),
