@@ -106,7 +106,7 @@ export function shareStatusOf(
 
 /** 后端选择:都绑定优先 KV(与默认配置一致);只绑 D1 走 D1 模式;都没有 index.ts 前置拦截 */
 export function getStore(env: Env): ShareStore {
-  if (env.KV) return createKVStore(env.KV);
+  if (env.fileKV) return createKVStore(env.fileKV);
   if (env.DB) return createD1Store(env.DB);
   throw new Error('未绑定 KV 或 D1:请在 wrangler.jsonc 配置二选一的元数据库');
 }

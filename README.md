@@ -78,7 +78,7 @@ npx wrangler login
 npx wrangler r2 bucket create file-relay
 #    名字被占就换名,同步改 wrangler.jsonc 的 r2_buckets.bucket_name
 
-# 3. 建 KV 命名空间(存元数据,默认后端)
+# 3. 建 KV 命名空间(存元数据,默认后端;binding 名保持 fileKV 不变)
 npx wrangler kv namespace create file-relay-meta
 #    把输出的 id 填进 wrangler.jsonc 的 kv_namespaces[0].id
 
@@ -101,43 +101,50 @@ npm run db:remote                          # 远端建表;本地调试用 npm ru
 
 ### 方式二:Cloudflare 控制台(GitHub 连接)
 
-不装 Node 的纯网页部署:仓库连到 Cloudflare 后,每次 `git push` 自动重新部署(Workers Builds,免费构建额度个人使用绰绰有余)。流程:**先建资源拿 ID → 改 wrangler.jsonc 提交 → 连仓库触发构建 → 补 Secret → 验证**。
+不装 Node 的纯网页部署,**全程不需要改仓库里的任何文件**——资源全部在控制台手动绑定,变量名与代码约定一致即可。仓库连到 Cloudflare 后,每次 `git push` 自动重新部署(Workers Builds,免费构建额度个人使用绰绰有余)。
 
 #### 1. 推送到 GitHub
 
-把本仓库推到自己的 GitHub(私有/公开都行);后续所有配置改动都是改仓库文件再 push,和部署一体。
+把本仓库**原样**推到自己的 GitHub(私有/公开都行),wrangler.jsonc 一个字都不用改。
 
 #### 2. 建 KV 命名空间(必需;默认模式文件+元数据都存它)
 
 1. 控制台左侧 **Storage & Databases → KV → Create namespace**,名字如 `file-relay-meta`
-2. 点进新建的命名空间,**复制它的 ID**(32 位十六进制串)
-3. 编辑仓库里的 `wrangler.jsonc`,把 `kv_namespaces[0].id` 换成自己的 ID,提交
 
-> ⚠️ 这步必须在连接仓库**之前**做:`wrangler deploy` 会校验 namespace id,还是占位符/别人的 id 会直接构建失败(构建日志报 binding 相关错误,多半是这里)。
+命名空间建好先放着,等第 4 步 Worker 部署完成后回来绑定(见第 5 步)。
 
-#### 3.(可选)加装 R2 / D1
+#### 3.(可选)建 R2 / D1 资源
 
 默认小存储模式直接跳过本步:
 
-- **R2(要传 >24MB 大文件)**:**Storage & Databases → R2 → Create bucket**(首次使用 R2 可能要求绑卡)→ 名字如 `file-relay` → 仓库里放开 `wrangler.jsonc` 的 `r2_buckets` 块,`bucket_name` 与桶名一致
-- **D1(要强一致元数据)**:**Storage & Databases → D1 → Create database** → 复制 database_id 填进 `wrangler.jsonc`(注释 kv_namespaces、放开 d1_databases)→ 点进该库的 **Console** 标签页,把仓库 `schema/schema.sql` 全文粘进去执行建表(控制台能直接跑 SQL,不需要 wrangler)
+- **R2(要传 >24MB 大文件)**:**Storage & Databases → R2 → Create bucket**(首次使用 R2 可能要求绑卡),名字如 `file-relay`
+- **D1(要强一致元数据)**:**Storage & Databases → D1 → Create database**,建完点进该库的 **Console** 标签页,把仓库 `schema/schema.sql` 全文粘进去执行建表(控制台能直接跑 SQL,不需要 wrangler)
 
 #### 4. 连接仓库,触发首次部署
 
 1. 控制台 **Compute (Workers) → Create → Import a Git repository → Connect to Git**(旧版界面叫 Workers & Pages → Create application)
 2. 首次会跳转 GitHub 授权:安装 **Cloudflare Workers and Pages** App 并勾选本仓库(私有库选 *Only select repositories* 足够)
 3. 回到 Cloudflare 选中仓库,项目名保持 `file-relay`,构建配置保持默认——CF 识别 `wrangler.jsonc`,Deploy command 自动为 `npx wrangler deploy`,`public/` 静态资源随仓库一并上传
-4. 点 **Save and Deploy**,约 1 分钟完成;失败就去 Worker 页面的构建记录看日志,最常见原因就是第 2 步的 id 没换
+4. 点 **Save and Deploy**,约 1 分钟完成。此时页面能打开,但发文本/文件会报「未绑定元数据库」——**预期状态**,下一步绑定后即恢复
 
-#### 5. 配置 Secret、确认 Cron
+#### 5. 绑定 KV(核心一步)
+
+1. 进入 Worker → **Settings → Bindings → Add binding**
+2. 类型选 **KV namespace**,**变量名必须填 `fileKV`**(代码读 `env.fileKV`,填别的名字一律报"未绑定元数据库"),选中第 2 步建的命名空间
+3. 保存并 **Deploy** 生效,即刻完成部署
+
+> R2/D1 同理:Bindings → Add → 类型 **R2 bucket** / **D1 database**,变量名分别是 `BUCKET` / `DB`(仅大存储/强一致模式需要)。
+
+#### 6. 配置 Secret、确认 Cron
 
 - **Worker → Settings → Variables and Secrets → Add**:类型选 **Secret**,名字 `ADMIN_TOKEN`,值填强随机串(本地有 OpenSSL 就 `openssl rand -base64 24`,没有用密码管理器/在线生成器),保存后点 **Deploy** 生效;(可选)再加一个 `ADMIN_PATH` 自定义管理入口(如 `panel-x7k9`,设置后 `/admin` 404)
 - **Settings → Triggers & Events**:确认 Cron Triggers 出现 `0 */6 * * *`(wrangler.jsonc 里有就会自动注册,一般无需手动加)
 
-#### 6. 验证与日常更新
+#### 7. 验证与日常更新
 
-- 打开 `https://file-relay.<你的子域>.workers.dev`:发一条文本分享 → 能取件即部署成功;`/admin` 用 ADMIN_TOKEN 登录核对统计
-- 之后每次 `git push` 到 `main` 自动部署新版本;以后改 `wrangler.jsonc`(比如放开 R2 升级大存储)也只是改仓库提交,Secret 永远只在控制台改
+- 打开 `https://file-relay.<你的子域>.workers.dev`:发一条文本分享 → 能取件即部署成功;管理后台默认 `/admin`(设了 ADMIN_PATH 则是 `/<该值>`),用 ADMIN_TOKEN 登录
+- 之后每次 `git push` 到 `main` 自动部署新版本;KV/R2/D1 绑定与 Secret 永远在控制台管理,仓库文件不用动
+- ⚠️ 偶尔用 wrangler CLI 手动部署时注意:配置里没有的**控制台绑定会保留**;但曾经写在配置里、后来从配置删掉的绑定会被移除——CLI 部署前确认 `kv_namespaces`(binding 名 `fileKV`)是否在配置里
 - 大陆访问 `*.workers.dev` 被墙,验证需代理,或给 Worker 绑定自定义域名
 
 ### 注意事项

@@ -32,7 +32,7 @@ app.use('*', async (c, next) => {
 
 // 元数据库前置检查:D1/KV 至少绑一个(都没绑时给出可读错误而非路由内炸 500)
 app.use('/api/*', async (c, next) => {
-  if (!c.env.DB && !c.env.KV) {
+  if (!c.env.DB && !c.env.fileKV) {
     return c.json({ error: 'config', message: '未绑定元数据库:请在 wrangler.jsonc 配置 KV 或 D1(二选一)' }, 500);
   }
   await next();
