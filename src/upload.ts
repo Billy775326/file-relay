@@ -1,26 +1,9 @@
 import { Hono } from 'hono';
 import { num, type Env } from './types';
 import { err, parseExpiry, parseMaxPickups } from './util';
-import { createFileShareAndCloseSession } from './db';
-
-export interface SessionRow {
-  id: string;
-  upload_id: string;
-  r2_key: string;
-  filename: string | null;
-  mime: string | null;
-  size: number;
-  parts: number;
-  expiry: string | null;
-  max_pickups: number | null;
-  created_at: number;
-}
+import { getStore } from './store';
 
 export const uploadRoutes = new Hono<{ Bindings: Env }>();
-
-function getSession(db: D1Database, id: string): Promise<SessionRow | null> {
-  return db.prepare('SELECT * FROM upload_sessions WHERE id = ?1').bind(id).first<SessionRow>();
-}
 
 /** 初始化分片上传:校验 → 预生成 r2_key → R2 createMultipartUpload → 落会话台账 */
 uploadRoutes.post('/init', async (c) => {
@@ -55,12 +38,18 @@ uploadRoutes.post('/init', async (c) => {
     httpMetadata: { contentType },
   });
 
-  await c.env.DB.prepare(
-    `INSERT INTO upload_sessions (id, upload_id, r2_key, filename, mime, size, parts, expiry, max_pickups, created_at)
-     VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`,
-  )
-    .bind(id, mpu.uploadId, r2Key, filename.slice(0, 255), contentType, size, parts, typeof expiry === 'string' ? expiry : null, mp, Date.now())
-    .run();
+  await getStore(c.env).createSession({
+    id,
+    uploadId: mpu.uploadId,
+    r2Key,
+    filename: filename.slice(0, 255),
+    mime: contentType,
+    size,
+    parts,
+    expiry: typeof expiry === 'string' ? expiry : null,
+    maxPickups: mp,
+    createdAt: Date.now(),
+  });
 
   return c.json({ uploadId: id, partSize, parts, size });
 });
@@ -70,7 +59,7 @@ uploadRoutes.put('/:id/parts/:n', async (c) => {
   const id = c.req.param('id');
   const n = Number(c.req.param('n'));
 
-  const sess = await getSession(c.env.DB, id);
+  const sess = await getStore(c.env).getSession(id);
   if (!sess) return err(c, 404, 'not_found', '上传会话不存在或已过期');
   if (!Number.isInteger(n) || n < 1 || n > sess.parts) return err(c, 400, 'bad_request', '分片序号非法');
 
@@ -82,7 +71,7 @@ uploadRoutes.put('/:id/parts/:n', async (c) => {
   if (!body) return err(c, 400, 'bad_request', '请求体为空');
 
   try {
-    const mpu = c.env.BUCKET.resumeMultipartUpload(sess.r2_key, sess.upload_id);
+    const mpu = c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId);
     const part = await mpu.uploadPart(n, body);
     return c.json({ partNumber: part.partNumber, etag: part.etag });
   } catch {
@@ -90,12 +79,13 @@ uploadRoutes.put('/:id/parts/:n', async (c) => {
   }
 });
 
-/** 完成上传:R2 complete 校验 etag → 大小比对 → 生成口令落库并关会话(同一 batch) */
+/** 完成上传:R2 complete 校验 etag → 大小比对 → 生成口令落库并关会话(同一原子操作) */
 uploadRoutes.post('/:id/complete', async (c) => {
   const id = c.req.param('id');
   const body = (await c.req.json().catch(() => null)) as { parts?: unknown } | null;
 
-  const sess = await getSession(c.env.DB, id);
+  const store = getStore(c.env);
+  const sess = await store.getSession(id);
   if (!sess) return err(c, 404, 'not_found', '上传会话不存在或已过期');
 
   const parts = body?.parts;
@@ -117,7 +107,7 @@ uploadRoutes.post('/:id/complete', async (c) => {
 
   let obj: R2Object;
   try {
-    const mpu = c.env.BUCKET.resumeMultipartUpload(sess.r2_key, sess.upload_id);
+    const mpu = c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId);
     obj = await mpu.complete(r2parts);
   } catch {
     return err(c, 400, 'bad_request', '合并分片失败,请重试');
@@ -125,29 +115,26 @@ uploadRoutes.post('/:id/complete', async (c) => {
 
   // 声明大小造假的最后一道闸
   if (obj.size !== sess.size) {
-    await c.env.BUCKET.delete(sess.r2_key);
-    await c.env.DB.prepare('DELETE FROM upload_sessions WHERE id = ?1').bind(id).run();
+    await c.env.BUCKET.delete(sess.r2Key);
+    await store.deleteSession(id);
     return err(c, 400, 'bad_request', '文件大小校验失败');
   }
 
-  const now = Date.now();
   const parsed = parseExpiry(sess.expiry);
   const expMs = parsed === undefined ? 7 * 86_400_000 : parsed; // 脏数据兜底 7 天
-  const expireAt = expMs === null ? null : now + expMs;
+  const expireAt = expMs === null ? null : Date.now() + expMs;
 
-  const created = await createFileShareAndCloseSession(
-    c.env.DB,
+  const created = await store.createShare(
     {
       kind: 'file',
       filename: sess.filename,
       size: sess.size,
       mime: sess.mime,
-      r2Key: sess.r2_key,
-      maxPickups: sess.max_pickups,
+      r2Key: sess.r2Key,
+      maxPickups: sess.maxPickups,
       expireAt,
     },
     id,
-    now,
   );
 
   return c.json({
@@ -155,22 +142,22 @@ uploadRoutes.post('/:id/complete', async (c) => {
     kind: 'file',
     size: sess.size,
     expireAt,
-    maxPickups: sess.max_pickups,
+    maxPickups: sess.maxPickups,
     pickupUrl: `/pickup?code=${created.code}`,
   });
 });
 
 /** 放弃上传:幂等,会话不存在也返回 ok(pagehide sendBeacon 与主动取消共用) */
 uploadRoutes.post('/:id/abort', async (c) => {
-  const id = c.req.param('id');
-  const sess = await getSession(c.env.DB, id);
+  const store = getStore(c.env);
+  const sess = await store.getSession(c.req.param('id'));
   if (sess) {
     try {
-      await c.env.BUCKET.resumeMultipartUpload(sess.r2_key, sess.upload_id).abort();
+      await c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId).abort();
     } catch {
       // 已中止/不存在,忽略
     }
-    await c.env.DB.prepare('DELETE FROM upload_sessions WHERE id = ?1').bind(id).run();
+    await store.deleteSession(sess.id);
   }
   return c.json({ ok: true });
 });

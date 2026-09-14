@@ -1,5 +1,7 @@
 export interface Env {
-  DB: D1Database;
+  /** 元数据库二选一:KV(默认,免建 D1)或 D1(强一致);都绑定时优先 KV */
+  KV?: KVNamespace;
+  DB?: D1Database;
   BUCKET: R2Bucket;
   ASSETS: Fetcher;
   ADMIN_TOKEN: string;

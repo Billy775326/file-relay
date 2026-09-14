@@ -1,14 +1,7 @@
 import { Hono } from 'hono';
 import { num, type Env } from './types';
 import { err, parseExpiry, parseMaxPickups, contentDisposition } from './util';
-import {
-  createTextShare,
-  pickTextAndIncrement,
-  incrementAndGetForDownload,
-  getShareByCode,
-  shareStatus,
-  type ShareRow,
-} from './db';
+import { getStore, shareStatusOf } from './store';
 import type { Context } from 'hono';
 
 export const shareRoutes = new Hono<{ Bindings: Env }>();
@@ -29,18 +22,21 @@ shareRoutes.post('/shares/text', async (c) => {
   if (mp === undefined) return err(c, 400, 'bad_request', '取件次数参数非法');
 
   const now = Date.now();
-  const created = await createTextShare(
-    c.env.DB,
-    { kind: 'text', size: text.length, text, maxPickups: mp, expireAt: expMs === null ? null : now + expMs },
-    now,
-  );
+  const expireAt = expMs === null ? null : now + expMs;
+  const created = await getStore(c.env).createShare({
+    kind: 'text',
+    size: text.length,
+    text,
+    maxPickups: mp,
+    expireAt,
+  });
 
   return c.json(
     {
       code: created.code,
       kind: 'text',
       size: text.length,
-      expireAt: expMs === null ? null : now + expMs,
+      expireAt,
       maxPickups: mp,
       pickupUrl: `/pickup?code=${created.code}`,
     },
@@ -54,21 +50,23 @@ shareRoutes.post('/pickup', async (c) => {
   const code = String(body?.code ?? '').trim();
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '请输入 6 位取件口令');
 
+  const store = getStore(c.env);
   const now = Date.now();
-  const picked = await pickTextAndIncrement(c.env.DB, code, now);
+  const picked = await store.tryPickup(code, { textOnly: true });
   if (picked) {
     return c.json({
       kind: 'text',
       text: picked.text,
       size: picked.size,
-      expireAt: picked.expire_at,
-      pickupsLeft: picked.max_pickups === null ? null : Math.max(0, picked.max_pickups - picked.pickup_count),
+      expireAt: picked.expireAt,
+      pickupsLeft:
+        picked.maxPickups === null ? null : Math.max(0, picked.maxPickups - picked.pickupCount),
     });
   }
 
-  const row = await getShareByCode(c.env.DB, code);
+  const row = await store.getByCode(code);
   if (!row) return err(c, 404, 'not_found', '口令不存在');
-  const st = shareStatus(row, now);
+  const st = shareStatusOf(row.expireAt, row.maxPickups, row.pickupCount, now);
   if (st === 'expired') return err(c, 410, 'expired', '分享已过期');
   if (st === 'exhausted') return err(c, 410, 'exhausted', '取件次数已用完');
 
@@ -77,8 +75,9 @@ shareRoutes.post('/pickup', async (c) => {
     filename: row.filename,
     size: row.size,
     mime: row.mime,
-    expireAt: row.expire_at,
-    pickupsLeft: row.max_pickups === null ? null : Math.max(0, row.max_pickups - row.pickup_count),
+    expireAt: row.expireAt,
+    pickupsLeft:
+      row.maxPickups === null ? null : Math.max(0, row.maxPickups - row.pickupCount),
     downloadUrl: `/api/pickup/${code}/download`,
   });
 });
@@ -101,19 +100,20 @@ function downloadError(c: Context, status: 404 | 410, code: string, message: str
 /** 文件下载:原子计数 → R2 流式返回 */
 shareRoutes.get('/pickup/:code/download', async (c) => {
   const code = c.req.param('code');
+  const store = getStore(c.env);
   const now = Date.now();
 
-  const row = await incrementAndGetForDownload(c.env.DB, code, now);
-  if (!row || row.kind !== 'file' || !row.r2_key) {
-    const raw = await getShareByCode(c.env.DB, code);
+  const row = await store.tryPickup(code);
+  if (!row || row.kind !== 'file' || !row.r2Key) {
+    const raw = await store.getByCode(code);
     if (!raw) return downloadError(c, 404, 'not_found', '口令不存在');
-    const st = shareStatus(raw, now);
+    const st = shareStatusOf(raw.expireAt, raw.maxPickups, raw.pickupCount, now);
     if (st === 'expired') return downloadError(c, 410, 'expired', '分享已过期');
     if (st === 'exhausted') return downloadError(c, 410, 'exhausted', '取件次数已用完');
     return downloadError(c, 410, 'gone', '文件不存在');
   }
 
-  const obj = await c.env.BUCKET.get(row.r2_key);
+  const obj = await c.env.BUCKET.get(row.r2Key);
   if (!obj || !obj.body) return downloadError(c, 410, 'gone', '文件已被清理');
 
   return c.body(obj.body, 200, {
@@ -123,5 +123,3 @@ shareRoutes.get('/pickup/:code/download', async (c) => {
     'Cache-Control': 'no-store',
   });
 });
-
-export type { ShareRow };
