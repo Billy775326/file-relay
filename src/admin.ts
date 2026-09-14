@@ -3,6 +3,7 @@ import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import type { Context } from 'hono';
 import type { Env } from './types';
 import { err } from './util';
+import { getStore, shareStatusOf } from './store';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
 
@@ -83,68 +84,47 @@ adminRoutes.post('/logout', (c) => {
 
 /** 概览统计 */
 adminRoutes.get('/stats', async (c) => {
-  const now = Date.now();
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
-
-  const s = await c.env.DB.prepare(
-    `SELECT COUNT(*) AS total,
-            COALESCE(SUM(CASE WHEN kind='file' THEN 1 ELSE 0 END), 0) AS files,
-            COALESCE(SUM(CASE WHEN kind='text' THEN 1 ELSE 0 END), 0) AS texts,
-            COALESCE(SUM(size), 0) AS totalBytes,
-            SUM(CASE WHEN (expire_at IS NULL OR expire_at > ?1)
-                      AND (max_pickups IS NULL OR pickup_count < max_pickups)
-                     THEN 1 ELSE 0 END) AS active
-     FROM shares`,
-  )
-    .bind(now)
-    .first<{ total: number; files: number; texts: number; totalBytes: number; active: number | null }>();
-
-  const t = await c.env.DB.prepare('SELECT COUNT(*) AS n FROM shares WHERE created_at >= ?1')
-    .bind(todayStart.getTime())
-    .first<{ n: number }>();
-
-  return c.json({
-    total: s?.total ?? 0,
-    files: s?.files ?? 0,
-    texts: s?.texts ?? 0,
-    totalBytes: s?.totalBytes ?? 0,
-    active: s?.active ?? 0,
-    todayCreated: t?.n ?? 0,
-  });
+  return c.json(await getStore(c.env).stats(todayStart.getTime()));
 });
 
-/** 分享列表(状态由 SQL 惰性计算),?limit=50&offset=0 */
+/** 分享列表(状态惰性计算),?limit=50&offset=0;响应字段沿用 snake_case(前端契约) */
 adminRoutes.get('/shares', async (c) => {
   const limit = Math.min(Math.max(Number(c.req.query('limit') || 50) || 50, 1), 200);
   const offset = Math.max(Number(c.req.query('offset') || 0) || 0, 0);
   const now = Date.now();
 
-  const total = (await c.env.DB.prepare('SELECT COUNT(*) AS n FROM shares').first<{ n: number }>())?.n ?? 0;
-  const rows = await c.env.DB.prepare(
-    `SELECT id, code, kind, filename, mime, size, pickup_count, max_pickups, expire_at, created_at,
-            CASE WHEN (expire_at IS NOT NULL AND expire_at <= ?1) THEN 'expired'
-                 WHEN (max_pickups IS NOT NULL AND pickup_count >= max_pickups) THEN 'exhausted'
-                 ELSE 'active' END AS status,
-            CASE WHEN kind = 'text' THEN substr(text, 1, 50) ELSE NULL END AS text_preview
-     FROM shares ORDER BY created_at DESC LIMIT ?2 OFFSET ?3`,
-  )
-    .bind(now, limit, offset)
-    .all();
-
-  return c.json({ total, rows: rows.results ?? [] });
+  const { total, rows } = await getStore(c.env).listShares(limit, offset);
+  return c.json({
+    total,
+    rows: rows.map((r) => ({
+      id: r.id,
+      code: r.code,
+      kind: r.kind,
+      filename: r.filename,
+      size: r.size,
+      pickup_count: r.pickupCount,
+      max_pickups: r.maxPickups,
+      expire_at: r.expireAt,
+      created_at: r.createdAt,
+      status: shareStatusOf(r.expireAt, r.maxPickups, r.pickupCount, now),
+      text_preview: r.textPreview,
+    })),
+  });
 });
 
-/** 删除分享:文件的先删 R2 对象再删行 */
-adminRoutes.delete('/shares/:id', async (c) => {
-  const id = c.req.param('id');
-  const row = await c.env.DB.prepare('SELECT id, kind, r2_key FROM shares WHERE id = ?1')
-    .bind(id)
-    .first<{ id: string; kind: string; r2_key: string | null }>();
-  if (!row) return err(c, 404, 'not_found', '分享不存在');
+/** 删除分享:按口令删(D1/KV 通吃),文件的先删 R2 对象再删元数据 */
+adminRoutes.delete('/shares/:code', async (c) => {
+  const code = c.req.param('code');
+  if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
 
-  if (row.kind === 'file' && row.r2_key) await c.env.BUCKET.delete(row.r2_key);
-  await c.env.DB.prepare('DELETE FROM shares WHERE id = ?1').bind(id).run();
+  const store = getStore(c.env);
+  const rec = await store.getByCode(code);
+  if (!rec) return err(c, 404, 'not_found', '分享不存在');
+
+  if (rec.kind === 'file' && rec.r2Key) await c.env.BUCKET.delete(rec.r2Key);
+  await store.deleteByCode(code);
   return c.json({ ok: true });
 });
 

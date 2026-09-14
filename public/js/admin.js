@@ -119,7 +119,7 @@ async function remove(r) {
   const label = r.kind === 'text' ? `文本「${(r.text_preview || '').slice(0, 20)}…` : `文件「${r.filename || r.code}`;
   if (!confirm(`确定删除${label}」?文件将从存储中移除,口令 ${r.code} 将立即失效。`)) return;
   try {
-    await api(`/api/admin/shares/${r.id}`, { method: 'DELETE' });
+    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });
     toast('已删除', 'ok');
     loadStats();
     loadList();

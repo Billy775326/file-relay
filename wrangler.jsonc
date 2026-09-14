@@ -14,9 +14,16 @@
     { "binding": "BUCKET", "bucket_name": "file-relay" }
   ],
 
-  "d1_databases": [
-    { "binding": "DB", "database_name": "file-relay", "database_id": "63cb9f3e-0225-44f7-9b23-c746c436f108" }
+  // ── 元数据库:默认 KV(部署最简,免建 D1);D1 为可选强一致后端 ──
+  // 切 D1 模式:注释掉 kv_namespaces、放开下面 d1_databases 即可,无需改代码。
+  // 两者的语义差异/限额对比见 README「存储选型」。
+  "kv_namespaces": [
+    { "binding": "KV", "id": "4e267d205aef4957b1c2382a481ea882" }
   ],
+
+  // "d1_databases": [
+  //   { "binding": "DB", "database_name": "file-relay", "database_id": "<npx wrangler d1 create file-relay 的输出>" }
+  // ],
 
   // 每 6 小时清理过期分享与孤儿分片会话(免费套餐支持)
   "triggers": {
