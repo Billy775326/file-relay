@@ -1,18 +1,18 @@
 # 📦 file-relay 文件中转站
 
-像取快递一样取文件的自托管分享服务,Cloudflare 原生技术栈(Workers + R2 + KV/D1),免费套餐可跑。
+像取快递一样取文件的自托管分享服务,Cloudflare 原生技术栈:**默认只需要 Workers + 一个 KV 命名空间**,免费套餐可跑;有大文件需求(>24MB)时再加装 R2。
 
 FileCodeBox 的 CF 等价替代:上传文件或文本 → 生成 6 位取件口令 → 对方输入口令取件。
 
 ## 功能
 
-- **文件分享,双存储模式**:默认小存储模式 KV 直传(单文件 ≤24MB,部署只需一个 KV 命名空间);放开 `r2_buckets` 升级大存储模式 R2 分片上传,单文件最大 **2 GB**
+- **文件分享(默认 KV 直传)**:单文件 ≤24MB,单请求直传,部署不需要任何存储桶;**有大文件需求时**放开 `r2_buckets` 可选升级 R2 分片上传,单文件最大 **2 GB**,免改代码
 - **文本分享**:粘贴文本生成口令,取件页一键复制
 - **有效期**:1 天 / 7 天 / 30 天 / 永久 × 取件次数 1 / 5 / 不限,组合失效
-- **自动清理**:cron 每 6 小时回收过期分享与孤儿分片;取件时惰性校验,cron 挂了功能也不受影响
+- **自动清理**:cron 每 6 小时回收过期分享(R2 模式另清孤儿分片会话);取件时惰性校验,cron 挂了功能也不受影响
 - **管理后台** `/admin`:令牌登录,统计 + 列表 + 删除
-- **配置切换免改代码**:文件存储 R2/KV 二选一,元数据 KV/D1 二选一,全在 wrangler.jsonc
-- 中文 UI、移动端适配、深色模式;上传带进度/速度/分片重试
+- **配置切换免改代码**:文件存储默认 KV、R2 可选,元数据默认 KV、D1 可选,全在 wrangler.jsonc
+- 中文 UI、移动端适配、深色模式;上传带进度/速度/失败重试
 
 ## 存储选型:小存储模式(KV,默认)vs 大存储模式(R2)
 
@@ -42,14 +42,9 @@ FileCodeBox 的 CF 等价替代:上传文件或文本 → 生成 6 位取件口�
 
 个人自用低并发,两者无实际差异;多人共用/高并发取件切 D1(建库后放开 wrangler.jsonc 的 `d1_databases`)。
 
-### 收费参考(2026,以 [官方定价页](https://developers.cloudflare.com/workers/platform/pricing/) 为准)
+**部署组合速查**:**默认 = 只绑 KV(文件+元数据一个命名空间,最简)** | 大文件需求 = 放开 r2_buckets(R2 + KV)| 再加强一致 = R2 + D1
 
-- Workers 免费版 10 万请求/天;Workers Paid **$5/月** 含 1000 万请求/月,超额 $0.30/百万
-- R2 / KV / D1 免费额度见上两表,超出按表内价格计费;R2 出口流量永久免费
-
-**部署组合速查**:**默认 = 只绑 KV(文件+元数据一个命名空间,最简)** | 大存储 = 放开 r2_buckets(R2 + KV)| 大存储强一致 = R2 + D1
-
-### 免费额度与收费(2026 年,以 [官方定价页](https://developers.cloudflare.com/workers/platform/pricing/) 为准)
+### 免费额度与收费(2026,以 [官方定价页](https://developers.cloudflare.com/workers/platform/pricing/) 为准)
 
 | 资源 | 免费套餐额度 | 超额/付费价格 |
 |---|---|---|
@@ -132,18 +127,18 @@ ADMIN_TOKEN 为 secret(`npx wrangler secret put ADMIN_TOKEN`),任何模式都需
 
 ## 设计取舍(已知边界)
 
-- **不支持断点续传**:刷新/关页即放弃本次上传(会尽力 abort 服务端会话,剩余靠 cron 兜底)
+- **不支持断点续传**:刷新/关页即放弃本次上传(R2 模式会尽力 abort 服务端会话,剩余靠 cron 兜底)
 - **下载即计数**:次数限制按"开始下载"计,中途取消也消耗(防并发超取的必要代价);文本查看即计数,文件可先看卡片再决定下载
-- **取完不立即删文件**:R2 对象保留到自然过期或管理员删除,取件人能看到"次数已用完"而非"口令不存在"
+- **取完不立即删文件**:文件(KV 键/R2 对象)保留到自然过期或管理员删除,取件人能看到"次数已用完"而非"口令不存在"
 - 口令 6 位数字(100 万空间):D1 靠 UNIQUE 约束 + 碰撞换码;KV 靠先查后写,极端并发下存在理论碰撞窗口
 - KV 模式取件计数为读改写,极端并发下可能超出次数上限 1-2 次(个人使用无感)
 
 ## 结构
 
 ```
-src/          Hono Worker:store(KV/D1 双后端) / upload(分片) / share(取件下载) / admin / cleanup(cron)
+src/          Hono Worker:store(KV/D1 双后端) / share(取件下载 + KV 直传) / upload(R2 分片,大存储模式用) / admin / cleanup(cron)
 public/       原生 JS 三页面(发送 / 取件 / 管理),Workers Static Assets 托管
-schema/       D1 初始化 SQL(KV 模式不需要)
+schema/       D1 初始化 SQL(仅切 D1 元数据后端时需要,默认不用)
 test/         Python 端到端测试
 ```
 
@@ -152,4 +147,4 @@ test/         Python 端到端测试
 - **[FileCodeBox](https://github.com/vastsa/FileCodeBox)** —— 本项目的灵感来源与产品原型
 - **[Hono](https://github.com/honojs/hono)** —— 轻量高性能的边缘 Web 框架
 - **[Wrangler](https://github.com/cloudflare/workers-sdk)** / **[@cloudflare/workers-types](https://github.com/cloudflare/workers-types)** —— Cloudflare Workers 官方工具链与类型
-- 托管于 [Cloudflare Workers](https://workers.cloudflare.com/) / [R2](https://developers.cloudflare.com/r2/) / [Workers KV](https://developers.cloudflare.com/kv/) / [D1](https://developers.cloudflare.com/d1/)
+- 托管于 [Cloudflare Workers](https://workers.cloudflare.com/) / [Workers KV](https://developers.cloudflare.com/kv/) / [R2](https://developers.cloudflare.com/r2/)(可选) / [D1](https://developers.cloudflare.com/d1/)(可选)
