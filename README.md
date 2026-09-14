@@ -167,6 +167,8 @@ npm install
 npm run build:single     # 产出 dist/worker.js
 ```
 
+仓库中的 `dist/worker.js` 与源码同步维护;自行修改代码后需重新构建并替换该文件,以保持两者一致。
+
 #### 2. 控制台创建并粘贴
 
 1. **Compute (Workers) → Create → Create Worker**(默认 Hello World 模板即可),名称如 `file-relay`
@@ -177,13 +179,45 @@ npm run build:single     # 产出 dist/worker.js
 1. **Settings → Bindings → Add → KV namespace**:变量名必须为 `fileKV`,选中目标命名空间(必需)
 2. **Settings → Variables and Secrets → Add → Secret**:`ADMIN_TOKEN`(必需);可选 `ADMIN_PATH` 自定义管理入口
 3. **Settings → Triggers & Events → Cron Triggers → Add**:`0 */6 * * *`(每 6 小时清理过期分享)
-4. 各项 vars 均有代码默认值,可不设置;如需大文件或强一致,再绑定 `BUCKET`(R2)/ `DB`(D1)
+4. 各项 vars 均有代码默认值,可不设置;如需覆盖默认值,在 **Variables and Secrets** 中以纯文本变量(非 Secret)形式添加同名条目即可;如需大文件或强一致,再绑定 `BUCKET`(R2)/ `DB`(D1)
 
 #### 4. 验证
 
 访问 `https://<worker名>.<子域>.workers.dev`,发送一条文本分享并成功取件即部署完成。
 
 > **模式取舍**:单文件模式将前端页面内联于代码,修改页面需重新 `npm run build:single` 并整文件替换;方式一/二的静态资源由边缘直接返回,修改页面仅需推送代码。两种模式功能完全一致,使用同一命名空间时取件口令与数据互通。
+
+## API 接口
+
+除网页操作外,全部功能均可编程调用。参数约定:`expiry` 取值 `1d | 7d | 30d | forever`;`maxPickups` 取 1-999 或 `null`(不限次)。错误统一返回 `{error, message}`。
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/health` | 健康检查 |
+| GET | `/api/config` | 当前上传模式与限额(KV 模式 `fileBackend=kv`) |
+| POST | `/api/shares/text` | 创建文本分享,返回 `{code, expireAt, …}` |
+| POST | `/api/shares/file` | KV 模式文件直传(query 传 `filename`/`mime`/`expiry`/`maxPickups`,请求体为文件字节,≤24MB) |
+| POST | `/api/pickup` | 凭口令取件:文本直接返回内容;文件返回元数据(此步不计数) |
+| GET | `/api/pickup/:code/download` | 下载文件(此步计数) |
+| POST | `/api/uploads/init` 等 | R2 大存储模式分片上传四端点(init / `:id/parts/:n` / complete / abort) |
+| POST | `/api/admin/login` 等 | 管理接口(HMAC 签名 cookie 鉴权):`stats`、`shares` 列表、`DELETE shares/:code` 按口令删除 |
+
+调用示例:
+
+```bash
+# 文本分享 → {"code":"376966","expireAt":…}
+curl -X POST https://<你的域名>/api/shares/text \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"hello file-relay","expiry":"7d","maxPickups":null}'
+
+# 凭口令取件
+curl -X POST https://<你的域名>/api/pickup \
+  -H 'Content-Type: application/json' -d '{"code":"376966"}'
+
+# 文件直传(KV 模式,单文件 ≤24MB)
+curl -X POST 'https://<你的域名>/api/shares/file?filename=doc.zip&mime=application/zip&expiry=1d&maxPickups=5' \
+  --data-binary @doc.zip
+```
 
 ## 配置(wrangler.jsonc `vars`)
 
@@ -213,6 +247,14 @@ ADMIN_TOKEN 为 Secret(`npx wrangler secret put ADMIN_TOKEN`),任何模式均需
 - **取件完成后不立即删除文件**:文件(KV 键/R2 对象)保留至自然过期或管理员删除,取件人可看到「次数已用完」而非「口令不存在」
 - 口令为 6 位数字(100 万空间):D1 依赖 UNIQUE 约束并以碰撞换码;KV 采用先查后写,极端并发下存在理论碰撞窗口
 - KV 模式取件计数为读改写,极端并发下可能超出次数上限 1-2 次(个人使用无感知)
+
+## 常见问题
+
+- **接口返回 500「未绑定元数据库」**:KV/D1 绑定被部署清除。未写入 wrangler.jsonc 的资源绑定在 `wrangler deploy` 时一律移除(详见方式二中的警告);恢复方法为将绑定写回配置后重新部署,单文件模式则回控制台重新绑定
+- **忘记 ADMIN_TOKEN**:Secret 不可查看,只能重设——执行 `npx wrangler secret put ADMIN_TOKEN`(或在控制台 Variables and Secrets 中重新编辑)。重设后已登录的管理会话即失效
+- **中国大陆无法访问 `*.workers.dev`**:属预期现象;验证需使用代理,或为 Worker 绑定自定义域名后直连
+- **切换存储模式是否影响已有分享**:不影响。存储键按前缀自动路由(`f:` 前缀为 KV 文件,裸 uuid 为 R2 对象),新旧数据并存,无需迁移
+- **KV 写额度耗尽**:当日新分享创建失败,已有分享的读取与下载不受影响,次日额度自动重置;亦可持续大用量场景切换 D1 或升级付费套餐
 
 ## 结构
 
