@@ -4,6 +4,7 @@ initTheme();
 
 const els = {
   dropzone: $('#dropzone'),
+  dzHint: $('#dz-hint'),
   fileInput: $('#file-input'),
   fileInfo: $('#file-info'),
   fiName: $('#fi-name'),
@@ -37,6 +38,7 @@ let cancelled = false;
   try {
     cfg = await api('/api/config');
     MAX_SIZE = cfg.maxFileSize || MAX_SIZE_FALLBACK;
+    els.dzHint.textContent = `单个文件最大 ${fmtBytes(MAX_SIZE)} · 上传后生成 6 位取件口令`;
   } catch { /* 保持默认 */ }
 })();
 
