@@ -20,12 +20,13 @@
   // ],
 
   // ── 元数据库:默认 KV(部署最简,免建 D1);D1 为可选强一致后端 ──
-  // 绑定变量名必须是 fileKV(代码读 env.fileKV),两种方式二选一:
-  //   a. 控制台手动绑定(零文件编辑):Worker → Settings → Bindings → Add
-  //      → KV namespace → 变量名填 fileKV
-  //   b. wrangler CLI:解开下面 kv_namespaces,把 id 换成自己账号的命名空间 ID
-  //      (本地 npm run dev 也需要临时解开,id 随便填,本地是模拟 KV)
-  // 切 D1:控制台加 D1 绑定(变量名 DB),或放开下面 d1_databases。差异见 README「存储选型」。
+  // 绑定变量名必须是 fileKV(代码读 env.fileKV)。
+  // ⚠️ 实测(wrangler 4.31):wrangler deploy 以本配置为绑定的唯一来源——
+  //    未写在配置里的绑定,包括控制台/仪表板手动添加的,部署时一律被移除。
+  //    所以 CLI 部署(npm run deploy)必须保留下面的 kv_namespaces(填自己账号的 ID);
+  //    「纯控制台绑定、零文件编辑」只适用于 Workers Builds(GitHub 连接)部署流,
+  //    若中途跑过本地 CLI 部署把绑定清掉了,回控制台重新绑定即可恢复。
+  // 切 D1:注释 kv_namespaces、放开下面 d1_databases。语义差异见 README「存储选型」。
   "kv_namespaces": [
     { "binding": "fileKV", "id": "4e267d205aef4957b1c2382a481ea882" }
   ],

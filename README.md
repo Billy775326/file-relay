@@ -144,7 +144,10 @@ npm run db:remote                          # 远端建表;本地调试用 npm ru
 
 - 打开 `https://file-relay.<你的子域>.workers.dev`:发一条文本分享 → 能取件即部署成功;管理后台默认 `/admin`(设了 ADMIN_PATH 则是 `/<该值>`),用 ADMIN_TOKEN 登录
 - 之后每次 `git push` 到 `main` 自动部署新版本;KV/R2/D1 绑定与 Secret 永远在控制台管理,仓库文件不用动
-- ⚠️ 偶尔用 wrangler CLI 手动部署时注意:配置里没有的**控制台绑定会保留**;但曾经写在配置里、后来从配置删掉的绑定会被移除——CLI 部署前确认 `kv_namespaces`(binding 名 `fileKV`)是否在配置里
+- ⚠️ **重要(实测 wrangler 4.31)**:`wrangler deploy` 以 `wrangler.jsonc` 为绑定的**唯一来源**——未写在配置里的绑定,**包括控制台手动添加的,CLI 部署时一律被移除**。因此:
+  - 本方式(控制台绑定)只与 Workers Builds 部署流共存,部署全程走 Git push,别再本地跑 `npm run deploy`
+  - 如果绑定真被 CLI 部署清掉了(接口报 500「未绑定元数据库」):回控制台按第 5 步重新绑定即可恢复
+  - 想两种部署方式混用?把 `kv_namespaces`(binding 名 `fileKV`,自己的命名空间 ID)写进 `wrangler.jsonc` 一劳永逸(即方式一的做法)
 - 大陆访问 `*.workers.dev` 被墙,验证需代理,或给 Worker 绑定自定义域名
 
 ### 注意事项
