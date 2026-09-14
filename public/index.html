@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文件中转站 - 发送</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+<link rel="stylesheet" href="/style.css">
+<script>
+  // 防 FOUC:渲染前定主题
+  document.documentElement.dataset.theme =
+    localStorage.getItem('theme') ||
+    (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">📦</span>
+    <div><b>文件中转站</b><small>像取快递一样取文件</small></div>
+  </div>
+  <div class="actions">
+    <button id="theme-btn" class="icon-btn" title="切换主题">🌗</button>
+    <a class="btn ghost small" href="/pickup">取件</a>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card">
+    <div class="tabs">
+      <button class="tab active" data-tab="file">发文件</button>
+      <button class="tab" data-tab="text">发文本</button>
+    </div>
+
+    <div id="panel-file" class="panel">
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="选择文件">
+        <input type="file" id="file-input" hidden>
+        <div class="dz-icon">📄</div>
+        <p><b>点击选择文件</b>,或拖拽 / 粘贴到此处</p>
+        <small>单个文件最大 2 GB · 上传后生成 6 位取件口令</small>
+      </div>
+      <div id="file-info" class="file-info" hidden>
+        <span class="fi-icon">📎</span>
+        <div class="fi-meta"><b id="fi-name"></b><small id="fi-size"></small></div>
+        <button id="fi-remove" class="icon-btn" title="移除文件">✕</button>
+      </div>
+    </div>
+
+    <div id="panel-text" class="panel" hidden>
+      <textarea id="text-input" rows="6" maxlength="65536" placeholder="粘贴或输入要分享的文本…"></textarea>
+      <div class="row-between"><small class="muted" id="text-counter">0 / 65536</small></div>
+    </div>
+
+    <div class="options">
+      <div class="opt-group">
+        <label>有效期</label>
+        <div class="seg" id="seg-expiry">
+          <button type="button" data-v="1d">1 天</button>
+          <button type="button" data-v="7d" class="active">7 天</button>
+          <button type="button" data-v="30d">30 天</button>
+          <button type="button" data-v="forever">永久</button>
+        </div>
+      </div>
+      <div class="opt-group">
+        <label>可取次数</label>
+        <div class="seg" id="seg-pickups">
+          <button type="button" data-v="1">1 次</button>
+          <button type="button" data-v="5">5 次</button>
+          <button type="button" data-v="null" class="active">不限</button>
+        </div>
+      </div>
+    </div>
+
+    <button id="btn-upload" class="btn primary block" disabled>开始上传</button>
+    <button id="btn-text" class="btn primary block" hidden disabled>生成口令</button>
+
+    <div id="progress" class="progress" hidden>
+      <div class="bar"><div id="progress-fill"></div></div>
+      <div class="row-between">
+        <small id="progress-text">准备中…</small>
+        <button id="btn-cancel" class="btn danger small" type="button">取消</button>
+      </div>
+    </div>
+
+    <div id="result" class="result" hidden>
+      <p class="result-title">✅ 分享成功,把口令发给对方</p>
+      <div class="code" id="result-code"></div>
+      <div class="result-link" id="result-link"></div>
+      <div class="result-meta" id="result-meta"></div>
+      <div class="btn-row">
+        <button id="btn-copy-code" class="btn primary" type="button">复制口令</button>
+        <button id="btn-copy-link" class="btn" type="button">复制链接</button>
+        <button id="btn-again" class="btn ghost" type="button">再来一个</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script type="module" src="/js/index.js"></script>
+</body>
+</html>

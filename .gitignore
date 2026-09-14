@@ -1,0 +1,6 @@
+node_modules/
+.wrangler/
+.dev.vars
+dist/
+.admin-token.txt
+cookies.txt
