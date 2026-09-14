@@ -21,15 +21,19 @@
 
   // ── 元数据库:默认 KV(部署最简,免建 D1);D1 为可选强一致后端 ──
   // 绑定变量名必须是 fileKV(代码读 env.fileKV)。
+  // 本仓库默认「零 ID」模式:这里不写任何资源 ID,绑定全部在 Cloudflare 控制台管理
+  // (Worker → Settings → Bindings → 添加 KV namespace,变量名填 fileKV),
+  // 与 Workers Builds(Git push 自动构建)部署流配套。
   // ⚠️ 实测(wrangler 4.31):wrangler deploy 以本配置为绑定的唯一来源——
-  //    未写在配置里的绑定,包括控制台/仪表板手动添加的,部署时一律被移除。
-  //    所以 CLI 部署(npm run deploy)必须保留下面的 kv_namespaces(填自己账号的 ID);
-  //    「纯控制台绑定、零文件编辑」只适用于 Workers Builds(GitHub 连接)部署流,
-  //    若中途跑过本地 CLI 部署把绑定清掉了,回控制台重新绑定即可恢复。
+  //    未写在配置里的绑定(含控制台手动添加的)部署时一律被移除;
+  //    所以本模式只走 Git push 部署,别再本地跑 npm run deploy。
+  //    确需 CLI 部署 / 本地 npm run dev 调试:取消下面的注释
+  //    (本地 dev 的 id 随便填 32 位 hex 即可,wrangler 用本地模拟 KV;
+  //     CLI 部署则填自己账号 npx wrangler kv namespace create 输出的真实 id)。
   // 切 D1:注释 kv_namespaces、放开下面 d1_databases。语义差异见 README「存储选型」。
-  "kv_namespaces": [
-    { "binding": "fileKV", "id": "4e267d205aef4957b1c2382a481ea882" }
-  ],
+  // "kv_namespaces": [
+  //   { "binding": "fileKV", "id": "<npx wrangler kv namespace create file-relay-meta 输出的 id>" }
+  // ],
 
   // "d1_databases": [
   //   { "binding": "DB", "database_name": "file-relay", "database_id": "<npx wrangler d1 create file-relay 的输出>" }
