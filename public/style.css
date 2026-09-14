@@ -85,9 +85,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 20px 12px;
+  padding: 22px 20px 14px;
   max-width: 720px;
-  margin: 0 auto;
+  margin: 0 auto 26px;
+  border-bottom: 3px double var(--line);
 }
 .topbar.wide { max-width: 1080px; }
 .brand { display: flex; align-items: center; gap: 12px; }
@@ -137,6 +138,64 @@ body {
   padding: 32px 16px 10px;
 }
 
+/* ============ 发送页:柜台双栏(左寄件单 / 右回执常驻) ============ */
+.send-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 26px;
+  align-items: start;
+}
+.form-card { margin-bottom: 0; }
+.card-cap, .side-cap {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: -4px 0 16px;
+  font-size: 11.5px;
+  letter-spacing: 0.3em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.card-cap .cap-date {
+  font-family: var(--serif);
+  color: var(--stamp);
+  letter-spacing: 0.08em;
+  font-size: 12.5px;
+}
+.send-side { position: sticky; top: 24px; min-width: 0; }
+.send-side .results { margin-top: 0; }
+/* 回执空态:待出票邮戳 */
+.result-placeholder {
+  border: 1.5px dashed var(--line);
+  border-radius: 13px;
+  padding: 38px 20px;
+  min-height: 340px; /* 与左栏表单卡视觉平衡 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  animation: fade-up var(--t-slow) var(--ease) both;
+}
+.ph-postmark {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 14px;
+  border: 2.5px double var(--stamp);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--stamp);
+  font-family: var(--serif);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em; /* 补偿字距,让圆形邮戳视觉居中 */
+  transform: rotate(-8deg);
+  opacity: 0.8;
+}
+.result-placeholder p { margin: 0 0 4px; font-weight: 700; font-family: var(--serif); letter-spacing: 0.08em; }
+.result-placeholder small { color: var(--muted); font-size: 12.5px; }
+
 /* ============ 按钮:邮戳章 ============ */
 .btn {
   display: inline-flex;
@@ -166,6 +225,7 @@ body {
 }
 .btn.primary:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--stamp); }
 .btn.primary:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--stamp); }
+.btn.primary:disabled { box-shadow: 2px 2px 0 var(--hard-soft); } /* 禁用时不亮橙影,避免误读为可点 */
 .btn.ghost { background: transparent; box-shadow: none; border-color: var(--line); }
 .btn.ghost:hover { background: var(--rowbg); transform: none; }
 .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 2px 2px 0 var(--hard-soft); }
@@ -241,7 +301,7 @@ body {
 .fr-icon { font-size: 20px; flex: none; }
 .fr-meta { flex: 1; min-width: 0; }
 .fr-meta b { display: block; font-size: 13.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fr-meta small { color: var(--muted); font-size: 12px; }
+.fr-meta small { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fr-status { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--serif); }
 .file-row.done .fr-status { color: var(--ok); font-weight: 700; }
 .file-row.fail .fr-status { color: var(--danger); font-weight: 700; }
@@ -277,7 +337,7 @@ textarea {
 textarea:focus { outline: none; box-shadow: 3px 3px 0 var(--hard-soft); }
 
 /* ============ 选项 segmented:邮资标签 ============ */
-.options { display: flex; flex-direction: column; gap: 16px; margin: 20px 0 6px; }
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; margin: 22px 0 6px; }
 .opt-group label {
   display: block;
   font-size: 11.5px;
@@ -530,7 +590,14 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 .toast.error { background: var(--danger); border-color: var(--danger); color: #fff; }
 
 /* ============ 移动端 ============ */
+/* 双栏并回单栏:右栏回到表单下方,空态占位隐藏 */
+@media (max-width: 880px) {
+  .send-grid { grid-template-columns: 1fr; gap: 18px; }
+  .send-side { position: static; }
+  .send-side .side-cap, .result-placeholder { display: none; }
+}
 @media (max-width: 640px) {
+  .options { grid-template-columns: 1fr; }
   .card { padding: 18px; }
   .topbar { padding: 14px 16px 8px; }
   .code { gap: 6px; }

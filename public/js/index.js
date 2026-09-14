@@ -18,6 +18,8 @@ const els = {
   progressText: $('#progress-text'),
   btnCancel: $('#btn-cancel'),
   results: $('#results'),
+  placeholder: $('#result-placeholder'),
+  capDate: $('#cap-date'),
 };
 
 const MAX_SIZE_FALLBACK = 2 * 1024 * 1024 * 1024;
@@ -45,6 +47,9 @@ function updateHint() {
     updateHint();
   } catch { /* 保持默认 */ }
 })();
+
+/* 寄件单抬头日期(装饰) */
+if (els.capDate) els.capDate.textContent = fmtDate(Date.now()).split(' ')[0];
 
 /* 语言切换:重算动态文案与结果卡片 */
 onLangChange(() => {
@@ -491,6 +496,7 @@ function buildResultCard(r, compact) {
 
 function showResults(list) {
   lastResults = list;
+  if (els.placeholder) els.placeholder.hidden = true;
   els.results.replaceChildren();
   if (list.length > 1) {
     els.results.append(
@@ -536,5 +542,6 @@ async function copyBtn(btn, text, label) {
 
 function hideResult() {
   lastResults = [];
+  if (els.placeholder) els.placeholder.hidden = false;
   els.results.replaceChildren();
 }
