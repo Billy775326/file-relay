@@ -2,6 +2,8 @@
 
 像取快递一样取文件的自托管分享服务,Cloudflare 原生技术栈:**默认只需要 Workers + 一个 KV 命名空间**,免费套餐可跑;有大文件需求(>24MB)时再加装 R2。
 
+三种部署姿势任选:wrangler 命令行 / 控制台连 GitHub 自动构建 / 免环境单文件粘贴(见「部署方式」)。
+
 FileCodeBox 的 CF 等价替代:上传文件或文本 → 生成 6 位取件口令 → 对方输入口令取件。
 
 ## 功能
@@ -10,7 +12,7 @@ FileCodeBox 的 CF 等价替代:上传文件或文本 → 生成 6 位取件口�
 - **文本分享**:粘贴文本生成口令,取件页一键复制
 - **有效期**:1 天 / 7 天 / 30 天 / 永久 × 取件次数 1 / 5 / 不限,组合失效
 - **自动清理**:cron 每 6 小时回收过期分享(R2 模式另清孤儿分片会话);取件时惰性校验,cron 挂了功能也不受影响
-- **管理后台** `/admin`:令牌登录,统计 + 列表 + 删除
+- **管理后台**:令牌登录,统计 + 列表 + 删除;入口默认 `/admin`,可用 Secret `ADMIN_PATH` 自定义(设置后 `/admin` 404 防扫描)
 - **配置切换免改代码**:文件存储默认 KV、R2 可选,元数据默认 KV、D1 可选,全在 wrangler.jsonc
 - 中文 UI、移动端适配、深色模式;上传带进度/速度/失败重试
 
@@ -62,7 +64,13 @@ FileCodeBox 的 CF 等价替代:上传文件或文本 → 生成 6 位取件口�
 
 KV 模式下每次取件 ≈ 1 读 + 1 写:免费额度每天 1000 次写,个人使用绰绰有余;若分享量上千再考虑 $5/月的 Workers Paid 或切 D1(读额度宽裕得多)。
 
-## 手动部署
+## 部署方式
+
+| 方式 | 适合 | 特点 |
+|---|---|---|
+| [方式一](#方式一wrangler-命令行推荐) 命令行 wrangler | 有 Node 环境 | 最直接,一条命令部署 |
+| [方式二](#方式二cloudflare-控制台github-连接) 控制台 + GitHub | 想要 push 即部署 | Workers Builds 自动构建,只改配置一行 |
+| [方式三](#方式三单文件代码部署免-github免-node-运行环境) 单文件粘贴 | 不装 Node、不连 Git | 整个服务一个 worker.js,控制台粘贴即用 |
 
 ### 方式一:wrangler 命令行(推荐)
 
@@ -145,11 +153,42 @@ npm run db:remote                          # 远端建表;本地调试用 npm ru
 - 之后每次 `git push` 到 `main` 自动部署新版本;Secret 与 Cron 一直在控制台管理
 - 大陆访问 `*.workers.dev` 被墙,验证需代理,或给 Worker 绑定自定义域名
 
+### 方式三:单文件代码部署(免 GitHub、免 Node 运行环境)
+
+整个服务(后端 + 前端页面)打包成**一个 `worker.js`**,粘贴进控制台编辑器即可——适合不方便连 Git 或装 Node 的账号。纯控制台部署没有配置文件,绑定/Secret 都在控制台管理,天然不存在"部署清绑定"问题。
+
+#### 1. 生成 worker.js
+
+在任意装好本仓库的机器上执行一次:
+
+```bash
+npm install
+npm run build:single     # 产出 dist/worker.js(约 160KB)
+```
+
+#### 2. 控制台创建并粘贴
+
+1. **Compute (Workers) → Create → Create Worker**(默认 Hello World 模板即可),名字如 `file-relay`
+2. 部署后进入 **Edit code**,清空编辑器,粘贴 `dist/worker.js` 全文,点 **Deploy**
+
+#### 3. 控制台配置
+
+1. **Settings → Bindings → Add → KV namespace**:变量名必须 `fileKV`,选中命名空间(必需)
+2. **Settings → Variables and Secrets → Add → Secret**:`ADMIN_TOKEN`(必需);可选 `ADMIN_PATH` 自定义管理入口
+3. **Settings → Triggers & Events → Cron Triggers → Add**:`0 */6 * * *`(每 6 小时清理过期分享)
+4. vars 均有代码默认值可不设;要大文件/强一致再加 `BUCKET`(R2)/ `DB`(D1)绑定
+
+#### 4. 验证
+
+打开 `https://<worker名>.<子域>.workers.dev` 发一条文本分享 → 能取件即成功。
+
+> **取舍**:单文件模式前端页面内联在代码里,改页面需重新 `build:single` 后整文件替换粘贴;方式一/二的静态资源由边缘直出,改页面只需推送代码。两种模式功能完全一致,取件口令与数据互通(同一命名空间时)。
+
 ### 注意事项
 
 - **大陆访问**:`*.workers.dev` 被墙,需代理访问;绑定自有域名(Custom Domains)通常可直连
 - **workers.dev 防护**会拦截非浏览器 UA 的脚本请求(error 1010),自动化测试需自定义 User-Agent
-- 本地开发:`npm run dev`(`--test-scheduled` 后访问 `/__scheduled` 可手动触发 cron)
+- 本地开发:`npm run dev`(`--test-scheduled` 后访问 `/__scheduled` 可手动触发 cron);调试单文件模式用 `npx wrangler dev -c wrangler.standalone.jsonc`
 - 端到端测试:`python test/e2e_test.py`(默认打 `http://localhost:8787`,可传 BASE 参数)
 
 ## 配置(wrangler.jsonc `vars`)
@@ -185,7 +224,9 @@ ADMIN_TOKEN 为 secret(`npx wrangler secret put ADMIN_TOKEN`),任何模式都需
 
 ```
 src/          Hono Worker:store(KV/D1 双后端) / share(取件下载 + KV 直传) / upload(R2 分片,大存储模式用) / admin / cleanup(cron)
-public/       原生 JS 三页面(发送 / 取件 / 管理),Workers Static Assets 托管
+              asset-resolver.ts 静态资源双模式(Static Assets / 单文件内联);standalone.ts 单文件部署入口
+public/       原生 JS 三页面(发送 / 取件 / 管理),仓库模式由 Workers Static Assets 托管,单文件模式内联进 worker.js
+tools/        build:single 的内联生成与收尾脚本
 schema/       D1 初始化 SQL(仅切 D1 元数据后端时需要,默认不用)
 test/         Python 端到端测试
 ```

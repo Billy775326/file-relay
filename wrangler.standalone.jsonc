@@ -1,0 +1,11 @@
+{
+  // 单文件打包专用配置:npm run build:single 用 --dry-run 产出 dist/worker.js,
+  // 也可用它本地调试单文件模式(npx wrangler dev -c wrangler.standalone.jsonc)。
+  // 不含 assets 静态资源(public/ 已内联进代码)、不含真实资源 ID,与生产部署无关。
+  "name": "file-relay-single",
+  "main": "src/standalone.ts",
+  "compatibility_date": "2025-06-01",
+
+  // 占位 ID:本地 dev 用模拟 KV;单文件模式绑定在控制台手动加,不走本配置
+  "kv_namespaces": [{ "binding": "fileKV", "id": "00000000000000000000000000000000" }]
+}

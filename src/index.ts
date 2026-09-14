@@ -6,6 +6,7 @@ import { shareRoutes } from './share';
 import { adminRoutes, adminPath } from './admin';
 import { runCleanup } from './cleanup';
 import { fileMode, fileMaxSize } from './filestore';
+import { serveAsset } from './asset-resolver';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -19,12 +20,10 @@ app.use('*', async (c, next) => {
     const entry = adminPath(c.env);
     const path = c.req.path;
     if (path === entry) {
-      const asset = await c.env.ASSETS.fetch(new Request(new URL('/admin.html', c.req.url), { method: c.req.method }));
-      return new Response(asset.body, { headers: asset.headers });
+      return (await serveAsset(c, '/admin.html')) ?? c.notFound();
     }
     if (path === '/admin' || path === '/admin.html' || path.startsWith('/admin/')) {
-      const asset = await c.env.ASSETS.fetch(new Request(new URL('/404.html', c.req.url)));
-      return new Response(asset.body, { status: 404, headers: asset.headers });
+      return (await serveAsset(c, '/404.html', 404)) ?? c.notFound();
     }
   }
   await next();
@@ -53,14 +52,20 @@ app.route('/api/uploads', uploadRoutes);
 app.route('/api', shareRoutes);
 app.route('/api/admin', adminRoutes);
 
+/** 静态页面兜底:单文件模式在此 serve 内联资源;仓库模式下 Static Assets 边缘直出,基本走不到这里 */
+app.on(['GET', 'HEAD'], '*', async (c, next) => {
+  const asset = await serveAsset(c, c.req.path);
+  if (asset && asset.status === 200) return asset;
+  await next();
+});
+
 app.notFound(async (c) => {
   // API 未知路径:JSON 404
   if (c.req.path.startsWith('/api/')) {
     return c.json({ error: 'not_found', message: '接口不存在' }, 404);
   }
   // 页面路径:兜底 404.html(不用 not_found_handling,避免它吞掉 API 的 JSON 404)
-  const asset = await c.env.ASSETS.fetch(new Request(new URL('/404.html', c.req.url)));
-  return new Response(asset.body, { status: 404, headers: asset.headers });
+  return (await serveAsset(c, '/404.html', 404)) ?? c.text('Not Found', 404);
 });
 
 export default {
