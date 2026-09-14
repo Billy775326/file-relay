@@ -61,7 +61,7 @@ setInlineAssets({ "404.html": `<!doctype html>
 <meta name="description" content="\u9875\u9762\u4E0D\u5B58\u5728">
 <meta name="theme-color" content="#f6f7fb">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\u{1F4E6}</text></svg>">
-<title>404 - \u6587\u4EF6\u4E2D\u8F6C\u7AD9</title>
+<title data-i18n="doc.404">404 - \u6587\u4EF6\u4E2D\u8F6C\u7AD9</title>
 <link rel="stylesheet" href="/style.css">
 <script>
   document.documentElement.dataset.theme =
@@ -70,19 +70,24 @@ setInlineAssets({ "404.html": `<!doctype html>
 <\/script>
 </head>
 <body>
+<button id="lang-btn" class="icon-btn lang-btn lang-float" data-i18n-title="nav.lang">EN</button>
 <main class="container narrow" style="padding-top:10vh">
   <section class="card center">
     <div style="font-size:48px;margin-bottom:8px">\u{1F9ED}</div>
-    <h2 class="title">\u9875\u9762\u4E0D\u5B58\u5728</h2>
-    <p class="muted">\u4F60\u8981\u627E\u7684\u9875\u9762\u4E0D\u5728\u4E2D\u8F6C\u7AD9\u91CC</p>
+    <h2 class="title" data-i18n="nf.title">\u9875\u9762\u4E0D\u5B58\u5728</h2>
+    <p class="muted" data-i18n="nf.body">\u4F60\u8981\u627E\u7684\u9875\u9762\u4E0D\u5728\u4E2D\u8F6C\u7AD9\u91CC</p>
     <div class="btn-row" style="justify-content:center">
-      <a class="btn primary" href="/">\u53BB\u53D1\u9001</a>
-      <a class="btn ghost" href="/pickup">\u53BB\u53D6\u4EF6</a>
+      <a class="btn primary" href="/" data-i18n="nf.send">\u53BB\u53D1\u9001</a>
+      <a class="btn ghost" href="/pickup" data-i18n="nf.pickup">\u53BB\u53D6\u4EF6</a>
     </div>
   </section>
 </main>
 
-<footer class="foot">\u81EA\u6258\u7BA1 \xB7 \u8FD0\u884C\u4E8E Cloudflare Workers</footer>
+<footer class="foot" data-i18n="foot">\u81EA\u6258\u7BA1 \xB7 \u8FD0\u884C\u4E8E Cloudflare Workers</footer>
+<script type="module">
+  import { initI18n } from '/js/i18n.js';
+  initI18n();
+<\/script>
 </body>
 </html>
 `, "admin.html": `<!doctype html>
@@ -93,7 +98,7 @@ setInlineAssets({ "404.html": `<!doctype html>
 <meta name="description" content="\u6587\u4EF6\u4E2D\u8F6C\u7AD9\u7BA1\u7406\u540E\u53F0">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#f6f7fb">
-<title>\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u7BA1\u7406</title>
+<title data-i18n="doc.admin">\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u7BA1\u7406</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\u{1F4E6}</text></svg>">
 <link rel="stylesheet" href="/style.css">
 <script>
@@ -106,20 +111,21 @@ setInlineAssets({ "404.html": `<!doctype html>
 <header class="topbar wide">
   <div class="brand">
     <span class="logo">\u{1F4E6}</span>
-    <div><b>\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b><small>\u7BA1\u7406\u540E\u53F0</small></div>
+    <div><b data-i18n="brand.name">\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b><small data-i18n="brand.admin">\u7BA1\u7406\u540E\u53F0</small></div>
   </div>
   <div class="actions">
-    <button id="theme-btn" class="icon-btn" title="\u5207\u6362\u4E3B\u9898">\u{1F317}</button>
-    <a class="btn ghost small" href="/">\u53D1\u9001</a>
+    <button id="lang-btn" class="icon-btn lang-btn" data-i18n-title="nav.lang">EN</button>
+    <button id="theme-btn" class="icon-btn" data-i18n-title="nav.theme">\u{1F317}</button>
+    <a class="btn ghost small" href="/" data-i18n="nav.send">\u53D1\u9001</a>
   </div>
 </header>
 
 <main class="container wide">
   <section class="card center" id="admin-login" hidden>
-    <h2 class="title">\u7BA1\u7406\u767B\u5F55</h2>
-    <p class="muted" style="margin:0">\u8F93\u5165\u90E8\u7F72\u65F6\u8BBE\u7F6E\u7684\u7BA1\u7406\u4EE4\u724C(ADMIN_TOKEN)</p>
-    <input id="admin-token" class="token-input" type="password" placeholder="\u7BA1\u7406\u4EE4\u724C" autocomplete="current-password">
-    <button id="btn-login" class="btn primary block">\u767B\u5F55</button>
+    <h2 class="title" data-i18n="ad.loginTitle">\u7BA1\u7406\u767B\u5F55</h2>
+    <p class="muted" style="margin:0" data-i18n="ad.loginSub">\u8F93\u5165\u90E8\u7F72\u65F6\u8BBE\u7F6E\u7684\u7BA1\u7406\u4EE4\u724C(ADMIN_TOKEN)</p>
+    <input id="admin-token" class="token-input" type="password" data-i18n-ph="ad.tokenPh" placeholder="\u7BA1\u7406\u4EE4\u724C" autocomplete="current-password">
+    <button id="btn-login" class="btn primary block" data-i18n="ad.login">\u767B\u5F55</button>
     <div id="login-error" class="error-box" hidden></div>
   </section>
 
@@ -130,8 +136,8 @@ setInlineAssets({ "404.html": `<!doctype html>
         <table>
           <thead>
             <tr>
-              <th>\u53E3\u4EE4</th><th>\u7C7B\u578B</th><th>\u5185\u5BB9</th><th>\u5927\u5C0F</th>
-              <th>\u5DF2\u53D6/\u4E0A\u9650</th><th>\u8FC7\u671F\u65F6\u95F4</th><th>\u72B6\u6001</th><th>\u521B\u5EFA\u65F6\u95F4</th><th></th>
+              <th data-i18n="ad.th.code">\u53E3\u4EE4</th><th data-i18n="ad.th.kind">\u7C7B\u578B</th><th data-i18n="ad.th.content">\u5185\u5BB9</th><th data-i18n="ad.th.size">\u5927\u5C0F</th>
+              <th data-i18n="ad.th.pickups">\u5DF2\u53D6/\u4E0A\u9650</th><th data-i18n="ad.th.expire">\u8FC7\u671F\u65F6\u95F4</th><th data-i18n="ad.th.status">\u72B6\u6001</th><th data-i18n="ad.th.created">\u521B\u5EFA\u65F6\u95F4</th><th></th>
             </tr>
           </thead>
           <tbody id="shares-body"></tbody>
@@ -139,14 +145,14 @@ setInlineAssets({ "404.html": `<!doctype html>
       </div>
       <div class="row-between">
         <div class="pager-btns">
-          <button id="btn-prev" class="btn small" disabled>\u4E0A\u4E00\u9875</button>
-          <button id="btn-next" class="btn small" disabled>\u4E0B\u4E00\u9875</button>
+          <button id="btn-prev" class="btn small" disabled data-i18n="ad.prev">\u4E0A\u4E00\u9875</button>
+          <button id="btn-next" class="btn small" disabled data-i18n="ad.next">\u4E0B\u4E00\u9875</button>
         </div>
         <small class="muted" id="page-info"></small>
-        <button id="btn-refresh" class="btn small ghost">\u21BB \u5237\u65B0</button>
+        <button id="btn-refresh" class="btn small ghost" data-i18n="ad.refresh">\u21BB \u5237\u65B0</button>
       </div>
       <div class="admin-foot">
-        <button id="btn-logout" class="btn ghost small">\u9000\u51FA\u767B\u5F55</button>
+        <button id="btn-logout" class="btn ghost small" data-i18n="ad.logout">\u9000\u51FA\u767B\u5F55</button>
       </div>
     </div>
   </section>
@@ -162,7 +168,7 @@ setInlineAssets({ "404.html": `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="\u81EA\u6258\u7BA1\u6587\u4EF6/\u6587\u672C\u5206\u4EAB:\u4E0A\u4F20\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4,\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u4EF6">
 <meta name="theme-color" content="#f6f7fb">
-<title>\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001</title>
+<title data-i18n="doc.send">\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\u{1F4E6}</text></svg>">
 <link rel="stylesheet" href="/style.css">
 <script>
@@ -176,98 +182,2688 @@ setInlineAssets({ "404.html": `<!doctype html>
 <header class="topbar">
   <div class="brand">
     <span class="logo">\u{1F4E6}</span>
-    <div><b>\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b><small>\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u6587\u4EF6</small></div>
+    <div><b data-i18n="brand.name">\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b><small data-i18n="brand.tagline">\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u6587\u4EF6</small></div>
   </div>
   <div class="actions">
-    <button id="theme-btn" class="icon-btn" title="\u5207\u6362\u4E3B\u9898">\u{1F317}</button>
-    <a class="btn ghost small" href="/pickup">\u53D6\u4EF6</a>
+    <button id="lang-btn" class="icon-btn lang-btn" data-i18n-title="nav.lang">EN</button>
+    <button id="theme-btn" class="icon-btn" data-i18n-title="nav.theme">\u{1F317}</button>
+    <a class="btn ghost small" href="/pickup" data-i18n="nav.pickup">\u53D6\u4EF6</a>
   </div>
 </header>
 
 <main class="container">
   <section class="card">
     <div class="tabs">
-      <button class="tab active" data-tab="file">\u53D1\u6587\u4EF6</button>
-      <button class="tab" data-tab="text">\u53D1\u6587\u672C</button>
+      <button class="tab active" data-tab="file" data-i18n="tab.file">\u53D1\u6587\u4EF6</button>
+      <button class="tab" data-tab="text" data-i18n="tab.text">\u53D1\u6587\u672C</button>
     </div>
 
     <div id="panel-file" class="panel">
-      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="\u9009\u62E9\u6587\u4EF6">
-        <input type="file" id="file-input" hidden>
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" data-i18n-aria="dz.aria" aria-label="\u9009\u62E9\u6587\u4EF6">
+        <input type="file" id="file-input" multiple hidden>
         <div class="dz-icon">\u{1F4C4}</div>
-        <p><b>\u70B9\u51FB\u9009\u62E9\u6587\u4EF6</b>,\u6216\u62D6\u62FD / \u7C98\u8D34\u5230\u6B64\u5904</p>
-        <small id="dz-hint">\u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4</small>
+        <p><b data-i18n="dz.click">\u70B9\u51FB\u9009\u62E9\u6587\u4EF6</b><span data-i18n="dz.drop">,\u6216\u62D6\u62FD / \u7C98\u8D34\u5230\u6B64\u5904</span></p>
+        <small id="dz-hint" data-i18n="dz.hint">\u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4</small>
       </div>
-      <div id="file-info" class="file-info" hidden>
-        <span class="fi-icon">\u{1F4CE}</span>
-        <div class="fi-meta"><b id="fi-name"></b><small id="fi-size"></small></div>
-        <button id="fi-remove" class="icon-btn" title="\u79FB\u9664\u6587\u4EF6">\u2715</button>
-      </div>
+      <div id="file-list" class="file-list" hidden></div>
     </div>
 
     <div id="panel-text" class="panel" hidden>
-      <textarea id="text-input" rows="6" maxlength="65536" placeholder="\u7C98\u8D34\u6216\u8F93\u5165\u8981\u5206\u4EAB\u7684\u6587\u672C\u2026"></textarea>
+      <textarea id="text-input" rows="6" maxlength="65536" data-i18n-ph="text.placeholder" placeholder="\u7C98\u8D34\u6216\u8F93\u5165\u8981\u5206\u4EAB\u7684\u6587\u672C\u2026"></textarea>
       <div class="row-between"><small class="muted" id="text-counter">0 / 65536</small></div>
     </div>
 
     <div class="options">
       <div class="opt-group">
-        <label>\u6709\u6548\u671F</label>
+        <label data-i18n="opt.expiry">\u6709\u6548\u671F</label>
         <div class="seg" id="seg-expiry">
-          <button type="button" data-v="1d">1 \u5929</button>
-          <button type="button" data-v="7d" class="active">7 \u5929</button>
-          <button type="button" data-v="30d">30 \u5929</button>
-          <button type="button" data-v="forever">\u6C38\u4E45</button>
+          <button type="button" data-v="1d" data-i18n="seg.1d">1 \u5929</button>
+          <button type="button" data-v="7d" class="active" data-i18n="seg.7d">7 \u5929</button>
+          <button type="button" data-v="30d" data-i18n="seg.30d">30 \u5929</button>
+          <button type="button" data-v="forever" data-i18n="seg.forever">\u6C38\u4E45</button>
         </div>
       </div>
       <div class="opt-group">
-        <label>\u53EF\u53D6\u6B21\u6570</label>
+        <label data-i18n="opt.pickups">\u53EF\u53D6\u6B21\u6570</label>
         <div class="seg" id="seg-pickups">
-          <button type="button" data-v="1">1 \u6B21</button>
-          <button type="button" data-v="5">5 \u6B21</button>
-          <button type="button" data-v="null" class="active">\u4E0D\u9650</button>
+          <button type="button" data-v="1" data-i18n="seg.p1">1 \u6B21</button>
+          <button type="button" data-v="5" data-i18n="seg.p5">5 \u6B21</button>
+          <button type="button" data-v="null" class="active" data-i18n="seg.punlimited">\u4E0D\u9650</button>
         </div>
       </div>
     </div>
 
-    <button id="btn-upload" class="btn primary block" disabled>\u5F00\u59CB\u4E0A\u4F20</button>
-    <button id="btn-text" class="btn primary block" hidden disabled>\u751F\u6210\u53E3\u4EE4</button>
+    <button id="btn-upload" class="btn primary block" disabled data-i18n="btn.upload">\u5F00\u59CB\u4E0A\u4F20</button>
+    <button id="btn-text" class="btn primary block" hidden disabled data-i18n="btn.genCode">\u751F\u6210\u53E3\u4EE4</button>
 
     <div id="progress" class="progress" hidden>
       <div class="bar"><div id="progress-fill"></div></div>
       <div class="row-between">
-        <small id="progress-text">\u51C6\u5907\u4E2D\u2026</small>
-        <button id="btn-cancel" class="btn danger small" type="button">\u53D6\u6D88</button>
+        <small id="progress-text">\u2026</small>
+        <button id="btn-cancel" class="btn danger small" type="button" data-i18n="btn.cancel">\u53D6\u6D88</button>
       </div>
     </div>
 
-    <div id="result" class="result" hidden>
-      <p class="result-title">\u2705 \u5206\u4EAB\u6210\u529F,\u628A\u53E3\u4EE4\u53D1\u7ED9\u5BF9\u65B9</p>
-      <div class="code" id="result-code"></div>
-      <div class="result-link" id="result-link"></div>
-      <div class="result-meta" id="result-meta"></div>
-      <div class="btn-row">
-        <button id="btn-copy-code" class="btn primary" type="button">\u590D\u5236\u53E3\u4EE4</button>
-        <button id="btn-copy-link" class="btn" type="button">\u590D\u5236\u94FE\u63A5</button>
-        <button id="btn-again" class="btn ghost" type="button">\u518D\u6765\u4E00\u4E2A</button>
-      </div>
-    </div>
+    <div id="results" class="results"></div>
   </section>
 </main>
 
-<footer class="foot">\u81EA\u6258\u7BA1 \xB7 \u8FD0\u884C\u4E8E Cloudflare Workers</footer>
+<footer class="foot" data-i18n="foot">\u81EA\u6258\u7BA1 \xB7 \u8FD0\u884C\u4E8E Cloudflare Workers</footer>
 
+<script src="/js/vendor/qrcode.js"><\/script>
 <script type="module" src="/js/index.js"><\/script>
 </body>
 </html>
-`, "js/admin.js": "import { $, api, fmtBytes, fmtDate, toast, initTheme, el } from './common.js';\n\ninitTheme();\n\nconst loginCard = $('#admin-login');\nconst panel = $('#admin-panel');\nconst loginError = $('#login-error');\nconst tokenInput = $('#admin-token');\nconst statsRow = $('#stats-row');\nconst tbody = $('#shares-body');\nconst btnPrev = $('#btn-prev');\nconst btnNext = $('#btn-next');\nconst btnRefresh = $('#btn-refresh');\nconst pageInfo = $('#page-info');\n\nconst LIMIT = 50;\nlet offset = 0;\nlet total = 0;\n\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\n(async () => {\n  try {\n    await api('/api/admin/stats');\n    showPanel();\n  } catch {\n    loginCard.hidden = false;\n    tokenInput.focus();\n  }\n})();\n\nasync function login() {\n  const token = tokenInput.value.trim();\n  if (!token) return;\n  loginError.hidden = true;\n  try {\n    await api('/api/admin/login', { method: 'POST', body: { token } });\n    showPanel();\n  } catch (e) {\n    loginError.textContent = e.message || '\u4EE4\u724C\u65E0\u6548';\n    loginError.hidden = false;\n  }\n}\n$('#btn-login').addEventListener('click', login);\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\n\nfunction showPanel() {\n  loginCard.hidden = true;\n  panel.hidden = false;\n  loadStats();\n  loadList();\n}\n\n$('#btn-logout').addEventListener('click', async () => {\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\n  location.reload();\n});\n\n/* ---------- \u7EDF\u8BA1 ---------- */\nasync function loadStats() {\n  try {\n    const s = await api('/api/admin/stats');\n    statsRow.replaceChildren(\n      el('div', { class: 'stat-card' }, el('b', {}, String(s.total)), el('small', { class: 'muted' }, '\u5206\u4EAB\u603B\u6570')),\n      el('div', { class: 'stat-card' }, el('b', {}, String(s.active)), el('small', { class: 'muted' }, '\u5F53\u524D\u6709\u6548')),\n      el('div', { class: 'stat-card' }, el('b', {}, String(s.files)), el('small', { class: 'muted' }, '\u6587\u4EF6')),\n      el('div', { class: 'stat-card' }, el('b', {}, String(s.texts)), el('small', { class: 'muted' }, '\u6587\u672C')),\n      el('div', { class: 'stat-card' }, el('b', {}, fmtBytes(s.totalBytes)), el('small', { class: 'muted' }, '\u5360\u7528\u5B58\u50A8')),\n      el('div', { class: 'stat-card' }, el('b', {}, String(s.todayCreated)), el('small', { class: 'muted' }, '\u4ECA\u65E5\u65B0\u589E')),\n    );\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\n}\n\n/* ---------- \u5217\u8868 ---------- */\nconst STATUS_LABEL = { active: '\u6709\u6548', expired: '\u5DF2\u8FC7\u671F', exhausted: '\u5DF2\u53D6\u5B8C' };\n\nasync function loadList() {\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, '\u52A0\u8F7D\u4E2D\u2026')));\n  try {\n    const data = await api(`/api/admin/shares?limit=${LIMIT}&offset=${offset}`);\n    total = data.total;\n    const rows = data.rows ?? [];\n    tbody.replaceChildren();\n    for (const r of rows) {\n      const content = r.kind === 'text' ? (r.text_preview || '(\u6587\u672C)') : (r.filename || '(\u672A\u547D\u540D)');\n      tbody.append(\n        el('tr', {},\n          el('td', { class: 'mono' }, r.code),\n          el('td', {}, el('span', { class: `badge kind-${r.kind}` }, r.kind === 'file' ? '\u6587\u4EF6' : '\u6587\u672C')),\n          el('td', { class: 'wrap' }, content),\n          el('td', {}, r.kind === 'text' ? `${r.size} \u5B57` : fmtBytes(r.size)),\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : '\u6C38\u4E45'),\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_LABEL[r.status] || r.status)),\n          el('td', {}, fmtDate(r.created_at)),\n          el('td', {}, el('button', { class: 'btn danger small', onclick: () => remove(r) }, '\u5220\u9664')),\n        ),\n      );\n    }\n    if (rows.length === 0) {\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, '\u6682\u65E0\u5206\u4EAB')));\n    }\n    updatePager();\n  } catch (e) {\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || '\u52A0\u8F7D\u5931\u8D25')));\n  }\n}\n\nfunction updatePager() {\n  const page = Math.floor(offset / LIMIT) + 1;\n  const pages = Math.max(1, Math.ceil(total / LIMIT));\n  pageInfo.textContent = `\u7B2C ${page} / ${pages} \u9875 \xB7 \u5171 ${total} \u6761`;\n  btnPrev.disabled = offset <= 0;\n  btnNext.disabled = offset + LIMIT >= total;\n}\nbtnPrev.addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); loadList(); });\nbtnNext.addEventListener('click', () => { offset += LIMIT; loadList(); });\nbtnRefresh.addEventListener('click', () => { loadStats(); loadList(); });\n\n/* ---------- \u5220\u9664 ---------- */\nasync function remove(r) {\n  const label = r.kind === 'text' ? `\u6587\u672C\u300C${(r.text_preview || '').slice(0, 20)}\u2026` : `\u6587\u4EF6\u300C${r.filename || r.code}`;\n  if (!confirm(`\u786E\u5B9A\u5220\u9664${label}\u300D?\u6587\u4EF6\u5C06\u4ECE\u5B58\u50A8\u4E2D\u79FB\u9664,\u53E3\u4EE4 ${r.code} \u5C06\u7ACB\u5373\u5931\u6548\u3002`)) return;\n  try {\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\n    toast('\u5DF2\u5220\u9664', 'ok');\n    loadStats();\n    loadList();\n  } catch (e) {\n    toast(e.message || '\u5220\u9664\u5931\u8D25', 'error');\n  }\n}\n", "js/common.js": "export const $ = (sel, el = document) => el.querySelector(sel);\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\n\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\nexport async function api(path, opts = {}) {\n  const res = await fetch(path, {\n    method: opts.method || 'GET',\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\n  });\n  let data = null;\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\n  if (!res.ok) {\n    const e = new Error(data?.message || `\u8BF7\u6C42\u5931\u8D25 (${res.status})`);\n    e.code = data?.error || 'unknown';\n    e.status = res.status;\n    throw e;\n  }\n  return data;\n}\n\nexport function fmtBytes(n) {\n  if (!Number.isFinite(n) || n < 0) return '-';\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\n  let i = 0;\n  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 10) / 10;\n  return `${v} ${units[i]}`;\n}\n\nexport function fmtDate(ms) {\n  if (ms === null || ms === undefined) return '\u6C38\u4E45';\n  const d = new Date(ms);\n  const p = (x) => String(x).padStart(2, '0');\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\n}\n\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6 */\nexport function fmtDuration(sec) {\n  if (!Number.isFinite(sec) || sec < 0) return '-';\n  if (sec < 1) return '\u4E0D\u8DB3 1 \u79D2';\n  if (sec < 60) return `${Math.round(sec)} \u79D2`;\n  if (sec < 3600) {\n    const m = Math.floor(sec / 60);\n    const s = Math.round(sec % 60);\n    return s ? `${m} \u5206 ${s} \u79D2` : `${m} \u5206`;\n  }\n  if (sec < 86400) {\n    const h = Math.floor(sec / 3600);\n    const m = Math.round((sec % 3600) / 60);\n    return m ? `${h} \u65F6 ${m} \u5206` : `${h} \u65F6`;\n  }\n  return `${Math.round(sec / 86400)} \u5929`;\n}\n\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\nexport function iconFor(name = '', mime = '') {\n  const ext = (name.split('.').pop() || '').toLowerCase();\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\n  return '\u{1F4E6}';\n}\n\nexport async function copyText(text) {\n  try {\n    await navigator.clipboard.writeText(text);\n    return true;\n  } catch { /* \u8D70\u964D\u7EA7 */ }\n  try {\n    const ta = document.createElement('textarea');\n    ta.value = text;\n    ta.style.cssText = 'position:fixed;opacity:0';\n    document.body.appendChild(ta);\n    ta.select();\n    const ok = document.execCommand('copy');\n    ta.remove();\n    return ok;\n  } catch {\n    return false;\n  }\n}\n\nexport function toast(msg, type = 'info') {\n  let host = $('#toast-host');\n  if (!host) {\n    host = document.createElement('div');\n    host.id = 'toast-host';\n    document.body.appendChild(host);\n  }\n  const t = document.createElement('div');\n  t.className = `toast ${type}`;\n  t.textContent = msg;\n  host.appendChild(t);\n  requestAnimationFrame(() => t.classList.add('show'));\n  setTimeout(() => {\n    t.classList.remove('show');\n    setTimeout(() => t.remove(), 300);\n  }, 2400);\n}\n\nexport function initTheme() {\n  const btn = $('#theme-btn');\n  const meta = $('meta[name=\"theme-color\"]');\n  const sync = () => {\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\n  };\n  sync();\n  btn?.addEventListener('click', () => {\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\n    localStorage.setItem('theme', next);\n    document.documentElement.dataset.theme = next;\n    sync();\n  });\n}\n\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\nexport function el(tag, attrs = {}, ...children) {\n  const n = document.createElement(tag);\n  for (const [k, v] of Object.entries(attrs)) {\n    if (k === 'class') n.className = v;\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\n    else n[k] = v;\n  }\n  for (const c of children.flat(Infinity)) {\n    if (c == null || c === false) continue;\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\n  }\n  return n;\n}\n", "js/index.js": "import { $, $$, api, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme } from './common.js';\n\ninitTheme();\n\nconst els = {\n  dropzone: $('#dropzone'),\n  dzHint: $('#dz-hint'),\n  fileInput: $('#file-input'),\n  fileInfo: $('#file-info'),\n  fiName: $('#fi-name'),\n  fiSize: $('#fi-size'),\n  fiIcon: $('.fi-icon'),\n  fiRemove: $('#fi-remove'),\n  textInput: $('#text-input'),\n  textCounter: $('#text-counter'),\n  btnUpload: $('#btn-upload'),\n  btnText: $('#btn-text'),\n  progress: $('#progress'),\n  progressFill: $('#progress-fill'),\n  progressText: $('#progress-text'),\n  btnCancel: $('#btn-cancel'),\n  result: $('#result'),\n  resultCode: $('#result-code'),\n  resultLink: $('#result-link'),\n  resultMeta: $('#result-meta'),\n};\n\nconst MAX_SIZE_FALLBACK = 2 * 1024 * 1024 * 1024;\nlet cfg = { fileBackend: 'r2', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config \u52A0\u8F7D\u540E\u8986\u76D6\nlet MAX_SIZE = MAX_SIZE_FALLBACK;\n\nlet file = null;\nlet session = null; // \u8FDB\u884C\u4E2D\u7684\u4E0A\u4F20\u4F1A\u8BDD { uploadId, partSize, parts }\nlet currentXhr = null;\nlet cancelled = false;\n\n/* \u670D\u52A1\u7AEF\u914D\u7F6E:\u51B3\u5B9A\u8D70\u5206\u7247\u4E0A\u4F20(R2 \u5927\u5B58\u50A8)\u8FD8\u662F\u5355\u8BF7\u6C42\u76F4\u4F20(KV \u5C0F\u5B58\u50A8) */\n(async () => {\n  try {\n    cfg = await api('/api/config');\n    MAX_SIZE = cfg.maxFileSize || MAX_SIZE_FALLBACK;\n    els.dzHint.textContent = `\u5355\u4E2A\u6587\u4EF6\u6700\u5927 ${fmtBytes(MAX_SIZE)} \xB7 \u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4`;\n  } catch { /* \u4FDD\u6301\u9ED8\u8BA4 */ }\n})();\n\n/* ---------- tabs ---------- */\n$$('.tab').forEach((t) =>\n  t.addEventListener('click', () => {\n    if (session) return; // \u4E0A\u4F20\u4E2D\u7981\u6B62\u5207\u6362\n    $$('.tab').forEach((x) => x.classList.toggle('active', x === t));\n    const tab = t.dataset.tab;\n    $('#panel-file').hidden = tab !== 'file';\n    $('#panel-text').hidden = tab !== 'text';\n    els.btnUpload.hidden = tab !== 'file';\n    els.btnText.hidden = tab !== 'text';\n    hideResult();\n  }),\n);\n\n/* ---------- segmented \u9009\u9879 ---------- */\nfor (const id of ['seg-expiry', 'seg-pickups']) {\n  $(`#${id}`).addEventListener('click', (e) => {\n    const b = e.target.closest('button');\n    if (!b) return;\n    $$('button', $(`#${id}`)).forEach((x) => x.classList.toggle('active', x === b));\n  });\n}\nfunction readOptions() {\n  const exp = $('#seg-expiry .active').dataset.v;\n  const pk = $('#seg-pickups .active').dataset.v;\n  return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk) };\n}\n\n/* ---------- \u6587\u4EF6\u9009\u62E9:\u70B9\u51FB / \u5168\u7A97\u53E3\u62D6\u62FD / \u667A\u80FD\u7C98\u8D34 ---------- */\nels.dropzone.addEventListener('click', () => els.fileInput.click());\nels.dropzone.addEventListener('keydown', (e) => {\n  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); els.fileInput.click(); }\n});\nels.fileInput.addEventListener('change', () => {\n  if (els.fileInput.files[0]) setFile(els.fileInput.files[0]);\n  els.fileInput.value = '';\n});\n\nfunction showTab(name) {\n  const t = $(`.tab[data-tab=\"${name}\"]`);\n  if (t && !t.classList.contains('active')) t.click(); // \u4E0A\u4F20\u4E2D\u65F6 tab \u5904\u7406\u5668\u81EA\u5DF1\u4F1A\u62D2\u7EDD\n}\n\n/* \u62D6\u5230\u9875\u9762\u4EFB\u610F\u4F4D\u7F6E\u90FD\u9AD8\u4EAE\u5E76\u53EF\u653E\u4E0B(\u4E0D\u518D\u8981\u6C42\u7CBE\u786E\u547D\u4E2D\u62D6\u62FD\u533A) */\nlet dragDepth = 0;\nwindow.addEventListener('dragenter', (e) => {\n  if (![...(e.dataTransfer?.types || [])].includes('Files')) return;\n  dragDepth++;\n  if (!session) els.dropzone.classList.add('dragover');\n});\nwindow.addEventListener('dragleave', () => {\n  if (--dragDepth <= 0) { dragDepth = 0; els.dropzone.classList.remove('dragover'); }\n});\nwindow.addEventListener('dragover', (e) => e.preventDefault());\nwindow.addEventListener('drop', (e) => {\n  e.preventDefault();\n  dragDepth = 0;\n  els.dropzone.classList.remove('dragover');\n  if (e.dataTransfer?.files?.[0]) setFile(e.dataTransfer.files[0]);\n});\n\n/* \u7C98\u8D34\u667A\u80FD\u8DEF\u7531:\u7C98\u8D34\u6587\u4EF6\u2192\u6587\u4EF6\u9875;\u6587\u4EF6\u9875\u7C98\u8D34\u7EAF\u6587\u672C\u2192\u81EA\u52A8\u5207\u5230\u6587\u672C\u9875 */\ndocument.addEventListener('paste', (e) => {\n  if (e.target?.closest?.('textarea, input')) return; // \u8F93\u5165\u6846\u5185\u7C98\u8D34\u8D70\u9ED8\u8BA4\u884C\u4E3A\n  if (e.clipboardData?.files?.[0]) {\n    setFile(e.clipboardData.files[0]);\n    return;\n  }\n  const text = e.clipboardData?.getData('text/plain');\n  if (text && $('#panel-text').hidden) {\n    showTab('text');\n    els.textInput.value = text;\n    els.textInput.dispatchEvent(new Event('input'));\n  }\n});\n\nfunction setFile(f) {\n  if (session) return;\n  if (f.size > MAX_SIZE) {\n    toast(`\u6587\u4EF6\u8D85\u8FC7 ${fmtBytes(MAX_SIZE)} \u4E0A\u9650(${fmtBytes(f.size)})`, 'error');\n    return;\n  }\n  if (f.size < 1) { toast('\u7A7A\u6587\u4EF6\u4E0D\u80FD\u5206\u4EAB', 'error'); return; }\n  if ($('#panel-file').hidden) showTab('file');\n  file = f;\n  els.fiIcon.textContent = iconFor(f.name, f.type);\n  els.fiName.textContent = f.name;\n  els.fiSize.textContent = `${fmtBytes(f.size)} \xB7 ${f.type || '\u672A\u77E5\u7C7B\u578B'}`;\n  els.fileInfo.hidden = false;\n  els.dropzone.hidden = true;\n  els.btnUpload.disabled = false;\n  hideResult();\n}\nfunction clearFile() {\n  file = null;\n  els.fileInfo.hidden = true;\n  els.dropzone.hidden = false;\n  els.btnUpload.disabled = true;\n}\nels.fiRemove.addEventListener('click', clearFile);\n\n/* ---------- \u6587\u672C\u8F93\u5165 ---------- */\nels.textInput.addEventListener('input', () => {\n  const len = els.textInput.value.length;\n  els.textCounter.textContent = `${len} / 65536`;\n  els.btnText.disabled = !els.textInput.value.trim();\n});\n\n/* ---------- \u4E0A\u4F20 ---------- */\nels.btnUpload.addEventListener('click', startUpload);\nels.btnCancel.addEventListener('click', cancelUpload);\nels.btnText.addEventListener('click', submitText);\n\nfunction sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }\n\nfunction xhrPut(url, blob, onProgress) {\n  return new Promise((resolve) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open('PUT', url);\n    xhr.onload = () => {\n      let etag = null;\n      try { etag = JSON.parse(xhr.responseText).etag; } catch { /* ignore */ }\n      resolve(xhr.status >= 200 && xhr.status < 300 && etag ? etag : null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\n/** \u5355\u7247\u6700\u591A\u91CD\u8BD5 3 \u6B21,\u9000\u907F 1s/2s/4s */\nasync function putPartWithRetry(uploadId, n, blob, onProgress) {\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) return null;\n    const etag = await xhrPut(`/api/uploads/${uploadId}/parts/${n}`, blob, onProgress);\n    if (etag) return etag;\n    await sleep([1000, 2000, 4000][attempt] || 4000);\n  }\n  return null;\n}\n\nlet speedState = { t: 0, loaded: 0, speed: 0 };\nfunction updateProgress(loaded, total, partIdx, parts) {\n  const pct = Math.min(100, Math.floor((loaded / total) * 100));\n  els.progressFill.style.width = pct + '%';\n  const now = performance.now();\n  if (speedState.t && loaded > speedState.loaded) {\n    const inst = (loaded - speedState.loaded) / ((now - speedState.t) / 1000);\n    speedState.speed = speedState.speed ? speedState.speed * 0.7 + inst * 0.3 : inst;\n  }\n  speedState.t = now;\n  speedState.loaded = loaded;\n  let text = `${pct}% \xB7 ${fmtBytes(loaded)} / ${fmtBytes(total)} \xB7 ${fmtBytes(speedState.speed)}/s`;\n  if (speedState.speed > 1024 && loaded > 0 && loaded < total) {\n    text += ` \xB7 \u5269\u4F59 ${fmtDuration((total - loaded) / speedState.speed)}`;\n  }\n  els.progressText.textContent = parts <= 1 ? text : `${text} \xB7 \u7B2C ${partIdx}/${parts} \u7247`;\n}\n\n/** \u7B49\u5F85\u6001(\u521D\u59CB\u5316/\u91CD\u8BD5\u95F4\u9694/\u5408\u5E76\u5206\u7247):\u8FDB\u5EA6\u6761\u53E0\u52A0\u6D41\u5149\u52A8\u753B */\nfunction setPending(on) {\n  els.progressFill.classList.toggle('pending', on);\n}\n\nasync function startUpload() {\n  if (!file || session) return;\n  if (cfg.fileBackend === 'kv') return directUpload();\n  return multipartUpload();\n}\n\n/* ---------- \u5C0F\u5B58\u50A8\u6A21\u5F0F(KV):\u5355\u8BF7\u6C42\u76F4\u4F20,\u5931\u8D25\u6574\u6587\u4EF6\u91CD\u53D1 ---------- */\nasync function directUpload() {\n  const opts = readOptions();\n  setBusy(true);\n  cancelled = false;\n  speedState = { t: 0, loaded: 0, speed: 0 };\n  els.progress.hidden = false;\n  els.progressFill.style.width = '0%';\n  setPending(false);\n  els.progressText.textContent = '\u4E0A\u4F20\u4E2D\u2026';\n\n  const qs = new URLSearchParams({\n    filename: file.name,\n    mime: file.type || 'application/octet-stream',\n    expiry: opts.expiry,\n  });\n  if (opts.maxPickups !== null) qs.set('maxPickups', String(opts.maxPickups));\n\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) { resetAfterUpload(); return; }\n    setPending(false);\n    const res = await xhrJson('POST', `/api/shares/file?${qs}`, file, (loaded) =>\n      updateProgress(loaded, file.size, 1, 1),\n    );\n    if (res) {\n      els.progress.hidden = true;\n      showResult(res);\n      setBusy(false);\n      return;\n    }\n    setPending(true);\n    els.progressText.textContent = `\u4E0A\u4F20\u5931\u8D25,\u91CD\u8BD5 ${attempt + 1}/3\u2026`;\n    await sleep([1000, 2000][attempt] || 4000);\n  }\n  if (!cancelled) toast('\u4E0A\u4F20\u5931\u8D25,\u8BF7\u91CD\u8BD5', 'error');\n  resetAfterUpload();\n}\n\nfunction xhrJson(method, url, blob, onProgress) {\n  return new Promise((resolve) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open(method, url);\n    xhr.onload = () => {\n      if (xhr.status >= 200 && xhr.status < 300) {\n        try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }\n      }\n      resolve(null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\n/* ---------- \u5927\u5B58\u50A8\u6A21\u5F0F(R2):\u5206\u7247\u4E0A\u4F20 ---------- */\nasync function multipartUpload() {\n  const opts = readOptions();\n  setBusy(true);\n  speedState = { t: 0, loaded: 0, speed: 0 };\n  els.progress.hidden = false;\n  els.progressFill.style.width = '0%';\n  setPending(true);\n  els.progressText.textContent = '\u521D\u59CB\u5316\u2026';\n\n  try {\n    const init = await api('/api/uploads/init', {\n      method: 'POST',\n      body: { filename: file.name, size: file.size, mime: file.type || 'application/octet-stream', ...opts },\n    });\n    session = init;\n    cancelled = false;\n    setPending(false);\n\n    const etags = [];\n    let doneBytes = 0;\n    for (let i = 1; i <= init.parts; i++) {\n      const blob = file.slice((i - 1) * init.partSize, Math.min(i * init.partSize, file.size));\n      const etag = await putPartWithRetry(init.uploadId, i, blob, (loaded) =>\n        updateProgress(doneBytes + loaded, file.size, i, init.parts),\n      );\n      if (!etag) {\n        if (!cancelled) {\n          await abortUpload();\n          toast('\u4E0A\u4F20\u5931\u8D25,\u8BF7\u91CD\u8BD5', 'error');\n        }\n        resetAfterUpload();\n        return;\n      }\n      etags.push({ partNumber: i, etag });\n      doneBytes += blob.size;\n    }\n    if (cancelled) return;\n\n    els.progressFill.style.width = '100%';\n    setPending(true);\n    els.progressText.textContent = '\u6B63\u5728\u5408\u5E76\u5206\u7247\u2026';\n    const res = await api(`/api/uploads/${init.uploadId}/complete`, {\n      method: 'POST',\n      body: { parts: etags },\n    });\n    session = null;\n    els.progress.hidden = true;\n    showResult(res);\n  } catch (e) {\n    toast(e.message || '\u4E0A\u4F20\u5931\u8D25', 'error');\n    resetAfterUpload();\n  }\n}\n\nasync function cancelUpload() {\n  cancelled = true;\n  currentXhr?.abort();\n  await abortUpload();\n  toast('\u5DF2\u53D6\u6D88\u4E0A\u4F20');\n  resetAfterUpload();\n}\n\nasync function abortUpload() {\n  if (!session) return;\n  const id = session.uploadId;\n  session = null;\n  try { await api(`/api/uploads/${id}/abort`, { method: 'POST', body: {} }); } catch { /* ignore */ }\n}\n\nfunction setBusy(busy) {\n  els.btnUpload.disabled = busy || !file;\n  els.btnText.disabled = busy || !els.textInput.value.trim();\n}\n\nfunction resetAfterUpload() {\n  session = null;\n  els.progress.hidden = true;\n  setPending(false);\n  setBusy(false);\n}\n\n/* \u5237\u65B0/\u5173\u9875\u65F6\u5C3D\u529B\u901A\u77E5\u670D\u52A1\u7AEF\u653E\u5F03(\u4E0D\u662F\u65AD\u70B9\u7EED\u4F20) */\nwindow.addEventListener('pagehide', () => {\n  if (session) navigator.sendBeacon(`/api/uploads/${session.uploadId}/abort`);\n});\n\n/* ---------- \u6587\u672C\u5206\u4EAB ---------- */\nasync function submitText() {\n  const text = els.textInput.value;\n  if (!text.trim()) return;\n  setBusy(true);\n  try {\n    const res = await api('/api/shares/text', { method: 'POST', body: { text, ...readOptions() } });\n    showResult(res);\n  } catch (e) {\n    toast(e.message || '\u63D0\u4EA4\u5931\u8D25', 'error');\n  } finally {\n    setBusy(false);\n  }\n}\n\n/* ---------- \u7ED3\u679C\u5361\u7247 ---------- */\nfunction showResult(res) {\n  /* \u53E3\u4EE4\u9010\u4F4D\u6E32\u67D3\u6210\u74E6\u7247,\u4E0E\u53D6\u4EF6\u9875 OTP \u98CE\u683C\u547C\u5E94 */\n  els.resultCode.replaceChildren(\n    ...res.code.split('').map((d) => {\n      const s = document.createElement('span');\n      s.textContent = d;\n      return s;\n    }),\n  );\n  const link = `${location.origin}/pickup?code=${res.code}`;\n  els.resultLink.textContent = link;\n  const meta = [];\n  meta.push(res.expireAt\n    ? `${fmtDuration((res.expireAt - Date.now()) / 1000)}\u540E\u8FC7\u671F(${fmtDate(res.expireAt)})`\n    : '\u6C38\u4E45\u6709\u6548');\n  meta.push(res.maxPickups === null || res.maxPickups === undefined ? '\u53D6\u4EF6\u6B21\u6570\u4E0D\u9650' : `\u53EF\u53D6 ${res.maxPickups} \u6B21`);\n  if (res.kind === 'file' && res.size) meta.push(fmtBytes(res.size));\n  els.resultMeta.textContent = meta.join(' \xB7 ');\n  els.result.hidden = false;\n  els.result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });\n\n  $('#btn-copy-code').onclick = (e) => copyBtn(e.currentTarget, res.code, '\u53E3\u4EE4');\n  $('#btn-copy-link').onclick = (e) => copyBtn(e.currentTarget, link, '\u94FE\u63A5');\n  $('#btn-again').onclick = () => {\n    hideResult();\n    clearFile();\n    els.textInput.value = '';\n    els.textCounter.textContent = '0 / 65536';\n    els.btnText.disabled = true;\n  };\n}\n\n/** \u590D\u5236\u6210\u529F\u540E\u6309\u94AE\u77ED\u6682\u53D8\u6210\"\u2713 \u5DF2\u590D\u5236\" */\nasync function copyBtn(btn, text, label) {\n  const ok = await copyText(text);\n  toast(ok ? `${label}\u5DF2\u590D\u5236` : '\u590D\u5236\u5931\u8D25,\u8BF7\u624B\u52A8\u590D\u5236', ok ? 'ok' : 'error');\n  if (!ok) return;\n  const orig = btn.textContent;\n  btn.textContent = '\u2713 \u5DF2\u590D\u5236';\n  btn.disabled = true;\n  setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 1500);\n}\nfunction hideResult() { els.result.hidden = true; }\n", "js/pickup.js": "import { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js';\n\ninitTheme();\n\nconst boxes = $$('.otp-box');\nconst row = $('#otp-row');\nconst errorBox = $('#pickup-error');\nconst resultCard = $('#pickup-result');\nlet querying = false;\n\nfunction value() {\n  return boxes.map((b) => b.value).join('');\n}\n\n/* \u586B\u5165 1-6 \u4F4D\u6570\u5B57:\u591F 6 \u4F4D\u81EA\u52A8\u63D0\u4EA4,\u5426\u5219\u805A\u7126\u5230\u4E0B\u4E00\u4E2A\u7A7A\u683C */\nfunction fill(digits) {\n  boxes.forEach((b, i) => { b.value = digits[i] || ''; });\n  hideError();\n  if (digits.length === 6) {\n    boxes[5].focus();\n    if (!querying) submit();\n  } else {\n    boxes[Math.min(digits.length, 5)].focus();\n  }\n}\n\nboxes.forEach((box, i) => {\n  box.addEventListener('input', () => {\n    box.value = box.value.replace(/\\D/g, '').slice(0, 1);\n    hideError();\n    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();\n    if (value().length === 6 && !querying) submit();\n  });\n  box.addEventListener('keydown', (e) => {\n    if (e.key === 'Backspace' && !box.value && i > 0) {\n      e.preventDefault();\n      boxes[i - 1].value = '';\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowLeft' && i > 0) {\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {\n      boxes[i + 1].focus();\n    } else if (e.key === 'Enter' && value().length === 6 && !querying) {\n      submit();\n    }\n  });\n  box.addEventListener('paste', (e) => {\n    e.preventDefault();\n    const digits = (e.clipboardData.getData('text') || '').replace(/\\D/g, '').slice(0, 6);\n    if (digits) fill(digits);\n  });\n  box.addEventListener('focus', () => box.select());\n});\n\nfunction showError(msg) {\n  errorBox.textContent = msg;\n  errorBox.hidden = false;\n  row.classList.remove('shake');\n  void row.offsetWidth; /* \u5F3A\u5236 reflow,\u91CD\u542F\u52A8\u753B */\n  row.classList.add('shake');\n}\nfunction hideError() {\n  errorBox.hidden = true;\n}\n\nasync function submit() {\n  const code = value();\n  querying = true;\n  hideError();\n  resultCard.hidden = true;\n  try {\n    const res = await api('/api/pickup', { method: 'POST', body: { code } });\n    render(res, code);\n  } catch (e) {\n    showError(e.message || '\u53D6\u4EF6\u5931\u8D25');\n  } finally {\n    querying = false;\n  }\n}\n\nfunction metaLine(res) {\n  const parts = [];\n  parts.push(res.expireAt ? `${fmtDate(res.expireAt)} \u8FC7\u671F` : '\u6C38\u4E45\u6709\u6548');\n  parts.push(res.pickupsLeft === null || res.pickupsLeft === undefined ? '\u53D6\u4EF6\u6B21\u6570\u4E0D\u9650' : `\u5269\u4F59\u53EF\u53D6 ${res.pickupsLeft} \u6B21`);\n  return parts.join(' \xB7 ');\n}\n\nfunction render(res, code) {\n  resultCard.replaceChildren();\n\n  if (res.kind === 'text') {\n    const pre = el('pre', { class: 'text-body' });\n    pre.textContent = res.text ?? '';\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, '\u{1F4DD}'),\n        el('div', { class: 'sc-meta' }, el('b', {}, `\u6587\u672C \xB7 ${res.size} \u5B57\u7B26`)),\n      ),\n      pre,\n      el('div', { class: 'btn-row' },\n        el('button', { class: 'btn primary', onclick: async () => {\n          (await copyText(res.text)) ? toast('\u5DF2\u590D\u5236\u5168\u6587', 'ok') : toast('\u590D\u5236\u5931\u8D25', 'error');\n        } }, '\u4E00\u952E\u590D\u5236\u5168\u6587'),\n      ),\n    );\n  } else {\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, iconFor(res.filename, res.mime)),\n        el('div', { class: 'sc-meta' },\n          el('b', {}, res.filename || '\u672A\u547D\u540D\u6587\u4EF6'),\n          el('small', {}, `${fmtBytes(res.size)} \xB7 ${res.mime || '\u672A\u77E5\u7C7B\u578B'}`),\n        ),\n      ),\n      el('a', {\n        class: 'btn primary block',\n        href: `/api/pickup/${code}/download`,\n        download: res.filename || 'file',\n      }, '\u2B07 \u4E0B\u8F7D\u6587\u4EF6'),\n    );\n  }\n\n  resultCard.append(\n    el('div', { class: 'meta-line' }, metaLine(res)),\n    el('div', { class: 'btn-row' },\n      el('button', { class: 'btn ghost', onclick: reset }, '\u91CD\u65B0\u8F93\u5165'),\n    ),\n  );\n  resultCard.hidden = false;\n}\n\nfunction reset() {\n  resultCard.hidden = true;\n  boxes.forEach((b) => { b.value = ''; });\n  hideError();\n  boxes[0].focus();\n}\n\n/* \u652F\u6301 /pickup?code=xxxxxx \u5E26\u53C2\u8FDB\u5165 */\nconst fromUrl = new URLSearchParams(location.search).get('code');\nif (fromUrl && /^\\d{1,6}$/.test(fromUrl)) {\n  fill(fromUrl.slice(0, 6));\n} else {\n  boxes[0].focus();\n}\n", "pickup.html": `<!doctype html>
+`, "js/admin.js": "import { $, api, fmtBytes, fmtDate, toast, initTheme, el } from './common.js';\nimport { t, onLangChange, initI18n } from './i18n.js';\n\ninitTheme();\ninitI18n();\n\nconst loginCard = $('#admin-login');\nconst panel = $('#admin-panel');\nconst loginError = $('#login-error');\nconst tokenInput = $('#admin-token');\nconst statsRow = $('#stats-row');\nconst tbody = $('#shares-body');\nconst btnPrev = $('#btn-prev');\nconst btnNext = $('#btn-next');\nconst btnRefresh = $('#btn-refresh');\nconst pageInfo = $('#page-info');\n\nconst LIMIT = 50;\nlet offset = 0;\nlet total = 0;\n\n/* \u8BED\u8A00\u5207\u6362:\u9762\u677F\u53EF\u89C1\u65F6\u6309\u65B0\u8BED\u8A00\u91CD\u62C9\u6587\u6848 */\nonLangChange(() => {\n  if (!panel.hidden) {\n    loadStats();\n    loadList();\n  }\n});\n\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\n(async () => {\n  try {\n    await api('/api/admin/stats');\n    showPanel();\n  } catch {\n    loginCard.hidden = false;\n    tokenInput.focus();\n  }\n})();\n\nasync function login() {\n  const token = tokenInput.value.trim();\n  if (!token) return;\n  loginError.hidden = true;\n  try {\n    await api('/api/admin/login', { method: 'POST', body: { token } });\n    showPanel();\n  } catch (e) {\n    loginError.textContent = e.message || t('ad.badToken');\n    loginError.hidden = false;\n  }\n}\n$('#btn-login').addEventListener('click', login);\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\n\nfunction showPanel() {\n  loginCard.hidden = true;\n  panel.hidden = false;\n  loadStats();\n  loadList();\n}\n\n$('#btn-logout').addEventListener('click', async () => {\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\n  location.reload();\n});\n\n/* ---------- \u7EDF\u8BA1 ---------- */\nasync function loadStats() {\n  try {\n    const s = await api('/api/admin/stats');\n    statsRow.replaceChildren(\n      el('div', { class: 'stat-card' }, el('b', {}, String(s.total)), el('small', { class: 'muted' }, t('ad.total'))),\n      el('div', { class: 'stat-card' }, el('b', {}, String(s.active)), el('small', { class: 'muted' }, t('ad.active'))),\n      el('div', { class: 'stat-card' }, el('b', {}, String(s.files)), el('small', { class: 'muted' }, t('ad.files'))),\n      el('div', { class: 'stat-card' }, el('b', {}, String(s.texts)), el('small', { class: 'muted' }, t('ad.texts'))),\n      el('div', { class: 'stat-card' }, el('b', {}, fmtBytes(s.totalBytes)), el('small', { class: 'muted' }, t('ad.storage'))),\n      el('div', { class: 'stat-card' }, el('b', {}, String(s.todayCreated)), el('small', { class: 'muted' }, t('ad.today'))),\n    );\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\n}\n\n/* ---------- \u5217\u8868 ---------- */\nconst STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };\nconst KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };\n\nasync function loadList() {\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));\n  try {\n    const data = await api(`/api/admin/shares?limit=${LIMIT}&offset=${offset}`);\n    total = data.total;\n    const rows = data.rows ?? [];\n    tbody.replaceChildren();\n    for (const r of rows) {\n      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n      tbody.append(\n        el('tr', {},\n          el('td', { class: 'mono' }, r.code),\n          el('td', {}, el('span', { class: `badge kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind))),\n          el('td', { class: 'wrap' }, content),\n          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),\n          el('td', {}, fmtDate(r.created_at)),\n          el('td', {}, el('button', { class: 'btn danger small', onclick: () => remove(r) }, t('ad.delete'))),\n        ),\n      );\n    }\n    if (rows.length === 0) {\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));\n    }\n    updatePager();\n  } catch (e) {\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));\n  }\n}\n\nfunction updatePager() {\n  const page = Math.floor(offset / LIMIT) + 1;\n  const pages = Math.max(1, Math.ceil(total / LIMIT));\n  pageInfo.textContent = t('ad.page', page, pages, total);\n  btnPrev.disabled = offset <= 0;\n  btnNext.disabled = offset + LIMIT >= total;\n}\nbtnPrev.addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); loadList(); });\nbtnNext.addEventListener('click', () => { offset += LIMIT; loadList(); });\nbtnRefresh.addEventListener('click', () => { loadStats(); loadList(); });\n\n/* ---------- \u5220\u9664 ---------- */\nasync function remove(r) {\n  const preview = r.kind === 'text'\n    ? `${(r.text_preview || t('ad.textFallback')).slice(0, 20)}\u2026`\n    : (r.filename || t('ad.unnamed'));\n  const msg = t(r.kind === 'text' ? 'ad.confirmText' : 'ad.confirmFile', preview, r.code);\n  if (!confirm(msg)) return;\n  try {\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\n    toast(t('ad.deleted'), 'ok');\n    loadStats();\n    loadList();\n  } catch (e) {\n    toast(e.message || t('ad.deleteFail'), 'error');\n  }\n}\n", "js/common.js": "import { t } from './i18n.js';\n\nexport const $ = (sel, el = document) => el.querySelector(sel);\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\n\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\nexport async function api(path, opts = {}) {\n  const res = await fetch(path, {\n    method: opts.method || 'GET',\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\n  });\n  let data = null;\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\n  if (!res.ok) {\n    const e = new Error(data?.message || t('req.fail', res.status));\n    e.code = data?.error || 'unknown';\n    e.status = res.status;\n    throw e;\n  }\n  return data;\n}\n\nexport function fmtBytes(n) {\n  if (!Number.isFinite(n) || n < 0) return '-';\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\n  let i = 0;\n  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 10) / 10;\n  return `${v} ${units[i]}`;\n}\n\n/** \u6C38\u4E45\u5206\u4EAB\u8FD4\u56DE null,\u7531\u8C03\u7528\u65B9\u6309\u8BED\u8A00\u6E32\u67D3\u300C\u6C38\u4E45 / Forever\u300D */\nexport function fmtDate(ms) {\n  if (ms === null || ms === undefined) return null;\n  const d = new Date(ms);\n  const p = (x) => String(x).padStart(2, '0');\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\n}\n\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6,\u5355\u4F4D\u8BCD\u968F\u8BED\u8A00 */\nexport function fmtDuration(sec) {\n  if (!Number.isFinite(sec) || sec < 0) return '-';\n  if (sec < 1) return t('dur.ms');\n  if (sec < 60) return t('dur.s', Math.round(sec));\n  if (sec < 3600) {\n    const m = Math.floor(sec / 60);\n    const s = Math.round(sec % 60);\n    return s ? t('dur.hm', m, s) : t('dur.h', m);\n  }\n  if (sec < 86400) {\n    const h = Math.floor(sec / 3600);\n    const m = Math.round((sec % 3600) / 60);\n    return m ? t('dur.hH', h, m) : t('dur.hH2', h);\n  }\n  return t('dur.d', Math.round(sec / 86400));\n}\n\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\nexport function iconFor(name = '', mime = '') {\n  const ext = (name.split('.').pop() || '').toLowerCase();\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\n  return '\u{1F4E6}';\n}\n\nexport async function copyText(text) {\n  try {\n    await navigator.clipboard.writeText(text);\n    return true;\n  } catch { /* \u8D70\u964D\u7EA7 */ }\n  try {\n    const ta = document.createElement('textarea');\n    ta.value = text;\n    ta.style.cssText = 'position:fixed;opacity:0';\n    document.body.appendChild(ta);\n    ta.select();\n    const ok = document.execCommand('copy');\n    ta.remove();\n    return ok;\n  } catch {\n    return false;\n  }\n}\n\nexport function toast(msg, type = 'info') {\n  let host = $('#toast-host');\n  if (!host) {\n    host = document.createElement('div');\n    host.id = 'toast-host';\n    document.body.appendChild(host);\n  }\n  const t = document.createElement('div');\n  t.className = `toast ${type}`;\n  t.textContent = msg;\n  host.appendChild(t);\n  requestAnimationFrame(() => t.classList.add('show'));\n  setTimeout(() => {\n    t.classList.remove('show');\n    setTimeout(() => t.remove(), 300);\n  }, 2400);\n}\n\nexport function initTheme() {\n  const btn = $('#theme-btn');\n  const meta = $('meta[name=\"theme-color\"]');\n  const sync = () => {\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\n  };\n  sync();\n  btn?.addEventListener('click', () => {\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\n    localStorage.setItem('theme', next);\n    document.documentElement.dataset.theme = next;\n    sync();\n  });\n}\n\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\nexport function el(tag, attrs = {}, ...children) {\n  const n = document.createElement(tag);\n  for (const [k, v] of Object.entries(attrs)) {\n    if (k === 'class') n.className = v;\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\n    else n[k] = v;\n  }\n  for (const c of children.flat(Infinity)) {\n    if (c == null || c === false) continue;\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\n  }\n  return n;\n}\n", "js/i18n.js": `/**
+ * \u8F7B\u91CF i18n:HTML \u9759\u6001\u6587\u6848\u7528 data-i18n / data-i18n-ph / data-i18n-title \u6807\u8BB0,
+ * JS \u52A8\u6001\u5B57\u7B26\u4E32\u7528 t('key', \u2026args);{n} \u5360\u4F4D\u3002
+ * \u8BED\u8A00\u4F18\u5148\u7EA7:localStorage('lang') > \u6D4F\u89C8\u5668\u8BED\u8A00(en \u5F00\u5934\u2192\u82F1\u6587)> \u4E2D\u6587\u3002
+ * \u5207\u6362\u540E\u8C03\u7528\u5DF2\u6CE8\u518C\u7684\u91CD\u6E32\u67D3\u94A9\u5B50(\u5404\u9875\u9762 setLang \u65F6\u767B\u8BB0)\u3002
+ */
+
+const DICT = {
+  zh: {
+    'doc.send': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001',
+    'doc.pickup': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D6\u4EF6',
+    'doc.admin': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u7BA1\u7406',
+    'doc.404': '404 - \u6587\u4EF6\u4E2D\u8F6C\u7AD9',
+
+    'brand.name': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9',
+    'brand.tagline': '\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u6587\u4EF6',
+    'brand.pickup': '\u53D6\u4EF6',
+    'brand.admin': '\u7BA1\u7406\u540E\u53F0',
+    'nav.pickup': '\u53D6\u4EF6',
+    'nav.send': '\u53D1\u9001',
+    'nav.theme': '\u5207\u6362\u4E3B\u9898',
+    'nav.lang': '\u5207\u6362\u8BED\u8A00',
+    'foot': '\u81EA\u6258\u7BA1 \xB7 \u8FD0\u884C\u4E8E Cloudflare Workers',
+
+    'tab.file': '\u53D1\u6587\u4EF6',
+    'tab.text': '\u53D1\u6587\u672C',
+    'dz.click': '\u70B9\u51FB\u9009\u62E9\u6587\u4EF6',
+    'dz.drop': ',\u6216\u62D6\u62FD / \u7C98\u8D34\u5230\u6B64\u5904',
+    'dz.aria': '\u9009\u62E9\u6587\u4EF6',
+    'dz.hint': '\u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',
+    'dz.hintMax': '\u5355\u4E2A\u6587\u4EF6\u6700\u5927 {0} \xB7 \u652F\u6301\u591A\u9009,\u4E0A\u4F20\u540E\u751F\u6210\u53D6\u4EF6\u53E3\u4EE4',
+    'remove': '\u79FB\u9664',
+    'text.placeholder': '\u7C98\u8D34\u6216\u8F93\u5165\u8981\u5206\u4EAB\u7684\u6587\u672C\u2026',
+    'opt.expiry': '\u6709\u6548\u671F',
+    'opt.pickups': '\u53EF\u53D6\u6B21\u6570',
+    'seg.1d': '1 \u5929', 'seg.7d': '7 \u5929', 'seg.30d': '30 \u5929', 'seg.forever': '\u6C38\u4E45',
+    'seg.p1': '1 \u6B21', 'seg.p5': '5 \u6B21', 'seg.punlimited': '\u4E0D\u9650',
+    'btn.upload': '\u5F00\u59CB\u4E0A\u4F20',
+    'btn.genCode': '\u751F\u6210\u53E3\u4EE4',
+    'btn.cancel': '\u53D6\u6D88',
+    'btn.copyCode': '\u590D\u5236\u53E3\u4EE4',
+    'btn.copyLink': '\u590D\u5236\u94FE\u63A5',
+    'btn.copyAll': '\u590D\u5236\u5168\u90E8\u53E3\u4EE4',
+    'btn.again': '\u518D\u6765\u4E00\u4E2A',
+
+    'prog.preparing': '\u51C6\u5907\u4E2D\u2026',
+    'prog.uploading': '\u4E0A\u4F20\u4E2D\u2026',
+    'prog.init': '\u521D\u59CB\u5316\u2026',
+    'prog.merging': '\u6B63\u5728\u5408\u5E76\u5206\u7247\u2026',
+    'prog.file': '\u7B2C {0}/{1} \u4E2A',
+    'prog.part': '\u7B2C {0}/{1} \u7247',
+    'prog.eta': '\u5269\u4F59 {0}',
+    'prog.retry': '\u4E0A\u4F20\u5931\u8D25,\u91CD\u8BD5 {0}/3\u2026',
+
+    'result.ok': '\u2705 \u5206\u4EAB\u6210\u529F,\u628A\u53E3\u4EE4\u53D1\u7ED9\u5BF9\u65B9',
+    'result.okBatch': '\u2705 {0} \u4E2A\u6587\u4EF6\u5206\u4EAB\u6210\u529F',
+    'qr.hint': '\u626B\u7801\u76F4\u63A5\u53D6\u4EF6',
+    'label.code': '\u53E3\u4EE4',
+    'label.link': '\u94FE\u63A5',
+    'copied': '{0}\u5DF2\u590D\u5236',
+    'copy.fail': '\u590D\u5236\u5931\u8D25,\u8BF7\u624B\u52A8\u590D\u5236',
+    'copied.btn': '\u2713 \u5DF2\u590D\u5236',
+
+    'meta.after': '{0}\u540E\u8FC7\u671F({1})',
+    'meta.forever': '\u6C38\u4E45\u6709\u6548',
+    'meta.pickups': '\u53EF\u53D6 {0} \u6B21',
+    'meta.unlimited': '\u53D6\u4EF6\u6B21\u6570\u4E0D\u9650',
+    'files.count': '{0} \u4E2A\u6587\u4EF6 \xB7 \u5171 {1}',
+    'unknown.type': '\u672A\u77E5\u7C7B\u578B',
+    'text.counter': '{0} / {1}',
+
+    'err.oversize': '\u6587\u4EF6\u8D85\u8FC7 {0} \u4E0A\u9650({1})',
+    'err.empty': '\u7A7A\u6587\u4EF6\u4E0D\u80FD\u5206\u4EAB',
+    'err.tooMany': '\u4E00\u6B21\u6700\u591A\u5206\u4EAB {0} \u4E2A\u6587\u4EF6',
+    'err.upload': '\u4E0A\u4F20\u5931\u8D25,\u8BF7\u91CD\u8BD5',
+    'err.submit': '\u63D0\u4EA4\u5931\u8D25',
+    'req.fail': '\u8BF7\u6C42\u5931\u8D25 ({0})',
+    'toast.cancelled': '\u5DF2\u53D6\u6D88\u4E0A\u4F20',
+
+    'dur.s': '{0} \u79D2',
+    'dur.ms': '<1 \u79D2',
+    'dur.hm': '{0} \u5206 {1} \u79D2',
+    'dur.h': '{0} \u5206',
+    'dur.hH': '{0} \u65F6 {1} \u5206',
+    'dur.hH2': '{0} \u65F6',
+    'dur.d': '{0} \u5929',
+
+    'pk.title': '\u8F93\u5165\u53D6\u4EF6\u53E3\u4EE4',
+    'pk.sub': '\u8F93\u5165 6 \u4F4D\u6570\u5B57\u53E3\u4EE4,\u53D6\u51FA\u5206\u4EAB\u7684\u6587\u4EF6\u6216\u6587\u672C',
+    'pk.aria': '6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',
+    'pk.fail': '\u53D6\u4EF6\u5931\u8D25',
+    'pk.textChars': '\u6587\u672C \xB7 {0} \u5B57\u7B26',
+    'pk.copyAllText': '\u4E00\u952E\u590D\u5236\u5168\u6587',
+    'pk.download': '\u2B07 \u4E0B\u8F7D\u6587\u4EF6',
+    'pk.again': '\u91CD\u65B0\u8F93\u5165',
+    'pk.expireAt': '{0} \u8FC7\u671F',
+    'pk.left': '\u5269\u4F59\u53EF\u53D6 {0} \u6B21',
+    'pk.unnamed': '\u672A\u547D\u540D\u6587\u4EF6',
+    'copied.text': '\u5DF2\u590D\u5236\u5168\u6587',
+
+    'ad.loginTitle': '\u7BA1\u7406\u767B\u5F55',
+    'ad.loginSub': '\u8F93\u5165\u90E8\u7F72\u65F6\u8BBE\u7F6E\u7684\u7BA1\u7406\u4EE4\u724C(ADMIN_TOKEN)',
+    'ad.tokenPh': '\u7BA1\u7406\u4EE4\u724C',
+    'ad.login': '\u767B\u5F55',
+    'ad.badToken': '\u4EE4\u724C\u65E0\u6548',
+    'ad.total': '\u5206\u4EAB\u603B\u6570',
+    'ad.active': '\u5F53\u524D\u6709\u6548',
+    'ad.files': '\u6587\u4EF6',
+    'ad.texts': '\u6587\u672C',
+    'ad.storage': '\u5360\u7528\u5B58\u50A8',
+    'ad.today': '\u4ECA\u65E5\u65B0\u589E',
+    'ad.th.code': '\u53E3\u4EE4', 'ad.th.kind': '\u7C7B\u578B', 'ad.th.content': '\u5185\u5BB9',
+    'ad.th.size': '\u5927\u5C0F', 'ad.th.pickups': '\u5DF2\u53D6/\u4E0A\u9650', 'ad.th.expire': '\u8FC7\u671F\u65F6\u95F4',
+    'ad.th.status': '\u72B6\u6001', 'ad.th.created': '\u521B\u5EFA\u65F6\u95F4',
+    'ad.kind.file': '\u6587\u4EF6', 'ad.kind.text': '\u6587\u672C',
+    'ad.st.active': '\u6709\u6548', 'ad.st.expired': '\u5DF2\u8FC7\u671F', 'ad.st.exhausted': '\u5DF2\u53D6\u5B8C',
+    'ad.loading': '\u52A0\u8F7D\u4E2D\u2026',
+    'ad.empty': '\u6682\u65E0\u5206\u4EAB',
+    'ad.loadFail': '\u52A0\u8F7D\u5931\u8D25',
+    'ad.page': '\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761',
+    'ad.prev': '\u4E0A\u4E00\u9875', 'ad.next': '\u4E0B\u4E00\u9875',
+    'ad.refresh': '\u21BB \u5237\u65B0',
+    'ad.logout': '\u9000\u51FA\u767B\u5F55',
+    'ad.delete': '\u5220\u9664',
+    'ad.deleted': '\u5DF2\u5220\u9664',
+    'ad.deleteFail': '\u5220\u9664\u5931\u8D25',
+    'ad.confirmFile': '\u786E\u5B9A\u5220\u9664\u6587\u4EF6\u300C{0}\u300D?\u6587\u4EF6\u5C06\u4ECE\u5B58\u50A8\u4E2D\u79FB\u9664,\u53E3\u4EE4 {1} \u5C06\u7ACB\u5373\u5931\u6548\u3002',
+    'ad.confirmText': '\u786E\u5B9A\u5220\u9664\u6587\u672C\u300C{0}\u300D?\u6587\u672C\u5C06\u4ECE\u5B58\u50A8\u4E2D\u79FB\u9664,\u53E3\u4EE4 {1} \u5C06\u7ACB\u5373\u5931\u6548\u3002',
+    'ad.textFallback': '(\u6587\u672C)',
+    'ad.unnamed': '(\u672A\u547D\u540D)',
+    'ad.chars': '{0} \u5B57',
+    'ad.forever': '\u6C38\u4E45',
+
+    'nf.title': '\u9875\u9762\u4E0D\u5B58\u5728',
+    'nf.body': '\u4F60\u8981\u627E\u7684\u9875\u9762\u4E0D\u5728\u4E2D\u8F6C\u7AD9\u91CC',
+    'nf.send': '\u53BB\u53D1\u9001',
+    'nf.pickup': '\u53BB\u53D6\u4EF6',
+  },
+
+  en: {
+    'doc.send': 'file-relay - Send',
+    'doc.pickup': 'file-relay - Pickup',
+    'doc.admin': 'file-relay - Admin',
+    'doc.404': '404 - file-relay',
+
+    'brand.name': 'file-relay',
+    'brand.tagline': 'Files, picked up like parcels',
+    'brand.pickup': 'Pickup',
+    'brand.admin': 'Admin',
+    'nav.pickup': 'Pick up',
+    'nav.send': 'Send',
+    'nav.theme': 'Toggle theme',
+    'nav.lang': 'Switch language',
+    'foot': 'Self-hosted \xB7 Running on Cloudflare Workers',
+
+    'tab.file': 'Send file',
+    'tab.text': 'Send text',
+    'dz.click': 'Click to choose files',
+    'dz.drop': ', or drag & drop / paste here',
+    'dz.aria': 'Choose files',
+    'dz.hint': 'A 6-digit pickup code is generated after upload',
+    'dz.hintMax': 'Up to {0} per file \xB7 multiple selection supported',
+    'remove': 'Remove',
+    'text.placeholder': 'Paste or type the text to share\u2026',
+    'opt.expiry': 'Expires',
+    'opt.pickups': 'Pickup limit',
+    'seg.1d': '1 day', 'seg.7d': '7 days', 'seg.30d': '30 days', 'seg.forever': 'Forever',
+    'seg.p1': '1\xD7', 'seg.p5': '5\xD7', 'seg.punlimited': 'Unlimited',
+    'btn.upload': 'Start upload',
+    'btn.genCode': 'Generate code',
+    'btn.cancel': 'Cancel',
+    'btn.copyCode': 'Copy code',
+    'btn.copyLink': 'Copy link',
+    'btn.copyAll': 'Copy all codes',
+    'btn.again': 'New share',
+
+    'prog.preparing': 'Preparing\u2026',
+    'prog.uploading': 'Uploading\u2026',
+    'prog.init': 'Initializing\u2026',
+    'prog.merging': 'Merging parts\u2026',
+    'prog.file': 'file {0}/{1}',
+    'prog.part': 'part {0}/{1}',
+    'prog.eta': 'ETA {0}',
+    'prog.retry': 'Upload failed, retrying {0}/3\u2026',
+
+    'result.ok': '\u2705 Shared! Send the code to the recipient',
+    'result.okBatch': '\u2705 {0} files shared successfully',
+    'qr.hint': 'Scan to pick up',
+    'label.code': 'code',
+    'label.link': 'link',
+    'copied': '{0} copied',
+    'copy.fail': 'Copy failed, please copy manually',
+    'copied.btn': '\u2713 Copied',
+
+    'meta.after': 'Expires in {0} ({1})',
+    'meta.forever': 'Never expires',
+    'meta.pickups': '{0} pickups allowed',
+    'meta.unlimited': 'Unlimited pickups',
+    'files.count': '{0} files \xB7 {1} total',
+    'unknown.type': 'unknown type',
+    'text.counter': '{0} / {1}',
+
+    'err.oversize': 'File exceeds the {0} limit ({1})',
+    'err.empty': 'Empty files cannot be shared',
+    'err.tooMany': 'Up to {0} files per batch',
+    'err.upload': 'Upload failed, please retry',
+    'err.submit': 'Submission failed',
+    'req.fail': 'Request failed ({0})',
+    'toast.cancelled': 'Upload cancelled',
+
+    'dur.s': '{0}s',
+    'dur.ms': '<1s',
+    'dur.hm': '{0}m {1}s',
+    'dur.h': '{0}m',
+    'dur.hH': '{0}h {1}m',
+    'dur.hH2': '{0}h',
+    'dur.d': '{0}d',
+
+    'pk.title': 'Enter pickup code',
+    'pk.sub': 'Enter the 6-digit code to retrieve the shared file or text',
+    'pk.aria': '6-digit pickup code',
+    'pk.fail': 'Pickup failed',
+    'pk.textChars': 'Text \xB7 {0} chars',
+    'pk.copyAllText': 'Copy all text',
+    'pk.download': '\u2B07 Download file',
+    'pk.again': 'Try another code',
+    'pk.expireAt': 'Expires {0}',
+    'pk.left': '{0} pickups left',
+    'pk.unnamed': 'Untitled file',
+    'copied.text': 'Full text copied',
+
+    'ad.loginTitle': 'Admin login',
+    'ad.loginSub': 'Enter the admin token (ADMIN_TOKEN) set at deployment',
+    'ad.tokenPh': 'Admin token',
+    'ad.login': 'Log in',
+    'ad.badToken': 'Invalid token',
+    'ad.total': 'Total shares',
+    'ad.active': 'Active',
+    'ad.files': 'Files',
+    'ad.texts': 'Texts',
+    'ad.storage': 'Storage used',
+    'ad.today': 'New today',
+    'ad.th.code': 'Code', 'ad.th.kind': 'Type', 'ad.th.content': 'Content',
+    'ad.th.size': 'Size', 'ad.th.pickups': 'Picked/Limit', 'ad.th.expire': 'Expires',
+    'ad.th.status': 'Status', 'ad.th.created': 'Created',
+    'ad.kind.file': 'File', 'ad.kind.text': 'Text',
+    'ad.st.active': 'Active', 'ad.st.expired': 'Expired', 'ad.st.exhausted': 'Exhausted',
+    'ad.loading': 'Loading\u2026',
+    'ad.empty': 'No shares yet',
+    'ad.loadFail': 'Failed to load',
+    'ad.page': 'Page {0} / {1} \xB7 {2} total',
+    'ad.prev': 'Prev', 'ad.next': 'Next',
+    'ad.refresh': '\u21BB Refresh',
+    'ad.logout': 'Log out',
+    'ad.delete': 'Delete',
+    'ad.deleted': 'Deleted',
+    'ad.deleteFail': 'Delete failed',
+    'ad.confirmFile': 'Delete file "{0}"? It will be removed from storage and code {1} will stop working immediately.',
+    'ad.confirmText': 'Delete text "{0}"? It will be removed from storage and code {1} will stop working immediately.',
+    'ad.textFallback': '(text)',
+    'ad.unnamed': '(unnamed)',
+    'ad.chars': '{0} chars',
+    'ad.forever': 'Forever',
+
+    'nf.title': 'Page not found',
+    'nf.body': "The page you're looking for isn't in this relay",
+    'nf.send': 'Send files',
+    'nf.pickup': 'Pick up',
+  },
+};
+
+export let LANG =
+  localStorage.getItem('lang') ||
+  ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
+
+/** \u53D6\u8BCD:\u5F53\u524D\u8BED\u8A00 \u2192 \u4E2D\u6587\u515C\u5E95 \u2192 key \u672C\u8EAB;{0}{1}\u2026 \u4F9D\u6B21\u66FF\u6362 */
+export function t(key, ...args) {
+  let s = (DICT[LANG] && DICT[LANG][key]) ?? DICT.zh[key] ?? key;
+  args.forEach((v, i) => { s = s.replaceAll(\`{\${i}}\`, String(v)); });
+  return s;
+}
+
+const rerenders = [];
+/** \u5404\u9875\u9762\u767B\u8BB0:\u8BED\u8A00\u5207\u6362\u540E\u91CD\u7B97\u52A8\u6001\u6587\u6848 */
+export function onLangChange(fn) { rerenders.push(fn); }
+
+function applyLang() {
+  document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';
+  document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = t(n.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach((n) => { n.placeholder = t(n.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-title]').forEach((n) => { n.title = t(n.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((n) => { n.setAttribute('aria-label', t(n.dataset.i18nAria)); });
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = LANG === 'en' ? '\u4E2D' : 'EN';
+}
+
+export function initI18n() {
+  applyLang();
+  document.getElementById('lang-btn')?.addEventListener('click', () => {
+    LANG = LANG === 'en' ? 'zh' : 'en';
+    localStorage.setItem('lang', LANG);
+    applyLang();
+    rerenders.forEach((fn) => fn());
+  });
+}
+`, "js/index.js": "import { $, $$, api, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme, el } from './common.js';\nimport { t, onLangChange, initI18n } from './i18n.js';\n\ninitTheme();\ninitI18n();\n\nconst els = {\n  dropzone: $('#dropzone'),\n  dzHint: $('#dz-hint'),\n  fileInput: $('#file-input'),\n  fileList: $('#file-list'),\n  textInput: $('#text-input'),\n  textCounter: $('#text-counter'),\n  btnUpload: $('#btn-upload'),\n  btnText: $('#btn-text'),\n  progress: $('#progress'),\n  progressFill: $('#progress-fill'),\n  progressText: $('#progress-text'),\n  btnCancel: $('#btn-cancel'),\n  results: $('#results'),\n};\n\nconst MAX_SIZE_FALLBACK = 2 * 1024 * 1024 * 1024;\nconst MAX_BATCH = 10;\nlet cfg = { fileBackend: 'r2', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config \u52A0\u8F7D\u540E\u8986\u76D6\nlet MAX_SIZE = MAX_SIZE_FALLBACK;\n\nlet files = []; // \u5F85\u4E0A\u4F20\u961F\u5217(File[])\nlet queueUI = new Map(); // File \u2192 { row, bar, status }\nlet queueState = new Map(); // File \u2192 'idle' | { done: code } | 'fail'(\u8BED\u8A00\u5207\u6362\u540E\u91CD\u6E32\u67D3\u7528)\nlet session = null; // \u8FDB\u884C\u4E2D\u7684 R2 \u5206\u7247\u4F1A\u8BDD { uploadId, partSize, parts }\nlet currentXhr = null;\nlet cancelled = false;\nlet uploading = false;\nlet lastResults = [];\n\n/* \u670D\u52A1\u7AEF\u914D\u7F6E:\u51B3\u5B9A\u8D70\u5206\u7247\u4E0A\u4F20(R2 \u5927\u5B58\u50A8)\u8FD8\u662F\u5355\u8BF7\u6C42\u76F4\u4F20(KV \u5C0F\u5B58\u50A8) */\nfunction updateHint() {\n  els.dzHint.textContent = t('dz.hintMax', fmtBytes(MAX_SIZE));\n}\n(async () => {\n  try {\n    cfg = await api('/api/config');\n    MAX_SIZE = cfg.maxFileSize || MAX_SIZE_FALLBACK;\n    updateHint();\n  } catch { /* \u4FDD\u6301\u9ED8\u8BA4 */ }\n})();\n\n/* \u8BED\u8A00\u5207\u6362:\u91CD\u7B97\u52A8\u6001\u6587\u6848\u4E0E\u7ED3\u679C\u5361\u7247 */\nonLangChange(() => {\n  if (cfg.maxFileSize) updateHint();\n  renderQueue();\n  if (lastResults.length) showResults(lastResults);\n});\n\n/* ---------- tabs ---------- */\n$$('.tab').forEach((tb) =>\n  tb.addEventListener('click', () => {\n    if (uploading) return; // \u4E0A\u4F20\u4E2D\u7981\u6B62\u5207\u6362\n    $$('.tab').forEach((x) => x.classList.toggle('active', x === tb));\n    const tab = tb.dataset.tab;\n    $('#panel-file').hidden = tab !== 'file';\n    $('#panel-text').hidden = tab !== 'text';\n    els.btnUpload.hidden = tab !== 'file';\n    els.btnText.hidden = tab !== 'text';\n    hideResult();\n  }),\n);\n\n/* ---------- segmented \u9009\u9879 ---------- */\nfor (const id of ['seg-expiry', 'seg-pickups']) {\n  $(`#${id}`).addEventListener('click', (e) => {\n    const b = e.target.closest('button');\n    if (!b) return;\n    $$('button', $(`#${id}`)).forEach((x) => x.classList.toggle('active', x === b));\n  });\n}\nfunction readOptions() {\n  const exp = $('#seg-expiry .active').dataset.v;\n  const pk = $('#seg-pickups .active').dataset.v;\n  return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk) };\n}\n\n/* ---------- \u6587\u4EF6\u961F\u5217:\u70B9\u51FB / \u5168\u7A97\u53E3\u62D6\u62FD / \u667A\u80FD\u7C98\u8D34,\u518D\u9009\u5373\u6574\u4F53\u66FF\u6362 ---------- */\nels.dropzone.addEventListener('click', () => els.fileInput.click());\nels.dropzone.addEventListener('keydown', (e) => {\n  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); els.fileInput.click(); }\n});\nels.fileInput.addEventListener('change', () => {\n  setFiles([...els.fileInput.files]);\n  els.fileInput.value = '';\n});\n\nfunction showTab(name) {\n  const tb = $(`.tab[data-tab=\"${name}\"]`);\n  if (tb && !tb.classList.contains('active')) tb.click(); // \u4E0A\u4F20\u4E2D\u65F6 tab \u5904\u7406\u5668\u81EA\u5DF1\u4F1A\u62D2\u7EDD\n}\n\n/* \u62D6\u5230\u9875\u9762\u4EFB\u610F\u4F4D\u7F6E\u90FD\u9AD8\u4EAE\u5E76\u53EF\u653E\u4E0B(\u4E0D\u518D\u8981\u6C42\u7CBE\u786E\u547D\u4E2D\u62D6\u62FD\u533A) */\nlet dragDepth = 0;\nwindow.addEventListener('dragenter', (e) => {\n  if (![...(e.dataTransfer?.types || [])].includes('Files')) return;\n  dragDepth++;\n  if (!uploading) els.dropzone.classList.add('dragover');\n});\nwindow.addEventListener('dragleave', () => {\n  if (--dragDepth <= 0) { dragDepth = 0; els.dropzone.classList.remove('dragover'); }\n});\nwindow.addEventListener('dragover', (e) => e.preventDefault());\nwindow.addEventListener('drop', (e) => {\n  e.preventDefault();\n  dragDepth = 0;\n  els.dropzone.classList.remove('dragover');\n  if (e.dataTransfer?.files?.length) setFiles([...e.dataTransfer.files]);\n});\n\n/* \u7C98\u8D34\u667A\u80FD\u8DEF\u7531:\u7C98\u8D34\u6587\u4EF6\u2192\u6587\u4EF6\u9875;\u6587\u4EF6\u9875\u7C98\u8D34\u7EAF\u6587\u672C\u2192\u81EA\u52A8\u5207\u5230\u6587\u672C\u9875 */\ndocument.addEventListener('paste', (e) => {\n  if (e.target?.closest?.('textarea, input')) return; // \u8F93\u5165\u6846\u5185\u7C98\u8D34\u8D70\u9ED8\u8BA4\u884C\u4E3A\n  if (e.clipboardData?.files?.length) {\n    setFiles([...e.clipboardData.files]);\n    return;\n  }\n  const text = e.clipboardData?.getData('text/plain');\n  if (text && $('#panel-text').hidden) {\n    showTab('text');\n    els.textInput.value = text;\n    els.textInput.dispatchEvent(new Event('input'));\n  }\n});\n\nfunction setFiles(list) {\n  if (uploading) return;\n  const ok = [];\n  for (const f of list) {\n    if (f.size > MAX_SIZE) { toast(t('err.oversize', fmtBytes(MAX_SIZE), fmtBytes(f.size)), 'error'); continue; }\n    if (f.size < 1) { toast(t('err.empty'), 'error'); continue; }\n    ok.push(f);\n  }\n  if (ok.length > MAX_BATCH) {\n    toast(t('err.tooMany', MAX_BATCH), 'error');\n    ok.length = MAX_BATCH;\n  }\n  files = ok; // \u66FF\u6362\u8BED\u4E49:\u518D\u6B21\u9009\u62E9\u5373\u91CD\u7F6E\u961F\u5217\n  queueState = new Map(files.map((f) => [f, 'idle']));\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0;\n  hideResult();\n}\n\nfunction statusText(f, st) {\n  if (st === 'fail') return '\u2717';\n  if (st && st.done) return `\u2713 ${st.done}`;\n  return fmtBytes(f.size);\n}\n\nfunction renderQueue() {\n  els.fileList.replaceChildren();\n  queueUI = new Map();\n  files.forEach((f) => {\n    const st = queueState.get(f) || 'idle';\n    const bar = el('div', { class: 'fr-bar' });\n    const status = el('small', { class: 'fr-status' }, statusText(f, st));\n    const row = el('div', {\n      class: `file-row${st === 'fail' ? ' fail' : ''}${st && st.done ? ' done' : ''}`,\n    });\n    row.replaceChildren(\n      el('span', { class: 'fr-icon' }, iconFor(f.name, f.type)),\n      el('div', { class: 'fr-meta' },\n        el('b', { title: f.name }, f.name),\n        el('small', {}, `${fmtBytes(f.size)} \xB7 ${f.type || t('unknown.type')}`),\n      ),\n      status,\n      el('button', { class: 'icon-btn fr-remove', title: t('remove'), type: 'button', onclick: () => removeFile(f) }, '\u2715'),\n      bar,\n    );\n    if (st && st.done) bar.style.width = '100%';\n    queueUI.set(f, { row, bar, status });\n    els.fileList.append(row);\n  });\n  els.fileList.hidden = files.length === 0;\n  els.dropzone.hidden = files.length > 0;\n}\n\nfunction removeFile(f) {\n  if (uploading) return;\n  files = files.filter((x) => x !== f);\n  queueState.delete(f);\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0;\n}\n\n/* ---------- \u6587\u672C\u8F93\u5165 ---------- */\nels.textInput.addEventListener('input', () => {\n  els.textCounter.textContent = t('text.counter', els.textInput.value.length, 65536);\n  els.btnText.disabled = !els.textInput.value.trim();\n});\n\n/* ---------- \u4E0A\u4F20:\u961F\u5217\u987A\u5E8F\u9010\u4E2A,\u805A\u5408\u8FDB\u5EA6 + \u6BCF\u884C\u8FF7\u4F60\u8FDB\u5EA6 ---------- */\nels.btnUpload.addEventListener('click', startUpload);\nels.btnCancel.addEventListener('click', cancelUpload);\nels.btnText.addEventListener('click', submitText);\n\nfunction sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }\n\nfunction xhrPut(url, blob, onProgress) {\n  return new Promise((resolve) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open('PUT', url);\n    xhr.onload = () => {\n      let etag = null;\n      try { etag = JSON.parse(xhr.responseText).etag; } catch { /* ignore */ }\n      resolve(xhr.status >= 200 && xhr.status < 300 && etag ? etag : null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\n/** \u5355\u7247\u6700\u591A\u91CD\u8BD5 3 \u6B21,\u9000\u907F 1s/2s/4s */\nasync function putPartWithRetry(uploadId, n, blob, onProgress) {\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) return null;\n    const etag = await xhrPut(`/api/uploads/${uploadId}/parts/${n}`, blob, onProgress);\n    if (etag) return etag;\n    await sleep([1000, 2000, 4000][attempt] || 4000);\n  }\n  return null;\n}\n\nfunction xhrJson(method, url, blob, onProgress) {\n  return new Promise((resolve) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open(method, url);\n    xhr.onload = () => {\n      if (xhr.status >= 200 && xhr.status < 300) {\n        try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }\n      }\n      resolve(null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\nlet speedState = { t: 0, loaded: 0, speed: 0 };\nlet curFileIdx = 0;\nlet curFileTotal = 1;\nfunction updateAggregate(loaded, total) {\n  const pct = Math.min(100, Math.floor((loaded / total) * 100));\n  els.progressFill.style.width = pct + '%';\n  const now = performance.now();\n  if (speedState.t && loaded > speedState.loaded) {\n    const inst = (loaded - speedState.loaded) / ((now - speedState.t) / 1000);\n    speedState.speed = speedState.speed ? speedState.speed * 0.7 + inst * 0.3 : inst;\n  }\n  speedState.t = now;\n  speedState.loaded = loaded;\n  let text = `${pct}% \xB7 ${fmtBytes(loaded)} / ${fmtBytes(total)} \xB7 ${fmtBytes(speedState.speed)}/s`;\n  if (speedState.speed > 1024 && loaded > 0 && loaded < total) {\n    text += ` \xB7 ${t('prog.eta', fmtDuration((total - loaded) / speedState.speed))}`;\n  }\n  if (curFileTotal > 1) text += ` \xB7 ${t('prog.file', curFileIdx, curFileTotal)}`;\n  els.progressText.textContent = text;\n}\n\n/** \u7B49\u5F85\u6001(\u521D\u59CB\u5316/\u91CD\u8BD5\u95F4\u9694/\u5408\u5E76\u5206\u7247):\u8FDB\u5EA6\u6761\u53E0\u52A0\u6D41\u5149\u52A8\u753B */\nfunction setPending(on) {\n  els.progressFill.classList.toggle('pending', on);\n}\n\nasync function startUpload() {\n  if (!files.length || uploading) return;\n  uploading = true;\n  cancelled = false;\n  speedState = { t: 0, loaded: 0, speed: 0 };\n  curFileIdx = 0;\n  curFileTotal = files.length;\n  const opts = readOptions();\n  const responses = [];\n  const totalBytes = files.reduce((s, f) => s + f.size, 0);\n  let baseBytes = 0;\n  setBusy(true);\n  els.progress.hidden = false;\n  els.progressFill.style.width = '0%';\n  setPending(false);\n  els.progressText.textContent = t('prog.preparing');\n\n  for (let i = 0; i < files.length; i++) {\n    if (cancelled) break;\n    const f = files[i];\n    const ui = queueUI.get(f);\n    curFileIdx = i + 1;\n    ui.row.classList.add('uploading');\n    els.progressText.textContent = t('prog.uploading');\n    const onProgress = (loaded) => {\n      ui.bar.style.width = Math.min(100, (loaded / f.size) * 100) + '%';\n      updateAggregate(baseBytes + loaded, totalBytes);\n    };\n    try {\n      const res = cfg.fileBackend === 'kv'\n        ? await directUpload(f, opts, onProgress)\n        : await multipartUpload(f, opts, onProgress);\n      responses.push(res);\n      baseBytes += f.size;\n      queueState.set(f, { done: res.code });\n      ui.bar.style.width = '100%';\n      ui.row.classList.add('done');\n      ui.status.textContent = `\u2713 ${res.code}`;\n    } catch (e) {\n      queueState.set(f, 'fail');\n      ui.row.classList.add('fail');\n      ui.status.textContent = '\u2717';\n      if (!cancelled) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');\n      break; // \u4E00\u4E2A\u5931\u8D25\u5373\u505C,\u4FDD\u7559\u961F\u5217\u4FBF\u4E8E\u5904\u7406\n    }\n  }\n\n  uploading = false;\n  els.progress.hidden = true;\n  setPending(false);\n  setBusy(false);\n  if (cancelled) toast(t('toast.cancelled'));\n  if (responses.length) showResults(responses);\n}\n\n/* ---------- \u5C0F\u5B58\u50A8\u6A21\u5F0F(KV):\u5355\u8BF7\u6C42\u76F4\u4F20,\u5931\u8D25\u6574\u6587\u4EF6\u91CD\u53D1 ---------- */\nasync function directUpload(f, opts, onProgress) {\n  const qs = new URLSearchParams({\n    filename: f.name,\n    mime: f.type || 'application/octet-stream',\n    expiry: opts.expiry,\n  });\n  if (opts.maxPickups !== null) qs.set('maxPickups', String(opts.maxPickups));\n\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) throw new Error('cancelled');\n    setPending(false);\n    const res = await xhrJson('POST', `/api/shares/file?${qs}`, f, onProgress);\n    if (res) return res;\n    if (cancelled) throw new Error('cancelled');\n    setPending(true);\n    els.progressText.textContent = t('prog.retry', attempt + 1);\n    await sleep([1000, 2000][attempt] || 4000);\n  }\n  throw new Error(t('err.upload'));\n}\n\n/* ---------- \u5927\u5B58\u50A8\u6A21\u5F0F(R2):\u5206\u7247\u4E0A\u4F20 ---------- */\nasync function multipartUpload(f, opts, onProgress) {\n  setPending(true);\n  els.progressText.textContent = t('prog.init');\n  const init = await api('/api/uploads/init', {\n    method: 'POST',\n    body: { filename: f.name, size: f.size, mime: f.type || 'application/octet-stream', ...opts },\n  });\n  session = init;\n  setPending(false);\n\n  const etags = [];\n  let doneBytes = 0;\n  for (let i = 1; i <= init.parts; i++) {\n    const blob = f.slice((i - 1) * init.partSize, Math.min(i * init.partSize, f.size));\n    const etag = await putPartWithRetry(init.uploadId, i, blob, (loaded) =>\n      onProgress(doneBytes + loaded),\n    );\n    if (!etag) {\n      const wasCancelled = cancelled;\n      await abortUpload();\n      throw new Error(wasCancelled ? 'cancelled' : t('err.upload'));\n    }\n    etags.push({ partNumber: i, etag });\n    doneBytes += blob.size;\n  }\n  if (cancelled) throw new Error('cancelled');\n\n  els.progressFill.style.width = '100%';\n  setPending(true);\n  els.progressText.textContent = t('prog.merging');\n  try {\n    const res = await api(`/api/uploads/${init.uploadId}/complete`, {\n      method: 'POST',\n      body: { parts: etags },\n    });\n    session = null;\n    return res;\n  } catch (e) {\n    session = null;\n    throw e;\n  }\n}\n\nasync function cancelUpload() {\n  cancelled = true;\n  currentXhr?.abort();\n  await abortUpload();\n}\n\nasync function abortUpload() {\n  if (!session) return;\n  const id = session.uploadId;\n  session = null;\n  try { await api(`/api/uploads/${id}/abort`, { method: 'POST', body: {} }); } catch { /* ignore */ }\n}\n\nfunction setBusy(busy) {\n  els.btnUpload.disabled = busy || files.length === 0;\n  els.btnText.disabled = busy || !els.textInput.value.trim();\n}\n\n/* \u5237\u65B0/\u5173\u9875\u65F6\u5C3D\u529B\u901A\u77E5\u670D\u52A1\u7AEF\u653E\u5F03(\u4E0D\u662F\u65AD\u70B9\u7EED\u4F20) */\nwindow.addEventListener('pagehide', () => {\n  if (session) navigator.sendBeacon(`/api/uploads/${session.uploadId}/abort`);\n});\n\n/* ---------- \u6587\u672C\u5206\u4EAB ---------- */\nasync function submitText() {\n  const text = els.textInput.value;\n  if (!text.trim()) return;\n  setBusy(true);\n  try {\n    const res = await api('/api/shares/text', { method: 'POST', body: { text, ...readOptions() } });\n    showResults([res]);\n  } catch (e) {\n    toast(e.message || t('err.submit'), 'error');\n  } finally {\n    setBusy(false);\n  }\n}\n\n/* ---------- \u7ED3\u679C\u5361\u7247(\u591A\u6587\u4EF6\u65F6\u9010\u5F20\u5806\u53E0 + \u6279\u91CF\u5934\u90E8) ---------- */\nfunction qrSvgFor(url) {\n  /* vendored qrcode-generator:\u5168\u5C40 window.qrcode(classic script \u5148\u4E8E\u672C\u6A21\u5757\u52A0\u8F7D) */\n  try {\n    const qr = window.qrcode(0, 'M');\n    qr.addData(url);\n    qr.make();\n    const holder = document.createElement('div');\n    holder.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true, alt: t('qr.hint') });\n    return holder.firstElementChild;\n  } catch { return null; }\n}\n\nfunction metaText(r) {\n  const parts = [];\n  parts.push(r.expireAt\n    ? t('meta.after', fmtDuration((r.expireAt - Date.now()) / 1000), fmtDate(r.expireAt))\n    : t('meta.forever'));\n  parts.push(r.maxPickups === null || r.maxPickups === undefined ? t('meta.unlimited') : t('meta.pickups', r.maxPickups));\n  if (r.kind === 'file' && r.size) parts.push(fmtBytes(r.size));\n  return parts.join(' \xB7 ');\n}\n\nfunction buildResultCard(r, compact) {\n  const link = `${location.origin}/pickup?code=${r.code}`;\n  const qr = qrSvgFor(link);\n  const col = el('div', { class: 'result-col' },\n    compact && r.kind === 'file' && r.filename ? el('div', { class: 'result-file-name' }, r.filename) : null,\n    el('div', { class: 'code' }, ...r.code.split('').map((d) => el('span', {}, d))),\n    el('div', { class: 'result-link' }, link),\n    el('div', { class: 'result-meta' }, metaText(r)),\n  );\n  const main = el('div', { class: 'result-main' },\n    qr ? el('div', { class: 'qr-wrap', title: t('qr.hint') }, qr, el('div', { class: 'qr-hint' }, t('qr.hint'))) : null,\n    col,\n  );\n  return el('div', { class: 'result' },\n    compact ? null : el('p', { class: 'result-title' }, t('result.ok')),\n    main,\n    el('div', { class: 'btn-row' },\n      el('button', { class: 'btn primary', type: 'button', onclick: (e) => copyBtn(e.currentTarget, r.code, t('label.code')) }, t('btn.copyCode')),\n      el('button', { class: 'btn', type: 'button', onclick: (e) => copyBtn(e.currentTarget, link, t('label.link')) }, t('btn.copyLink')),\n      compact ? null : el('button', { class: 'btn ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n    ),\n  );\n}\n\nfunction showResults(list) {\n  lastResults = list;\n  els.results.replaceChildren();\n  if (list.length > 1) {\n    els.results.append(\n      el('div', { class: 'result-batch-head' },\n        el('p', { class: 'result-title batch' }, t('result.okBatch', list.length)),\n        el('div', { class: 'btn-row' },\n          el('button', {\n            class: 'btn small', type: 'button',\n            onclick: async (e) => {\n              const ok = await copyText(list.map((r) => r.code).join('\\n'));\n              toast(ok ? t('copied', t('label.code')) : t('copy.fail'), ok ? 'ok' : 'error');\n            },\n          }, t('btn.copyAll')),\n          el('button', { class: 'btn small ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n        ),\n      ),\n    );\n  }\n  for (const r of list) els.results.append(buildResultCard(r, list.length > 1));\n  els.results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });\n}\n\nfunction resetAll() {\n  files = [];\n  queueState = new Map();\n  renderQueue();\n  els.btnUpload.disabled = true;\n  els.textInput.value = '';\n  els.textCounter.textContent = t('text.counter', 0, 65536);\n  els.btnText.disabled = true;\n  hideResult();\n}\n\n/** \u590D\u5236\u6210\u529F\u540E\u6309\u94AE\u77ED\u6682\u53D8\u6210\"\u2713 \u5DF2\u590D\u5236\" */\nasync function copyBtn(btn, text, label) {\n  const ok = await copyText(text);\n  toast(ok ? t('copied', label) : t('copy.fail'), ok ? 'ok' : 'error');\n  if (!ok) return;\n  btn.textContent = t('copied.btn');\n  btn.disabled = true;\n  setTimeout(() => { btn.textContent = label === t('label.code') ? t('btn.copyCode') : t('btn.copyLink'); btn.disabled = false; }, 1500);\n}\n\nfunction hideResult() {\n  lastResults = [];\n  els.results.replaceChildren();\n}\n", "js/pickup.js": "import { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js';\nimport { t, onLangChange, initI18n } from './i18n.js';\n\ninitTheme();\ninitI18n();\n\nconst boxes = $$('.otp-box');\nconst row = $('#otp-row');\nconst errorBox = $('#pickup-error');\nconst resultCard = $('#pickup-result');\nlet querying = false;\nlet last = null; // { res, code } \u8BED\u8A00\u5207\u6362\u65F6\u91CD\u6E32\u67D3\n\nonLangChange(() => {\n  if (last && !resultCard.hidden) render(last.res, last.code);\n});\n\nfunction value() {\n  return boxes.map((b) => b.value).join('');\n}\n\n/* \u586B\u5165 1-6 \u4F4D\u6570\u5B57:\u591F 6 \u4F4D\u81EA\u52A8\u63D0\u4EA4,\u5426\u5219\u805A\u7126\u5230\u4E0B\u4E00\u4E2A\u7A7A\u683C */\nfunction fill(digits) {\n  boxes.forEach((b, i) => { b.value = digits[i] || ''; });\n  hideError();\n  if (digits.length === 6) {\n    boxes[5].focus();\n    if (!querying) submit();\n  } else {\n    boxes[Math.min(digits.length, 5)].focus();\n  }\n}\n\nboxes.forEach((box, i) => {\n  box.addEventListener('input', () => {\n    box.value = box.value.replace(/\\D/g, '').slice(0, 1);\n    hideError();\n    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();\n    if (value().length === 6 && !querying) submit();\n  });\n  box.addEventListener('keydown', (e) => {\n    if (e.key === 'Backspace' && !box.value && i > 0) {\n      e.preventDefault();\n      boxes[i - 1].value = '';\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowLeft' && i > 0) {\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {\n      boxes[i + 1].focus();\n    } else if (e.key === 'Enter' && value().length === 6 && !querying) {\n      submit();\n    }\n  });\n  box.addEventListener('paste', (e) => {\n    e.preventDefault();\n    const digits = (e.clipboardData.getData('text') || '').replace(/\\D/g, '').slice(0, 6);\n    if (digits) fill(digits);\n  });\n  box.addEventListener('focus', () => box.select());\n});\n\nfunction showError(msg) {\n  errorBox.textContent = msg;\n  errorBox.hidden = false;\n  row.classList.remove('shake');\n  void row.offsetWidth; /* \u5F3A\u5236 reflow,\u91CD\u542F\u52A8\u753B */\n  row.classList.add('shake');\n}\nfunction hideError() {\n  errorBox.hidden = true;\n}\n\nasync function submit() {\n  const code = value();\n  querying = true;\n  hideError();\n  resultCard.hidden = true;\n  try {\n    const res = await api('/api/pickup', { method: 'POST', body: { code } });\n    render(res, code);\n  } catch (e) {\n    showError(e.message || t('pk.fail'));\n  } finally {\n    querying = false;\n  }\n}\n\nfunction metaLine(res) {\n  const parts = [];\n  parts.push(res.expireAt ? t('pk.expireAt', fmtDate(res.expireAt)) : t('meta.forever'));\n  parts.push(res.pickupsLeft === null || res.pickupsLeft === undefined ? t('meta.unlimited') : t('pk.left', res.pickupsLeft));\n  return parts.join(' \xB7 ');\n}\n\nfunction render(res, code) {\n  last = { res, code };\n  resultCard.replaceChildren();\n\n  if (res.kind === 'text') {\n    const pre = el('pre', { class: 'text-body' });\n    pre.textContent = res.text ?? '';\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, '\u{1F4DD}'),\n        el('div', { class: 'sc-meta' }, el('b', {}, t('pk.textChars', res.size))),\n      ),\n      pre,\n      el('div', { class: 'btn-row' },\n        el('button', { class: 'btn primary', onclick: async () => {\n          (await copyText(res.text)) ? toast(t('copied.text'), 'ok') : toast(t('copy.fail'), 'error');\n        } }, t('pk.copyAllText')),\n      ),\n    );\n  } else {\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, iconFor(res.filename, res.mime)),\n        el('div', { class: 'sc-meta' },\n          el('b', {}, res.filename || t('pk.unnamed')),\n          el('small', {}, `${fmtBytes(res.size)} \xB7 ${res.mime || t('unknown.type')}`),\n        ),\n      ),\n      el('a', {\n        class: 'btn primary block',\n        href: `/api/pickup/${code}/download`,\n        download: res.filename || 'file',\n      }, t('pk.download')),\n    );\n  }\n\n  resultCard.append(\n    el('div', { class: 'meta-line' }, metaLine(res)),\n    el('div', { class: 'btn-row' },\n      el('button', { class: 'btn ghost', onclick: reset }, t('pk.again')),\n    ),\n  );\n  resultCard.hidden = false;\n}\n\nfunction reset() {\n  last = null;\n  resultCard.hidden = true;\n  boxes.forEach((b) => { b.value = ''; });\n  hideError();\n  boxes[0].focus();\n}\n\n/* \u652F\u6301 /pickup?code=xxxxxx \u5E26\u53C2\u8FDB\u5165 */\nconst fromUrl = new URLSearchParams(location.search).get('code');\nif (fromUrl && /^\\d{1,6}$/.test(fromUrl)) {\n  fill(fromUrl.slice(0, 6));\n} else {\n  boxes[0].focus();\n}\n", "js/vendor/qrcode.js": `//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\\u0020width="';
+      img += size;
+      img += '"';
+      img += '\\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '\u2588\u2588': '\u2588',
+        '\u2588 ': '\u2580',
+        ' \u2588': '\u2584',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '\u2588\u2588': '\u2580',
+        '\u2588 ': '\u2580',
+        ' \u2588': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '\u2588';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '\u2588';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('\u2580');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('\u2588\u2588');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+`, "pickup.html": `<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="\u8F93\u5165 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4,\u53D6\u51FA\u5206\u4EAB\u7ED9\u4F60\u7684\u6587\u4EF6\u6216\u6587\u672C">
 <meta name="theme-color" content="#f6f7fb">
-<title>\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D6\u4EF6</title>
+<title data-i18n="doc.pickup">\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D6\u4EF6</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\u{1F4E6}</text></svg>">
 <link rel="stylesheet" href="/style.css">
 <script>
@@ -280,19 +2876,20 @@ setInlineAssets({ "404.html": `<!doctype html>
 <header class="topbar">
   <div class="brand">
     <span class="logo">\u{1F4E6}</span>
-    <div><b>\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b><small>\u53D6\u4EF6</small></div>
+    <div><b data-i18n="brand.name">\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b><small data-i18n="brand.pickup">\u53D6\u4EF6</small></div>
   </div>
   <div class="actions">
-    <button id="theme-btn" class="icon-btn" title="\u5207\u6362\u4E3B\u9898">\u{1F317}</button>
-    <a class="btn ghost small" href="/">\u53D1\u9001</a>
+    <button id="lang-btn" class="icon-btn lang-btn" data-i18n-title="nav.lang">EN</button>
+    <button id="theme-btn" class="icon-btn" data-i18n-title="nav.theme">\u{1F317}</button>
+    <a class="btn ghost small" href="/" data-i18n="nav.send">\u53D1\u9001</a>
   </div>
 </header>
 
 <main class="container narrow">
   <section class="card center" id="pickup-input-card">
-    <h2 class="title">\u8F93\u5165\u53D6\u4EF6\u53E3\u4EE4</h2>
-    <p class="muted" style="margin:0 0 16px">\u8F93\u5165 6 \u4F4D\u6570\u5B57\u53E3\u4EE4,\u53D6\u51FA\u5206\u4EAB\u7684\u6587\u4EF6\u6216\u6587\u672C</p>
-    <div id="otp-row" class="otp-row" role="group" aria-label="6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4">
+    <h2 class="title" data-i18n="pk.title">\u8F93\u5165\u53D6\u4EF6\u53E3\u4EE4</h2>
+    <p class="muted pk-sub" data-i18n="pk.sub">\u8F93\u5165 6 \u4F4D\u6570\u5B57\u53E3\u4EE4,\u53D6\u51FA\u5206\u4EAB\u7684\u6587\u4EF6\u6216\u6587\u672C</p>
+    <div id="otp-row" class="otp-row" role="group" data-i18n-aria="pk.aria" aria-label="6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4">
       <input class="otp-box" inputmode="numeric" autocomplete="one-time-code" maxlength="1" autofocus>
       <input class="otp-box" inputmode="numeric" autocomplete="one-time-code" maxlength="1">
       <input class="otp-box" inputmode="numeric" autocomplete="one-time-code" maxlength="1">
@@ -306,12 +2903,12 @@ setInlineAssets({ "404.html": `<!doctype html>
   <section class="card" id="pickup-result" hidden></section>
 </main>
 
-<footer class="foot">\u81EA\u6258\u7BA1 \xB7 \u8FD0\u884C\u4E8E Cloudflare Workers</footer>
+<footer class="foot" data-i18n="foot">\u81EA\u6258\u7BA1 \xB7 \u8FD0\u884C\u4E8E Cloudflare Workers</footer>
 
 <script type="module" src="/js/pickup.js"><\/script>
 </body>
 </html>
-`, "style.css": "/* ============ \u4E3B\u9898\u53D8\u91CF ============ */\n:root {\n  --bg: #f6f7fb;\n  --card: #ffffff;\n  --text: #1a1d27;\n  --muted: #6b7280;\n  --border: #e5e7eb;\n  --accent: #4f6ef7;\n  --accent-bright: #7c9bff;\n  --accent-text: #ffffff;\n  --accent-soft: #eef1fe;\n  --violet: #7c5cff;\n  --danger: #e5484d;\n  --danger-soft: #fdecec;\n  --ok: #2fa96e;\n  --ok-soft: #e8f7f0;\n  --warn: #d97a1a;\n  --warn-soft: #fdf3e7;\n  --radius: 16px;\n  --radius-sm: 10px;\n  --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 10px 30px rgba(16, 24, 40, 0.07);\n  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 2px 8px rgba(16, 24, 40, 0.05);\n}\n[data-theme='dark'] {\n  --bg: #0f1117;\n  --card: #171a23;\n  --text: #e8eaf2;\n  --muted: #9aa1b2;\n  --border: #262b38;\n  --accent: #6d8bff;\n  --accent-bright: #8aa2ff;\n  --accent-text: #0f1117;\n  --accent-soft: #1e2438;\n  --violet: #9d86ff;\n  --danger: #ff6b6f;\n  --danger-soft: #2e1c1e;\n  --ok: #4ecb8f;\n  --ok-soft: #16261e;\n  --warn: #f0a35a;\n  --warn-soft: #2a2118;\n  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);\n  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);\n}\n\n* { box-sizing: border-box; }\nhtml { -webkit-text-size-adjust: 100%; }\nbody {\n  margin: 0;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto,\n    'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei', sans-serif;\n  font-size: 15px;\n  line-height: 1.6;\n  color: var(--text);\n  min-height: 100vh;\n  background:\n    radial-gradient(1100px 480px at 85% -12%, rgba(79, 110, 247, 0.12), transparent 62%),\n    radial-gradient(800px 420px at -12% 6%, rgba(124, 92, 255, 0.07), transparent 58%),\n    var(--bg);\n  -webkit-font-smoothing: antialiased;\n  text-rendering: optimizeLegibility;\n}\n[data-theme='dark'] body {\n  background:\n    radial-gradient(1100px 480px at 85% -12%, rgba(109, 139, 255, 0.13), transparent 62%),\n    radial-gradient(800px 420px at -12% 6%, rgba(124, 92, 255, 0.08), transparent 58%),\n    var(--bg);\n}\n\n::selection { background: var(--accent); color: #fff; }\n\n/* \u7EC6\u6EDA\u52A8\u6761 */\n* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }\n::-webkit-scrollbar { width: 8px; height: 8px; }\n::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }\n::-webkit-scrollbar-track { background: transparent; }\n\n/* ============ \u9876\u680F ============ */\n.topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 18px 20px 10px;\n  max-width: 720px;\n  margin: 0 auto;\n}\n.topbar.wide { max-width: 1080px; }\n.brand { display: flex; align-items: center; gap: 12px; }\n.brand .logo {\n  display: grid;\n  place-items: center;\n  width: 40px;\n  height: 40px;\n  font-size: 20px;\n  border-radius: 13px;\n  background: linear-gradient(135deg, var(--accent), var(--violet));\n  box-shadow: 0 3px 10px rgba(79, 110, 247, 0.35);\n}\n.brand b { font-size: 16px; font-weight: 650; display: block; line-height: 1.25; letter-spacing: 0.01em; }\n.brand small { color: var(--muted); font-size: 12px; }\n.actions { display: flex; align-items: center; gap: 8px; }\n\n/* ============ \u5E03\u5C40 ============ */\n.container { max-width: 720px; margin: 0 auto; padding: 6px 16px 48px; }\n.container.wide { max-width: 1080px; }\n.container.narrow { max-width: 440px; }\n.card {\n  background: var(--card);\n  border: 1px solid var(--border);\n  border-radius: var(--radius);\n  box-shadow: var(--shadow);\n  padding: 24px;\n  margin-bottom: 16px;\n}\n.card.center { text-align: center; }\n.muted { color: var(--muted); }\n.row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }\n\n.foot {\n  text-align: center;\n  color: var(--muted);\n  font-size: 12px;\n  padding: 30px 16px 10px;\n  opacity: 0.85;\n}\n\n/* ============ \u6309\u94AE ============ */\n.btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  padding: 10px 18px;\n  border-radius: var(--radius-sm);\n  border: 1px solid var(--border);\n  background: var(--card);\n  color: var(--text);\n  font-size: 14px;\n  font-weight: 500;\n  cursor: pointer;\n  text-decoration: none;\n  transition: filter 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s, border-color 0.15s, color 0.15s;\n}\n.btn:hover { filter: brightness(1.04); }\n.btn:active { transform: scale(0.98); }\n.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }\n.btn.primary {\n  background: linear-gradient(135deg, var(--accent-bright), var(--accent));\n  border-color: transparent;\n  color: var(--accent-text);\n  font-weight: 600;\n  box-shadow: 0 2px 6px rgba(79, 110, 247, 0.3), 0 6px 18px rgba(79, 110, 247, 0.2);\n}\n.btn.primary:hover { transform: translateY(-1px); filter: brightness(1.05); }\n.btn.primary:active { transform: translateY(0) scale(0.99); }\n.btn.ghost { background: transparent; }\n.btn.ghost:hover { border-color: var(--accent); color: var(--accent); }\n.btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }\n.btn.small { padding: 6px 12px; font-size: 13px; border-radius: 8px; }\n.btn.block { width: 100%; margin-top: 14px; }\n.btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }\n.icon-btn {\n  background: transparent;\n  border: none;\n  font-size: 17px;\n  cursor: pointer;\n  color: var(--muted);\n  padding: 7px 9px;\n  border-radius: 9px;\n  transition: background 0.15s, color 0.15s, transform 0.15s;\n}\n.icon-btn:hover { background: var(--accent-soft); color: var(--accent); }\n.icon-btn:active { transform: scale(0.92); }\n\n/* ============ Tabs ============ */\n.tabs {\n  display: flex;\n  background: var(--bg);\n  border-radius: 12px;\n  padding: 4px;\n  margin-bottom: 20px;\n}\n.tab {\n  flex: 1;\n  padding: 9px;\n  border: none;\n  background: transparent;\n  border-radius: 9px;\n  font-size: 14px;\n  font-weight: 500;\n  color: var(--muted);\n  cursor: pointer;\n  transition: color 0.15s, background 0.15s, box-shadow 0.15s;\n}\n.tab.active { background: var(--card); color: var(--text); font-weight: 600; box-shadow: var(--shadow-sm); }\n\n/* ============ \u62D6\u62FD\u533A ============ */\n.dropzone {\n  border: 2px dashed var(--border);\n  border-radius: 14px;\n  padding: 38px 16px;\n  text-align: center;\n  cursor: pointer;\n  transition: border-color 0.15s, background 0.15s;\n  outline: none;\n}\n.dropzone:hover, .dropzone:focus-visible, .dropzone.dragover {\n  border-color: var(--accent);\n  background: var(--accent-soft);\n}\n.dz-icon { font-size: 36px; margin-bottom: 8px; transition: transform 0.2s ease; }\n.dropzone:hover .dz-icon, .dropzone.dragover .dz-icon { transform: scale(1.1) translateY(-2px); }\n.dropzone p { margin: 0 0 6px; font-size: 14px; }\n.dropzone p b { font-weight: 600; }\n.dropzone small { color: var(--muted); font-size: 13px; }\n\n.file-info {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  background: var(--accent-soft);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 12px 14px;\n}\n.fi-icon { font-size: 24px; }\n.fi-meta { flex: 1; min-width: 0; }\n.fi-meta b { display: block; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.fi-meta small { color: var(--muted); }\n\n/* ============ \u6587\u672C\u8F93\u5165 ============ */\ntextarea {\n  width: 100%;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--bg);\n  color: var(--text);\n  padding: 12px 14px;\n  font-size: 14px;\n  font-family: inherit;\n  line-height: 1.65;\n  resize: vertical;\n  transition: border-color 0.15s, box-shadow 0.15s;\n}\ntextarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }\n\n/* ============ \u9009\u9879 segmented ============ */\n.options { display: flex; flex-direction: column; gap: 14px; margin: 20px 0 6px; }\n.opt-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }\n.seg { display: flex; background: var(--bg); border-radius: 10px; padding: 3px; }\n.seg button {\n  flex: 1;\n  padding: 7px 4px;\n  border: none;\n  background: transparent;\n  border-radius: 8px;\n  font-size: 13px;\n  color: var(--muted);\n  cursor: pointer;\n  transition: color 0.15s, background 0.15s, box-shadow 0.15s;\n}\n.seg button.active { background: var(--card); color: var(--text); font-weight: 600; box-shadow: var(--shadow-sm); }\n\n/* ============ \u8FDB\u5EA6\u6761 ============ */\n.progress { margin-top: 18px; }\n.bar {\n  height: 12px;\n  background: var(--bg);\n  border-radius: 999px;\n  overflow: hidden;\n  box-shadow: inset 0 1px 2px rgba(16, 24, 40, 0.06);\n}\n.bar > div {\n  height: 100%;\n  width: 0;\n  background: linear-gradient(90deg, var(--accent), var(--accent-bright));\n  border-radius: 999px;\n  box-shadow: 0 1px 4px rgba(79, 110, 247, 0.35);\n  transition: width 0.2s ease;\n}\n.progress small { color: var(--muted); font-variant-numeric: tabular-nums; }\n\n/* ============ \u7ED3\u679C\u5361\u7247 ============ */\n.result {\n  margin-top: 18px;\n  padding: 22px 20px;\n  border-radius: var(--radius);\n  background: var(--ok-soft);\n  border: 1px solid var(--border);\n  text-align: center;\n}\n.result-title { margin: 0 0 6px; font-weight: 600; font-size: 15px; }\n.code { display: flex; justify-content: center; gap: 10px; margin: 10px 0 12px; }\n.code span {\n  display: grid;\n  place-items: center;\n  min-width: 56px;\n  height: 68px;\n  font-size: 38px;\n  font-weight: 700;\n  font-variant-numeric: tabular-nums;\n  color: var(--text);\n  background: var(--card);\n  border: 1px solid var(--border);\n  border-bottom: 3px solid var(--accent);\n  border-radius: 14px;\n  box-shadow: var(--shadow-sm);\n  user-select: all;\n}\n.result-link { color: var(--muted); font-size: 12px; word-break: break-all; }\n.result-meta { color: var(--muted); font-size: 13px; margin-top: 8px; }\n.result .btn-row { justify-content: center; }\n\n/* ============ \u53D6\u4EF6\u9875 ============ */\nh2.title { margin: 8px 0 6px; font-size: 22px; font-weight: 700; line-height: 1.3; }\n.error-box {\n  margin-top: 14px;\n  padding: 12px 14px;\n  border-radius: var(--radius-sm);\n  background: var(--danger-soft);\n  color: var(--danger);\n  font-size: 14px;\n}\n.share-card {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  background: var(--bg);\n  border-radius: 14px;\n  padding: 16px;\n}\n.sc-icon { font-size: 32px; }\n.sc-meta { flex: 1; min-width: 0; text-align: left; }\n.sc-meta b { display: block; font-size: 15px; font-weight: 600; word-break: break-all; }\n.sc-meta small { color: var(--muted); }\n.meta-line { color: var(--muted); font-size: 13px; margin: 12px 2px 0; text-align: left; }\npre.text-body {\n  background: var(--bg);\n  border-radius: 14px;\n  padding: 14px 16px;\n  white-space: pre-wrap;\n  word-break: break-all;\n  font-size: 13px;\n  line-height: 1.7;\n  max-height: 340px;\n  overflow: auto;\n  margin: 0 0 4px;\n  text-align: left;\n}\n\n/* ============ \u7BA1\u7406\u9875 ============ */\n.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }\n.stat-card {\n  background: var(--card);\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  padding: 16px 12px;\n  text-align: center;\n  box-shadow: var(--shadow-sm);\n}\n.stat-card b { display: block; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.3; }\n.stat-card small { color: var(--muted); font-size: 12px; }\n.table-wrap { overflow-x: auto; }\ntable { width: 100%; border-collapse: collapse; font-size: 13px; }\nth, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }\nth { color: var(--muted); font-weight: 500; font-size: 12px; }\ntbody tr:last-child td { border-bottom: none; }\ntbody tr:hover td { background: var(--accent-soft); }\ntd.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }\n.badge {\n  display: inline-block;\n  padding: 2px 9px;\n  border-radius: 999px;\n  font-size: 12px;\n  font-weight: 500;\n}\n.badge.active { background: var(--ok-soft); color: var(--ok); }\n.badge.expired { background: var(--danger-soft); color: var(--danger); }\n.badge.exhausted { background: var(--warn-soft); color: var(--warn); }\n.badge.kind-file { background: var(--accent-soft); color: var(--accent); }\n.badge.kind-text { background: var(--bg); color: var(--muted); }\n.token-input {\n  width: 100%;\n  padding: 11px 13px;\n  border: 1px solid var(--border);\n  border-radius: var(--radius-sm);\n  background: var(--bg);\n  color: var(--text);\n  font-size: 14px;\n  margin: 12px 0 4px;\n  transition: border-color 0.15s, box-shadow 0.15s;\n}\n.token-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }\n.admin-foot { margin-top: 18px; display: flex; justify-content: flex-end; }\n.pager-btns { display: flex; gap: 8px; }\n\n/* ============ toast ============ */\n#toast-host {\n  position: fixed;\n  bottom: calc(24px + env(safe-area-inset-bottom, 0px));\n  left: 50%;\n  transform: translateX(-50%);\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  z-index: 99;\n  pointer-events: none;\n}\n.toast {\n  background: var(--text);\n  color: var(--bg);\n  padding: 10px 18px;\n  border-radius: 12px;\n  font-size: 14px;\n  opacity: 0;\n  transform: translateY(8px);\n  transition: opacity 0.25s, transform 0.25s;\n  box-shadow: var(--shadow);\n}\n.toast.show { opacity: 1; transform: translateY(0); }\n.toast.ok { background: var(--ok); color: #fff; }\n.toast.error { background: var(--danger); color: #fff; }\n\n/* ============ \u79FB\u52A8\u7AEF ============ */\n@media (max-width: 640px) {\n  .card { padding: 18px; }\n  .topbar { padding: 14px 16px 8px; }\n  .code { gap: 8px; }\n  .code span { min-width: 46px; height: 58px; font-size: 30px; border-radius: 12px; }\n  .otp-row { gap: 6px; }\n  .otp-box { width: 42px; height: 54px; font-size: 24px; }\n  .btn-row .btn { flex: 1; }\n  th, td { padding: 8px 6px; }\n  .row-between { flex-wrap: wrap; }\n  .stat-card b { font-size: 21px; }\n}\n\n/* ============ \u52A8\u6548 ============ */\n@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }\n@keyframes pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }\n.card { animation: fade-up 0.35s ease both; }\n.result:not([hidden]) { animation: pop 0.3s ease both; }\n\n@keyframes shake {\n  10%, 90% { transform: translateX(-2px); }\n  20%, 80% { transform: translateX(3px); }\n  30%, 50%, 70% { transform: translateX(-5px); }\n  40%, 60% { transform: translateX(5px); }\n}\n.shake { animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }\n\n/* \u952E\u76D8\u7126\u70B9\u53EF\u89C1\u6027 */\n.btn:focus-visible, .icon-btn:focus-visible, .tab:focus-visible,\n.seg button:focus-visible, a:focus-visible, .otp-box:focus-visible {\n  outline: 2px solid var(--accent);\n  outline-offset: 2px;\n}\n\n/* \u53D6\u4EF6\u9875:6 \u683C\u53E3\u4EE4\u8F93\u5165 */\n.otp-row { display: flex; gap: 8px; justify-content: center; margin: 4px 0 8px; }\n.otp-box {\n  width: 46px;\n  height: 58px;\n  padding: 0;\n  text-align: center;\n  font-size: 26px;\n  font-weight: 600;\n  font-variant-numeric: tabular-nums;\n  border: 2px solid var(--border);\n  border-radius: 12px;\n  background: var(--bg);\n  color: var(--text);\n  caret-color: var(--accent);\n  transition: border-color 0.15s, box-shadow 0.15s;\n}\n.otp-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }\n\n/* \u8FDB\u5EA6\u6761:\u7B49\u5F85\u6001(\u521D\u59CB\u5316/\u91CD\u8BD5/\u5408\u5E76\u5206\u7247)\u6D41\u5149 */\n@keyframes pending-slide { from { background-position: 0 0; } to { background-position: 34px 0; } }\n.bar > div.pending {\n  background-image: repeating-linear-gradient(\n    45deg,\n    rgba(255, 255, 255, 0) 0,\n    rgba(255, 255, 255, 0) 12px,\n    rgba(255, 255, 255, 0.28) 12px,\n    rgba(255, 255, 255, 0.28) 24px\n  );\n  background-size: 34px 34px;\n  animation: pending-slide 0.8s linear infinite;\n}\n\n.mono { font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace; font-variant-numeric: tabular-nums; }\n\n/* \u52A8\u753B\u654F\u611F\u7528\u6237 */\n@media (prefers-reduced-motion: reduce) {\n  *, *::before, *::after {\n    animation-duration: 0.01ms !important;\n    animation-iteration-count: 1 !important;\n    transition-duration: 0.01ms !important;\n  }\n}\n" });
+`, "style.css": "/* ============ \u4E3B\u9898\u53D8\u91CF ============ */\n:root {\n  --bg: #f6f7fb;\n  --card: #ffffff;\n  --text: #1a1d27;\n  --muted: #5a6472;\n  --border: #e5e7eb;\n  --accent: #4f6ef7;\n  --accent-bright: #7c9bff;\n  --accent-text: #ffffff;\n  --accent-soft: #eef1fe;\n  --violet: #7c5cff;\n  --danger: #e5484d;\n  --danger-soft: #fdecec;\n  --ok: #2fa96e;\n  --ok-soft: #e8f7f0;\n  --warn: #d97a1a;\n  --warn-soft: #fdf3e7;\n  --radius: 16px;\n  --radius-sm: 10px;\n  --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 10px 30px rgba(16, 24, 40, 0.07);\n  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 2px 8px rgba(16, 24, 40, 0.05);\n  /* \u52A8\u6548\u8282\u594F:\u5FEB(\u53CD\u9988)/\u4E2D(\u9762\u677F)/\u6162(\u5165\u573A),\u7EDF\u4E00\u7F13\u52A8 */\n  --t-fast: 0.15s;\n  --t-med: 0.25s;\n  --t-slow: 0.35s;\n  --ease: cubic-bezier(0.2, 0, 0, 1);\n}\n[data-theme='dark'] {\n  --bg: #0f1117;\n  --card: #171a23;\n  --text: #e8eaf2;\n  --muted: #9aa1b2;\n  --border: #262b38;\n  --accent: #6d8bff;\n  --accent-bright: #8aa2ff;\n  --accent-text: #0f1117;\n  --accent-soft: #1e2438;\n  --violet: #9d86ff;\n  --danger: #ff6b6f;\n  --danger-soft: #2e1c1e;\n  --ok: #4ecb8f;\n  --ok-soft: #16261e;\n  --warn: #f0a35a;\n  --warn-soft: #2a2118;\n  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);\n  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);\n}\n\n* { box-sizing: border-box; }\nhtml { -webkit-text-size-adjust: 100%; }\nbody {\n  margin: 0;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto,\n    'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei', sans-serif;\n  font-size: 15px;\n  line-height: 1.6;\n  color: var(--text);\n  min-height: 100vh;\n  background:\n    radial-gradient(1100px 480px at 85% -12%, rgba(79, 110, 247, 0.12), transparent 62%),\n    radial-gradient(800px 420px at -12% 6%, rgba(124, 92, 255, 0.07), transparent 58%),\n    var(--bg);\n  -webkit-font-smoothing: antialiased;\n  text-rendering: optimizeLegibility;\n}\n[data-theme='dark'] body {\n  background:\n    radial-gradient(1100px 480px at 85% -12%, rgba(109, 139, 255, 0.13), transparent 62%),\n    radial-gradient(800px 420px at -12% 6%, rgba(124, 92, 255, 0.08), transparent 58%),\n    var(--bg);\n}\n\n::selection { background: var(--accent); color: #fff; }\n\n/* \u7EC6\u6EDA\u52A8\u6761 */\n* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }\n::-webkit-scrollbar { width: 8px; height: 8px; }\n::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }\n::-webkit-scrollbar-track { background: transparent; }\n\n/* ============ \u9876\u680F ============ */\n.topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 18px 20px 10px;\n  max-width: 720px;\n  margin: 0 auto;\n}\n.topbar.wide { max-width: 1080px; }\n.brand { display: flex; align-items: center; gap: 12px; }\n.brand .logo {\n  display: grid;\n  place-items: center;\n  width: 40px;\n  height: 40px;\n  font-size: 20px;\n  border-radius: 13px;\n  background: linear-gradient(135deg, var(--accent), var(--violet));\n  box-shadow: 0 3px 10px rgba(79, 110, 247, 0.35);\n}\n.brand b { font-size: 16px; font-weight: 650; display: block; line-height: 1.25; letter-spacing: 0.01em; }\n.brand small { color: var(--muted); font-size: 12px; }\n.actions { display: flex; align-items: center; gap: 8px; }\n\n/* ============ \u5E03\u5C40 ============ */\n.container { max-width: 720px; margin: 0 auto; padding: 6px 16px 48px; }\n.container.wide { max-width: 1080px; }\n.container.narrow { max-width: 440px; }\n.card {\n  background: var(--card);\n  border: 1px solid var(--border);\n  border-radius: var(--radius);\n  box-shadow: var(--shadow);\n  padding: 24px;\n  margin-bottom: 16px;\n}\n.card.center { text-align: center; }\n.muted { color: var(--muted); }\n.row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }\n\n.foot {\n  text-align: center;\n  color: var(--muted);\n  font-size: 12px;\n  padding: 30px 16px 10px;\n  opacity: 0.85;\n}\n\n/* ============ \u6309\u94AE ============ */\n.btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  padding: 10px 18px;\n  border-radius: var(--radius-sm);\n  border: 1px solid var(--border);\n  background: var(--card);\n  color: var(--text);\n  font-size: 14px;\n  font-weight: 500;\n  cursor: pointer;\n  text-decoration: none;\n  transition: filter var(--t-fast), transform var(--t-fast), opacity var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast), color var(--t-fast);\n}\n.btn:hover { filter: brightness(1.04); }\n.btn:active { transform: scale(0.98); }\n.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }\n.btn.primary {\n  background: linear-gradient(135deg, var(--accent-bright), var(--accent));\n  border-color: transparent;\n  color: var(--accent-text);\n  font-weight: 600;\n  box-shadow: 0 2px 6px rgba(79, 110, 247, 0.3), 0 6px 18px rgba(79, 110, 247, 0.2);\n}\n.btn.primary:hover { transform: translateY(-1px); filter: brightness(1.05); }\n.btn.primary:active { transform: translateY(0) scale(0.99); }\n.btn.ghost { background: transparent; }\n.btn.ghost:hover { border-color: var(--accent); color: var(--accent); }\n.btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }\n.btn.small { padding: 6px 12px; font-size: 13px; border-radius: 8px; }\n.btn.block { width: 100%; margin-top: 14px; }\n.btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }\n.icon-btn {\n  background: transparent;\n  border: none;\n  font-size: 17px;\n  cursor: pointer;\n  color: var(--muted);\n  padding: 7px 9px;\n  border-radius: 9px;\n  transition: background var(--t-fast), color var(--t-fast), transform var(--t-fast);\n}\n.icon-btn:hover { background: var(--accent-soft); color: var(--accent); }\n.icon-btn:active { transform: scale(0.92); }\n/* \u8BED\u8A00\u5207\u6362:\u663E\u793A\u76EE\u6807\u8BED\u8A00 */\n.lang-btn { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; padding: 7px 10px; }\n.lang-float { position: fixed; top: 14px; right: 14px; z-index: 10; background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }\n\n/* ============ Tabs ============ */\n.tabs {\n  display: flex;\n  background: var(--bg);\n  border-radius: 12px;\n  padding: 4px;\n  margin-bottom: 20px;\n}\n.tab {\n  flex: 1;\n  padding: 9px;\n  border: none;\n  background: transparent;\n  border-radius: 9px;\n  font-size: 14px;\n  font-weight: 500;\n  color: var(--muted);\n  cursor: pointer;\n  transition: color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);\n}\n.tab.active { background: var(--card); color: var(--text); font-weight: 600; box-shadow: var(--shadow-sm); }\n\n/* ============ \u62D6\u62FD\u533A ============ */\n.dropzone {\n  border: 2px dashed var(--border);\n  border-radius: 14px;\n  padding: 38px 16px;\n  text-align: center;\n  cursor: pointer;\n  transition: border-color var(--t-fast), background var(--t-fast);\n  outline: none;\n}\n.dropzone:hover, .dropzone:focus-visible, .dropzone.dragover {\n  border-color: var(--accent);\n  background: var(--accent-soft);\n}\n.dz-icon { font-size: 36px; margin-bottom: 8px; transition: transform var(--t-med) ease; }\n.dropzone:hover .dz-icon, .dropzone.dragover .dz-icon { transform: scale(1.1) translateY(-2px); }\n.dropzone p { margin: 0 0 6px; font-size: 14px; }\n.dropzone p b { font-weight: 600; }\n.dropzone small { color: var(--muted); font-size: 13px; }\n\n/* ============ \u6587\u4EF6\u961F\u5217(\u591A\u9009\u6279\u91CF) ============ */\n.file-list { display: flex; flex-direction: column; gap: 8px; }\n.file-row {\n  position: relative;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  background: var(--accent-soft);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 10px 12px;\n  overflow: hidden;\n  animation: fade-up var(--t-slow) var(--ease) both;\n}\n.file-row.fail { background: var(--danger-soft); }\n.fr-icon { font-size: 20px; flex: none; }\n.fr-meta { flex: 1; min-width: 0; }\n.fr-meta b { display: block; font-size: 13.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.fr-meta small { color: var(--muted); font-size: 12px; }\n.fr-status { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }\n.file-row.done .fr-status { color: var(--ok); font-weight: 600; }\n.file-row.fail .fr-status { color: var(--danger); font-weight: 700; }\n.fr-remove { padding: 5px 7px; font-size: 13px; flex: none; }\n/* \u8FF7\u4F60\u8FDB\u5EA6\u6761:\u8D34\u884C\u5E95\u7F18 */\n.fr-bar {\n  position: absolute;\n  left: 0;\n  bottom: 0;\n  height: 3px;\n  width: 0;\n  border-radius: 999px;\n  background: linear-gradient(90deg, var(--accent), var(--accent-bright));\n  transition: width var(--t-med) ease;\n}\n.file-row.done .fr-bar { width: 100%; background: var(--ok); }\n.file-row.fail .fr-bar { width: 100%; background: var(--danger); }\n\n/* ============ \u6587\u672C\u8F93\u5165 ============ */\ntextarea {\n  width: 100%;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--bg);\n  color: var(--text);\n  padding: 12px 14px;\n  font-size: 14px;\n  font-family: inherit;\n  line-height: 1.65;\n  resize: vertical;\n  transition: border-color var(--t-fast), box-shadow var(--t-fast);\n}\ntextarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }\n\n/* ============ \u9009\u9879 segmented ============ */\n.options { display: flex; flex-direction: column; gap: 14px; margin: 20px 0 6px; }\n.opt-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }\n.seg { display: flex; background: var(--bg); border-radius: 10px; padding: 3px; }\n.seg button {\n  flex: 1;\n  padding: 7px 4px;\n  border: none;\n  background: transparent;\n  border-radius: 8px;\n  font-size: 13px;\n  color: var(--muted);\n  cursor: pointer;\n  transition: color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);\n}\n.seg button.active { background: var(--card); color: var(--text); font-weight: 600; box-shadow: var(--shadow-sm); }\n\n/* ============ \u8FDB\u5EA6\u6761 ============ */\n.progress { margin-top: 18px; }\n.bar {\n  height: 12px;\n  background: var(--bg);\n  border-radius: 999px;\n  overflow: hidden;\n  box-shadow: inset 0 1px 2px rgba(16, 24, 40, 0.06);\n}\n.bar > div {\n  height: 100%;\n  width: 0;\n  background: linear-gradient(90deg, var(--accent), var(--accent-bright));\n  border-radius: 999px;\n  box-shadow: 0 1px 4px rgba(79, 110, 247, 0.35);\n  transition: width var(--t-med) ease;\n}\n.progress small { color: var(--muted); font-variant-numeric: tabular-nums; }\n\n/* ============ \u7ED3\u679C\u5361\u7247(\u591A\u6587\u4EF6\u9010\u5F20\u5806\u53E0) ============ */\n.results { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }\n.result {\n  padding: 22px 20px;\n  border-radius: var(--radius);\n  background: var(--ok-soft);\n  border: 1px solid var(--border);\n  text-align: center;\n}\n.result-title { margin: 0 0 6px; font-weight: 600; font-size: 15px; }\n.result-batch-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  padding: 14px 16px;\n  border-radius: var(--radius);\n  background: var(--ok-soft);\n  border: 1px solid var(--border);\n}\n.result-batch-head .result-title { margin: 0; }\n.result-batch-head .btn-row { margin: 0; flex-wrap: nowrap; }\n/* \u4E8C\u7EF4\u7801 + \u53E3\u4EE4\u5E76\u6392,\u79FB\u52A8\u7AEF\u6362\u884C */\n.result-main { display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; }\n.result-col { display: flex; flex-direction: column; align-items: center; min-width: 0; }\n.result-file-name { font-size: 13px; color: var(--muted); word-break: break-all; margin-bottom: 2px; }\n.qr-wrap {\n  flex: none;\n  background: #fff; /* \u767D\u5E95\u4FDD\u8BC1\u6DF1\u8272\u6A21\u5F0F\u4E0B\u53EF\u626B\u63CF */\n  padding: 8px;\n  border-radius: 12px;\n  border: 1px solid var(--border);\n  box-shadow: var(--shadow-sm);\n}\n.qr-wrap svg { display: block; width: 112px; height: 112px; }\n.qr-hint { text-align: center; font-size: 11px; color: #6b7280; margin-top: 4px; }\n.code { display: flex; justify-content: center; gap: 10px; margin: 10px 0 12px; }\n.code span {\n  display: grid;\n  place-items: center;\n  min-width: 56px;\n  height: 68px;\n  font-size: 38px;\n  font-weight: 700;\n  font-variant-numeric: tabular-nums;\n  color: var(--text);\n  background: var(--card);\n  border: 1px solid var(--border);\n  border-bottom: 3px solid var(--accent);\n  border-radius: 14px;\n  box-shadow: var(--shadow-sm);\n  user-select: all;\n}\n.result-link { color: var(--muted); font-size: 12px; word-break: break-all; }\n.result-meta { color: var(--muted); font-size: 13px; margin-top: 8px; }\n.result .btn-row { justify-content: center; }\n\n/* ============ \u53D6\u4EF6\u9875 ============ */\nh2.title { margin: 8px 0 6px; font-size: 22px; font-weight: 700; line-height: 1.3; }\n.pk-sub { margin: 0 0 16px; font-size: 13.5px; }\n.error-box {\n  margin-top: 14px;\n  padding: 12px 14px;\n  border-radius: var(--radius-sm);\n  background: var(--danger-soft);\n  color: var(--danger);\n  font-size: 14px;\n}\n.share-card {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  background: var(--bg);\n  border-radius: 14px;\n  padding: 16px;\n}\n.sc-icon { font-size: 32px; }\n.sc-meta { flex: 1; min-width: 0; text-align: left; }\n.sc-meta b { display: block; font-size: 15px; font-weight: 600; word-break: break-all; }\n.sc-meta small { color: var(--muted); }\n.meta-line { color: var(--muted); font-size: 13px; margin: 12px 2px 0; text-align: left; }\npre.text-body {\n  background: var(--bg);\n  border-radius: 14px;\n  padding: 14px 16px;\n  white-space: pre-wrap;\n  word-break: break-all;\n  font-size: 13px;\n  line-height: 1.7;\n  max-height: 340px;\n  overflow: auto;\n  margin: 0 0 4px;\n  text-align: left;\n}\n\n/* ============ \u7BA1\u7406\u9875 ============ */\n.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }\n.stat-card {\n  background: var(--card);\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  padding: 16px 12px;\n  text-align: center;\n  box-shadow: var(--shadow-sm);\n}\n.stat-card b { display: block; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.3; }\n.stat-card small { color: var(--muted); font-size: 12px; }\n.table-wrap { overflow-x: auto; }\ntable { width: 100%; border-collapse: collapse; font-size: 13px; }\nth, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }\nth { color: var(--muted); font-weight: 500; font-size: 12px; }\ntbody tr:last-child td { border-bottom: none; }\ntbody tr:hover td { background: var(--accent-soft); }\ntd.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }\n.badge {\n  display: inline-block;\n  padding: 2px 9px;\n  border-radius: 999px;\n  font-size: 12px;\n  font-weight: 500;\n}\n.badge.active { background: var(--ok-soft); color: var(--ok); }\n.badge.expired { background: var(--danger-soft); color: var(--danger); }\n.badge.exhausted { background: var(--warn-soft); color: var(--warn); }\n.badge.kind-file { background: var(--accent-soft); color: var(--accent); }\n.badge.kind-text { background: var(--bg); color: var(--muted); }\n.token-input {\n  width: 100%;\n  padding: 11px 13px;\n  border: 1px solid var(--border);\n  border-radius: var(--radius-sm);\n  background: var(--bg);\n  color: var(--text);\n  font-size: 14px;\n  margin: 12px 0 4px;\n  transition: border-color var(--t-fast), box-shadow var(--t-fast);\n}\n.token-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }\n.admin-foot { margin-top: 18px; display: flex; justify-content: flex-end; }\n.pager-btns { display: flex; gap: 8px; }\n\n/* ============ toast ============ */\n#toast-host {\n  position: fixed;\n  bottom: calc(24px + env(safe-area-inset-bottom, 0px));\n  left: 50%;\n  transform: translateX(-50%);\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  z-index: 99;\n  pointer-events: none;\n}\n.toast {\n  background: var(--text);\n  color: var(--bg);\n  padding: 10px 18px;\n  border-radius: 12px;\n  font-size: 14px;\n  opacity: 0;\n  transform: translateY(8px);\n  transition: opacity var(--t-med), transform var(--t-med);\n  box-shadow: var(--shadow);\n}\n.toast.show { opacity: 1; transform: translateY(0); }\n.toast.ok { background: var(--ok); color: #fff; }\n.toast.error { background: var(--danger); color: #fff; }\n\n/* ============ \u79FB\u52A8\u7AEF ============ */\n@media (max-width: 640px) {\n  .card { padding: 18px; }\n  .topbar { padding: 14px 16px 8px; }\n  .code { gap: 8px; }\n  .code span { min-width: 46px; height: 58px; font-size: 30px; border-radius: 12px; }\n  .otp-row { gap: 6px; }\n  .otp-box { width: 42px; height: 54px; font-size: 24px; }\n  .btn-row .btn { flex: 1; }\n  th, td { padding: 8px 6px; }\n  .row-between { flex-wrap: wrap; }\n  .stat-card b { font-size: 21px; }\n  .result-main { gap: 16px; }\n  .qr-wrap svg { width: 96px; height: 96px; }\n}\n\n/* ============ \u52A8\u6548 ============ */\n@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }\n@keyframes pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }\n.card { animation: fade-up var(--t-slow) var(--ease) both; }\n.result:not([hidden]) { animation: pop var(--t-slow) var(--ease) both; }\n\n@keyframes shake {\n  10%, 90% { transform: translateX(-2px); }\n  20%, 80% { transform: translateX(3px); }\n  30%, 50%, 70% { transform: translateX(-5px); }\n  40%, 60% { transform: translateX(5px); }\n}\n.shake { animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }\n\n/* \u952E\u76D8\u7126\u70B9\u53EF\u89C1\u6027 */\n.btn:focus-visible, .icon-btn:focus-visible, .tab:focus-visible,\n.seg button:focus-visible, a:focus-visible, .otp-box:focus-visible {\n  outline: 2px solid var(--accent);\n  outline-offset: 2px;\n}\n\n/* \u53D6\u4EF6\u9875:6 \u683C\u53E3\u4EE4\u8F93\u5165 */\n.otp-row { display: flex; gap: 8px; justify-content: center; margin: 4px 0 8px; }\n.otp-box {\n  width: 46px;\n  height: 58px;\n  padding: 0;\n  text-align: center;\n  font-size: 26px;\n  font-weight: 600;\n  font-variant-numeric: tabular-nums;\n  border: 2px solid var(--border);\n  border-radius: 12px;\n  background: var(--bg);\n  color: var(--text);\n  caret-color: var(--accent);\n  transition: border-color var(--t-fast), box-shadow var(--t-fast);\n}\n.otp-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }\n\n/* \u8FDB\u5EA6\u6761:\u7B49\u5F85\u6001(\u521D\u59CB\u5316/\u91CD\u8BD5/\u5408\u5E76\u5206\u7247)\u6D41\u5149 */\n@keyframes pending-slide { from { background-position: 0 0; } to { background-position: 34px 0; } }\n.bar > div.pending {\n  background-image: repeating-linear-gradient(\n    45deg,\n    rgba(255, 255, 255, 0) 0,\n    rgba(255, 255, 255, 0) 12px,\n    rgba(255, 255, 255, 0.28) 12px,\n    rgba(255, 255, 255, 0.28) 24px\n  );\n  background-size: 34px 34px;\n  animation: pending-slide 0.8s linear infinite;\n}\n\n.mono { font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace; font-variant-numeric: tabular-nums; }\n\n/* \u52A8\u753B\u654F\u611F\u7528\u6237 */\n@media (prefers-reduced-motion: reduce) {\n  *, *::before, *::after {\n    animation-duration: 0.01ms !important;\n    animation-iteration-count: 1 !important;\n    transition-duration: 0.01ms !important;\n  }\n}\n" });
 
 // node_modules/hono/dist/compose.js
 var compose = /* @__PURE__ */ __name((middleware, onError, onNotFound) => {

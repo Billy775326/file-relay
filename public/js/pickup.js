@@ -1,12 +1,19 @@
 import { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js';
+import { t, onLangChange, initI18n } from './i18n.js';
 
 initTheme();
+initI18n();
 
 const boxes = $$('.otp-box');
 const row = $('#otp-row');
 const errorBox = $('#pickup-error');
 const resultCard = $('#pickup-result');
 let querying = false;
+let last = null; // { res, code } 语言切换时重渲染
+
+onLangChange(() => {
+  if (last && !resultCard.hidden) render(last.res, last.code);
+});
 
 function value() {
   return boxes.map((b) => b.value).join('');
@@ -72,7 +79,7 @@ async function submit() {
     const res = await api('/api/pickup', { method: 'POST', body: { code } });
     render(res, code);
   } catch (e) {
-    showError(e.message || '取件失败');
+    showError(e.message || t('pk.fail'));
   } finally {
     querying = false;
   }
@@ -80,12 +87,13 @@ async function submit() {
 
 function metaLine(res) {
   const parts = [];
-  parts.push(res.expireAt ? `${fmtDate(res.expireAt)} 过期` : '永久有效');
-  parts.push(res.pickupsLeft === null || res.pickupsLeft === undefined ? '取件次数不限' : `剩余可取 ${res.pickupsLeft} 次`);
+  parts.push(res.expireAt ? t('pk.expireAt', fmtDate(res.expireAt)) : t('meta.forever'));
+  parts.push(res.pickupsLeft === null || res.pickupsLeft === undefined ? t('meta.unlimited') : t('pk.left', res.pickupsLeft));
   return parts.join(' · ');
 }
 
 function render(res, code) {
+  last = { res, code };
   resultCard.replaceChildren();
 
   if (res.kind === 'text') {
@@ -94,13 +102,13 @@ function render(res, code) {
     resultCard.append(
       el('div', { class: 'share-card' },
         el('span', { class: 'sc-icon' }, '📝'),
-        el('div', { class: 'sc-meta' }, el('b', {}, `文本 · ${res.size} 字符`)),
+        el('div', { class: 'sc-meta' }, el('b', {}, t('pk.textChars', res.size))),
       ),
       pre,
       el('div', { class: 'btn-row' },
         el('button', { class: 'btn primary', onclick: async () => {
-          (await copyText(res.text)) ? toast('已复制全文', 'ok') : toast('复制失败', 'error');
-        } }, '一键复制全文'),
+          (await copyText(res.text)) ? toast(t('copied.text'), 'ok') : toast(t('copy.fail'), 'error');
+        } }, t('pk.copyAllText')),
       ),
     );
   } else {
@@ -108,28 +116,29 @@ function render(res, code) {
       el('div', { class: 'share-card' },
         el('span', { class: 'sc-icon' }, iconFor(res.filename, res.mime)),
         el('div', { class: 'sc-meta' },
-          el('b', {}, res.filename || '未命名文件'),
-          el('small', {}, `${fmtBytes(res.size)} · ${res.mime || '未知类型'}`),
+          el('b', {}, res.filename || t('pk.unnamed')),
+          el('small', {}, `${fmtBytes(res.size)} · ${res.mime || t('unknown.type')}`),
         ),
       ),
       el('a', {
         class: 'btn primary block',
         href: `/api/pickup/${code}/download`,
         download: res.filename || 'file',
-      }, '⬇ 下载文件'),
+      }, t('pk.download')),
     );
   }
 
   resultCard.append(
     el('div', { class: 'meta-line' }, metaLine(res)),
     el('div', { class: 'btn-row' },
-      el('button', { class: 'btn ghost', onclick: reset }, '重新输入'),
+      el('button', { class: 'btn ghost', onclick: reset }, t('pk.again')),
     ),
   );
   resultCard.hidden = false;
 }
 
 function reset() {
+  last = null;
   resultCard.hidden = true;
   boxes.forEach((b) => { b.value = ''; });
   hideError();
