@@ -126,9 +126,7 @@ npm run db:remote                          # 远端建表;本地调试使用 npm
 
 将 `wrangler.jsonc` 中 `kv_namespaces[0].id` 的值替换为上一步获得的 ID(binding 名保持 `fileKV` 不变),提交并推送。
 
-> ⚠️ 为何不能采用「控制台手动绑定、文件零编辑」?实测(wrangler 4.31,本地 CLI 与 Workers Builds 两种部署流均验证):`wrangler deploy` 以 wrangler.jsonc 作为绑定的**唯一来源**——未写入配置的绑定(含控制台/仪表板手动添加的)在部署时一律被移除,控制台完成绑定后一次推送即失效。因此资源绑定必须写入配置文件。
->
-> R2/D1 同理:放开对应块并填入自己的资源名与 ID(变量名 `BUCKET` / `DB`,仅大存储/强一致模式需要)。
+> 实测结论(wrangler 4.31,本地 CLI 与 Workers Builds 两种部署流均验证):`wrangler deploy` 以 wrangler.jsonc 作为绑定的**唯一来源**,未写入配置的绑定(含控制台/仪表板手动添加的)在部署时一律被移除。因此资源绑定必须写入配置文件;R2/D1 同理,放开对应块并填入自己的资源名与 ID(变量名 `BUCKET` / `DB`,仅大存储/强一致模式需要)。
 
 #### 4.(可选)创建 R2 / D1 资源
 
