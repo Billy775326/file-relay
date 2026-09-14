@@ -10,6 +10,7 @@ const statsRow = $('#stats-row');
 const tbody = $('#shares-body');
 const btnPrev = $('#btn-prev');
 const btnNext = $('#btn-next');
+const btnRefresh = $('#btn-refresh');
 const pageInfo = $('#page-info');
 
 const LIMIT = 50;
@@ -73,7 +74,7 @@ async function loadStats() {
 const STATUS_LABEL = { active: '有效', expired: '已过期', exhausted: '已取完' };
 
 async function loadList() {
-  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted' }, '加载中…')));
+  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, '加载中…')));
   try {
     const data = await api(`/api/admin/shares?limit=${LIMIT}&offset=${offset}`);
     total = data.total;
@@ -83,7 +84,7 @@ async function loadList() {
       const content = r.kind === 'text' ? (r.text_preview || '(文本)') : (r.filename || '(未命名)');
       tbody.append(
         el('tr', {},
-          el('td', {}, r.code),
+          el('td', { class: 'mono' }, r.code),
           el('td', {}, el('span', { class: `badge kind-${r.kind}` }, r.kind === 'file' ? '文件' : '文本')),
           el('td', { class: 'wrap' }, content),
           el('td', {}, r.kind === 'text' ? `${r.size} 字` : fmtBytes(r.size)),
@@ -96,11 +97,11 @@ async function loadList() {
       );
     }
     if (rows.length === 0) {
-      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted' }, '暂无分享')));
+      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, '暂无分享')));
     }
     updatePager();
   } catch (e) {
-    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted' }, e.message || '加载失败')));
+    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || '加载失败')));
   }
 }
 
@@ -113,6 +114,7 @@ function updatePager() {
 }
 btnPrev.addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); loadList(); });
 btnNext.addEventListener('click', () => { offset += LIMIT; loadList(); });
+btnRefresh.addEventListener('click', () => { loadStats(); loadList(); });
 
 /* ---------- 删除 ---------- */
 async function remove(r) {
