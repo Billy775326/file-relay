@@ -16,7 +16,7 @@
 </script>
 </head>
 <body>
-<header class="topbar">
+<header class="topbar wide">
   <div class="brand">
     <span class="logo">📦</span>
     <div><b data-i18n="brand.name">文件中转站</b><small data-i18n="brand.tagline">像取快递一样取文件</small></div>
@@ -28,8 +28,13 @@
   </div>
 </header>
 
-<main class="container">
-  <section class="card">
+<main class="container wide">
+  <div class="send-grid">
+  <section class="card form-card">
+    <div class="card-cap">
+      <span data-i18n="send.cap">寄件单</span>
+      <span class="cap-date" id="cap-date"></span>
+    </div>
     <div class="tabs">
       <button class="tab active" data-tab="file" data-i18n="tab.file">发文件</button>
       <button class="tab" data-tab="text" data-i18n="tab.text">发文本</button>
@@ -81,8 +86,18 @@
       </div>
     </div>
 
-    <div id="results" class="results"></div>
-  </section>
+    </section>
+
+    <aside class="send-side">
+      <div class="side-cap" data-i18n="receipt.cap">回执</div>
+      <div id="result-placeholder" class="result-placeholder">
+        <div class="ph-postmark">PENDING</div>
+        <p data-i18n="ph.title">待出票</p>
+        <small data-i18n="ph.sub">上传完成后,取件凭证会出现在这里</small>
+      </div>
+      <div id="results" class="results"></div>
+    </aside>
+  </div>
 </main>
 
 <footer class="foot" data-i18n="foot">自托管 · 运行于 Cloudflare Workers</footer>
