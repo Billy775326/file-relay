@@ -11,12 +11,15 @@ Three deployment methods are supported: wrangler CLI, dashboard GitHub integrati
 ## Features
 
 - **File sharing (KV direct upload by default)**: single files up to 24MB via a single request, no storage bucket required; for larger files, enable `r2_buckets` to upgrade to chunked R2 uploads with a ~2GB per-file limit — no code changes needed either way
+- **Multi-file batch sharing**: select up to 10 files at once, uploaded sequentially with per-file progress; each file gets its own result card, plus one-click copy of all codes
 - **Text sharing**: paste text to get a pickup code; one-click copy on the pickup page
 - **Validity**: 1 day / 7 days / 30 days / forever × pickup limit of 1 / 5 / unlimited, whichever expires first
+- **Pickup QR codes**: every result card includes a QR code of the `pickup` link — scan to open the pickup page directly
+- **Bilingual UI (Chinese/English)**: one-click toggle, auto-initialized from the browser language, preference persisted
 - **Automatic cleanup**: a cron job reclaims expired shares every 6 hours (the R2 mode also cleans up orphaned multipart sessions); pickups are validated lazily, so a broken cron does not affect functionality
 - **Admin console**: token login with statistics, listing, and deletion; the entrance defaults to `/admin` and can be customized via the `ADMIN_PATH` secret (once set, `/admin` returns 404 to resist scanning)
 - **Configuration-driven mode switching**: file storage defaults to KV with optional R2; metadata defaults to KV with optional D1 — all switched via wrangler.jsonc
-- Chinese UI, mobile-friendly layout, dark mode; uploads include progress, speed, and retry on failure
+- Mobile-friendly layout, dark mode; uploads include progress, speed, and retry on failure
 
 ## Storage Selection: Small-Storage Mode (KV, default) vs Large-Storage Mode (R2)
 
@@ -162,7 +165,7 @@ The entire service (backend and all frontend pages) is bundled into **one `worke
 
 #### 1. Obtain worker.js
 
-Use the prebuilt [dist/worker.js](dist/worker.js) in this repository (~160 KB). To regenerate it after code changes:
+Use the prebuilt [dist/worker.js](dist/worker.js) in this repository (~240 KB). To regenerate it after code changes:
 
 ```bash
 npm install

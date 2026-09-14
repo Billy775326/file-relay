@@ -6,7 +6,7 @@
 <meta name="description" content="页面不存在">
 <meta name="theme-color" content="#f6f7fb">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
-<title>404 - 文件中转站</title>
+<title data-i18n="doc.404">404 - 文件中转站</title>
 <link rel="stylesheet" href="/style.css">
 <script>
   document.documentElement.dataset.theme =
@@ -15,18 +15,23 @@
 </script>
 </head>
 <body>
+<button id="lang-btn" class="icon-btn lang-btn lang-float" data-i18n-title="nav.lang">EN</button>
 <main class="container narrow" style="padding-top:10vh">
   <section class="card center">
     <div style="font-size:48px;margin-bottom:8px">🧭</div>
-    <h2 class="title">页面不存在</h2>
-    <p class="muted">你要找的页面不在中转站里</p>
+    <h2 class="title" data-i18n="nf.title">页面不存在</h2>
+    <p class="muted" data-i18n="nf.body">你要找的页面不在中转站里</p>
     <div class="btn-row" style="justify-content:center">
-      <a class="btn primary" href="/">去发送</a>
-      <a class="btn ghost" href="/pickup">去取件</a>
+      <a class="btn primary" href="/" data-i18n="nf.send">去发送</a>
+      <a class="btn ghost" href="/pickup" data-i18n="nf.pickup">去取件</a>
     </div>
   </section>
 </main>
 
-<footer class="foot">自托管 · 运行于 Cloudflare Workers</footer>
+<footer class="foot" data-i18n="foot">自托管 · 运行于 Cloudflare Workers</footer>
+<script type="module">
+  import { initI18n } from '/js/i18n.js';
+  initI18n();
+</script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="输入 6 位取件口令,取出分享给你的文件或文本">
 <meta name="theme-color" content="#f6f7fb">
-<title>文件中转站 - 取件</title>
+<title data-i18n="doc.pickup">文件中转站 - 取件</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
 <link rel="stylesheet" href="/style.css">
 <script>
@@ -18,19 +18,20 @@
 <header class="topbar">
   <div class="brand">
     <span class="logo">📦</span>
-    <div><b>文件中转站</b><small>取件</small></div>
+    <div><b data-i18n="brand.name">文件中转站</b><small data-i18n="brand.pickup">取件</small></div>
   </div>
   <div class="actions">
-    <button id="theme-btn" class="icon-btn" title="切换主题">🌗</button>
-    <a class="btn ghost small" href="/">发送</a>
+    <button id="lang-btn" class="icon-btn lang-btn" data-i18n-title="nav.lang">EN</button>
+    <button id="theme-btn" class="icon-btn" data-i18n-title="nav.theme">🌗</button>
+    <a class="btn ghost small" href="/" data-i18n="nav.send">发送</a>
   </div>
 </header>
 
 <main class="container narrow">
   <section class="card center" id="pickup-input-card">
-    <h2 class="title">输入取件口令</h2>
-    <p class="muted" style="margin:0 0 16px">输入 6 位数字口令,取出分享的文件或文本</p>
-    <div id="otp-row" class="otp-row" role="group" aria-label="6 位取件口令">
+    <h2 class="title" data-i18n="pk.title">输入取件口令</h2>
+    <p class="muted pk-sub" data-i18n="pk.sub">输入 6 位数字口令,取出分享的文件或文本</p>
+    <div id="otp-row" class="otp-row" role="group" data-i18n-aria="pk.aria" aria-label="6 位取件口令">
       <input class="otp-box" inputmode="numeric" autocomplete="one-time-code" maxlength="1" autofocus>
       <input class="otp-box" inputmode="numeric" autocomplete="one-time-code" maxlength="1">
       <input class="otp-box" inputmode="numeric" autocomplete="one-time-code" maxlength="1">
@@ -44,7 +45,7 @@
   <section class="card" id="pickup-result" hidden></section>
 </main>
 
-<footer class="foot">自托管 · 运行于 Cloudflare Workers</footer>
+<footer class="foot" data-i18n="foot">自托管 · 运行于 Cloudflare Workers</footer>
 
 <script type="module" src="/js/pickup.js"></script>
 </body>

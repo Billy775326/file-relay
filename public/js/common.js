@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 export const $ = (sel, el = document) => el.querySelector(sel);
 export const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
@@ -11,7 +13,7 @@ export async function api(path, opts = {}) {
   let data = null;
   try { data = await res.json(); } catch { /* 非 JSON 响应 */ }
   if (!res.ok) {
-    const e = new Error(data?.message || `请求失败 (${res.status})`);
+    const e = new Error(data?.message || t('req.fail', res.status));
     e.code = data?.error || 'unknown';
     e.status = res.status;
     throw e;
@@ -28,29 +30,30 @@ export function fmtBytes(n) {
   return `${v} ${units[i]}`;
 }
 
+/** 永久分享返回 null,由调用方按语言渲染「永久 / Forever」 */
 export function fmtDate(ms) {
-  if (ms === null || ms === undefined) return '永久';
+  if (ms === null || ms === undefined) return null;
   const d = new Date(ms);
   const p = (x) => String(x).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-/** 秒数人性化:用于上传剩余时间 / 过期倒计时 */
+/** 秒数人性化:用于上传剩余时间 / 过期倒计时,单位词随语言 */
 export function fmtDuration(sec) {
   if (!Number.isFinite(sec) || sec < 0) return '-';
-  if (sec < 1) return '不足 1 秒';
-  if (sec < 60) return `${Math.round(sec)} 秒`;
+  if (sec < 1) return t('dur.ms');
+  if (sec < 60) return t('dur.s', Math.round(sec));
   if (sec < 3600) {
     const m = Math.floor(sec / 60);
     const s = Math.round(sec % 60);
-    return s ? `${m} 分 ${s} 秒` : `${m} 分`;
+    return s ? t('dur.hm', m, s) : t('dur.h', m);
   }
   if (sec < 86400) {
     const h = Math.floor(sec / 3600);
     const m = Math.round((sec % 3600) / 60);
-    return m ? `${h} 时 ${m} 分` : `${h} 时`;
+    return m ? t('dur.hH', h, m) : t('dur.hH2', h);
   }
-  return `${Math.round(sec / 86400)} 天`;
+  return t('dur.d', Math.round(sec / 86400));
 }
 
 /** 按文件名/ MIME 挑一个直观图标(纯展示用) */

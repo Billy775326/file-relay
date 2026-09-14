@@ -6,7 +6,7 @@
 <meta name="description" content="文件中转站管理后台">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#f6f7fb">
-<title>文件中转站 - 管理</title>
+<title data-i18n="doc.admin">文件中转站 - 管理</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
 <link rel="stylesheet" href="/style.css">
 <script>
@@ -19,20 +19,21 @@
 <header class="topbar wide">
   <div class="brand">
     <span class="logo">📦</span>
-    <div><b>文件中转站</b><small>管理后台</small></div>
+    <div><b data-i18n="brand.name">文件中转站</b><small data-i18n="brand.admin">管理后台</small></div>
   </div>
   <div class="actions">
-    <button id="theme-btn" class="icon-btn" title="切换主题">🌗</button>
-    <a class="btn ghost small" href="/">发送</a>
+    <button id="lang-btn" class="icon-btn lang-btn" data-i18n-title="nav.lang">EN</button>
+    <button id="theme-btn" class="icon-btn" data-i18n-title="nav.theme">🌗</button>
+    <a class="btn ghost small" href="/" data-i18n="nav.send">发送</a>
   </div>
 </header>
 
 <main class="container wide">
   <section class="card center" id="admin-login" hidden>
-    <h2 class="title">管理登录</h2>
-    <p class="muted" style="margin:0">输入部署时设置的管理令牌(ADMIN_TOKEN)</p>
-    <input id="admin-token" class="token-input" type="password" placeholder="管理令牌" autocomplete="current-password">
-    <button id="btn-login" class="btn primary block">登录</button>
+    <h2 class="title" data-i18n="ad.loginTitle">管理登录</h2>
+    <p class="muted" style="margin:0" data-i18n="ad.loginSub">输入部署时设置的管理令牌(ADMIN_TOKEN)</p>
+    <input id="admin-token" class="token-input" type="password" data-i18n-ph="ad.tokenPh" placeholder="管理令牌" autocomplete="current-password">
+    <button id="btn-login" class="btn primary block" data-i18n="ad.login">登录</button>
     <div id="login-error" class="error-box" hidden></div>
   </section>
 
@@ -43,8 +44,8 @@
         <table>
           <thead>
             <tr>
-              <th>口令</th><th>类型</th><th>内容</th><th>大小</th>
-              <th>已取/上限</th><th>过期时间</th><th>状态</th><th>创建时间</th><th></th>
+              <th data-i18n="ad.th.code">口令</th><th data-i18n="ad.th.kind">类型</th><th data-i18n="ad.th.content">内容</th><th data-i18n="ad.th.size">大小</th>
+              <th data-i18n="ad.th.pickups">已取/上限</th><th data-i18n="ad.th.expire">过期时间</th><th data-i18n="ad.th.status">状态</th><th data-i18n="ad.th.created">创建时间</th><th></th>
             </tr>
           </thead>
           <tbody id="shares-body"></tbody>
@@ -52,14 +53,14 @@
       </div>
       <div class="row-between">
         <div class="pager-btns">
-          <button id="btn-prev" class="btn small" disabled>上一页</button>
-          <button id="btn-next" class="btn small" disabled>下一页</button>
+          <button id="btn-prev" class="btn small" disabled data-i18n="ad.prev">上一页</button>
+          <button id="btn-next" class="btn small" disabled data-i18n="ad.next">下一页</button>
         </div>
         <small class="muted" id="page-info"></small>
-        <button id="btn-refresh" class="btn small ghost">↻ 刷新</button>
+        <button id="btn-refresh" class="btn small ghost" data-i18n="ad.refresh">↻ 刷新</button>
       </div>
       <div class="admin-foot">
-        <button id="btn-logout" class="btn ghost small">退出登录</button>
+        <button id="btn-logout" class="btn ghost small" data-i18n="ad.logout">退出登录</button>
       </div>
     </div>
   </section>
