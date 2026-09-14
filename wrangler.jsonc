@@ -28,7 +28,7 @@
   //    控制台 Bindings 页只作查看或临时救急,撑不过下一次部署。
   // 切 D1:注释 kv_namespaces、放开下面 d1_databases。语义差异见 README「存储选型」。
   "kv_namespaces": [
-    { "binding": "fileKV", "id": "4e267d205aef4957b1c2382a481ea882" }
+    { "binding": "fileKV", "id": "675ec5110dc545d3b9f09af58eb10a50" }
   ],
 
   // "d1_databases": [
