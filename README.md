@@ -80,8 +80,7 @@ npx wrangler r2 bucket create file-relay
 
 # 3. 建 KV 命名空间(存元数据,默认后端;binding 名保持 fileKV 不变)
 npx wrangler kv namespace create file-relay-meta
-#    取消 wrangler.jsonc 里 kv_namespaces 块的注释,把输出的 id 填进去
-#    (仓库默认零 ID 模式:该块注释着,绑定走控制台,见方式二)
+#    把输出的 id 填进 wrangler.jsonc 的 kv_namespaces[0].id
 
 # 4. 设置管理令牌(强随机串,自己生成,例如 openssl rand -base64 24)
 npx wrangler secret put ADMIN_TOKEN
@@ -102,53 +101,48 @@ npm run db:remote                          # 远端建表;本地调试用 npm ru
 
 ### 方式二:Cloudflare 控制台(GitHub 连接)
 
-不装 Node 的纯网页部署,**全程不需要改仓库里的任何文件**——资源全部在控制台手动绑定,变量名与代码约定一致即可。仓库连到 Cloudflare 后,每次 `git push` 自动重新部署(Workers Builds,免费构建额度个人使用绰绰有余)。本仓库自身就是这种「零 ID」模式:`wrangler.jsonc` 不写任何资源 ID,KV 绑定只存在于控制台。
+不装 Node 的纯网页部署,**唯一要改的是 `wrangler.jsonc` 里一行**(填自己的 KV 命名空间 ID)。仓库连到 Cloudflare 后,每次 `git push` 自动重新部署(Workers Builds,免费构建额度个人使用绰绰有余)。
 
 #### 1. 推送到 GitHub
 
-把本仓库**原样**推到自己的 GitHub(私有/公开都行),wrangler.jsonc 一个字都不用改。
+把本仓库推到自己的 GitHub(私有/公开都行)。
 
 #### 2. 建 KV 命名空间(必需;默认模式文件+元数据都存它)
 
 1. 控制台左侧 **Storage & Databases → KV → Create namespace**,名字如 `file-relay-meta`
+2. 建好后列表里能看到该命名空间的 **ID**(一串 32 位十六进制),复制备用
 
-命名空间建好先放着,等第 4 步 Worker 部署完成后回来绑定(见第 5 步)。
+#### 3. 把 ID 填进 wrangler.jsonc(核心一步)
 
-#### 3.(可选)建 R2 / D1 资源
+把 `wrangler.jsonc` 中 `kv_namespaces[0].id` 的值换成上一步的 ID(binding 名保持 `fileKV` 不变),提交并推送。
+
+> ⚠️ 为什么不能「控制台手动绑定、文件零编辑」?实测(wrangler 4.31,本地 CLI 与 Workers Builds 两种部署流均验证):`wrangler deploy` 以 wrangler.jsonc 为绑定的**唯一来源**——未写在配置里的绑定(含控制台/仪表板手动添加的)**部署时一律被移除**,控制台绑完一推送就没了。所以资源绑定必须落在配置文件里。
+>
+> R2/D1 同理:放开对应块并填自己的资源名/ ID(变量名 `BUCKET` / `DB`,仅大存储/强一致模式需要)。
+
+#### 4.(可选)建 R2 / D1 资源
 
 默认小存储模式直接跳过本步:
 
-- **R2(要传 >24MB 大文件)**:**Storage & Databases → R2 → Create bucket**(首次使用 R2 可能要求绑卡),名字如 `file-relay`
-- **D1(要强一致元数据)**:**Storage & Databases → D1 → Create database**,建完点进该库的 **Console** 标签页,把仓库 `schema/schema.sql` 全文粘进去执行建表(控制台能直接跑 SQL,不需要 wrangler)
+- **R2(要传 >24MB 大文件)**:**Storage & Databases → R2 → Create bucket**(首次使用 R2 可能要求绑卡),名字如 `file-relay`,并在 wrangler.jsonc 放开 `r2_buckets` 块
+- **D1(要强一致元数据)**:**Storage & Databases → D1 → Create database**,建完点进该库的 **Console** 标签页,把仓库 `schema/schema.sql` 全文粘进去执行建表(控制台能直接跑 SQL,不需要 wrangler),并放开 `d1_databases` 块
 
-#### 4. 连接仓库,触发首次部署
+#### 5. 连接仓库,首次部署
 
 1. 控制台 **Compute (Workers) → Create → Import a Git repository → Connect to Git**(旧版界面叫 Workers & Pages → Create application)
 2. 首次会跳转 GitHub 授权:安装 **Cloudflare Workers and Pages** App 并勾选本仓库(私有库选 *Only select repositories* 足够)
 3. 回到 Cloudflare 选中仓库,项目名保持 `file-relay`,构建配置保持默认——CF 识别 `wrangler.jsonc`,Deploy command 自动为 `npx wrangler deploy`,`public/` 静态资源随仓库一并上传
-4. 点 **Save and Deploy**,约 1 分钟完成。此时页面能打开,但发文本/文件会报「未绑定元数据库」——**预期状态**,下一步绑定后即恢复
-
-#### 5. 绑定 KV(核心一步)
-
-1. 进入 Worker → **Settings → Bindings → Add binding**
-2. 类型选 **KV namespace**,**变量名必须填 `fileKV`**(代码读 `env.fileKV`,填别的名字一律报"未绑定元数据库"),选中第 2 步建的命名空间
-3. 保存并 **Deploy** 生效,即刻完成部署
-
-> R2/D1 同理:Bindings → Add → 类型 **R2 bucket** / **D1 database**,变量名分别是 `BUCKET` / `DB`(仅大存储/强一致模式需要)。
+4. 点 **Save and Deploy**,约 1 分钟完成。因为第 3 步已填好 ID,首建即带 KV 绑定,部署完直接可用
 
 #### 6. 配置 Secret、确认 Cron
 
-- **Worker → Settings → Variables and Secrets → Add**:类型选 **Secret**,名字 `ADMIN_TOKEN`,值填强随机串(本地有 OpenSSL 就 `openssl rand -base64 24`,没有用密码管理器/在线生成器),保存后点 **Deploy** 生效;(可选)再加一个 `ADMIN_PATH` 自定义管理入口(如 `panel-x7k9`,设置后 `/admin` 404)
+- **Worker → Settings → Variables and Secrets → Add**:类型选 **Secret**,名字 `ADMIN_TOKEN`,值填强随机串(本地有 OpenSSL 就 `openssl rand -base64 24`,没有用密码管理器/在线生成器),保存后点 **Deploy** 生效;(可选)再加一个 `ADMIN_PATH` 自定义管理入口(如 `panel-x7k9`,设置后 `/admin` 404)。Secret 不受 wrangler.jsonc 约束,控制台添加的 Secret 部署后依然保留
 - **Settings → Triggers & Events**:确认 Cron Triggers 出现 `0 */6 * * *`(wrangler.jsonc 里有就会自动注册,一般无需手动加)
 
 #### 7. 验证与日常更新
 
 - 打开 `https://file-relay.<你的子域>.workers.dev`:发一条文本分享 → 能取件即部署成功;管理后台默认 `/admin`(设了 ADMIN_PATH 则是 `/<该值>`),用 ADMIN_TOKEN 登录
-- 之后每次 `git push` 到 `main` 自动部署新版本;KV/R2/D1 绑定与 Secret 永远在控制台管理,仓库文件不用动
-- ⚠️ **重要(实测 wrangler 4.31)**:`wrangler deploy` 以 `wrangler.jsonc` 为绑定的**唯一来源**——未写在配置里的绑定,**包括控制台手动添加的,CLI 部署时一律被移除**。因此:
-  - 本方式(控制台绑定)只与 Workers Builds 部署流共存,部署全程走 Git push,别再本地跑 `npm run deploy`
-  - 如果绑定真被 CLI 部署清掉了(接口报 500「未绑定元数据库」):回控制台按第 5 步重新绑定即可恢复
-  - 想两种部署方式混用?把 `kv_namespaces`(binding 名 `fileKV`,自己的命名空间 ID)写进 `wrangler.jsonc` 一劳永逸(即方式一的做法)
+- 之后每次 `git push` 到 `main` 自动部署新版本;Secret 与 Cron 一直在控制台管理
 - 大陆访问 `*.workers.dev` 被墙,验证需代理,或给 Worker 绑定自定义域名
 
 ### 注意事项
