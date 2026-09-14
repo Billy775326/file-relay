@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "file-relay",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-01",
+
+  // 静态资源:命中文件直接由边缘返回,不进 Worker;/api/* 不匹配任何文件 → 落入 Worker
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  "r2_buckets": [
+    { "binding": "BUCKET", "bucket_name": "file-relay" }
+  ],
+
+  "d1_databases": [
+    { "binding": "DB", "database_name": "file-relay", "database_id": "63cb9f3e-0225-44f7-9b23-c746c436f108" }
+  ],
+
+  // 每 6 小时清理过期分享与孤儿分片会话(免费套餐支持)
+  "triggers": {
+    "crons": ["0 */6 * * *"]
+  },
+
+  // 非敏感配置走 vars;ADMIN_TOKEN 走 secret(npx wrangler secret put ADMIN_TOKEN)
+  "vars": {
+    "MAX_FILE_SIZE": "2147483648",
+    "MAX_TEXT_LENGTH": "65536",
+    "PART_SIZE": "10485760",
+    "SESSION_TTL_MS": "86400000",
+    "MAX_PARTS": "10000"
+  },
+
+  "observability": { "enabled": true }
+}
