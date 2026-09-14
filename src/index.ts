@@ -3,11 +3,32 @@ import type { Env } from './types';
 import { num } from './types';
 import { uploadRoutes } from './upload';
 import { shareRoutes } from './share';
-import { adminRoutes } from './admin';
+import { adminRoutes, adminPath } from './admin';
 import { runCleanup } from './cleanup';
 import { fileMode, fileMaxSize } from './filestore';
 
 const app = new Hono<{ Bindings: Env }>();
+
+/**
+ * 管理后台入口:默认 /admin,可设 secret ADMIN_PATH 自定义(设置后 /admin 直接 404,防扫描)。
+ * wrangler.jsonc 的 assets.run_worker_first=["/admin*"] 保证 /admin 与 /admin.html
+ * 都先进 Worker,避免绕过自定义入口直取静态文件。
+ */
+app.use('*', async (c, next) => {
+  if (c.req.method === 'GET' || c.req.method === 'HEAD') {
+    const entry = adminPath(c.env);
+    const path = c.req.path;
+    if (path === entry) {
+      const asset = await c.env.ASSETS.fetch(new Request(new URL('/admin.html', c.req.url), { method: c.req.method }));
+      return new Response(asset.body, { headers: asset.headers });
+    }
+    if (path === '/admin' || path === '/admin.html' || path.startsWith('/admin/')) {
+      const asset = await c.env.ASSETS.fetch(new Request(new URL('/404.html', c.req.url)));
+      return new Response(asset.body, { status: 404, headers: asset.headers });
+    }
+  }
+  await next();
+});
 
 // 元数据库前置检查:D1/KV 至少绑一个(都没绑时给出可读错误而非路由内炸 500)
 app.use('/api/*', async (c, next) => {

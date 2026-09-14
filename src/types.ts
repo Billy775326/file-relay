@@ -6,6 +6,8 @@ export interface Env {
   BUCKET?: R2Bucket;
   ASSETS: Fetcher;
   ADMIN_TOKEN: string;
+  /** 可选 secret:自定义管理后台入口路径(如 /panel-x7k9);设置后 /admin 返回 404 */
+  ADMIN_PATH?: string;
   // 以下均为 wrangler.jsonc vars,运行时是 string
   MAX_FILE_SIZE: string;
   MAX_TEXT_LENGTH: string;

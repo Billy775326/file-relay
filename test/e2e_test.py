@@ -90,5 +90,13 @@ else:
 st, r = call("POST", "/api/shares/text", {"text": "x", "expiry": "bad"})
 check("非法expiry 400", st == 400, f"st={st}")
 
+print("== 5. 管理入口(默认未自定义时)==")
+st, page = call("GET", "/admin")
+check("/admin 200 且为管理页", st == 200 and b"\xe7\xae\xa1\xe7\x90\x86\xe5\x90\x8e\xe5\x8f\xb0" in (page if isinstance(page, bytes) else page.encode()), f"st={st}")
+st, _ = call("GET", "/admin.html")
+check("/admin.html 直达 404", st == 404, f"st={st}")
+st, _ = call("GET", "/admin/whatever")
+check("/admin/* 404", st == 404, f"st={st}")
+
 print(f"\n结果({backend} 模式): {ok} pass / {fail} fail")
 sys.exit(1 if fail else 0)
