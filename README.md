@@ -80,7 +80,8 @@ npx wrangler r2 bucket create file-relay
 
 # 3. 建 KV 命名空间(存元数据,默认后端;binding 名保持 fileKV 不变)
 npx wrangler kv namespace create file-relay-meta
-#    把输出的 id 填进 wrangler.jsonc 的 kv_namespaces[0].id
+#    取消 wrangler.jsonc 里 kv_namespaces 块的注释,把输出的 id 填进去
+#    (仓库默认零 ID 模式:该块注释着,绑定走控制台,见方式二)
 
 # 4. 设置管理令牌(强随机串,自己生成,例如 openssl rand -base64 24)
 npx wrangler secret put ADMIN_TOKEN
@@ -101,7 +102,7 @@ npm run db:remote                          # 远端建表;本地调试用 npm ru
 
 ### 方式二:Cloudflare 控制台(GitHub 连接)
 
-不装 Node 的纯网页部署,**全程不需要改仓库里的任何文件**——资源全部在控制台手动绑定,变量名与代码约定一致即可。仓库连到 Cloudflare 后,每次 `git push` 自动重新部署(Workers Builds,免费构建额度个人使用绰绰有余)。
+不装 Node 的纯网页部署,**全程不需要改仓库里的任何文件**——资源全部在控制台手动绑定,变量名与代码约定一致即可。仓库连到 Cloudflare 后,每次 `git push` 自动重新部署(Workers Builds,免费构建额度个人使用绰绰有余)。本仓库自身就是这种「零 ID」模式:`wrangler.jsonc` 不写任何资源 ID,KV 绑定只存在于控制台。
 
 #### 1. 推送到 GitHub
 
