@@ -5,9 +5,12 @@
   "compatibility_date": "2025-06-01",
 
   // 静态资源:命中文件直接由边缘返回,不进 Worker;/api/* 不匹配任何文件 → 落入 Worker
+  // run_worker_first:/admin 与 /admin.html 必须先进 Worker,配合可选 secret ADMIN_PATH
+  // 自定义管理入口(设置后 /admin 返回 404),防止绕过入口直取 admin.html
   "assets": {
     "directory": "./public",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    "run_worker_first": ["/admin*"]
   },
 
   // ── 文件存储:默认小存储模式(KV 直传,单文件 ≤24MB,整个部署只需一个 KV 命名空间)──

@@ -8,6 +8,20 @@ import { deleteFile } from './filestore';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
 
+/**
+ * 管理后台入口路径:读 secret ADMIN_PATH(可选)。
+ * 格式:字母/数字/-/_ 组成的单段路径,1-64 位(带不带前导 / 均可);
+ * 未设置或非法时回退默认 /admin;保留路径(/api、/pickup)不允许占用。
+ */
+export function adminPath(env: Env): string {
+  const raw = env.ADMIN_PATH?.trim();
+  if (!raw) return '/admin';
+  const p = raw.startsWith('/') ? raw : `/${raw}`;
+  if (!/^\/[A-Za-z0-9_-]{1,64}$/.test(p)) return '/admin';
+  if (p === '/api' || p === '/pickup') return '/admin';
+  return p;
+}
+
 const enc = new TextEncoder();
 const DAY_MS = 86_400_000;
 

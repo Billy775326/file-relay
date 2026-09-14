@@ -85,6 +85,10 @@ npx wrangler kv namespace create file-relay-meta
 # 4. 设置管理令牌(强随机串,自己生成,例如 openssl rand -base64 24)
 npx wrangler secret put ADMIN_TOKEN
 
+# 4b.(可选)自定义管理入口:设置后 /admin 返回 404,后台只能从新入口进,防扫描
+#     值为字母/数字/-/_ 组成的单段路径,如 panel-x7k9(带不带开头 / 均可)
+npx wrangler secret put ADMIN_PATH
+
 # 5. 部署(会自动上传静态资源、注册 cron)
 npm run deploy
 
@@ -127,7 +131,7 @@ npm run db:remote                          # 远端建表;本地调试用 npm ru
 
 #### 5. 配置 Secret、确认 Cron
 
-- **Worker → Settings → Variables and Secrets → Add**:类型选 **Secret**,名字 `ADMIN_TOKEN`,值填强随机串(本地有 OpenSSL 就 `openssl rand -base64 24`,没有用密码管理器/在线生成器),保存后点 **Deploy** 生效
+- **Worker → Settings → Variables and Secrets → Add**:类型选 **Secret**,名字 `ADMIN_TOKEN`,值填强随机串(本地有 OpenSSL 就 `openssl rand -base64 24`,没有用密码管理器/在线生成器),保存后点 **Deploy** 生效;(可选)再加一个 `ADMIN_PATH` 自定义管理入口(如 `panel-x7k9`,设置后 `/admin` 404)
 - **Settings → Triggers & Events**:确认 Cron Triggers 出现 `0 */6 * * *`(wrangler.jsonc 里有就会自动注册,一般无需手动加)
 
 #### 6. 验证与日常更新
@@ -156,6 +160,13 @@ npm run db:remote                          # 远端建表;本地调试用 npm ru
 | MAX_PARTS | 10000 | 仅 R2 ❌ | R2 分片数上限 |
 
 ADMIN_TOKEN 为 secret(`npx wrangler secret put ADMIN_TOKEN`),任何模式都需要。
+
+### Secrets
+
+| Secret | 必需 | 说明 |
+|---|---|---|
+| `ADMIN_TOKEN` | ✅ | 管理后台登录令牌(强随机串) |
+| `ADMIN_PATH` | 可选 | 自定义管理入口:设置为字母/数字/`-`/`_` 组成的单段路径(1-64 位,如 `panel-x7k9`),后台入口变为 `https://…/<该值>`,`/admin` 与 `/admin.html` 一律 404,防被扫描。未设置则默认 `/admin`。别与 `/pickup`、`/api` 等现有路径同名。注:这只是隐藏登录页,`/api/admin/*` 接口本身始终受 ADMIN_TOKEN 保护 |
 
 ## 设计取舍(已知边界)
 
