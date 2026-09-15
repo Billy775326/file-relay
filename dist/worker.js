@@ -83,7 +83,7 @@ setInlineAssets({ "404.html": `<!doctype html>
   </section>
 </main>
 
-<footer class="foot" data-i18n="foot">\u4F60\u50CF\u4E2A\u7EAA\u5FF5\u54C1</footer>
+<footer class="foot" data-i18n="foot">\u89C1\u5B57\u5982\u9762</footer>
 <script type="module">
   import { initI18n } from '/js/i18n.js';
   initI18n();
@@ -263,7 +263,7 @@ setInlineAssets({ "404.html": `<!doctype html>
   </div>
 </main>
 
-<footer class="foot" data-i18n="foot">\u4F60\u50CF\u4E2A\u7EAA\u5FF5\u54C1</footer>
+<footer class="foot" data-i18n="foot">\u89C1\u5B57\u5982\u9762</footer>
 
 <script src="/js/vendor/qrcode.js"><\/script>
 <script type="module" src="/js/index.js"><\/script>
@@ -274,6 +274,7 @@ setInlineAssets({ "404.html": `<!doctype html>
  * JS \u52A8\u6001\u5B57\u7B26\u4E32\u7528 t('key', \u2026args);{n} \u5360\u4F4D\u3002
  * \u8BED\u8A00\u4F18\u5148\u7EA7:localStorage('lang') > \u6D4F\u89C8\u5668\u8BED\u8A00(en \u5F00\u5934\u2192\u82F1\u6587)> \u4E2D\u6587\u3002
  * \u5207\u6362\u540E\u8C03\u7528\u5DF2\u6CE8\u518C\u7684\u91CD\u6E32\u67D3\u94A9\u5B50(\u5404\u9875\u9762 setLang \u65F6\u767B\u8BB0)\u3002
+ * \u8BCD\u5178\u503C\u4E3A\u6570\u7EC4\u65F6\u968F\u673A\u53D6\u4E00\u6761(\u9875\u811A\u5F69\u86CB,\u6BCF\u6B21\u52A0\u8F7D/\u5207\u8BED\u8A00\u91CD\u6447)\u3002
  */
 
 const DICT = {
@@ -291,7 +292,14 @@ const DICT = {
     'nav.send': '\u53D1\u9001',
     'nav.theme': '\u5207\u6362\u4E3B\u9898',
     'nav.lang': '\u5207\u6362\u8BED\u8A00',
-    'foot': '\u4F60\u50CF\u4E2A\u7EAA\u5FF5\u54C1',
+    'foot': [
+      '\u89C1\u5B57\u5982\u9762',
+      '\u7EB8\u77ED\u60C5\u957F',
+      '\u5C71\u9AD8\u6C34\u957F,\u540E\u4F1A\u6709\u671F',
+      '\u6B64\u4EF6\u5DF2\u7B7E\u6536,\u671B\u73CD\u91CD',
+      '\u98CE\u91CC\u96E8\u91CC,\u4E2D\u8F6C\u7AD9\u7B49\u4F60',
+      '\u6162\u4E00\u70B9,\u4E5F\u6CA1\u5173\u7CFB',
+    ],
 
     'tab.file': '\u53D1\u6587\u4EF6',
     'tab.text': '\u53D1\u6587\u672C',
@@ -428,7 +436,14 @@ const DICT = {
     'nav.send': 'Send',
     'nav.theme': 'Toggle theme',
     'nav.lang': 'Switch language',
-    'foot': "You're like a keepsake",
+    'foot': [
+      'Yours, from afar',
+      'Words run short, feelings run long',
+      'See you down the road',
+      'Signed, sealed, delivered',
+      'Through wind and rain, the relay waits',
+      'Take care, until next time',
+    ],
 
     'tab.file': 'Send file',
     'tab.text': 'Send text',
@@ -556,9 +571,10 @@ export let LANG =
   localStorage.getItem('lang') ||
   ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
 
-/** \u53D6\u8BCD:\u5F53\u524D\u8BED\u8A00 \u2192 \u4E2D\u6587\u515C\u5E95 \u2192 key \u672C\u8EAB;{0}{1}\u2026 \u4F9D\u6B21\u66FF\u6362 */
+/** \u53D6\u8BCD:\u5F53\u524D\u8BED\u8A00 \u2192 \u4E2D\u6587\u515C\u5E95 \u2192 key \u672C\u8EAB;\u6570\u7EC4\u503C\u968F\u673A\u53D6\u4E00\u6761;{0}{1}\u2026 \u4F9D\u6B21\u66FF\u6362 */
 export function t(key, ...args) {
   let s = (DICT[LANG] && DICT[LANG][key]) ?? DICT.zh[key] ?? key;
+  if (Array.isArray(s)) s = s[Math.floor(Math.random() * s.length)];
   args.forEach((v, i) => { s = s.replaceAll(\`{\${i}}\`, String(v)); });
   return s;
 }
@@ -2930,7 +2946,7 @@ var qrcode = function() {
   <section class="card" id="pickup-result" hidden></section>
 </main>
 
-<footer class="foot" data-i18n="foot">\u4F60\u50CF\u4E2A\u7EAA\u5FF5\u54C1</footer>
+<footer class="foot" data-i18n="foot">\u89C1\u5B57\u5982\u9762</footer>
 
 <script type="module" src="/js/pickup.js"><\/script>
 </body>
