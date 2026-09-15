@@ -29,6 +29,13 @@
 </header>
 
 <main class="container wide">
+  <section class="flow-strip">
+    <div class="flow-step"><span class="flow-dot">📦</span><div class="flow-tt"><b data-i18n="flow.dropT">寄件</b><small data-i18n="flow.dropS">上传文件或文本,交寄柜台</small></div></div>
+    <div class="flow-link"></div>
+    <div class="flow-step"><span class="flow-dot">🎫</span><div class="flow-tt"><b data-i18n="flow.tickT">出票</b><small data-i18n="flow.tickS">生成 6 位取件口令</small></div></div>
+    <div class="flow-link"></div>
+    <div class="flow-step"><span class="flow-dot">📥</span><div class="flow-tt"><b data-i18n="flow.pickT">取件</b><small data-i18n="flow.pickS">对方凭码一次领走</small></div></div>
+  </section>
   <div class="send-grid">
   <section class="card form-card">
     <div class="card-cap">
@@ -94,10 +101,24 @@
         <div class="ph-postmark">PENDING</div>
         <p data-i18n="ph.title">待出票</p>
         <small data-i18n="ph.sub">上传完成后,取件凭证会出现在这里</small>
+        <div class="ph-route">
+          <div class="ph-leg"><span class="ph-ic">🧑</span><div><b data-i18n="route.senderT">寄件人 · 你</b><small data-i18n="route.senderS">把文件或文本交寄本柜台</small></div></div>
+          <div class="ph-dash"></div>
+          <div class="ph-leg"><span class="ph-ic">☁️</span><div><b data-i18n="route.relayT">中转站 · 在途</b><small data-i18n="route.relayS">Cloudflare 边缘限时保管</small></div></div>
+          <div class="ph-dash"></div>
+          <div class="ph-leg"><span class="ph-ic">🧲</span><div><b data-i18n="route.takerT">取件人 · 对方</b><small data-i18n="route.takerS">凭 6 位口令领取,逾期退回虚无</small></div></div>
+        </div>
+        <div class="ph-fine" data-i18n="route.fine">限 次 · 限 时 · 到 期 即 毁</div>
       </div>
       <div id="results" class="results"></div>
     </aside>
   </div>
+  <section class="feat-band">
+    <div class="feat"><span class="feat-ic">🧩</span><div><b data-i18n="feat.splitT">分片直传</b><small data-i18n="feat.splitS">单文件至高 2 GB</small></div></div>
+    <div class="feat"><span class="feat-ic">⏳</span><div><b data-i18n="feat.ttlT">时效可控</b><small data-i18n="feat.ttlS">1 ~ 30 天或永久</small></div></div>
+    <div class="feat"><span class="feat-ic">🔢</span><div><b data-i18n="feat.limitT">限次取件</b><small data-i18n="feat.limitS">1 次 · 5 次 · 不限</small></div></div>
+    <div class="feat"><span class="feat-ic">🔒</span><div><b data-i18n="feat.selfT">自托管</b><small data-i18n="feat.selfS">数据在你自己的账号</small></div></div>
+  </section>
 </main>
 
 <footer class="foot" data-i18n="foot">见字如面</footer>
