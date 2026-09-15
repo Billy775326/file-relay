@@ -57,6 +57,9 @@
 }
 
 * { box-sizing: border-box; }
+/* [hidden] 兜底:类上的 display:flex/inline-flex 会盖过 UA 样式表的 [hidden]{display:none},
+   导致 .result-placeholder/.file-list 等设了 hidden 仍可见 */
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
