@@ -149,6 +149,36 @@ main { flex: 1 0 auto; } /* 撑满视口剩余高度,把页脚推到底 */
   padding: 32px 16px 10px;
 }
 
+/* ============ 邮路三步条(柜台上方:寄件→出票→取件) ============ */
+.flow-strip {
+  display: flex;
+  align-items: center;
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: 13px;
+  box-shadow: 6px 6px 0 var(--hard);
+  padding: 18px 26px;
+  margin-bottom: 24px;
+  animation: fade-up var(--t-slow) var(--ease) both;
+}
+.flow-step { flex: 1; display: flex; align-items: center; gap: 13px; min-width: 0; }
+.flow-dot {
+  width: 46px; height: 46px; flex: none;
+  border: 2.5px double var(--stamp); border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 20px; color: var(--stamp); font-family: var(--serif);
+}
+.flow-step:nth-child(1) .flow-dot { transform: rotate(-7deg); }
+.flow-step:nth-child(3) .flow-dot { transform: rotate(5deg); }
+.flow-step:nth-child(5) .flow-dot { transform: rotate(-4deg); }
+.flow-tt b { display: block; font-size: 14px; font-family: var(--serif); letter-spacing: 0.06em; }
+.flow-tt small { color: var(--muted); font-size: 12px; }
+.flow-link { flex: 0 0 58px; border-top: 2px dashed var(--line); margin: 0 12px; position: relative; }
+.flow-link::after {
+  content: '✈'; position: absolute; right: -4px; top: -11px;
+  font-size: 12px; color: var(--stamp);
+}
+
 /* ============ 发送页:柜台双栏(左寄件单 / 右回执常驻) ============ */
 /* 内容不足一屏时柜台上/下留白均衡;超出一屏时 main 高度=内容高,自动退化为顶对齐 */
 main:has(> .send-grid) { display: flex; flex-direction: column; justify-content: center; }
@@ -158,7 +188,11 @@ main:has(> .send-grid) { display: flex; flex-direction: column; justify-content:
   gap: 26px;
   align-items: stretch; /* 两栏同高:空态时右栏占位撑到与表单卡齐底 */
 }
-.form-card { margin-bottom: 0; align-self: start; } /* 表单卡保持自然高,不被拉伸 */
+.form-card { margin-bottom: 0; align-self: stretch; display: flex; flex-direction: column; } /* 两栏齐底:表单卡同样拉伸(回执栏内容更高时不再参差) */
+/* 拉伸后的多余高度交给输入区吸收:拖拽区/文本框/文件队列长高,选项和按钮不被顶得悬空 */
+.form-card .panel { display: flex; flex-direction: column; flex: 1; }
+.form-card .dropzone, .form-card textarea, .form-card .file-list { flex: 1; }
+.form-card .dropzone { display: flex; flex-direction: column; justify-content: center; }
 .card-cap, .side-cap {
   display: flex;
   justify-content: space-between;
@@ -210,6 +244,24 @@ main:has(> .send-grid) { display: flex; flex-direction: column; justify-content:
 }
 .result-placeholder p { margin: 0 0 4px; font-weight: 700; font-family: var(--serif); letter-spacing: 0.08em; }
 .result-placeholder small { color: var(--muted); font-size: 12.5px; }
+/* 空态内嵌「在途邮路」竖向时间线:右栏不空 */
+.ph-route { margin-top: 24px; width: 100%; max-width: 300px; text-align: left; }
+.ph-leg { display: flex; gap: 13px; align-items: flex-start; }
+.ph-ic {
+  width: 40px; height: 40px; flex: none;
+  border: 1.5px solid var(--line); border-radius: 50%;
+  background: var(--rowbg);
+  display: grid; place-items: center; font-size: 17px;
+}
+.ph-leg:nth-child(1) .ph-ic { transform: rotate(-6deg); }
+.ph-leg b { display: block; font-size: 13px; font-family: var(--serif); letter-spacing: 0.04em; }
+.ph-leg small { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+.ph-dash { width: 0; height: 22px; border-left: 2px dashed var(--line); margin: 3px 0 3px 19px; }
+.ph-fine {
+  margin-top: 22px; padding-top: 13px; width: 100%; max-width: 300px;
+  border-top: 1.5px dashed var(--line);
+  color: var(--muted); font-size: 11px; letter-spacing: 0.12em; text-align: center;
+}
 
 /* ============ 按钮:邮戳章 ============ */
 .btn {
@@ -488,6 +540,27 @@ textarea:focus { outline: none; box-shadow: 3px 3px 0 var(--hard-soft); }
 .tk-foot { display: flex; gap: 10px; justify-content: center; padding: 14px; flex-wrap: wrap; }
 .result .btn-row { justify-content: center; }
 
+/* ============ 特性带(柜台下方:一排业务公告章) ============ */
+.feat-band { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 28px; }
+.feat {
+  background: var(--paper);
+  border: 1.5px dashed var(--line);
+  border-radius: 11px;
+  box-shadow: 3px 3px 0 var(--hard-soft);
+  padding: 14px 16px;
+  display: flex; gap: 12px; align-items: center;
+  animation: fade-up var(--t-slow) var(--ease) both;
+}
+.feat:nth-child(2) { transform: rotate(0.4deg); }
+.feat:nth-child(3) { transform: rotate(-0.3deg); }
+.feat-ic {
+  width: 40px; height: 40px; flex: none;
+  border: 2px double var(--stamp); border-radius: 50%;
+  display: grid; place-items: center; font-size: 17px;
+}
+.feat b { display: block; font-size: 13.5px; font-family: var(--serif); letter-spacing: 0.04em; }
+.feat small { color: var(--muted); font-size: 12px; }
+
 /* ============ 取件页 ============ */
 h2.title { margin: 8px 0 6px; font-size: 22px; font-weight: 700; line-height: 1.3; font-family: var(--serif); letter-spacing: 0.04em; }
 .pk-sub { margin: 0 0 16px; font-size: 13.5px; }
@@ -609,6 +682,11 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 @media (max-width: 880px) {
   .send-grid { grid-template-columns: 1fr; gap: 18px; }
   .send-side .side-cap, .result-placeholder { display: none; }
+  /* 邮路条竖排,连线转为向下虚线;特性带两列 */
+  .flow-strip { flex-direction: column; align-items: stretch; gap: 14px; padding: 16px 18px; }
+  .flow-link { flex: 0 0 0; width: 0; height: 26px; border-top: none; border-left: 2px dashed var(--line); margin: 0 0 0 22px; }
+  .flow-link::after { right: -6px; top: 12px; }
+  .feat-band { grid-template-columns: repeat(2, 1fr); margin-top: 20px; gap: 12px; }
 }
 @media (max-width: 640px) {
   .options { grid-template-columns: 1fr; }
