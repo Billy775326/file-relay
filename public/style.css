@@ -69,6 +69,9 @@ body {
   line-height: 1.6;
   color: var(--ink);
   min-height: 100vh;
+  /* 纵向 flex 骨架:main 吃掉剩余高度,页脚贴视口底 */
+  display: flex;
+  flex-direction: column;
   background:
     radial-gradient(var(--dots) 1px, transparent 1px) 0 0 / 22px 22px,
     var(--bag);
@@ -90,6 +93,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 22px 20px 14px;
+  width: 100%; /* body 改纵向 flex 后,auto margin 条目会收缩到内容宽,显式拉满再由 max-width 收口 */
   max-width: 720px;
   margin: 0 auto 26px;
   border-bottom: 3px double var(--line);
@@ -119,7 +123,7 @@ body {
 .actions { display: flex; align-items: center; gap: 8px; }
 
 /* ============ 布局 ============ */
-.container { max-width: 720px; margin: 0 auto; padding: 8px 16px 48px; }
+.container { width: 100%; max-width: 720px; margin: 0 auto; padding: 8px 16px 48px; }
 .container.wide { max-width: 1080px; }
 .container.narrow { max-width: 460px; }
 .card {
@@ -134,7 +138,10 @@ body {
 .muted { color: var(--muted); }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
 
+main { flex: 1 0 auto; } /* 撑满视口剩余高度,把页脚推到底 */
+/* 兜底:即使 main 没撑开(异常页面)也把页脚推到底 */
 .foot {
+  margin-top: auto;
   text-align: center;
   color: var(--muted);
   font-size: 12px;
@@ -143,13 +150,15 @@ body {
 }
 
 /* ============ 发送页:柜台双栏(左寄件单 / 右回执常驻) ============ */
+/* 内容不足一屏时柜台上/下留白均衡;超出一屏时 main 高度=内容高,自动退化为顶对齐 */
+main:has(> .send-grid) { display: flex; flex-direction: column; justify-content: center; }
 .send-grid {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
   gap: 26px;
-  align-items: start;
+  align-items: stretch; /* 两栏同高:空态时右栏占位撑到与表单卡齐底 */
 }
-.form-card { margin-bottom: 0; }
+.form-card { margin-bottom: 0; align-self: start; } /* 表单卡保持自然高,不被拉伸 */
 .card-cap, .side-cap {
   display: flex;
   justify-content: space-between;
@@ -166,7 +175,8 @@ body {
   letter-spacing: 0.08em;
   font-size: 12.5px;
 }
-.send-side { position: sticky; top: 24px; min-width: 0; }
+/* 右栏随行高拉伸:sticky 在 stretch 下不再生效(两栏永远同高,无可粘滞余量),改为 flex 纵向栏 */
+.send-side { display: flex; flex-direction: column; min-width: 0; }
 .send-side .results { margin-top: 0; }
 /* 回执空态:待出票邮戳 */
 .result-placeholder {
@@ -174,6 +184,7 @@ body {
   border-radius: 13px;
   padding: 38px 20px;
   min-height: 340px; /* 与左栏表单卡视觉平衡 */
+  flex: 1; /* 右栏被拉伸时占位随之长高,底边与表单卡对齐 */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -597,7 +608,6 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 /* 双栏并回单栏:右栏回到表单下方,空态占位隐藏 */
 @media (max-width: 880px) {
   .send-grid { grid-template-columns: 1fr; gap: 18px; }
-  .send-side { position: static; }
   .send-side .side-cap, .result-placeholder { display: none; }
 }
 @media (max-width: 640px) {

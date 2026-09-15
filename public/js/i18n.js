@@ -20,7 +20,7 @@ const DICT = {
     'nav.send': '发送',
     'nav.theme': '切换主题',
     'nav.lang': '切换语言',
-    'foot': '自托管 · 运行于 Cloudflare Workers',
+    'foot': '你像个纪念品',
 
     'tab.file': '发文件',
     'tab.text': '发文本',
@@ -157,7 +157,7 @@ const DICT = {
     'nav.send': 'Send',
     'nav.theme': 'Toggle theme',
     'nav.lang': 'Switch language',
-    'foot': 'Self-hosted · Running on Cloudflare Workers',
+    'foot': "You're like a keepsake",
 
     'tab.file': 'Send file',
     'tab.text': 'Send text',
