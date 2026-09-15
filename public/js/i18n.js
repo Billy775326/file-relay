@@ -3,6 +3,7 @@
  * JS 动态字符串用 t('key', …args);{n} 占位。
  * 语言优先级:localStorage('lang') > 浏览器语言(en 开头→英文)> 中文。
  * 切换后调用已注册的重渲染钩子(各页面 setLang 时登记)。
+ * 词典值为数组时随机取一条(页脚彩蛋,每次加载/切语言重摇)。
  */
 
 const DICT = {
@@ -20,7 +21,14 @@ const DICT = {
     'nav.send': '发送',
     'nav.theme': '切换主题',
     'nav.lang': '切换语言',
-    'foot': '你像个纪念品',
+    'foot': [
+      '见字如面',
+      '纸短情长',
+      '山高水长,后会有期',
+      '此件已签收,望珍重',
+      '风里雨里,中转站等你',
+      '慢一点,也没关系',
+    ],
 
     'tab.file': '发文件',
     'tab.text': '发文本',
@@ -157,7 +165,14 @@ const DICT = {
     'nav.send': 'Send',
     'nav.theme': 'Toggle theme',
     'nav.lang': 'Switch language',
-    'foot': "You're like a keepsake",
+    'foot': [
+      'Yours, from afar',
+      'Words run short, feelings run long',
+      'See you down the road',
+      'Signed, sealed, delivered',
+      'Through wind and rain, the relay waits',
+      'Take care, until next time',
+    ],
 
     'tab.file': 'Send file',
     'tab.text': 'Send text',
@@ -285,9 +300,10 @@ export let LANG =
   localStorage.getItem('lang') ||
   ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
 
-/** 取词:当前语言 → 中文兜底 → key 本身;{0}{1}… 依次替换 */
+/** 取词:当前语言 → 中文兜底 → key 本身;数组值随机取一条;{0}{1}… 依次替换 */
 export function t(key, ...args) {
   let s = (DICT[LANG] && DICT[LANG][key]) ?? DICT.zh[key] ?? key;
+  if (Array.isArray(s)) s = s[Math.floor(Math.random() * s.length)];
   args.forEach((v, i) => { s = s.replaceAll(`{${i}}`, String(v)); });
   return s;
 }
