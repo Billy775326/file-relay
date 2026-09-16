@@ -41,3 +41,24 @@ export async function runCleanup(env: Env): Promise<{ deletedShares: number; abo
 
   return { deletedShares, abortedSessions };
 }
+
+const CLEANUP_INTERVAL_MS = 6 * 3_600_000;
+const CLEANUP_MARK_KEY = 'sys:cleanup-at'; // 键空间:s:分享 u:会话 f:文件,sys: 系统标记
+
+/**
+ * 访客触发的节流清理:首页挂 waitUntil 调用(Pages 无 Cron Triggers 的零依赖补偿)。
+ * 6h 窗口内最多真正执行一次——节流标记存 fileKV;D1 元数据模式未绑 KV 时跳过节流
+ * (D1 扫描本身廉价)。任何失败静默:清理是尽力而为,绝不影响访客请求。
+ */
+export async function cleanupIfDue(env: Env): Promise<void> {
+  try {
+    if (env.fileKV) {
+      const last = Number(await env.fileKV.get(CLEANUP_MARK_KEY));
+      if (Number.isFinite(last) && Date.now() - last < CLEANUP_INTERVAL_MS) return;
+      await env.fileKV.put(CLEANUP_MARK_KEY, String(Date.now()));
+    }
+    await runCleanup(env);
+  } catch {
+    // 失败等下个窗口重来
+  }
+}

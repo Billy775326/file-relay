@@ -6025,6 +6025,20 @@ async function runCleanup(env) {
   return { deletedShares, abortedSessions };
 }
 __name(runCleanup, "runCleanup");
+var CLEANUP_INTERVAL_MS = 6 * 36e5;
+var CLEANUP_MARK_KEY = "sys:cleanup-at";
+async function cleanupIfDue(env) {
+  try {
+    if (env.fileKV) {
+      const last = Number(await env.fileKV.get(CLEANUP_MARK_KEY));
+      if (Number.isFinite(last) && Date.now() - last < CLEANUP_INTERVAL_MS) return;
+      await env.fileKV.put(CLEANUP_MARK_KEY, String(Date.now()));
+    }
+    await runCleanup(env);
+  } catch {
+  }
+}
+__name(cleanupIfDue, "cleanupIfDue");
 
 // src/admin.ts
 var adminRoutes = new Hono2();
@@ -6169,6 +6183,10 @@ app.use("/api/*", async (c, next) => {
   await next();
 });
 app.get("/api/health", (c) => c.json({ ok: true }));
+app.get("/", (c, next) => {
+  c.executionCtx.waitUntil(cleanupIfDue(c.env));
+  return next();
+});
 app.get(
   "/api/config",
   (c) => c.json({

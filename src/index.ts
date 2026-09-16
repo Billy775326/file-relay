@@ -4,7 +4,7 @@ import { num } from './types';
 import { uploadRoutes } from './upload';
 import { shareRoutes } from './share';
 import { adminRoutes, adminPath } from './admin';
-import { runCleanup } from './cleanup';
+import { runCleanup, cleanupIfDue } from './cleanup';
 import { fileMode, fileMaxSize } from './filestore';
 import { serveAsset } from './asset-resolver';
 
@@ -38,6 +38,17 @@ app.use('/api/*', async (c, next) => {
 });
 
 app.get('/api/health', (c) => c.json({ ok: true }));
+
+/**
+ * 首页顺带触发节流清理(Pages 无 Cron 的补偿):waitUntil 后台执行,响应零延迟;6h 窗口见 cleanup.ts。
+ * ⚠️ 本地 `wrangler pages dev` 会把 wrangler.jsonc 的 assets(./public)并入静态资产层,Pages 静态优先
+ * 导致 / 被直出、进不了本路由(生产产物 dist/pages 只有 _worker.js,无静态文件,所有路径都进 Worker)。
+ * 本地验证此逻辑需临时移走 wrangler.jsonc 再起 pages dev。
+ */
+app.get('/', (c, next) => {
+  c.executionCtx.waitUntil(cleanupIfDue(c.env));
+  return next();
+});
 
 /** 前端据此选择上传方式:fileBackend=r2 走分片,kv 走单请求直传 */
 app.get('/api/config', (c) =>

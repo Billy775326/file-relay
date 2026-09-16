@@ -16,7 +16,7 @@
 - **有效期**:1 天 / 7 天 / 30 天 / 永久 × 取件次数 1 / 5 / 不限,组合失效
 - **取件二维码**:每个分享结果附带 `pickup` 链接二维码,扫码直达取件页
 - **中英双语界面**:一键切换,按浏览器语言自动初始化,偏好持久保存
-- **自动清理**:cron 每 6 小时回收过期分享(R2 模式另清理孤儿分片会话);取件时惰性校验,cron 异常不影响功能
+- **自动清理**:Workers cron 每 6 小时回收过期分享(R2 模式另清理孤儿分片会话);Pages 无 cron,改为打开首页自动节流清理(6h 窗口)+ 可选外部定时器;取件时惰性校验,清理异常不影响功能
 - **管理后台**:令牌登录,提供统计、列表与删除;入口默认为 `/admin`,可通过 Secret `ADMIN_PATH` 自定义(设置后 `/admin` 返回 404,以防扫描)
 - **配置切换免改代码**:文件存储默认 KV、R2 可选;元数据默认 KV、D1 可选,全部通过 wrangler.jsonc 切换
 - 移动端适配、深色模式;上传含进度、速度与失败重试
@@ -117,11 +117,12 @@ KV 模式下每次取件约消耗 1 次读 + 1 次写:免费额度每天 1000 �
 
 Pages 的绑定与环境变量属于项目设置,**只上传产物的部署不会碰它们**;此后每次 push 自动部署都无需再管。
 
-#### 6. 定时清理(Pages 没有 Cron Triggers,需外部触发)
+#### 6. 定时清理(Pages 没有 Cron Triggers)
 
-过期分享有惰性检查兜底,**功能正确性不依赖清理**——过期/取完的分享不会被取到;清理只负责回收存储。Pages 不支持 Cron Triggers,补偿方案任选:
+过期分享有惰性检查兜底,**功能正确性不依赖清理**——过期/取完的分享不会被取到;清理只负责回收存储。Pages 不支持 Cron Triggers,补偿机制叠加生效:
 
-- **外部定时器**(推荐):[cron-job.org](https://cron-job.org) / UptimeRobot / 本地 cron,每 6 小时请求一次:
+- **访问即清理(自动)**:每次有人打开首页,后台顺带执行一次节流清理(6 小时窗口内最多真正执行一次,后台运行不影响页面速度)——常用站点无需任何额外配置
+- **外部定时器**(可选,低流量站点兜底):[cron-job.org](https://cron-job.org) / UptimeRobot / 本地 cron,每 6 小时请求一次:
 
   ```bash
   curl -X POST https://<项目名>.pages.dev/api/admin/cleanup -H "Authorization: Bearer <ADMIN_TOKEN>"
@@ -129,7 +130,6 @@ Pages 的绑定与环境变量属于项目设置,**只上传产物的部署不�
 
   返回 `{"ok":true,"deletedShares":n,"abortedSessions":n}`
 - **手动**:管理页登录后同样调用上述接口(cookie 鉴权即可)
-- **不管**:小规模自托管下仅存储残留,管理页可随时手动删除
 
 #### 7. 验证与日常更新
 
@@ -160,6 +160,8 @@ npx wrangler d1 create file-relay && npm run db:remote   # D1 建库+建表;本�
 部署完成后获得 `https://<项目名>.pages.dev`。**`wrangler pages deploy` 只上传构建产物、不上传绑定**——KV 与变量仍按方式一第 5 步在控制台配置(一次配好,后续部署不覆盖),ADMIN_TOKEN 也可以用 `npx wrangler pages secret put ADMIN_TOKEN` 代替控制台添加。定时清理同方式一第 6 步。
 
 本地开发:`npm run dev`(仓库模式,直接热更新 TS 源码 + `public/`;追加 `--test-scheduled` 后访问 `/__scheduled` 可手动触发 cron 逻辑)。调试 Pages/单文件产物形态:`npm run build:pages && npm run dev:pages`。端到端测试:`python test/e2e_test.py`(默认请求 `http://localhost:8787`,可通过 BASE 参数指定目标地址)。
+
+> ⚠️ `wrangler pages dev` 会把 wrangler.jsonc 的 `assets`(./public)并入本地静态资产层,Pages 静态优先——本地 `/` 等页面路径不进 Worker(与生产行为相反:生产产物 dist/pages 只有 _worker.js,所有请求都先进 Worker)。调试首页触发的清理逻辑时,需临时移走 wrangler.jsonc 再启动 pages dev。
 
 ### 方式三:单文件部署(控制台粘贴,免 GitHub 与 Node)
 
@@ -267,7 +269,7 @@ ADMIN_TOKEN 为 Secret(Pages 在控制台 Variables and Secrets 添加,或 `npx 
 ## 结构
 
 ```
-src/          Hono Worker:store(KV/D1 双后端)/ share(取件下载 + KV 直传)/ upload(R2 分片,大存储模式)/ admin / cleanup(cron + cleanup 接口)
+src/          Hono Worker:store(KV/D1 双后端)/ share(取件下载 + KV 直传)/ upload(R2 分片,大存储模式)/ admin / cleanup(cron + cleanup 接口 + 首页触发节流清理)
               asset-resolver.ts 静态资源双模式(Static Assets / 单文件内联);standalone.ts 单文件部署入口
 public/       原生 JS 三页面(发送 / 取件 / 管理),本地 wrangler dev 由 Static Assets 托管,部署形态内联进 _worker.js
 dist/         build:single 产物 worker.js(已入库,用于方式三粘贴);build:pages 复制为 dist/pages/_worker.js(方式一/二 Pages 部署)
