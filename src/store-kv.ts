@@ -127,14 +127,27 @@ export function createKVStore(kv: KVNamespace): ShareStore {
 
     async listShares(limit, offset) {
       const all = (await scanShareMeta(kv)).sort((a, b) => b.m.t - a.m.t);
-      const rows = all.slice(offset, offset + limit).map(({ code, m }): ShareListRow => ({
+      const page = all.slice(offset, offset + limit);
+      // KV 的 list 索引反映删除最长滞后约 60s,而 get 立即可见:刚删的口令会在管理列表
+      // "死而复生"。逐行 get 验活滤掉幽灵行(管理页专用路径,≤limit 次读可接受);
+      // subrequest 预算吃紧(免费档 50 次/请求)时退化为不校验,60s 后自然收敛。
+      let kept = page;
+      const budget = 48 - Math.ceil(all.length / 1000);
+      if (page.length > 0 && page.length <= budget) {
+        const alive = await Promise.all(
+          page.map((x) => kv.get(SHARE_PREFIX + x.code).then((v) => v !== null)),
+        );
+        kept = page.filter((_, i) => alive[i]);
+      }
+      const rows = kept.map(({ code, m }): ShareListRow => ({
         id: m.id, code, kind: m.k,
         filename: m.n ? b64decode(m.n) : null,
         size: m.s,
         pickupCount: m.c, maxPickups: m.m, expireAt: m.e, createdAt: m.t,
         textPreview: m.p ? b64decode(m.p) : null,
       }));
-      return { total: all.length, rows };
+      // total 同步扣除本页发现的幽灵行(其他页的幽灵由 60s 自然收敛,统计页同样有此偏差)
+      return { total: Math.max(0, all.length - (page.length - kept.length)), rows };
     },
 
     async stats(todayStart) {

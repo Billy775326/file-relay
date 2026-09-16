@@ -21,6 +21,7 @@
   --tkhead-bg: #26382c;      /* 票头底 */
   --tkhead-fg: #f4efdd;      /* 票头字 */
   --hard: rgba(38, 56, 44, 0.9);   /* 硬投影 */
+  --mask: rgba(24, 20, 12, 0.55);  /* 弹窗遮罩 */
   --hard-soft: rgba(38, 56, 44, 0.35);
   --dots: rgba(38, 56, 44, 0.05);  /* 纸面网点纹理 */
   --radius: 14px;
@@ -53,6 +54,8 @@
   --tkhead-fg: #f0eee0;
   --hard: rgba(0, 0, 0, 0.5);
   --hard-soft: rgba(0, 0, 0, 0.32);
+  /* 深色下同透明度的遮罩几乎看不出来,加深一档保住弹窗与背景的分离感 */
+  --mask: rgba(4, 7, 14, 0.72);
   --dots: rgba(232, 229, 214, 0.05);
 }
 
@@ -648,6 +651,44 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 .token-input:focus { outline: none; box-shadow: 3px 3px 0 var(--hard-soft); }
 .admin-foot { margin-top: 18px; display: flex; justify-content: flex-end; }
 .pager-btns { display: flex; gap: 8px; }
+
+/* ============ 作废确认弹窗(管理页):票据卡 + 硬偏移投影 ============ */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--mask);
+}
+.modal-mask[hidden] { display: none; }
+.modal-card {
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 8px 8px 0 var(--hard);
+  padding: 22px 22px 18px;
+  width: min(430px, 100%);
+  animation: pop-in 0.18s ease-out;
+}
+.modal-title { margin: 0 0 14px; font-family: var(--serif); font-size: 19px; letter-spacing: 0.04em; }
+.del-target {
+  border: 1.5px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--rowbg);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  display: grid;
+  gap: 6px;
+}
+.del-line { display: flex; gap: 10px; align-items: baseline; min-width: 0; }
+.del-line > :first-child { flex: 0 0 4em; font-size: 12px; letter-spacing: 0.08em; }
+.del-line > :last-child { min-width: 0; overflow-wrap: anywhere; }
+.del-warn { margin: 0 0 16px; color: var(--danger); font-size: 13px; line-height: 1.5; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+@keyframes pop-in { from { transform: translateY(8px); opacity: 0; } }
 
 /* ============ toast:墨条 ============ */
 #toast-host {

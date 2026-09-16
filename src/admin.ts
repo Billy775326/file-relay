@@ -137,14 +137,15 @@ adminRoutes.get('/shares', async (c) => {
   });
 });
 
-/** 删除分享:按口令删(D1/KV 通吃),文件的先删存储对象(R2/KV 按键前缀路由)再删元数据 */
+/** 删除分享:按口令删(D1/KV 通吃),文件的先删存储对象(R2/KV 按键前缀路由)再删元数据。
+ *  幂等:口令不存在(含 KV list 索引滞后窗口里的幽灵行重复删除)同样返回 ok */
 adminRoutes.delete('/shares/:code', async (c) => {
   const code = c.req.param('code');
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
 
   const store = getStore(c.env);
   const rec = await store.getByCode(code);
-  if (!rec) return err(c, 404, 'not_found', '分享不存在');
+  if (!rec) return c.json({ ok: true, already: true });
 
   if (rec.kind === 'file') await deleteFile(c.env, rec.r2Key);
   await store.deleteByCode(code);

@@ -209,7 +209,7 @@ Beyond the web UI, all features are programmable. Parameter conventions: `expiry
 | POST | `/api/pickup` | Pick up by code: text shares return the content; file shares return metadata (not counted) |
 | GET | `/api/pickup/:code/download` | Download the file (this step counts) |
 | POST | `/api/uploads/init` etc. | R2 large-storage chunked upload endpoints (init / `:id/parts/:n` / complete / abort) |
-| POST | `/api/admin/login` etc. | Admin endpoints (HMAC-signed cookie auth): `stats`, `shares` listing, `DELETE shares/:code` by pickup code |
+| POST | `/api/admin/login` etc. | Admin endpoints (HMAC-signed cookie auth): `stats`, `shares` listing, `DELETE shares/:code` by pickup code (idempotent: a nonexistent code also returns ok, tiding over the KV eventual-consistency window) |
 | POST | `/api/admin/cleanup` | Manually/externally trigger cleanup (compensation channel for Pages having no cron): admin cookie or `Authorization: Bearer <ADMIN_TOKEN>` auth; returns `{ok, deletedShares, abortedSessions}` |
 
 Examples:

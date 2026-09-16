@@ -209,7 +209,7 @@ npm run build:single     # 产出 dist/worker.js
 | POST | `/api/pickup` | 凭口令取件:文本直接返回内容;文件返回元数据(此步不计数) |
 | GET | `/api/pickup/:code/download` | 下载文件(此步计数) |
 | POST | `/api/uploads/init` 等 | R2 大存储模式分片上传四端点(init / `:id/parts/:n` / complete / abort) |
-| POST | `/api/admin/login` 等 | 管理接口(HMAC 签名 cookie 鉴权):`stats`、`shares` 列表、`DELETE shares/:code` 按口令删除 |
+| POST | `/api/admin/login` 等 | 管理接口(HMAC 签名 cookie 鉴权):`stats`、`shares` 列表、`DELETE shares/:code` 按口令删除(幂等:口令不存在同样返回 ok,应对 KV 最终一致窗口) |
 | POST | `/api/admin/cleanup` | 手动/外部定时触发清理(Pages 无 Cron 的补偿通道):管理 cookie 或 `Authorization: Bearer <ADMIN_TOKEN>` 鉴权,返回 `{ok, deletedShares, abortedSessions}` |
 
 调用示例:

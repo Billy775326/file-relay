@@ -7,10 +7,13 @@ from urllib.parse import quote
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8787"
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+ADMIN_COOKIE = None  # 登录成功后自动携带,管理接口用
+
 def call(method, path, body=None, raw=None, headers=None):
     data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
     h = {"User-Agent": "file-relay-e2e-test/1.0"}  # workers.dev 默认拦截 Python-urllib UA(error 1010)
     if body is not None and raw is None: h["Content-Type"] = "application/json"
+    if ADMIN_COOKIE: h["Cookie"] = ADMIN_COOKIE
     if headers: h.update(headers)
     req = urllib.request.Request(BASE + path, data=data, method=method, headers=h)
     try:
@@ -99,6 +102,45 @@ st, _ = call("GET", "/admin.html")
 check("/admin.html 直达 404", st == 404, f"st={st}")
 st, _ = call("GET", "/admin/whatever")
 check("/admin/* 404", st == 404, f"st={st}")
+
+print("== 6. 管理:删除幂等 + 列表验活 ==")
+# 令牌来源:环境变量 FILE_RELAY_ADMIN_TOKEN,或本地 .dev.vars;都没有则跳过本节
+token = os.environ.get("FILE_RELAY_ADMIN_TOKEN")
+if not token and os.path.exists(".dev.vars"):
+    with open(".dev.vars", encoding="utf-8") as f:
+        for ln in f:
+            if ln.startswith("ADMIN_TOKEN="):
+                token = ln.split("=", 1)[1].strip()
+if not token:
+    print("  SKIP 未提供 ADMIN_TOKEN(env FILE_RELAY_ADMIN_TOKEN 或 .dev.vars)")
+else:
+    st, r = call("POST", "/api/admin/login", {"token": "wrong-token"})
+    check("错令牌 401", st == 401, f"st={st}")
+    req = urllib.request.Request(BASE + "/api/admin/login",
+                                 data=json.dumps({"token": token}).encode(),
+                                 method="POST",
+                                 headers={"Content-Type": "application/json",
+                                          "User-Agent": "file-relay-e2e-test/1.0"})
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        cookie = resp.headers.get("Set-Cookie") or ""
+        check("登录 200", resp.status == 200, f"st={resp.status}")
+    ADMIN_COOKIE = cookie.split(";")[0] if cookie.startswith("admin=") else None
+    check("拿到管理 cookie", ADMIN_COOKIE is not None)
+
+    st, r = call("POST", "/api/shares/text", {"text": "admin-del-test", "expiry": "1d", "maxPickups": None})
+    del_code = r.get("code") if isinstance(r, dict) else None
+    check("建临时分享", st == 201 and del_code, f"st={st} r={r}")
+
+    st, r = call("DELETE", f"/api/admin/shares/{del_code}")
+    check("删除 200", st == 200 and r.get("ok") is True, f"st={st} r={r}")
+    # KV list 索引最长 60s 才反映删除:立即拉列表,验活后不应再出现(回归:幽灵行)
+    st, r = call("GET", "/api/admin/shares?limit=50&offset=0")
+    codes = [row.get("code") for row in (r.get("rows") or [])] if isinstance(r, dict) else []
+    check("删除后立即列表无此口令", st == 200 and del_code not in codes, f"st={st} codes={codes[:10]}")
+    st, r = call("DELETE", f"/api/admin/shares/{del_code}")
+    check("重复删除幂等 200", st == 200 and r.get("ok") is True, f"st={st} r={r}")
+    st, r = call("POST", "/api/pickup", {"code": del_code})
+    check("删除后取件 404", st == 404, f"st={st}")
 
 print(f"\n结果({backend} 模式): {ok} pass / {fail} fail")
 sys.exit(1 if fail else 0)

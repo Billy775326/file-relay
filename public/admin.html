@@ -66,6 +66,19 @@
   </section>
 </main>
 
+<!-- 作废确认弹窗:票据风,替代原生 confirm(ESC / 点遮罩 = 取消) -->
+<div class="modal-mask" id="del-mask" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="del-title">
+    <h3 class="modal-title" id="del-title" data-i18n="ad.delTitle">作废这张取件凭证?</h3>
+    <div class="del-target" id="del-target"></div>
+    <p class="del-warn" data-i18n="ad.delWarn">作废后口令立即失效,对方将无法取件,且不可恢复。</p>
+    <div class="modal-actions">
+      <button id="del-cancel" class="btn" data-i18n="btn.cancel">取消</button>
+      <button id="del-ok" class="btn danger" data-i18n="ad.delOk">确认作废</button>
+    </div>
+  </div>
+</div>
+
 <script type="module" src="/js/admin.js"></script>
 </body>
 </html>
