@@ -1,6 +1,7 @@
 {
-  // 单文件打包专用配置:npm run build:single 用 --dry-run 产出 dist/worker.js,
-  // 也可用它本地调试单文件模式(npx wrangler dev -c wrangler.standalone.jsonc)。
+  // 单文件打包专用配置:npm run build:single 用 --dry-run 产出 dist/worker.js(粘贴部署),
+  // build:pages 再把它复制为 dist/pages/_worker.js(Pages 部署),两者同源同行为。
+  // 本地调试 Pages 形态:npm run build:pages && npm run dev:pages。
   // 不含 assets 静态资源(public/ 已内联进代码)、不含真实资源 ID,与生产部署无关。
   "name": "file-relay-single",
   "main": "src/standalone.ts",

@@ -5,6 +5,7 @@ import type { Env } from './types';
 import { err } from './util';
 import { getStore, shareStatusOf } from './store';
 import { deleteFile } from './filestore';
+import { runCleanup } from './cleanup';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
 
@@ -68,6 +69,13 @@ async function isValidCookie(env: Env, value: string | undefined): Promise<boole
 /** 鉴权中间件:除 /api/admin/login 外全部校验签名 cookie */
 adminRoutes.use('*', async (c, next) => {
   if (c.req.method === 'POST' && c.req.path === '/api/admin/login') return next();
+  // cleanup 双通道:外部定时器/脚本带 Bearer token(Pages 无 Cron Triggers 的补偿),或管理页 cookie
+  if (c.req.method === 'POST' && c.req.path === '/api/admin/cleanup') {
+    const bearer = c.req.header('Authorization');
+    if (bearer?.startsWith('Bearer ') && (await safeEqual(bearer.slice(7), c.env.ADMIN_TOKEN || ''))) {
+      return next();
+    }
+  }
   if (!(await isValidCookie(c.env, getCookie(c, 'admin')))) {
     return err(c, 401, 'unauthorized', '未登录或会话已过期');
   }
@@ -142,5 +150,11 @@ adminRoutes.delete('/shares/:code', async (c) => {
   await store.deleteByCode(code);
   return c.json({ ok: true });
 });
+
+/** 手动/外部定时触发清理:Pages 部署没有 Cron Triggers,用外部定时器打这里;
+ *  Workers 粘贴部署也兼容(与 scheduled 共用 runCleanup)。鉴权见上方中间件(Bearer 或 cookie)。 */
+adminRoutes.post('/cleanup', async (c) =>
+  c.json({ ok: true, ...(await runCleanup(c.env)) }),
+);
 
 export type AdminContext = Context<{ Bindings: Env }>;

@@ -5997,6 +5997,35 @@ var deleteCookie = /* @__PURE__ */ __name((c, name, opt) => {
   return deletedCookie;
 }, "deleteCookie");
 
+// src/cleanup.ts
+async function runCleanup(env) {
+  const now = Date.now();
+  const store = getStore(env);
+  let deletedShares = 0;
+  let abortedSessions = 0;
+  for (let round = 0; round < 20; round++) {
+    const expired = await store.listExpiredShares(now, 100);
+    if (expired.length === 0) break;
+    const r2Keys = expired.filter((r) => r.r2Key && !isKvFileKey(r.r2Key)).map((r) => r.r2Key);
+    if (r2Keys.length > 0 && env.BUCKET) await env.BUCKET.delete(r2Keys);
+    await Promise.all(expired.filter((r) => r.r2Key && isKvFileKey(r.r2Key)).map((r) => deleteFile(env, r.r2Key)));
+    await store.deleteByCodes(expired.map((r) => r.code));
+    deletedShares += expired.length;
+  }
+  const ttl = num(env.SESSION_TTL_MS, 864e5);
+  const stale = await store.listStaleSessions(now, ttl);
+  for (const s of stale) {
+    try {
+      await env.BUCKET?.resumeMultipartUpload(s.r2Key, s.uploadId).abort();
+    } catch {
+    }
+    await store.deleteSession(s.id);
+    abortedSessions++;
+  }
+  return { deletedShares, abortedSessions };
+}
+__name(runCleanup, "runCleanup");
+
 // src/admin.ts
 var adminRoutes = new Hono2();
 function adminPath(env) {
@@ -6045,6 +6074,12 @@ async function isValidCookie(env, value) {
 __name(isValidCookie, "isValidCookie");
 adminRoutes.use("*", async (c, next) => {
   if (c.req.method === "POST" && c.req.path === "/api/admin/login") return next();
+  if (c.req.method === "POST" && c.req.path === "/api/admin/cleanup") {
+    const bearer = c.req.header("Authorization");
+    if (bearer?.startsWith("Bearer ") && await safeEqual(bearer.slice(7), c.env.ADMIN_TOKEN || "")) {
+      return next();
+    }
+  }
   if (!await isValidCookie(c.env, getCookie(c, "admin"))) {
     return err(c, 401, "unauthorized", "\u672A\u767B\u5F55\u6216\u4F1A\u8BDD\u5DF2\u8FC7\u671F");
   }
@@ -6107,35 +6142,10 @@ adminRoutes.delete("/shares/:code", async (c) => {
   await store.deleteByCode(code);
   return c.json({ ok: true });
 });
-
-// src/cleanup.ts
-async function runCleanup(env) {
-  const now = Date.now();
-  const store = getStore(env);
-  let deletedShares = 0;
-  let abortedSessions = 0;
-  for (let round = 0; round < 20; round++) {
-    const expired = await store.listExpiredShares(now, 100);
-    if (expired.length === 0) break;
-    const r2Keys = expired.filter((r) => r.r2Key && !isKvFileKey(r.r2Key)).map((r) => r.r2Key);
-    if (r2Keys.length > 0 && env.BUCKET) await env.BUCKET.delete(r2Keys);
-    await Promise.all(expired.filter((r) => r.r2Key && isKvFileKey(r.r2Key)).map((r) => deleteFile(env, r.r2Key)));
-    await store.deleteByCodes(expired.map((r) => r.code));
-    deletedShares += expired.length;
-  }
-  const ttl = num(env.SESSION_TTL_MS, 864e5);
-  const stale = await store.listStaleSessions(now, ttl);
-  for (const s of stale) {
-    try {
-      await env.BUCKET?.resumeMultipartUpload(s.r2Key, s.uploadId).abort();
-    } catch {
-    }
-    await store.deleteSession(s.id);
-    abortedSessions++;
-  }
-  return { deletedShares, abortedSessions };
-}
-__name(runCleanup, "runCleanup");
+adminRoutes.post(
+  "/cleanup",
+  async (c) => c.json({ ok: true, ...await runCleanup(c.env) })
+);
 
 // src/index.ts
 var app = new Hono2();

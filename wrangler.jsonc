@@ -4,6 +4,11 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-06-01",
 
+  // ⚠️ 本配置现在只服务本地开发:npm run dev(wrangler dev 热更新 TS 源码 + public/ 静态资源)。
+  // 部署不再走 wrangler deploy —— 三条部署路径见 README:Pages+GitHub 自动构建 /
+  // npx wrangler pages deploy dist/pages / 控制台粘贴 dist/worker.js。
+  // Pages/粘贴模式的绑定都在控制台手动配置,不随部署被覆盖。
+
   // 静态资源:命中文件直接由边缘返回,不进 Worker;/api/* 不匹配任何文件 → 落入 Worker
   // run_worker_first:/admin 与 /admin.html 必须先进 Worker,配合可选 secret ADMIN_PATH
   // 自定义管理入口(设置后 /admin 返回 404),防止绕过入口直取 admin.html

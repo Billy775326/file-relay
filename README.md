@@ -6,7 +6,7 @@
 
 本项目为 [FileCodeBox](https://github.com/vastsa/FileCodeBox) 的 Cloudflare 等价替代:上传文件或文本,生成 6 位取件口令,对方凭口令取件。
 
-支持三种部署方式:wrangler 命令行、控制台 GitHub 连接自动构建、免环境单文件粘贴(见「部署方式」)。注:`*.workers.dev` 域名在中国大陆无法直接访问,验证时需使用代理,或为 Worker 绑定自定义域名。
+支持三种部署方式:Pages + GitHub 自动构建、wrangler 命令行手动部署 Pages、免环境单文件粘贴(见「部署方式」)。注:`*.pages.dev` / `*.workers.dev` 域名在中国大陆无法直接访问,验证时需使用代理,或绑定自定义域名。
 
 ## 功能
 
@@ -73,11 +73,70 @@ KV 模式下每次取件约消耗 1 次读 + 1 次写:免费额度每天 1000 �
 
 | 方式 | 适用场景 | 特点 |
 |---|---|---|
-| [方式一](#方式一wrangler-命令行推荐) 命令行 wrangler | 具备 Node.js 环境 | 最直接,一条命令完成部署 |
-| [方式二](#方式二cloudflare-控制台github-连接) 控制台 + GitHub | 需要 push 即部署 | Workers Builds 自动构建,仅需修改配置一行 |
+| [方式一](#方式一pages--github-连接自动构建) Pages + GitHub 连接 | 需要 push 即部署 | 自动构建,绑定全在控制台配置、永不被部署覆盖 |
+| [方式二](#方式二wrangler-命令行手动部署-pages) wrangler 命令行 | 具备 Node.js 环境 | 手动部署 Pages,一条命令上传产物 |
 | [方式三](#方式三单文件部署控制台粘贴免-github-与-node) 单文件粘贴 | 不安装 Node、不连接 Git | 整个服务打包为一个 worker.js,控制台粘贴即可使用 |
 
-### 方式一:wrangler 命令行(推荐)
+> 三种方式跑的是同一套代码:`build:pages` 产出的 `dist/pages/_worker.js`(Pages 用)与 `dist/worker.js`(粘贴用)同源同行为。**Pages 的绑定(KV/变量)存在项目设置里、与部署解耦**——部署一万次也不会清掉控制台手动配的绑定,无需在仓库里维护资源 ID;方式三同理。仅当你自行沿用旧的 `wrangler deploy`(Workers)流程时,才有「未写进 wrangler.jsonc 的绑定被部署清除」的问题(见 FAQ)。
+
+### 方式一:Pages + GitHub 连接(自动构建)
+
+无需安装 Node 的网页部署方式,**仓库不需要修改任何配置**。仓库连接 Cloudflare Pages 后,每次 `git push` 自动重新构建部署(免费构建额度对个人充足)。
+
+#### 1. 推送到 GitHub
+
+将本仓库推送至自己的 GitHub 账号(私有或公开均可)。
+
+#### 2. 创建 KV 命名空间(必需;默认模式下文件与元数据均存储于此)
+
+控制台左侧 **Storage & Databases → KV → Create namespace**,名称如 `file-relay-meta`。命名空间本身不需要把 ID 填进仓库——稍后在 Pages 控制台绑定它。
+
+#### 3.(可选)创建 R2 / D1 资源
+
+默认小存储模式可跳过本步骤:
+
+- **R2(需传输 >24MB 大文件)**:**Storage & Databases → R2 → Create bucket**(首次使用 R2 可能要求绑定付款方式)
+- **D1(需要强一致元数据)**:**Storage & Databases → D1 → Create database**,创建后进入该库的 **Console** 标签页,将仓库 `schema/schema.sql` 全文粘贴执行以建表
+
+#### 4. 连接仓库并首次构建
+
+1. 控制台 **Workers & Pages → Create → Pages → Connect to Git**(新版界面在 Compute → Pages 标签下)
+2. 首次将跳转 GitHub 授权:安装 **Cloudflare Pages** App 并勾选本仓库(私有仓库选择 *Only select repositories* 即可)
+3. 返回 Cloudflare 选中仓库,项目名保持 `file-relay`,构建配置:
+   - **Framework preset**:None
+   - **Build command**:`npm run build:pages`
+   - **Build output directory**:`dist/pages`
+4. 点击 **Save and Deploy**,约 1 分钟完成。产物为单文件 `dist/pages/_worker.js`(Pages 高级模式:全部请求先进 Worker,前端页面已内联),静态文件无需单独上传
+
+#### 5. 配置绑定与变量(部署后进行,一次配好永不被覆盖)
+
+- **Settings → Functions → KV namespace bindings → Add binding**:Variable name `fileKV`(必须一致),Namespace 选中第 2 步创建的命名空间,Environment 选 Production(需要预览环境调试可再给 Preview 配一次)
+- **Settings → Variables and Secrets → Add**:类型 **Secret**,名称 `ADMIN_TOKEN`,值为强随机串(本地有 OpenSSL 可用 `openssl rand -base64 24` 生成,亦可使用密码管理器);(可选)`ADMIN_PATH` 自定义管理入口(如 `panel-x7k9`,设置后 `/admin` 返回 404)
+- 各项 vars 均有代码默认值,可不设置;如需覆盖,以纯文本变量(非 Secret)添加同名条目即可
+- 大文件 / 强一致模式:在同一 **Functions** 绑定页加 `BUCKET`(R2 桶)或 `DB`(D1 库)
+
+Pages 的绑定与环境变量属于项目设置,**只上传产物的部署不会碰它们**;此后每次 push 自动部署都无需再管。
+
+#### 6. 定时清理(Pages 没有 Cron Triggers,需外部触发)
+
+过期分享有惰性检查兜底,**功能正确性不依赖清理**——过期/取完的分享不会被取到;清理只负责回收存储。Pages 不支持 Cron Triggers,补偿方案任选:
+
+- **外部定时器**(推荐):[cron-job.org](https://cron-job.org) / UptimeRobot / 本地 cron,每 6 小时请求一次:
+
+  ```bash
+  curl -X POST https://<项目名>.pages.dev/api/admin/cleanup -H "Authorization: Bearer <ADMIN_TOKEN>"
+  ```
+
+  返回 `{"ok":true,"deletedShares":n,"abortedSessions":n}`
+- **手动**:管理页登录后同样调用上述接口(cookie 鉴权即可)
+- **不管**:小规模自托管下仅存储残留,管理页可随时手动删除
+
+#### 7. 验证与日常更新
+
+- 访问 `https://<项目名>.pages.dev`:发送一条文本分享并成功取件即部署完成;管理后台默认位于 `/admin`(设置 ADMIN_PATH 则为 `/<该值>`),使用 ADMIN_TOKEN 登录
+- 此后每次向 `main` 推送即自动部署新版本;绑定与变量始终在控制台管理,不受部署影响
+
+### 方式二:wrangler 命令行(手动部署 Pages)
 
 ```bash
 # 0. 前置条件:Node.js ≥ 18;克隆本仓库后安装依赖
@@ -86,76 +145,21 @@ npm install
 # 1. 登录 Cloudflare(浏览器授权)
 npx wrangler login
 
-# 2.(可选,大存储模式需要)创建 R2 桶并放开 wrangler.jsonc 的 r2_buckets 块
-#    首次使用 R2 需在控制台开通,可能要求绑定付款方式
-npx wrangler r2 bucket create file-relay
-#    若名称被占用则更换,并同步修改 wrangler.jsonc 的 r2_buckets.bucket_name
+# 2. 构建 Pages 产物(= build:single + 复制为 dist/pages/_worker.js)
+npm run build:pages
 
-# 3. 创建 KV 命名空间(元数据默认后端;binding 名保持 fileKV 不变)
-npx wrangler kv namespace create file-relay-meta
-#    将输出的 id 填入 wrangler.jsonc 的 kv_namespaces[0].id
-
-# 4. 设置管理令牌(强随机串,自行生成,例如 openssl rand -base64 24)
-npx wrangler secret put ADMIN_TOKEN
-
-# 4b.(可选)自定义管理入口:设置后 /admin 返回 404,后台仅可从新入口访问,以防扫描
-#     取值为字母/数字/-/_ 组成的单段路径,如 panel-x7k9(带不带开头 / 均可)
-npx wrangler secret put ADMIN_PATH
-
-# 5. 部署(自动上传静态资源并注册 cron)
+# 3. 部署到 Pages(首次会询问项目名,如 file-relay;之后直接更新)
 npm run deploy
 
-# 6.(可选)切换 D1 后端:建库并初始化表结构后修改 wrangler.jsonc(注释 KV、放开 D1)
-npx wrangler d1 create file-relay          # database_id 填入 wrangler.jsonc
-npm run db:remote                          # 远端建表;本地调试使用 npm run db:local
+# 4.(可选)本地创建 KV/R2/D1 资源,替代控制台手点:
+npx wrangler kv namespace create file-relay-meta
+npx wrangler r2 bucket create file-relay
+npx wrangler d1 create file-relay && npm run db:remote   # D1 建库+建表;本地调试 npm run db:local
 ```
 
-部署完成后获得 `https://<worker名>.<子域>.workers.dev`;管理后台位于 `/admin`,令牌即第 4 步设置的值。
+部署完成后获得 `https://<项目名>.pages.dev`。**`wrangler pages deploy` 只上传构建产物、不上传绑定**——KV 与变量仍按方式一第 5 步在控制台配置(一次配好,后续部署不覆盖),ADMIN_TOKEN 也可以用 `npx wrangler pages secret put ADMIN_TOKEN` 代替控制台添加。定时清理同方式一第 6 步。
 
-本地开发使用 `npm run dev`(追加 `--test-scheduled` 后访问 `/__scheduled` 可手动触发 cron);调试单文件模式使用 `npx wrangler dev -c wrangler.standalone.jsonc`。端到端测试:`python test/e2e_test.py`(默认请求 `http://localhost:8787`,可通过 BASE 参数指定目标地址)。
-
-### 方式二:Cloudflare 控制台(GitHub 连接)
-
-无需安装 Node 的网页部署方式,**唯一需要修改的是 `wrangler.jsonc` 中一行**(填入自己的 KV 命名空间 ID)。仓库连接 Cloudflare 后,每次 `git push` 自动重新部署(Workers Builds,免费构建额度对个人使用充足)。
-
-#### 1. 推送到 GitHub
-
-将本仓库推送至自己的 GitHub 账号(私有或公开均可)。
-
-#### 2. 创建 KV 命名空间(必需;默认模式下文件与元数据均存储于此)
-
-1. 控制台左侧 **Storage & Databases → KV → Create namespace**,名称如 `file-relay-meta`
-2. 创建后列表中可见该命名空间的 **ID**(32 位十六进制字符串),复制备用
-
-#### 3. 将 ID 填入 wrangler.jsonc(核心步骤)
-
-将 `wrangler.jsonc` 中 `kv_namespaces[0].id` 的值替换为上一步获得的 ID(binding 名保持 `fileKV` 不变),提交并推送。
-
-> 实测结论(wrangler 4.31,本地 CLI 与 Workers Builds 两种部署流均验证):`wrangler deploy` 以 wrangler.jsonc 作为绑定的**唯一来源**,未写入配置的绑定(含控制台/仪表板手动添加的)在部署时一律被移除。因此资源绑定必须写入配置文件;R2/D1 同理,放开对应块并填入自己的资源名与 ID(变量名 `BUCKET` / `DB`,仅大存储/强一致模式需要)。
-
-#### 4.(可选)创建 R2 / D1 资源
-
-默认小存储模式可跳过本步骤:
-
-- **R2(需传输 >24MB 大文件)**:**Storage & Databases → R2 → Create bucket**(首次使用 R2 可能要求绑定付款方式),名称如 `file-relay`,并在 wrangler.jsonc 放开 `r2_buckets` 块
-- **D1(需要强一致元数据)**:**Storage & Databases → D1 → Create database**,创建后进入该库的 **Console** 标签页,将仓库 `schema/schema.sql` 全文粘贴执行以建表(控制台可直接运行 SQL,无需 wrangler),并放开 `d1_databases` 块
-
-#### 5. 连接仓库并首次部署
-
-1. 控制台 **Compute (Workers) → Create → Import a Git repository → Connect to Git**(旧版界面为 Workers & Pages → Create application)
-2. 首次将跳转 GitHub 授权:安装 **Cloudflare Workers and Pages** App 并勾选本仓库(私有仓库选择 *Only select repositories* 即可)
-3. 返回 Cloudflare 选中仓库,项目名保持 `file-relay`,构建配置保持默认——Cloudflare 识别 `wrangler.jsonc`,Deploy command 自动为 `npx wrangler deploy`,`public/` 静态资源随仓库一并上传
-4. 点击 **Save and Deploy**,约 1 分钟完成。因第 3 步已填入 ID,首次构建即包含 KV 绑定,部署完成后可直接使用
-
-#### 6. 配置 Secret 与确认 Cron
-
-- **Worker → Settings → Variables and Secrets → Add**:类型选择 **Secret**,名称 `ADMIN_TOKEN`,值为强随机串(本地有 OpenSSL 可用 `openssl rand -base64 24` 生成,亦可使用密码管理器),保存后点击 **Deploy** 生效;(可选)再添加 `ADMIN_PATH` 自定义管理入口(如 `panel-x7k9`,设置后 `/admin` 返回 404)。Secret 不受 wrangler.jsonc 约束,控制台添加的 Secret 在部署后依然保留
-- **Settings → Triggers & Events**:确认 Cron Triggers 中出现 `0 */6 * * *`(wrangler.jsonc 已包含,通常会自动注册)
-
-#### 7. 验证与日常更新
-
-- 访问 `https://file-relay.<您的子域>.workers.dev`:发送一条文本分享并成功取件即部署完成;管理后台默认位于 `/admin`(设置 ADMIN_PATH 则为 `/<该值>`),使用 ADMIN_TOKEN 登录
-- 此后每次向 `main` 推送即自动部署新版本;Secret 与 Cron 始终在控制台管理
+本地开发:`npm run dev`(仓库模式,直接热更新 TS 源码 + `public/`;追加 `--test-scheduled` 后访问 `/__scheduled` 可手动触发 cron 逻辑)。调试 Pages/单文件产物形态:`npm run build:pages && npm run dev:pages`。端到端测试:`python test/e2e_test.py`(默认请求 `http://localhost:8787`,可通过 BASE 参数指定目标地址)。
 
 ### 方式三:单文件部署(控制台粘贴,免 GitHub 与 Node)
 
@@ -188,7 +192,7 @@ npm run build:single     # 产出 dist/worker.js
 
 访问 `https://<worker名>.<子域>.workers.dev`,发送一条文本分享并成功取件即部署完成。
 
-> **模式取舍**:单文件模式将前端页面内联于代码,修改页面需重新 `npm run build:single` 并整文件替换;方式一/二的静态资源由边缘直接返回,修改页面仅需推送代码。两种模式功能完全一致,使用同一命名空间时取件口令与数据互通。
+> **模式取舍**:三种方式功能完全一致且同一代码源——方式一/二(Pages)与方式三(Workers 粘贴)都是前端内联的单文件形态,修改页面后:Pages 走 push 自动构建(或重跑 `npm run build:pages` + deploy),粘贴模式需重新 `build:single` 并整文件替换。绑定同一个 KV 命名空间时,取件口令与数据跨方式互通。
 
 ## API 接口
 
@@ -204,6 +208,7 @@ npm run build:single     # 产出 dist/worker.js
 | GET | `/api/pickup/:code/download` | 下载文件(此步计数) |
 | POST | `/api/uploads/init` 等 | R2 大存储模式分片上传四端点(init / `:id/parts/:n` / complete / abort) |
 | POST | `/api/admin/login` 等 | 管理接口(HMAC 签名 cookie 鉴权):`stats`、`shares` 列表、`DELETE shares/:code` 按口令删除 |
+| POST | `/api/admin/cleanup` | 手动/外部定时触发清理(Pages 无 Cron 的补偿通道):管理 cookie 或 `Authorization: Bearer <ADMIN_TOKEN>` 鉴权,返回 `{ok, deletedShares, abortedSessions}` |
 
 调用示例:
 
@@ -222,7 +227,7 @@ curl -X POST 'https://<你的域名>/api/shares/file?filename=doc.zip&mime=appli
   --data-binary @doc.zip
 ```
 
-## 配置(wrangler.jsonc `vars`)
+## 配置(环境变量 `vars`)
 
 所有 var 均有代码默认值,不设置亦可运行;标注 ❌ 者仅 R2 大存储模式使用,小存储(KV)模式可整体删除。
 
@@ -234,7 +239,7 @@ curl -X POST 'https://<你的域名>/api/shares/file?filename=doc.zip&mime=appli
 | SESSION_TTL_MS | 24h | 仅 R2 ❌ | 孤儿分片会话判定阈值 |
 | MAX_PARTS | 10000 | 仅 R2 ❌ | R2 分片数上限 |
 
-ADMIN_TOKEN 为 Secret(`npx wrangler secret put ADMIN_TOKEN`),任何模式均需设置。
+ADMIN_TOKEN 为 Secret(Pages 在控制台 Variables and Secrets 添加,或 `npx wrangler pages secret put ADMIN_TOKEN`;粘贴模式在控制台添加),任何模式均需设置。
 
 ### Secrets
 
@@ -253,20 +258,20 @@ ADMIN_TOKEN 为 Secret(`npx wrangler secret put ADMIN_TOKEN`),任何模式均需
 
 ## 常见问题
 
-- **接口返回 500「未绑定元数据库」**:KV/D1 绑定被部署清除。未写入 wrangler.jsonc 的资源绑定在 `wrangler deploy` 时一律移除(详见方式二中的警告);恢复方法为将绑定写回配置后重新部署,单文件模式则回控制台重新绑定
-- **忘记 ADMIN_TOKEN**:Secret 不可查看,只能重设——执行 `npx wrangler secret put ADMIN_TOKEN`(或在控制台 Variables and Secrets 中重新编辑)。重设后已登录的管理会话即失效
-- **中国大陆无法访问 `*.workers.dev`**:属预期现象;验证需使用代理,或为 Worker 绑定自定义域名后直连
+- **接口返回 500「未绑定元数据库」**:未配置 KV/D1 绑定。三种部署方式的绑定都在控制台配置(Pages:Settings → Functions;粘贴:Settings → Bindings),且不会被部署覆盖——若你额外自行沿用旧的 `wrangler deploy`(Workers)流程,注意它以 wrangler.jsonc 为绑定唯一来源,未写入配置的绑定会被移除
+- **忘记 ADMIN_TOKEN**:Secret 不可查看,只能重设——Pages 在控制台 Variables and Secrets 重新编辑(或 `npx wrangler pages secret put ADMIN_TOKEN`),粘贴模式在 Worker 设置中重新编辑。重设后已登录的管理会话即失效
+- **中国大陆无法访问 `*.pages.dev` / `*.workers.dev`**:属预期现象;验证需使用代理,或绑定自定义域名后直连
 - **切换存储模式是否影响已有分享**:不影响。存储键按前缀自动路由(`f:` 前缀为 KV 文件,裸 uuid 为 R2 对象),新旧数据并存,无需迁移
 - **KV 写额度耗尽**:当日新分享创建失败,已有分享的读取与下载不受影响,次日额度自动重置;亦可持续大用量场景切换 D1 或升级付费套餐
 
 ## 结构
 
 ```
-src/          Hono Worker:store(KV/D1 双后端)/ share(取件下载 + KV 直传)/ upload(R2 分片,大存储模式)/ admin / cleanup(cron)
+src/          Hono Worker:store(KV/D1 双后端)/ share(取件下载 + KV 直传)/ upload(R2 分片,大存储模式)/ admin / cleanup(cron + cleanup 接口)
               asset-resolver.ts 静态资源双模式(Static Assets / 单文件内联);standalone.ts 单文件部署入口
-public/       原生 JS 三页面(发送 / 取件 / 管理),仓库模式由 Workers Static Assets 托管,单文件模式内联进 worker.js
-dist/         build:single 产物 worker.js(已入库,可直接用于方式三部署)
-tools/        build:single 的内联生成与收尾脚本
+public/       原生 JS 三页面(发送 / 取件 / 管理),本地 wrangler dev 由 Static Assets 托管,部署形态内联进 _worker.js
+dist/         build:single 产物 worker.js(已入库,用于方式三粘贴);build:pages 复制为 dist/pages/_worker.js(方式一/二 Pages 部署)
+tools/        构建(内联生成 / 收尾 / Pages 复制)与 i18n 校验脚本
 schema/       D1 初始化 SQL(仅切换 D1 元数据后端时需要,默认不用)
 test/         Python 端到端测试
 ```

@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev:pages": "wrangler pages dev dist/pages --kv fileKV --port 8787",
+    "deploy": "wrangler pages deploy dist/pages",
     "build:single": "node tools/gen-inline-assets.mjs && wrangler deploy -c wrangler.standalone.jsonc --dry-run --outdir=dist/_bundle && node tools/postbuild-single.mjs",
+    "build:pages": "npm run build:single && node tools/build-pages.mjs",
     "db:local": "wrangler d1 execute file-relay --local --file=./schema/schema.sql",
     "db:remote": "wrangler d1 execute file-relay --remote --file=./schema/schema.sql",
     "tail": "wrangler tail"
