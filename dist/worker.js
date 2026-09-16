@@ -31,13 +31,33 @@ function resolveKey(path) {
   return null;
 }
 __name(resolveKey, "resolveKey");
+var etags = /* @__PURE__ */ new Map();
+function etagOf(key, body) {
+  let tag = etags.get(key);
+  if (tag == null) {
+    let n = 2166136261;
+    for (let i = 0; i < body.length; i++) {
+      n = Math.imul(n ^ body.charCodeAt(i), 16777619) >>> 0;
+    }
+    tag = `W/"${n.toString(16)}-${body.length.toString(16)}"`;
+    etags.set(key, tag);
+  }
+  return tag;
+}
+__name(etagOf, "etagOf");
 async function serveAsset(c, path, status) {
   const key = resolveKey(path);
   const head = c.req.method === "HEAD";
   if (key) {
-    return new Response(head ? null : inline[key], {
+    const body = inline[key];
+    const etag = etagOf(key, body);
+    const headers = { etag, "cache-control": "no-cache" };
+    if (!status && c.req.header("if-none-match") === etag) {
+      return new Response(null, { status: 304, headers });
+    }
+    return new Response(head ? null : body, {
       status: status ?? 200,
-      headers: { "content-type": mime(key) }
+      headers: { "content-type": mime(key), ...headers }
     });
   }
   if (c.env.ASSETS) {
@@ -5850,7 +5870,7 @@ app.route("/api", shareRoutes);
 app.route("/api/admin", adminRoutes);
 app.on(["GET", "HEAD"], "*", async (c, next) => {
   const asset = await serveAsset(c, c.req.path);
-  if (asset && asset.status === 200) return asset;
+  if (asset && (asset.status === 200 || asset.status === 304)) return asset;
   await next();
 });
 app.notFound(async (c) => {

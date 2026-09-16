@@ -66,7 +66,8 @@ app.route('/api/admin', adminRoutes);
 /** 静态页面兜底:单文件模式在此 serve 内联资源;仓库模式下 Static Assets 边缘直出,基本走不到这里 */
 app.on(['GET', 'HEAD'], '*', async (c, next) => {
   const asset = await serveAsset(c, c.req.path);
-  if (asset && asset.status === 200) return asset;
+  // 304 是资产协商缓存命中,同样要原样返回,漏了会掉进 notFound 变 404
+  if (asset && (asset.status === 200 || asset.status === 304)) return asset;
   await next();
 });
 

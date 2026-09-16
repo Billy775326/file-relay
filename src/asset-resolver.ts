@@ -40,6 +40,24 @@ function resolveKey(path: string): string | null {
   return null;
 }
 
+/** 内联资产的内容 ETag(FNV-1a,按 key 记忆化)。
+ *  资产文件名不带版本号,若不显式发缓存策略,套在自定义域前面的 CF zone 代理
+ *  会按静态扩展名默认缓存 4h,部署后用户拿到旧 JS;统一 no-cache + ETag,
+ *  浏览器/边缘每次条件请求,未变 304 免传输,部署即刻生效。 */
+const etags = new Map<string, string>();
+function etagOf(key: string, body: string): string {
+  let tag = etags.get(key);
+  if (tag == null) {
+    let n = 0x811c9dc5;
+    for (let i = 0; i < body.length; i++) {
+      n = Math.imul(n ^ body.charCodeAt(i), 0x01000193) >>> 0;
+    }
+    tag = `W/"${n.toString(16)}-${body.length.toString(16)}"`;
+    etags.set(key, tag);
+  }
+  return tag;
+}
+
 /**
  * 取静态资源:单文件模式走内联表,否则回退 ASSETS 绑定;两处都没有返回 null。
  * status 显式指定时以其为准(如 404 页),未指定时单文件 200、ASSETS 沿用其自身状态码。
@@ -52,9 +70,15 @@ export async function serveAsset(
   const key = resolveKey(path);
   const head = c.req.method === 'HEAD';
   if (key) {
-    return new Response(head ? null : inline![key], {
+    const body = inline![key];
+    const etag = etagOf(key, body);
+    const headers = { etag, 'cache-control': 'no-cache' };
+    if (!status && c.req.header('if-none-match') === etag) {
+      return new Response(null, { status: 304, headers });
+    }
+    return new Response(head ? null : body, {
       status: status ?? 200,
-      headers: { 'content-type': mime(key) },
+      headers: { 'content-type': mime(key), ...headers },
     });
   }
   if (c.env.ASSETS) {
