@@ -61,18 +61,7 @@ The upload path is browser → Worker → R2. R2's native single-request limit i
 
 Official references: [KV limits](https://developers.cloudflare.com/kv/platform/limits/), [Worker request limits](https://developers.cloudflare.com/workers/platform/limits/#request-and-response-limits), [R2 limits](https://developers.cloudflare.com/r2/platform/limits/).
 
-### How 9.99 GB capacity protection works
-
-1. On new upload initialization, paginate through the bucket with R2 `list()` and sum object sizes.
-2. Include full-size reservations for unfinished uploads. Completed objects and their reservations are counted once.
-3. Reject a full bucket or an upload that would exceed the threshold with HTTP `507` / `capacity_exceeded`.
-4. Display a capacity alert and stop the remaining files in the batch.
-
-The ledger lives at `__file-relay/quota-v1.json` in R2. Conditional writes protect concurrent reservations; **no additional bindings are required**. Do not edit or delete this object manually.
-
-Successful cancellation, admin deletion and expiry cleanup release reservations. Storage or accounting failures block new admission. Reservations are retained when removal cannot be confirmed. Deleting application files directly in the R2 dashboard may leave reservations; use the admin page for routine deletion.
-
-Existing bucket objects are counted. Other buckets, historical operations and concurrent uploads bypassing this app are outside its protection. Scanning costs grow with object count. KV files and text shares are unaffected by the R2 threshold.
+When R2 capacity is insufficient, an alert stops the upload. Delete unneeded files through the admin page or cancel unfinished uploads before trying again.
 
 ### What the free allowance means
 
