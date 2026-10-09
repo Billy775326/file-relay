@@ -13,4 +13,6 @@ if (js.length !== 1) {
 }
 renameSync(join(bundle, js[0]), join(dist, 'worker.js'));
 rmSync(bundle, { recursive: true, force: true });
-console.log(`✔ dist/worker.js(${(statSync(join(dist, 'worker.js')).size / 1024).toFixed(1)} KB)—— 粘贴到 Cloudflare 控制台编辑器即可部署`);
+console.log(`Built: dist/worker.js (${(statSync(join(dist, 'worker.js')).size / 1024).toFixed(1)} KiB)\n` +
+  'Standalone Worker: paste the complete file into the Cloudflare code editor.\n' +
+  'Bindings and Secrets: docs/deployment.md | English: docs/deployment.en.md');

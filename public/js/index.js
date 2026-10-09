@@ -22,9 +22,9 @@ const els = {
   capDate: $('#cap-date'),
 };
 
-const MAX_SIZE_FALLBACK = 2 * 1024 * 1024 * 1024;
+const MAX_SIZE_FALLBACK = 25 * 1024 * 1024;
 const MAX_BATCH = 10;
-let cfg = { fileBackend: 'r2', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config 加载后覆盖
+let cfg = { fileBackend: 'kv', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config 加载后覆盖
 let MAX_SIZE = MAX_SIZE_FALLBACK;
 
 let files = []; // 待上传队列(File[])
@@ -39,7 +39,10 @@ let lastResults = [];
 /* 服务端配置:决定走分片上传(R2 大存储)还是单请求直传(KV 小存储) */
 function updateHint() {
   els.dzHint.textContent = t('dz.hintMax', fmtBytes(MAX_SIZE));
+  const feature = $('[data-i18n="feat.splitS"]');
+  if (feature) feature.textContent = t('feat.splitS', fmtBytes(MAX_SIZE));
 }
+updateHint();
 (async () => {
   try {
     cfg = await api('/api/config');
@@ -209,13 +212,22 @@ els.btnText.addEventListener('click', submitText);
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 function xhrPut(url, blob, onProgress) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     currentXhr = xhr;
     xhr.open('PUT', url);
     xhr.onload = () => {
       let etag = null;
-      try { etag = JSON.parse(xhr.responseText).etag; } catch { /* ignore */ }
+      try {
+        const result = JSON.parse(xhr.responseText);
+        if (result.error === 'capacity_exceeded') {
+          const error = new Error(result.message);
+          error.code = result.error;
+          reject(error);
+          return;
+        }
+        etag = result.etag;
+      } catch { /* ignore */ }
       resolve(xhr.status >= 200 && xhr.status < 300 && etag ? etag : null);
     };
     xhr.onerror = () => resolve(null);
@@ -322,7 +334,10 @@ async function startUpload() {
       queueState.set(f, 'fail');
       ui.row.classList.add('fail');
       ui.status.textContent = '✗';
-      if (!cancelled) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');
+      if (e.code === 'capacity_exceeded') {
+        await abortUpload();
+        window.alert(t('err.capacity'));
+      } else if (!cancelled) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');
       break; // 一个失败即停,保留队列便于处理
     }
   }

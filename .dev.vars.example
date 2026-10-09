@@ -1,0 +1,4 @@
+# Local development only. Copy to .dev.vars and replace the token.
+# Production: set ADMIN_TOKEN as a Secret in Cloudflare project settings.
+ADMIN_TOKEN=replace-with-your-local-random-token
+# ADMIN_PATH=panel-local

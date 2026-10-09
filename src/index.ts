@@ -6,6 +6,7 @@ import { shareRoutes } from './share';
 import { adminRoutes, adminPath } from './admin';
 import { runCleanup, cleanupIfDue } from './cleanup';
 import { fileMode, fileMaxSize } from './filestore';
+import { uploadPartSize } from './limits';
 import { serveAsset } from './asset-resolver';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -56,7 +57,7 @@ app.get('/api/config', (c) =>
     fileBackend: fileMode(c.env) ?? 'none',
     maxFileSize: fileMaxSize(c.env),
     maxTextLength: num(c.env.MAX_TEXT_LENGTH, 65_536),
-    partSize: num(c.env.PART_SIZE, 10 * 1024 * 1024),
+    partSize: uploadPartSize(c.env),
   }),
 );
 app.route('/api/uploads', uploadRoutes);

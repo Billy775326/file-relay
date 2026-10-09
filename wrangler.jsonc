@@ -4,53 +4,44 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-06-01",
 
-  // ⚠️ 本配置现在只服务本地开发:npm run dev(wrangler dev 热更新 TS 源码 + public/ 静态资源)。
-  // 部署不再走 wrangler deploy —— 三条部署路径见 README:Pages+GitHub 自动构建 /
-  // npx wrangler pages deploy dist/pages / 控制台粘贴 dist/worker.js。
-  // Pages/粘贴模式的绑定都在控制台手动配置,不随部署被覆盖。
+  // 本地开发配置：npm run dev。生产绑定请在 Cloudflare 项目设置中配置。
+  // Pages 自动/手动部署、Workers 粘贴部署：见 docs/deployment.md。
+  // 构建专用配置：wrangler.standalone.jsonc；不要用本文件直接发布 Workers。
 
-  // 静态资源:命中文件直接由边缘返回,不进 Worker;/api/* 不匹配任何文件 → 落入 Worker
-  // run_worker_first:/admin 与 /admin.html 必须先进 Worker,配合可选 secret ADMIN_PATH
-  // 自定义管理入口(设置后 /admin 返回 404),防止绕过入口直取 admin.html
+  // 本地静态资源；管理页先进 Worker，以应用自定义入口规则。
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
     "run_worker_first": ["/admin*"]
   },
 
-  // ── 文件存储:默认小存储模式(KV 直传,单文件 ≤24MB,整个部署只需一个 KV 命名空间)──
-  // 分享大文件为主时放开本块升级大存储模式(R2 分片,~2GB),免改代码:
+  // 本地文件存储：默认 KV（25 MiB）；测试 R2 时取消下方注释。
   // "r2_buckets": [
   //   { "binding": "BUCKET", "bucket_name": "file-relay" }
   // ],
 
-  // ── 元数据库:默认 KV(部署最简,免建 D1);D1 为可选强一致后端 ──
-  // 绑定变量名必须是 fileKV(代码读 env.fileKV)。
-  // ⚠️ 实测(wrangler 4.31,本地 CLI 与 Workers Builds 两种部署流均验证):
-  //    wrangler deploy 以本配置为绑定的唯一来源——未写在配置里的绑定
-  //    (含控制台/仪表板手动添加的)部署时一律被移除。
-  //    因此 KV 绑定必须写死在这里(填自己账号的命名空间 ID);
-  //    控制台 Bindings 页只作查看或临时救急,撑不过下一次部署。
-  // 切 D1:注释 kv_namespaces、放开下面 d1_databases。语义差异见 README「存储选型」。
+  // 本地元数据：默认 KV。占位 ID 仅用于本地模拟，无需访问生产命名空间。
+  // 测试 D1：移除 kv_namespaces，启用下面 d1_databases，再运行 npm run db:local。
   "kv_namespaces": [
-    { "binding": "fileKV", "id": "675ec5110dc545d3b9f09af58eb10a50" }
+    { "binding": "fileKV", "id": "00000000000000000000000000000000" }
   ],
 
   // "d1_databases": [
-  //   { "binding": "DB", "database_name": "file-relay", "database_id": "<npx wrangler d1 create file-relay 的输出>" }
+  //   { "binding": "DB", "database_name": "file-relay", "database_id": "00000000-0000-0000-0000-000000000000" }
   // ],
 
-  // 每 6 小时清理过期分享与孤儿分片会话(免费套餐支持)
+  // 本地 scheduled 调试配置。Workers 生产定时器需在控制台单独添加；Pages 见部署指南。
   "triggers": {
     "crons": ["0 */6 * * *"]
   },
 
-  // 非敏感配置走 vars;ADMIN_TOKEN 走 secret(npx wrangler secret put ADMIN_TOKEN)
-  // 所有 var 都有代码兜底;PART_SIZE / SESSION_TTL_MS / MAX_PARTS 仅 R2 大存储模式用到,小存储(KV)模式可删
+  // 本地普通变量；ADMIN_TOKEN 写入 .dev.vars（参见 .dev.vars.example）。
+  // 生产默认值相同；如需覆盖，在项目 Variables and Secrets 中设置。
   "vars": {
-    "MAX_FILE_SIZE": "2147483648",
+    // 单个完整文件的上限(字节),含所有分片;10 GB,不是 10 GiB
+    "MAX_FILE_SIZE": "10000000000",
     "MAX_TEXT_LENGTH": "65536",
-    "PART_SIZE": "10485760",
+    "PART_SIZE": "100000000",
     "SESSION_TTL_MS": "86400000",
     "MAX_PARTS": "10000"
   },

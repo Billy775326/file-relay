@@ -1,6 +1,7 @@
 import { num, type Env } from './types';
 import { getStore } from './store';
 import { deleteFile, isKvFileKey } from './filestore';
+import { releaseCapacity } from './quota';
 
 /**
  * 定时清理(scheduled / 本地 --test-scheduled 均调用),存储后端通用:
@@ -20,7 +21,10 @@ export async function runCleanup(env: Env): Promise<{ deletedShares: number; abo
     if (expired.length === 0) break;
 
     const r2Keys = expired.filter((r) => r.r2Key && !isKvFileKey(r.r2Key)).map((r) => r.r2Key as string);
-    if (r2Keys.length > 0 && env.BUCKET) await env.BUCKET.delete(r2Keys); // R2 支持批量
+    if (r2Keys.length > 0 && env.BUCKET) {
+      await env.BUCKET.delete(r2Keys);
+      await releaseCapacity(env, r2Keys);
+    }
     await Promise.all(expired.filter((r) => r.r2Key && isKvFileKey(r.r2Key)).map((r) => deleteFile(env, r.r2Key)));
     await store.deleteByCodes(expired.map((r) => r.code));
     deletedShares += expired.length;
@@ -33,8 +37,9 @@ export async function runCleanup(env: Env): Promise<{ deletedShares: number; abo
       // 大存储模式的会话;若部署已切走(BUCKET 未绑)则跳过 abort,仅清台账
       await env.BUCKET?.resumeMultipartUpload(s.r2Key, s.uploadId).abort();
     } catch {
-      // 已中止/不存在,忽略
+      continue; // Keep the session and reservation so a later cleanup can retry.
     }
+    if (env.BUCKET && !(await env.BUCKET.head(s.r2Key))) await releaseCapacity(env, [s.r2Key]);
     await store.deleteSession(s.id);
     abortedSessions++;
   }

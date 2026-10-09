@@ -8,6 +8,7 @@
 
 const DICT = {
   zh: {
+    'err.capacity': '容量超出免费额度',
     'doc.send': '文件中转站 - 发送',
     'doc.pickup': '文件中转站 - 取件',
     'doc.admin': '文件中转站 - 管理',
@@ -84,7 +85,7 @@ const DICT = {
     'route.takerS': '凭 6 位口令领取,逾期退回虚无',
     'route.fine': '限 次 · 限 时 · 到 期 即 毁',
 
-    'feat.splitT': '分片直传', 'feat.splitS': '单文件至高 2 GB',
+    'feat.splitT': '分片直传', 'feat.splitS': '单文件至高 {0}',
     'feat.ttlT': '时效可控', 'feat.ttlS': '1 ~ 30 天或永久',
     'feat.limitT': '限次取件', 'feat.limitS': '1 次 · 5 次 · 不限',
     'feat.selfT': '自托管', 'feat.selfS': '数据在你自己的账号',
@@ -173,6 +174,7 @@ const DICT = {
   },
 
   en: {
+    'err.capacity': 'Storage capacity exceeds the free quota.',
     'doc.send': 'file-relay - Send',
     'doc.pickup': 'file-relay - Pickup',
     'doc.admin': 'file-relay - Admin',
@@ -249,7 +251,7 @@ const DICT = {
     'route.takerS': 'Claims with the 6-digit code; unclaimed items vanish',
     'route.fine': 'LIMITED · TIMED · DESTROYED ON EXPIRY',
 
-    'feat.splitT': 'Chunked upload', 'feat.splitS': 'Up to 2 GB per file',
+    'feat.splitT': 'Chunked upload', 'feat.splitS': 'Up to {0} per file',
     'feat.ttlT': 'You set the clock', 'feat.ttlS': '1-30 days, or forever',
     'feat.limitT': 'Limited pickups', 'feat.limitS': '1× · 5× · unlimited',
     'feat.selfT': 'Self-hosted', 'feat.selfS': 'Data stays in your account',

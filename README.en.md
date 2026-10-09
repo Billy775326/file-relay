@@ -2,289 +2,270 @@
 
 [简体中文](README.md) | **English**
 
-A self-hosted file and text sharing service built on pickup codes, implemented with Cloudflare's native stack: **by default it requires only Workers and one KV namespace**, and runs on the free plan; R2 can be added when larger files (>24MB) are needed.
+A file and text sharing service for Cloudflare Workers / Pages. Upload content, receive a **six-digit pickup code**, and share it through a code, link or QR code.
 
-This project is a Cloudflare-equivalent alternative to [FileCodeBox](https://github.com/vastsa/FileCodeBox): upload a file or piece of text, receive a 6-digit pickup code, and the recipient collects it with that code.
+Designed for the **Cloudflare Free plan**. The default deployment needs one KV namespace. Adding an R2 bucket enables multipart uploads and **9.99 GB bucket-capacity protection**.
 
-Three deployment methods are supported: Pages + GitHub automatic builds, manual Pages deploy via the wrangler CLI, and environment-free single-file paste (see [Deployment](#deployment-methods)). Note: `*.pages.dev` / `*.workers.dev` hostnames are not directly reachable from mainland China; verification requires a proxy, or bind a custom domain.
+> Request limits, per-file limits and free storage allowances are separate concepts. Capacity protection covers the bound bucket; it does not guarantee zero charges for the entire account.
+
+[Deploy](#deploy) · [Upload-and-capacity limits](#upload-and-capacity-limits) · [Configuration](#configuration) · [Updating a deployment](#updating-a-deployment) · [Development and tests](#development-and-tests) · [API](#api) · [FAQ](#faq)
 
 ## Features
 
-- **File sharing (KV direct upload by default)**: single files up to 24MB via a single request, no storage bucket required; for larger files, enable `r2_buckets` to upgrade to chunked R2 uploads with a ~2GB per-file limit — no code changes needed either way
-- **Multi-file batch sharing**: select up to 10 files at once, uploaded sequentially with per-file progress; each file gets its own result card, plus one-click copy of all codes
-- **Text sharing**: paste text to get a pickup code; one-click copy on the pickup page
-- **Validity**: 1 day / 7 days / 30 days / forever × pickup limit of 1 / 5 / unlimited, whichever expires first
-- **Pickup QR codes**: every result card includes a QR code of the `pickup` link — scan to open the pickup page directly
-- **Bilingual UI (Chinese/English)**: one-click toggle, auto-initialized from the browser language, preference persisted
-- **Automatic cleanup**: Workers cron reclaims expired shares every 6 hours (the R2 mode also cleans up orphaned multipart sessions); Pages has no cron, so it instead cleans up automatically on homepage visits (throttled, 6h window) with an optional external timer; pickups are validated lazily, so cleanup issues never affect functionality
-- **Admin console**: token login with statistics, listing, and deletion; the entrance defaults to `/admin` and can be customized via the `ADMIN_PATH` secret (once set, `/admin` returns 404 to resist scanning)
-- **Configuration-driven mode switching**: file storage defaults to KV with optional R2; metadata defaults to KV with optional D1 — all switched via wrangler.jsonc
-- Mobile-friendly layout, dark mode; uploads include progress, speed, and retry on failure
+- File and text sharing through pickup codes, links and QR codes.
+- Select up to 10 files, upload sequentially and receive a separate code for each; progress, speed and retries included.
+- Expiry options: 1, 7 or 30 days, or forever. The UI offers 1, 5 or unlimited pickups.
+- Direct KV uploads; multipart uploads with cancellation when R2 is bound.
+- A capacity alert stops the upload batch when R2 space is insufficient.
+- Token-protected admin page with statistics, share lists, deletion and an optional custom entry path.
+- Expiry cleanup, Chinese and English UI, dark mode and mobile layouts.
 
-## Storage Selection: Small-Storage Mode (KV, default) vs Large-Storage Mode (R2)
+## Deploy
 
-**Choose file storage by the size of the files you share** (determined by whether `r2_buckets` is enabled in wrangler.jsonc; switching requires no code changes):
+Choose a method, then follow the [deployment guide](docs/deployment.en.md).
 
-| | 📦 Small-storage (KV, **default**) | 🗄️ Large-storage (R2) |
+| Method | Local tools | Updates |
 |---|---|---|
-| Per-file limit | **24 MB** (KV value cap 25MiB minus headroom) | **~2 GB** (10MB multipart chunks) |
-| Required resources | **One KV namespace only** | R2 bucket + KV/D1 metadata |
-| Upload method | Single request with progress and retry | Chunked (progress, retry, cancellable) |
-| Free storage | 1 GB | 10 GB |
-| Free operations | **1,000 writes/day** + 100k reads/day | 1M writes/month + 10M reads/month |
-| Overage pricing | Writes $5/M; reads $0.50/M; storage $0.50/GB·mo | Storage $0.015/GB·mo; writes $4.50/M; reads $0.36/M |
-| Egress traffic | Free (reads still billed) | **Free** (downloads incur no bandwidth cost) |
-| Best for | **Mostly small files** (documents, images, archives) | **Mostly large files** (hundreds of MB, video, installers) |
+| [Pages + GitHub](docs/deployment.en.md#a-pages-with-github) | None | Automatic builds on push |
+| [Pages CLI](docs/deployment.en.md#b-pages-cli) | Git, Node.js 22+ | `npm run deploy`, which rebuilds before uploading |
+| [Paste a Worker](docs/deployment.en.md#c-paste-a-worker) | None | Replace complete `worker.js` |
+| [Pages drag and drop](docs/deployment.en.md#d-pages-drag-and-drop) | None with a prebuilt file | Upload folder containing `_worker.js` |
 
-Key points: the default small-storage mode is the simplest to deploy and is sufficient for everyday documents and images; each KV upload consumes 1-2 writes (1,000 free per day). For heavy or large-file use cases, enable `r2_buckets` to upgrade to large-storage mode (R2's free tier is nearly unlimited for personal use, and downloads are free of bandwidth charges). Switching affects only new shares; existing data is routed automatically by key prefix, with no migration required.
+Every method needs storage bindings and an `ADMIN_TOKEN` Secret in Cloudflare project settings:
 
-### Metadata Backend: KV (default) vs D1 (optional)
-
-| | KV (default) | D1 (optional) |
+| Use case | Bindings | Details |
 |---|---|---|
-| Consistency | Eventual (up to 60s global visibility after writes) | **Strong** |
-| Pickup counting | Read-modify-write; extreme concurrency may exceed the limit by 1-2 | Atomic UPDATE, **strictly enforced** |
-| Code uniqueness | Check-then-write; theoretical race window | UNIQUE constraint, **strictly enforced** |
-| Free tier | See table above | 5M row reads/day + 100k row writes/day + 5GB |
+| Small files and text | `fileKV` → KV | Default; files and metadata share KV |
+| Large files | `fileKV` → KV; `BUCKET` → R2 | R2 files with KV metadata |
+| Strict concurrent pickup counting | `DB` → D1; `BUCKET` → R2 | Initialize the database; see the guide's D1 steps |
 
-For personal, low-concurrency use the two are practically identical; for shared or high-concurrency pickup scenarios, switch to D1 (create the database, then enable `d1_databases` in wrangler.jsonc).
+**KV takes priority when both `fileKV` and `DB` are bound.** Adding D1 does not switch backends or migrate records.
 
-**Combination quick reference**: **Default = KV only (files and metadata share one namespace, simplest)** | Large files = enable r2_buckets (R2 + KV) | Strong consistency = R2 + D1
+To generate files locally without publishing, use `npm run build:pages` or `npm run build:single`.
 
-### Free Tiers and Pricing (2026; see the [official pricing page](https://developers.cloudflare.com/workers/platform/pricing/))
+## Upload-and-capacity limits
 
-| Resource | Free tier | Paid / overage price |
+All applicable limits are enforced together. **MB / GB are decimal; MiB / GiB are binary.**
+
+| Limit | Value | Scope |
 |---|---|---|
-| Workers | 100k requests/day | Workers Paid **$5/mo**: 10M requests/month, then $0.30/M |
-| KV reads | 100k/day | Paid $0.50/M (10M/month included) |
-| KV writes/deletes/lists | 1,000/day each | Paid $5/M (1M/month included each) |
-| KV storage | 1 GB | $0.50/GB·mo |
-| D1 row reads | 5M/day | Paid $0.001/M rows (25B/month included) |
-| D1 row writes | 100k/day | Paid $1/M rows (50M/month included) |
-| D1 storage | 5 GB | $0.75/GB·mo |
-| R2 storage | 10 GB | $0.015/GB·mo |
-| R2 Class A (writes) | 1M/month | $4.50/M |
-| R2 Class B (reads) | 10M/month | $0.36/M |
-| R2 egress | **Unlimited, always free** | —— |
+| KV file | 25 MiB = 26,214,400 bytes | Raw bytes; share metadata is stored separately |
+| R2 part request | Default 100 MB = 100,000,000 bytes | Upload passes through a Free-plan Worker |
+| Complete file | `MAX_FILE_SIZE`, default 10 GB | All parts combined; checked server-side |
+| R2 part count | Default maximum 10,000 | Also constrained by `PART_SIZE` and `MAX_PARTS` |
+| R2 capacity protection | Fixed 9.99 GB = 9,990,000,000 bytes | Objects, upload reservations and ledger in the bound bucket |
 
-Each pickup in KV mode costs roughly 1 read + 1 write: the 1,000 free daily writes are ample for personal use; at thousands of shares per day, consider the $5/month Workers Paid plan or switch to D1 (its read allowance is far more generous).
+**The default configuration cannot accept a full 10 GB file:** the bucket-capacity guard rejects it first. An empty bucket also needs room for its ledger; existing files further reduce available space.
 
-## Deployment Methods
+The upload path is browser → Worker → R2. R2's native single-request limit is not the limit of this Worker path. S3 presigned direct uploads are not implemented.
 
-| Method | Best for | Characteristics |
+Official references: [KV limits](https://developers.cloudflare.com/kv/platform/limits/), [Worker request limits](https://developers.cloudflare.com/workers/platform/limits/#request-and-response-limits), [R2 limits](https://developers.cloudflare.com/r2/platform/limits/).
+
+### How 9.99 GB capacity protection works
+
+1. On new upload initialization, paginate through the bucket with R2 `list()` and sum object sizes.
+2. Include full-size reservations for unfinished uploads. Completed objects and their reservations are counted once.
+3. Reject a full bucket or an upload that would exceed the threshold with HTTP `507` / `capacity_exceeded`.
+4. Display a capacity alert and stop the remaining files in the batch.
+
+The ledger lives at `__file-relay/quota-v1.json` in R2. Conditional writes protect concurrent reservations; **no additional bindings are required**. Do not edit or delete this object manually.
+
+Successful cancellation, admin deletion and expiry cleanup release reservations. Storage or accounting failures block new admission. Reservations are retained when removal cannot be confirmed. Deleting application files directly in the R2 dashboard may leave reservations; use the admin page for routine deletion.
+
+Existing bucket objects are counted. Other buckets, historical operations and concurrent uploads bypassing this app are outside its protection. Scanning costs grow with object count. KV files and text shares are unaffected by the R2 threshold.
+
+### What the free allowance means
+
+R2 Standard includes **10 GB-month of storage per month**, plus separate Class A and Class B operation allowances. The 9.99 GB threshold is an application policy, not an account billing query. Scans, multipart operations and downloads also consume operation allowances. See [R2 pricing](https://developers.cloudflare.com/r2/pricing/).
+
+## Configuration
+
+For dashboard setup, follow the [deployment guide](docs/deployment.en.md).
+
+Configure production variables in Cloudflare project settings. [wrangler.jsonc](wrangler.jsonc) primarily serves local development.
+
+| Variable | Default | Meaning |
 |---|---|---|
-| [Option 1](#option-1-pages--github-connection-automatic-builds) Pages + GitHub connection | Deploy on every push | Automatic builds; bindings are configured in the dashboard and never overwritten by deployments |
-| [Option 2](#option-2-wrangler-cli-manual-pages-deploy) Wrangler CLI | Node.js available | Manual Pages deploy; a single command uploads the build output |
-| [Option 3](#option-3-single-file-deployment-dashboard-paste-no-github-or-node) Single-file paste | No Node, no Git | The whole service as one worker.js, pasted into the dashboard editor |
+| `MAX_FILE_SIZE` | `10000000000` | Complete-file byte limit; both modes; cannot override platform limits or remaining R2 capacity |
+| `MAX_TEXT_LENGTH` | `65536` | Server-side text length limit |
+| `PART_SIZE` | `100000000` | R2 part bytes, clamped to 5 MiB–100 MB |
+| `MAX_PARTS` | `10000` | R2 part count, clamped to 1–10,000 |
+| `SESSION_TTL_MS` | `86400000` | Cleanup age for unfinished sessions, default 24 hours |
 
-> All three methods run the same code: `build:pages` produces `dist/pages/_worker.js` (for Pages) and `dist/worker.js` (for pasting) from the same source with identical behavior. **Pages bindings (KV/variables) live in the project settings, decoupled from deployments** — deploy ten thousand times and dashboard-configured bindings are never wiped, so there is no need to maintain resource IDs in the repository; the same applies to Option 3. Only if you additionally keep using the legacy `wrangler deploy` (Workers) flow does the "bindings absent from wrangler.jsonc get removed at deploy time" behavior apply (see FAQ).
+### Admin settings
 
-### Option 1: Pages + GitHub Connection (Automatic Builds)
+| Secret | Required | Purpose |
+|---|---|---|
+| `ADMIN_TOKEN` | Yes | Admin login token; store as a production Secret |
+| `ADMIN_PATH` | No | Custom entry such as `panel-x7k9`; defaults to `/admin` |
 
-A browser-only deployment without installing Node, where **the repository requires no configuration changes**. Once the repository is connected to Cloudflare Pages, every `git push` rebuilds and redeploys automatically (the free build quota is ample for personal use).
+Custom paths accept 1–64 letters, digits, hyphens or underscores, with an optional leading slash. `/api` and `/pickup` are reserved. Setting a custom path makes the old `/admin` entry return 404; admin APIs remain authenticated.
 
-#### 1. Push to GitHub
+### Adjust the upload limit
 
-Push this repository to your own GitHub account (private or public).
+For a 1 GB per-file limit:
 
-#### 2. Create a KV namespace (required; in the default mode it stores both files and metadata)
+```text
+MAX_FILE_SIZE=1000000000
+```
 
-Dashboard: **Storage & Databases → KV → Create namespace**, e.g. `file-relay-meta`. The namespace ID does not need to go into the repository — you will bind it in the Pages dashboard shortly.
+The bucket threshold is **not an environment variable**. It is `R2_CAPACITY_MAX` in [src/quota.ts](src/quota.ts). Reducing `MAX_FILE_SIZE` does not delete existing files, but blocks oversized existing upload sessions from continuing.
 
-#### 3. (Optional) Create R2 / D1 resources
+## Cleanup
 
-Skip this step for the default small-storage mode:
+Expiry and pickup limits are checked during requests. Reclaiming stored bytes requires actual cleanup. Exhausting pickups does not immediately delete a file; permanent shares need manual deletion.
 
-- **R2 (for files >24MB)**: **Storage & Databases → R2 → Create bucket** (first-time R2 use may require a payment method)
-- **D1 (for strongly consistent metadata)**: **Storage & Databases → D1 → Create database**, then open the database's **Console** tab and paste the full `schema/schema.sql` from this repository to create the tables
-
-#### 4. Connect the repository and run the first build
-
-1. Dashboard: **Workers & Pages → Create → Pages → Connect to Git** (in the newer UI, under Compute → Pages tab)
-2. The first connection redirects to GitHub for authorization: install the **Cloudflare Pages** App and select this repository (*Only select repositories* is sufficient for private repos)
-3. Back in Cloudflare, select the repository, keep the project name `file-relay`, and set the build configuration:
-   - **Framework preset**: None
-   - **Build command**: `npm run build:pages`
-   - **Build output directory**: `dist/pages`
-4. Click **Save and Deploy**; it completes in about a minute. The output is the single file `dist/pages/_worker.js` (Pages advanced mode: all requests enter the Worker first, with the frontend pages already inlined) — no static files are uploaded separately
-
-#### 5. Configure bindings and variables (after the first deployment, once and never overwritten)
-
-- **Settings → Functions → KV namespace bindings → Add binding**: Variable name `fileKV` (must match exactly), Namespace selects the one created in step 2, Environment Production (add a Preview binding too if you want a preview environment)
-- **Settings → Variables and Secrets → Add**: type **Secret**, name `ADMIN_TOKEN`, value a strong random string (locally `openssl rand -base64 24`, or a password manager); optionally `ADMIN_PATH` for a custom admin entrance (e.g. `panel-x7k9`; once set, `/admin` returns 404)
-- All vars have code defaults and may be omitted; to override a default, add a plain-text variable (not a Secret) of the same name
-- Large-file / strong-consistency modes: add `BUCKET` (R2) or `DB` (D1) on the same **Functions** bindings page
-
-Pages bindings and environment variables are project settings, **and deployments that only upload build output never touch them**; subsequent automatic deployments on every push need no further attention.
-
-#### 6. Scheduled cleanup (Pages has no Cron Triggers)
-
-Expired shares are validated lazily as a safety net, so **functional correctness never depends on cleanup** — expired or exhausted shares cannot be picked up; cleanup only reclaims storage. Pages does not support Cron Triggers, so compensating mechanisms stack:
-
-- **Cleanup on visit (automatic)**: every homepage visit triggers a throttled background cleanup (at most one real run per 6-hour window, executed via waitUntil without slowing the page) — for a site with regular visitors, no extra configuration is needed
-- **External timer** (optional, a safety net for low-traffic sites): [cron-job.org](https://cron-job.org) / UptimeRobot / a local cron, hitting the endpoint every 6 hours:
-
-  ```bash
-  curl -X POST https://<project-name>.pages.dev/api/admin/cleanup -H "Authorization: Bearer <ADMIN_TOKEN>"
-  ```
-
-  Returns `{"ok":true,"deletedShares":n,"abortedSessions":n}`
-- **Manual**: after logging into the admin console, call the same endpoint (cookie auth works)
-
-#### 7. Verify and update
-
-- Visit `https://<project-name>.pages.dev`: create a text share and pick it up successfully — deployment is complete; the admin console defaults to `/admin` (or `/<ADMIN_PATH>` if set), logging in with ADMIN_TOKEN
-- Every subsequent push to `main` deploys a new version automatically; bindings and variables remain managed in the dashboard, unaffected by deployments
-
-### Option 2: Wrangler CLI (Manual Pages Deploy)
+- **Standalone Workers:** configure Cron Trigger `0 */6 * * *` in the dashboard.
+- **Pages:** homepage visits trigger background cleanup, with an approximate six-hour KV throttle. This is not a strict distributed lock. D1 deployments without KV have no such throttle marker.
+- **External scheduler:** low-traffic sites can call the cleanup API every six hours:
 
 ```bash
-# 0. Prerequisites: Node.js >= 18; clone the repository and install dependencies
-npm install
+curl -X POST 'https://your-domain.example/api/admin/cleanup' \
+  -H 'Authorization: Bearer <ADMIN_TOKEN>'
+```
 
-# 1. Log in to Cloudflare (browser authorization)
-npx wrangler login
+Response: `{"ok":true,"deletedShares":0,"abortedSessions":0}`. Keep admin tokens out of public repositories.
 
-# 2. Build the Pages output (= build:single + copy to dist/pages/_worker.js)
+## Updating a deployment
+
+1. Finish old in-progress uploads before upgrading. The guard counts existing objects and imports visible legacy sessions.
+2. Review dashboard variables. Old `MAX_FILE_SIZE` and `PART_SIZE` overrides survive code updates. Remove them or set `10000000000` and `100000000` to adopt current defaults.
+3. Rebuild and deploy Pages, or replace the complete `dist/worker.js` in paste mode. Restart uploads after changing part size.
+4. Check `/api/config`, then verify upload, pickup and deletion.
+
+When changing file storage, retain bindings for historical files. KV file keys start with `f:`; R2 objects use separate keys. Reading old files requires the appropriate binding. **Switching KV / D1 metadata backends requires record migration; there is no automatic migration.**
+
+## Development and tests
+
+Use [wrangler.jsonc](wrangler.jsonc) for local development. Enable `BUCKET` to test R2. To test D1, configure `DB`, remove `fileKV`, and initialize the schema. Production bindings remain in project settings.
+
+```bash
+npm ci
+npm run dev
+```
+
+Copy [.dev.vars.example](.dev.vars.example) to `.dev.vars` and replace the local token. `.dev.vars` is Git-ignored:
+
+```text
+ADMIN_TOKEN=your-local-test-token
+```
+
+Checks and build:
+
+```bash
+npx tsc --noEmit
+node tools/check-i18n.mjs
+npm run test:limits
+npm run test:quota
 npm run build:pages
-
-# 3. Deploy to Pages (the first run asks for a project name, e.g. file-relay; afterwards it updates directly)
-npm run deploy
-
-# 4. (Optional) Create KV/R2/D1 resources locally instead of clicking the dashboard:
-npx wrangler kv namespace create file-relay-meta
-npx wrangler r2 bucket create file-relay
-npx wrangler d1 create file-relay && npm run db:remote   # D1 database + tables; use npm run db:local locally
 ```
 
-After deployment you get `https://<project-name>.pages.dev`. **`wrangler pages deploy` uploads only the build output, not bindings** — KV and variables are still configured in the dashboard as in Option 1 step 5 (once configured, subsequent deploys never overwrite them); ADMIN_TOKEN can also be set with `npx wrangler pages secret put ADMIN_TOKEN` instead of the dashboard. Scheduled cleanup works as in Option 1 step 6.
-
-For local development use `npm run dev` (repository mode with hot-reloading TS sources + `public/`; append `--test-scheduled`, then visit `/__scheduled` to trigger the cron manually). To debug the Pages/single-file output shape: `npm run build:pages && npm run dev:pages`. End-to-end tests: `python test/e2e_test.py` (defaults to `http://localhost:8787`; override with the BASE argument).
-
-> ⚠️ `wrangler pages dev` merges the `assets` block from wrangler.jsonc (./public) into its local static-asset layer, and Pages serves static assets first — locally, page paths such as `/` never reach the Worker (the opposite of production, where the dist/pages output contains only _worker.js and every request enters the Worker first). When debugging homepage-triggered cleanup, temporarily move wrangler.jsonc away before starting pages dev.
-
-### Option 3: Single-File Deployment (Dashboard Paste, No GitHub or Node)
-
-The entire service (backend and all frontend pages) is bundled into **one `worker.js`** that is pasted into the dashboard editor — suitable for environments where connecting Git or installing Node is impractical. A pure-dashboard deployment has no config file; bindings and secrets are managed in the dashboard, and the binding-removal behavior described in the FAQ does not apply.
-
-#### 1. Obtain worker.js
-
-Use the prebuilt [dist/worker.js](dist/worker.js) in this repository (~240 KB). To regenerate it after code changes:
+Browser testing requires Python, Playwright and Chromium:
 
 ```bash
-npm install
-npm run build:single     # produces dist/worker.js
+python -m pip install playwright
+python -m playwright install chromium
+npm run test:quota-runtime
 ```
 
-The committed `dist/worker.js` is kept in sync with the source; if you modify the code yourself, rebuild and replace the file to keep them consistent.
+The quota runtime test starts a local emulator using the build output. It covers admission, upload/download, cancellation, deletion and the browser alert without Cloudflare credentials.
 
-#### 2. Create in the dashboard and paste
+For a running local server:
 
-1. **Compute (Workers) → Create → Create Worker** (the default Hello World template is fine), e.g. `file-relay`
-2. After deployment open **Edit code**, clear the editor, paste the entire `dist/worker.js`, and click **Deploy**
+```bash
+python test/e2e_test.py http://localhost:8787
+python test/ui_smoke.py http://localhost:8787
+```
 
-#### 3. Dashboard configuration
-
-1. **Settings → Bindings → Add → KV namespace**: the variable name must be `fileKV`; select the target namespace (required)
-2. **Settings → Variables and Secrets → Add → Secret**: `ADMIN_TOKEN` (required); optionally `ADMIN_PATH` for a custom admin entrance
-3. **Settings → Triggers & Events → Cron Triggers → Add**: `0 */6 * * *` (cleans expired shares every 6 hours)
-4. All vars have code defaults and may be omitted; to override a default, add a plain-text variable (not a Secret) of the same name under **Variables and Secrets**; bind `BUCKET` (R2) / `DB` (D1) only if large files or strong consistency are needed
-
-#### 4. Verify
-
-Visit `https://<worker-name>.<subdomain>.workers.dev` and create a text share; picking it up successfully completes the deployment.
-
-> **Trade-off**: all three methods are functionally identical and share the same code source — Options 1/2 (Pages) and Option 3 (Workers paste) both ship the single-file form with the frontend inlined. After page changes: Pages rebuilds automatically on push (or re-run `npm run build:pages` + deploy); the paste mode requires re-running `npm run build:single` and replacing the whole file. When the same KV namespace is bound, pickup codes and data interoperate across methods.
+These tests create shares and files. The R2 API test uses a file larger than one configured part. Do not treat them as read-only checks against production.
 
 ## API
 
-Beyond the web UI, all features are programmable. Parameter conventions: `expiry` is one of `1d | 7d | 30d | forever`; `maxPickups` is 1-999 or `null` (unlimited). Errors return `{error, message}` uniformly.
+`expiry`: `1d`, `7d`, `30d` or `forever`. `maxPickups`: an integer from 1–999, or `null` for unlimited pickups.
 
-| Method | Path | Description |
+| Method | Path | Purpose |
 |---|---|---|
-| GET | `/api/health` | Health check |
-| GET | `/api/config` | Current upload mode and limits (`fileBackend=kv` in KV mode) |
-| POST | `/api/shares/text` | Create a text share; returns `{code, expireAt, …}` |
-| POST | `/api/shares/file` | KV-mode direct file upload (query params `filename`/`mime`/`expiry`/`maxPickups`; body is the raw file bytes, ≤24MB) |
-| POST | `/api/pickup` | Pick up by code: text shares return the content; file shares return metadata (not counted) |
-| GET | `/api/pickup/:code/download` | Download the file (this step counts) |
-| POST | `/api/uploads/init` etc. | R2 large-storage chunked upload endpoints (init / `:id/parts/:n` / complete / abort) |
-| POST | `/api/admin/login` etc. | Admin endpoints (HMAC-signed cookie auth): `stats`, `shares` listing, `DELETE shares/:code` by pickup code (idempotent: a nonexistent code also returns ok, tiding over the KV eventual-consistency window) |
-| POST | `/api/admin/cleanup` | Manually/externally trigger cleanup (compensation channel for Pages having no cron): admin cookie or `Authorization: Bearer <ADMIN_TOKEN>` auth; returns `{ok, deletedShares, abortedSessions}` |
+| GET | `/api/health` | Health check; requires a metadata binding |
+| GET | `/api/config` | File backend, per-file/text limits and part size; does not return bucket usage |
+| POST | `/api/shares/text` | Create text share |
+| POST | `/api/shares/file` | Raw KV file upload; metadata in query parameters |
+| POST | `/api/pickup` | Retrieve and count text; return file metadata without counting |
+| GET | `/api/pickup/:code/download` | Download and count file pickup |
+| POST | `/api/uploads/init` | Reserve capacity and initialize multipart upload |
+| PUT | `/api/uploads/:id/parts/:n` | Upload one R2 part |
+| POST | `/api/uploads/:id/complete` | Complete upload and create share |
+| POST | `/api/uploads/:id/abort` | Cancel and release reclaimable reservations |
+| POST | `/api/admin/login`, `/api/admin/logout` | Manage admin session |
+| GET | `/api/admin/stats`, `/api/admin/shares` | Share statistics and list; not actual bucket usage |
+| DELETE | `/api/admin/shares/:code` | Delete share and file |
+| POST | `/api/admin/cleanup` | Clean expired shares and stale upload sessions |
 
-Examples:
+Admin APIs use a signed Cookie. Cleanup also accepts `Authorization: Bearer <ADMIN_TOKEN>`.
 
 ```bash
-# Text share → {"code":"376966","expireAt":…}
-curl -X POST https://<your-domain>/api/shares/text \
+curl -X POST 'https://your-domain.example/api/shares/text' \
   -H 'Content-Type: application/json' \
   -d '{"text":"hello file-relay","expiry":"7d","maxPickups":null}'
 
-# Pick up by code
-curl -X POST https://<your-domain>/api/pickup \
-  -H 'Content-Type: application/json' -d '{"code":"376966"}'
-
-# Direct file upload (KV mode, ≤24MB per file)
-curl -X POST 'https://<your-domain>/api/shares/file?filename=doc.zip&mime=application/zip&expiry=1d&maxPickups=5' \
-  --data-binary @doc.zip
+curl -X POST 'https://your-domain.example/api/pickup' \
+  -H 'Content-Type: application/json' \
+  -d '{"code":"376966"}'
 ```
 
-## Configuration (wrangler.jsonc `vars`)
+Insufficient R2 capacity returns HTTP `507`:
 
-Every var has a code default and may be omitted entirely; items marked ❌ are used only by the R2 large-storage mode and can be deleted entirely in small-storage (KV) mode.
+```json
+{"error":"capacity_exceeded","message":"容量超出免费额度"}
+```
 
-| Variable | Default | Applies to | Description |
-|---|---|---|---|
-| MAX_FILE_SIZE | 2 GiB | Both modes | Per-file cap; KV mode uses min(value, 24MB) |
-| MAX_TEXT_LENGTH | 65536 | Both modes | Text length cap in characters |
-| PART_SIZE | 10 MiB | R2 only ❌ | Chunk size (non-final chunks must be ≥5MB and <100MB request-body limit) |
-| SESSION_TTL_MS | 24h | R2 only ❌ | Threshold for orphaned multipart sessions |
-| MAX_PARTS | 10000 | R2 only ❌ | Maximum number of R2 parts |
+Capacity-service failures return `503`. Per-file size violations return `413`.
 
-ADMIN_TOKEN is a Secret (Pages: add it under Variables and Secrets in the dashboard, or `npx wrangler pages secret put ADMIN_TOKEN`; paste mode: add it in the dashboard) and is required in every mode.
+## Command reference
 
-### Secrets
-
-| Secret | Required | Description |
+| Purpose | Command | Publishes? |
 |---|---|---|
-| `ADMIN_TOKEN` | Yes | Admin console login token (a strong random string) |
-| `ADMIN_PATH` | Optional | Custom admin entrance: a single path segment of letters/digits/`-`/`_` (1-64 chars, e.g. `panel-x7k9`). Once set, the console entrance becomes `https://…/<value>` and both `/admin` and `/admin.html` return 404 to resist scanning; unset, it defaults to `/admin`. Do not reuse existing paths such as `/pickup` or `/api`. This secret only hides the login page — the `/api/admin/*` endpoints are always protected by ADMIN_TOKEN |
+| Local development | `npm run dev` | No |
+| Build standalone file | `npm run build:single` | No |
+| Build Pages output | `npm run build:pages` | No |
+| Preview Pages locally | `npm run dev:pages` (build first) | No |
+| Deploy Pages | `npm run deploy -- --project-name file-relay --branch main` | Yes, rebuilds first |
 
-## Design Trade-offs (Known Limits)
-
-- **No resumable uploads**: refreshing or closing the page abandons the upload (R2 mode aborts the server-side session on a best-effort basis; the remainder is handled by the cron)
-- **Download counts on start**: pickup limits are counted when a download begins, and cancelling midway still consumes one (the necessary cost of preventing concurrent over-pickup); viewing text counts immediately, while files let the recipient inspect the card before downloading
-- **Files are not deleted immediately after pickup**: the file (KV key / R2 object) is kept until natural expiry or admin deletion, so recipients see "limit exhausted" rather than "code not found"
-- Codes are 6 digits (a space of one million): D1 relies on a UNIQUE constraint with collision retries; KV uses check-then-write with a theoretical race window under extreme concurrency
-- Pickup counting in KV mode is read-modify-write and may exceed the limit by 1-2 under extreme concurrency (imperceptible for personal use)
+Local Static Assets can affect routing in `dev:pages`. Use `npm run test:quota-runtime` to check the embedded routing and quota alert.
 
 ## FAQ
 
-- **API returns 500 "metadata store not bound"**: a KV/D1 binding is not configured. All three deployment methods configure bindings in the dashboard (Pages: Settings → Functions; paste mode: Settings → Bindings), and they are never overwritten by deployments — only if you additionally keep using the legacy `wrangler deploy` (Workers) flow, note that it treats wrangler.jsonc as the single source of bindings and removes ones absent from the config
-- **Forgot ADMIN_TOKEN**: Secrets cannot be viewed, only reset — Pages: re-edit it under Variables and Secrets in the dashboard (or `npx wrangler pages secret put ADMIN_TOKEN`); paste mode: re-edit it in the Worker settings. Existing admin sessions become invalid after a reset
-- **`*.pages.dev` / `*.workers.dev` unreachable from mainland China**: expected; verification requires a proxy, or bind a custom domain for direct access
-- **Do storage-mode switches affect existing shares**: No. Keys are routed by prefix (`f:` prefix = KV files, bare uuid = R2 objects); old and new data coexist with no migration
-- **When KV write quota is exhausted**: creating new shares fails that day, while reading and downloading existing shares is unaffected; the quota resets the next day. For sustained heavy use, switch to D1 or upgrade to a paid plan
+**Why is capacity rejected below 9.99 GB?** The next file, unfinished reservations and ledger bytes also count. Cancel unfinished uploads or delete files through the admin page. Cleanup failures may retain reservations.
 
-## Structure
+**Does adding D1 enable strict counting?** No. KV wins when both are bound. D1 uses atomic updates; KV read-modify-write counting can exceed pickup limits under concurrency, and code allocation has a collision window. There is no guarantee that over-pickups stop at one or two.
 
+**Can exhausted KV writes affect downloads?** Yes. Pickup counting writes to KV, so new shares, text pickups and file downloads may fail.
+
+**Can uploads resume after refresh?** Not currently. The page tries to cancel on close; remaining sessions depend on cleanup.
+
+**Does cancelling a download refund a pickup?** No. Files count when download starts; text counts when viewed.
+
+**Forgot the admin token?** Reset `ADMIN_TOKEN` in project settings. Existing admin sessions become invalid.
+
+**Missing metadata database error?** Check the current environment's `fileKV` or `DB` binding and its spelling.
+
+**Cannot access the site?** Check deployment logs, bindings and network access to the domain. Default-domain availability depends on your network; configure a custom domain if appropriate.
+
+## Layout
+
+```text
+docs/       Chinese and English deployment guides
+src/        Routes, KV/D1 metadata, files, limits, R2 quota ledger and cleanup
+public/     Send, pickup and admin pages with vanilla JavaScript
+schema/     D1 initialization SQL
+tools/      Build and translation checks
+test/       Boundary, quota, runtime, API and browser tests
+dist/       worker.js; Pages output at pages/_worker.js
 ```
-src/          Hono Worker: store (dual KV/D1 backend) / share (pickup download + KV direct upload) / upload (R2 chunking, large-storage mode) / admin / cleanup (cron + cleanup endpoint + homepage-triggered throttled cleanup)
-              asset-resolver.ts dual-mode static assets (Static Assets / single-file inline); standalone.ts single-file entry point
-public/       Vanilla JS three pages (send / pickup / admin), served by Static Assets in local wrangler dev and inlined into the build output
-dist/         build:single output worker.js (committed to the repository, directly usable for Option 3); build:pages copies it to dist/pages/_worker.js (Options 1/2 Pages deploys)
-tools/        Build scripts (inline generation / finishing / Pages copy) and the i18n checker
-schema/       D1 initialization SQL (only needed when switching to the D1 metadata backend)
-test/         Python end-to-end tests
-```
 
-## Acknowledgments
+See [src/quota.ts](src/quota.ts) for capacity accounting, [src/limits.ts](src/limits.ts) for upload limits and [package.json](package.json) for commands.
 
-- **[FileCodeBox](https://github.com/vastsa/FileCodeBox)** — the inspiration and product prototype for this project
-- **[Hono](https://github.com/honojs/hono)** — a lightweight, high-performance edge web framework
-- **[Wrangler](https://github.com/cloudflare/workers-sdk)** / **[@cloudflare/workers-types](https://github.com/cloudflare/workers-types)** — the official Cloudflare Workers toolchain and types
-- Hosted on [Cloudflare Workers](https://workers.cloudflare.com/) / [Workers KV](https://developers.cloudflare.com/kv/) / [R2](https://developers.cloudflare.com/r2/) (optional) / [D1](https://developers.cloudflare.com/d1/) (optional)
+## Credits and license
 
-## License
+Inspired by [FileCodeBox](https://github.com/vastsa/FileCodeBox). Built with [Hono](https://github.com/honojs/hono) and Cloudflare Workers / Pages, KV, R2 and D1.
 
-[MIT](LICENSE)
+[MIT License](LICENSE)

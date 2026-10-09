@@ -55,8 +55,8 @@ if backend == "kv":
     check("直传创建", st == 201 and len(r.get("code", "")) == 6, f"st={st} r={r}")
     code2 = r["code"]
 else:
-    print("== 3. R2 大存储:12MB 双分片上传/下载 ==")
-    payload = os.urandom(12 * 1024 * 1024)
+    print("== 3. R2 大存储:按配置分片上传/下载 ==")
+    payload = os.urandom(cfg["partSize"] + 1024)
     fname = "测试 文件 (v1).bin"
     st, r = call("POST", "/api/uploads/init", {"filename": fname, "size": len(payload), "mime": "application/octet-stream", "expiry": "1d", "maxPickups": 5})
     check("init", st == 200 and r.get("parts") == 2, f"st={st} r={r}")

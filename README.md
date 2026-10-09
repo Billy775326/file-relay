@@ -2,289 +2,270 @@
 
 **简体中文** | [English](README.en.md)
 
-以取件码分享文件与文本的自托管服务,基于 Cloudflare 原生技术栈实现:**默认仅需 Workers 与一个 KV 命名空间**,免费套餐即可运行;有较大文件需求(>24MB)时可加装 R2。
+基于 Cloudflare Workers / Pages 的文件与文本分享服务。发送方上传内容，获得 **6 位取件码**；接收方输入取件码，或扫描二维码取件。
 
-本项目为 [FileCodeBox](https://github.com/vastsa/FileCodeBox) 的 Cloudflare 等价替代:上传文件或文本,生成 6 位取件口令,对方凭口令取件。
+项目按 **Cloudflare 免费套餐**设计。默认只需一个 KV 命名空间；添加 R2 桶后支持大文件分片上传，并提供 **9.99 GB 桶容量保护**。
 
-支持三种部署方式:Pages + GitHub 自动构建、wrangler 命令行手动部署 Pages、免环境单文件粘贴(见「部署方式」)。注:`*.pages.dev` / `*.workers.dev` 域名在中国大陆无法直接访问,验证时需使用代理,或绑定自定义域名。
+> 免费套餐的请求限制、单文件上限和免费存储额度是不同概念。R2 容量保护仅覆盖当前绑定桶，不保证整个账户零费用。
+
+[快速部署](#快速部署) · [上传与容量限制](#上传与容量限制) · [配置](#配置) · [更新已有部署](#更新已有部署) · [开发与测试](#开发与测试) · [API](#api) · [常见问题](#常见问题)
 
 ## 功能
 
-- **文件分享(默认 KV 直传)**:单文件不超过 24MB,单请求直传,部署无需任何存储桶;有较大文件需求时可放开 `r2_buckets`,升级为 R2 分片上传,单文件上限约 2 GB,均无需修改代码
-- **多文件批量分享**:一次选择最多 10 个文件,逐个顺序上传,每行独立进度,完成后逐张生成结果卡片,支持一键复制全部口令
-- **文本分享**:粘贴文本生成口令,取件页一键复制
-- **有效期**:1 天 / 7 天 / 30 天 / 永久 × 取件次数 1 / 5 / 不限,组合失效
-- **取件二维码**:每个分享结果附带 `pickup` 链接二维码,扫码直达取件页
-- **中英双语界面**:一键切换,按浏览器语言自动初始化,偏好持久保存
-- **自动清理**:Workers cron 每 6 小时回收过期分享(R2 模式另清理孤儿分片会话);Pages 无 cron,改为打开首页自动节流清理(6h 窗口)+ 可选外部定时器;取件时惰性校验,清理异常不影响功能
-- **管理后台**:令牌登录,提供统计、列表与删除;入口默认为 `/admin`,可通过 Secret `ADMIN_PATH` 自定义(设置后 `/admin` 返回 404,以防扫描)
-- **配置切换免改代码**:文件存储默认 KV、R2 可选;元数据默认 KV、D1 可选,全部通过 wrangler.jsonc 切换
-- 移动端适配、深色模式;上传含进度、速度与失败重试
+- 文件与文本分享，支持取件码、取件链接和二维码。
+- 一次选择最多 10 个文件，顺序上传，分别生成取件码；提供进度、速度和失败重试。
+- 有效期支持 1 天、7 天、30 天或永久；页面可选取件 1 次、5 次或不限。
+- KV 文件直传；绑定 R2 后自动改为分片上传，支持取消。
+- R2 容量不足时弹出“容量超出免费额度”，停止后续批量上传。
+- 管理后台支持令牌登录、统计、分享列表与删除，可自定义入口。
+- 自动清理过期分享，中英文界面、深色模式和移动端适配。
 
-## 存储选型:小存储模式(KV,默认)与大存储模式(R2)
+## 快速部署
 
-**根据分享文件的大小选择文件存储**(由 wrangler.jsonc 是否放开 `r2_buckets` 决定,切换无需修改代码):
+先选择适合自己的方式，完整步骤见 [部署指南](docs/deployment.md)。
 
-| | 📦 小存储模式(KV,**默认**) | 🗄️ 大存储模式(R2) |
+| 方式 | 本地环境 | 更新方式 |
 |---|---|---|
-| 单文件上限 | **24 MB**(KV 单值上限 25MiB,留余量) | **约 2 GB**(10MB 分片 multipart) |
-| 部署资源 | **仅需一个 KV 命名空间** | R2 桶 + KV/D1 元数据 |
-| 上传方式 | 单请求直传(含进度与重试) | 分片(进度、重试、可取消) |
-| 免费存储额度 | 1 GB | 10 GB |
-| 免费操作额度 | **写 1000 次/天** + 读 10 万次/天 | 写 100 万次/月 + 读 1000 万次/月 |
-| 超额价格 | 写 $5/百万;读 $0.50/百万;存储 $0.50/GB·月 | 存储 $0.015/GB·月;写 $4.50/百万;读 $0.36/百万 |
-| 出口流量 | 免费(但读操作计费) | **免费**(下载不产生带宽费用) |
-| 适用场景 | **以小文件为主**(文档、图片、压缩包) | **以大文件为主**(百 MB 级、视频、安装包) |
+| [Pages + GitHub](docs/deployment.md#a-pages-连接-github) | 无需安装 | 推送代码后自动构建 |
+| [命令行部署 Pages](docs/deployment.md#b-命令行部署-pages) | Git、Node.js 22+ | `npm run deploy`，自动先构建再上传 |
+| [Workers 单文件粘贴](docs/deployment.md#c-workers-单文件粘贴) | 无需安装 | 替换完整 `worker.js` |
+| [Pages 拖放上传](docs/deployment.md#d-pages-拖放上传) | 使用预构建文件时无需安装 | 上传含 `_worker.js` 的文件夹 |
 
-要点:默认小存储模式,部署最简,日常传输文档与图片足够;KV 每次上传消耗 1-2 次写额度(免费 1000 次/天),重度或大文件场景可放开 `r2_buckets` 升级大存储模式(R2 免费额度对个人几乎用不完,下载无流量费用)。切换仅影响新分享,旧数据按存储键前缀自动路由,无需迁移。
+所有方式都需要在 Cloudflare 项目中绑定资源，并添加管理员 Secret `ADMIN_TOKEN`：
 
-### 元数据后端:KV(默认)与 D1(可选)
-
-| | KV(默认) | D1(可选) |
+| 用途 | 绑定 | 说明 |
 |---|---|---|
-| 一致性 | 最终一致(写后最长 60 秒全球可见) | **强一致** |
-| 取件计数 | 读改写,极端并发可能超出次数 1-2 次 | 原子 UPDATE,**严格不超取** |
-| 口令唯一 | 先查后写,存在理论碰撞窗口 | UNIQUE 约束,**严格唯一** |
-| 免费额度 | 见上表 | 500 万行读/天 + 10 万行写/天 + 5GB |
+| 小文件与文本 | `fileKV` → KV 命名空间 | 默认方案，文件与元数据共用 KV |
+| 大文件分享 | `fileKV` → KV；`BUCKET` → R2 桶 | R2 文件 + KV 元数据 |
+| 严格控制并发取件次数 | `DB` → D1；`BUCKET` → R2 桶 | 先初始化数据库，见指南 D1 步骤 |
 
-个人自用、低并发场景两者无实际差异;多人共用或高并发取件建议切换 D1(建库后放开 wrangler.jsonc 的 `d1_databases`)。
+**同时绑定 `fileKV` 和 `DB` 时优先使用 KV。** 添加 D1 不会自动切换后端或迁移记录。
 
-**部署组合速查**:**默认 = 仅绑定 KV(文件与元数据共用一个命名空间,配置最简)** | 大文件需求 = 放开 r2_buckets(R2 + KV)| 需要强一致 = R2 + D1
+只在本地生成部署文件，使用 `npm run build:pages` 或 `npm run build:single`；这两个命令不会发布到 Cloudflare。
 
-### 免费额度与收费标准(2026,以[官方定价页](https://developers.cloudflare.com/workers/platform/pricing/)为准)
+## 上传与容量限制
 
-| 资源 | 免费套餐额度 | 超额/付费价格 |
+以下限制同时生效，实际可上传大小以最严格的一项为准。**MB / GB 使用十进制；MiB / GiB 使用二进制。**
+
+| 限制 | 当前值 | 作用范围 |
 |---|---|---|
-| Workers | 10 万请求/天 | Workers Paid **$5/月**:1000 万请求/月,超出 $0.30/百万 |
-| KV 读 | 10 万次/天 | 付费 $0.50/百万(含 1000 万/月) |
-| KV 写/删/列表 | 各 1000 次/天 | 付费 $5/百万(各含 100 万/月) |
-| KV 存储 | 1 GB | $0.50/GB·月 |
-| D1 行读 | 500 万行/天 | 付费 $0.001/百万行(含 250 亿/月) |
-| D1 行写 | 10 万行/天 | 付费 $1/百万行(含 5000 万/月) |
-| D1 存储 | 5 GB | $0.75/GB·月 |
-| R2 存储 | 10 GB | $0.015/GB·月 |
-| R2 Class A(写) | 100 万次/月 | $4.50/百万 |
-| R2 Class B(读) | 1000 万次/月 | $0.36/百万 |
-| R2 出口流量 | **无限,永久免费** | —— |
+| KV 单文件 | 25 MiB，即 26,214,400 字节 | 原始文件字节，不含另存的分享元数据 |
+| R2 单次分片请求 | 默认 100 MB，即 100,000,000 字节 | 上传经过免费套餐 Worker |
+| 单个完整文件 | `MAX_FILE_SIZE`，默认 10 GB | 包含全部分片，服务端校验 |
+| R2 分片数 | 默认最多 10,000 片 | 还受 `PART_SIZE` 与 `MAX_PARTS` 配置限制 |
+| R2 总容量保护 | 固定 9.99 GB，即 9,990,000,000 字节 | 当前桶的对象、上传预留和容量台账 |
 
-KV 模式下每次取件约消耗 1 次读 + 1 次写:免费额度每天 1000 次写,个人使用充足;若分享量达到千级,可考虑 $5/月的 Workers Paid 或切换 D1(读额度宽裕得多)。
+**默认配置不代表可以上传一个完整的 10 GB 文件**：桶容量保护会先拦截它。即使桶为空，也要为容量台账留出空间；桶已有文件时，可上传大小还取决于剩余容量。
 
-## 部署方式
+本项目采用“浏览器 → Worker → R2”路径。R2 原生接口的单次上传上限不能直接作为此路径的请求上限；本项目未实现 S3 预签名直传。
 
-| 方式 | 适用场景 | 特点 |
+官方参考：[KV 限制](https://developers.cloudflare.com/kv/platform/limits/)、[Workers 请求限制](https://developers.cloudflare.com/workers/platform/limits/#request-and-response-limits)、[R2 限制](https://developers.cloudflare.com/r2/platform/limits/)。
+
+### 9.99 GB 容量保护如何工作
+
+1. 新上传初始化时，通过 R2 `list()` 分页读取当前桶对象，累计实际字节数。
+2. 加上进行中上传的完整文件预留空间，合并后的同名对象与预留去重计算。
+3. 当前占用已达阈值，或新文件将导致超限时，返回 HTTP `507` / `capacity_exceeded`。
+4. 页面弹出 **“容量超出免费额度”**，并停止本次批量上传。
+
+容量台账位于 R2 的 `__file-relay/quota-v1.json`，通过条件写入处理并发预留，**无需额外绑定**。请勿手动编辑或删除该对象。
+
+成功取消上传、通过管理后台删除文件、清理过期文件后，会释放对应预留。存储故障或计量失败时拒绝新上传；不能确认字节已清除时保留预留。直接在 R2 控制台删除本项目文件可能留下预留，日常删除请使用管理后台。
+
+统计覆盖当前桶内已有对象，但不覆盖其他桶、历史操作次数，以及绕过本项目进行的并发上传。扫描成本随对象数量增加。KV 文件和文本分享不受此 R2 阈值限制。
+
+### 免费额度的含义
+
+R2 Standard 免费存储按 **10 GB-month/月**计量，另有 Class A、Class B 操作额度。9.99 GB 是本项目设置的实时容量阈值，不是 Cloudflare 账户账单查询结果。容量扫描、分片上传和下载也会消耗操作额度，详见 [R2 官方计费](https://developers.cloudflare.com/r2/pricing/)。
+
+## 配置
+
+部署位置与操作步骤见 [部署指南](docs/deployment.md)。
+
+生产环境在 Cloudflare 项目设置中配置；[wrangler.jsonc](wrangler.jsonc) 主要用于本地开发。
+
+| 变量 | 默认值 | 说明 |
 |---|---|---|
-| [方式一](#方式一pages--github-连接自动构建) Pages + GitHub 连接 | 需要 push 即部署 | 自动构建,绑定全在控制台配置、永不被部署覆盖 |
-| [方式二](#方式二wrangler-命令行手动部署-pages) wrangler 命令行 | 具备 Node.js 环境 | 手动部署 Pages,一条命令上传产物 |
-| [方式三](#方式三单文件部署控制台粘贴免-github-与-node) 单文件粘贴 | 不安装 Node、不连接 Git | 整个服务打包为一个 worker.js,控制台粘贴即可使用 |
+| `MAX_FILE_SIZE` | `10000000000` | 单个完整文件上限，单位字节；两种文件模式都生效，不能突破各自平台上限或 R2 剩余容量 |
+| `MAX_TEXT_LENGTH` | `65536` | 服务端文本长度上限 |
+| `PART_SIZE` | `100000000` | R2 分片字节数，自动限制在 5 MiB 至 100 MB |
+| `MAX_PARTS` | `10000` | R2 分片数量，自动限制在 1–10,000 |
+| `SESSION_TTL_MS` | `86400000` | 未完成上传会话的清理期限，默认 24 小时 |
 
-> 三种方式跑的是同一套代码:`build:pages` 产出的 `dist/pages/_worker.js`(Pages 用)与 `dist/worker.js`(粘贴用)同源同行为。**Pages 的绑定(KV/变量)存在项目设置里、与部署解耦**——部署一万次也不会清掉控制台手动配的绑定,无需在仓库里维护资源 ID;方式三同理。仅当你自行沿用旧的 `wrangler deploy`(Workers)流程时,才有「未写进 wrangler.jsonc 的绑定被部署清除」的问题(见 FAQ)。
+### 管理设置
 
-### 方式一:Pages + GitHub 连接(自动构建)
+| Secret | 是否必填 | 说明 |
+|---|---|---|
+| `ADMIN_TOKEN` | 是 | 管理员登录令牌；在生产控制台保存为 Secret |
+| `ADMIN_PATH` | 否 | 自定义入口，如 `panel-x7k9`；默认 `/admin` |
 
-无需安装 Node 的网页部署方式,**仓库不需要修改任何配置**。仓库连接 Cloudflare Pages 后,每次 `git push` 自动重新构建部署(免费构建额度对个人充足)。
+自定义入口支持 1–64 位字母、数字、`-`、`_`，可带前导 `/`，不能使用 `/api` 或 `/pickup`。设置后旧 `/admin` 入口返回 404，管理 API 仍需要令牌鉴权。
 
-#### 1. 推送到 GitHub
+### 调整上传上限
 
-将本仓库推送至自己的 GitHub 账号(私有或公开均可)。
+例如，将单文件限制为 1 GB：
 
-#### 2. 创建 KV 命名空间(必需;默认模式下文件与元数据均存储于此)
+```text
+MAX_FILE_SIZE=1000000000
+```
 
-控制台左侧 **Storage & Databases → KV → Create namespace**,名称如 `file-relay-meta`。命名空间本身不需要把 ID 填进仓库——稍后在 Pages 控制台绑定它。
+**桶总容量阈值不是环境变量**，固定定义在 [src/quota.ts](src/quota.ts) 的 `R2_CAPACITY_MAX`。降低 `MAX_FILE_SIZE` 不会删除已有文件，但会阻止超过新上限的旧会话继续上传。
 
-#### 3.(可选)创建 R2 / D1 资源
+## 自动清理
 
-默认小存储模式可跳过本步骤:
+过期时间和取件次数在请求时检查，失效分享不能正常取件；文件空间需要实际清理后才会释放。取件次数耗尽不会立即删除文件，永久分享需手动删除。
 
-- **R2(需传输 >24MB 大文件)**:**Storage & Databases → R2 → Create bucket**(首次使用 R2 可能要求绑定付款方式)
-- **D1(需要强一致元数据)**:**Storage & Databases → D1 → Create database**,创建后进入该库的 **Console** 标签页,将仓库 `schema/schema.sql` 全文粘贴执行以建表
-
-#### 4. 连接仓库并首次构建
-
-1. 控制台 **Workers & Pages → Create → Pages → Connect to Git**(新版界面在 Compute → Pages 标签下)
-2. 首次将跳转 GitHub 授权:安装 **Cloudflare Pages** App 并勾选本仓库(私有仓库选择 *Only select repositories* 即可)
-3. 返回 Cloudflare 选中仓库,项目名保持 `file-relay`,构建配置:
-   - **Framework preset**:None
-   - **Build command**:`npm run build:pages`
-   - **Build output directory**:`dist/pages`
-4. 点击 **Save and Deploy**,约 1 分钟完成。产物为单文件 `dist/pages/_worker.js`(Pages 高级模式:全部请求先进 Worker,前端页面已内联),静态文件无需单独上传
-
-#### 5. 配置绑定与变量(部署后进行,一次配好永不被覆盖)
-
-- **Settings → Functions → KV namespace bindings → Add binding**:Variable name `fileKV`(必须一致),Namespace 选中第 2 步创建的命名空间,Environment 选 Production(需要预览环境调试可再给 Preview 配一次)
-- **Settings → Variables and Secrets → Add**:类型 **Secret**,名称 `ADMIN_TOKEN`,值为强随机串(本地有 OpenSSL 可用 `openssl rand -base64 24` 生成,亦可使用密码管理器);(可选)`ADMIN_PATH` 自定义管理入口(如 `panel-x7k9`,设置后 `/admin` 返回 404)
-- 各项 vars 均有代码默认值,可不设置;如需覆盖,以纯文本变量(非 Secret)添加同名条目即可
-- 大文件 / 强一致模式:在同一 **Functions** 绑定页加 `BUCKET`(R2 桶)或 `DB`(D1 库)
-
-Pages 的绑定与环境变量属于项目设置,**只上传产物的部署不会碰它们**;此后每次 push 自动部署都无需再管。
-
-#### 6. 定时清理(Pages 没有 Cron Triggers)
-
-过期分享有惰性检查兜底,**功能正确性不依赖清理**——过期/取完的分享不会被取到;清理只负责回收存储。Pages 不支持 Cron Triggers,补偿机制叠加生效:
-
-- **访问即清理(自动)**:每次有人打开首页,后台顺带执行一次节流清理(6 小时窗口内最多真正执行一次,后台运行不影响页面速度)——常用站点无需任何额外配置
-- **外部定时器**(可选,低流量站点兜底):[cron-job.org](https://cron-job.org) / UptimeRobot / 本地 cron,每 6 小时请求一次:
-
-  ```bash
-  curl -X POST https://<项目名>.pages.dev/api/admin/cleanup -H "Authorization: Bearer <ADMIN_TOKEN>"
-  ```
-
-  返回 `{"ok":true,"deletedShares":n,"abortedSessions":n}`
-- **手动**:管理页登录后同样调用上述接口(cookie 鉴权即可)
-
-#### 7. 验证与日常更新
-
-- 访问 `https://<项目名>.pages.dev`:发送一条文本分享并成功取件即部署完成;管理后台默认位于 `/admin`(设置 ADMIN_PATH 则为 `/<该值>`),使用 ADMIN_TOKEN 登录
-- 此后每次向 `main` 推送即自动部署新版本;绑定与变量始终在控制台管理,不受部署影响
-
-### 方式二:wrangler 命令行(手动部署 Pages)
+- **Workers 单文件部署**：在控制台配置 Cron Trigger：`0 */6 * * *`。
+- **Pages 部署**：首页访问触发后台清理，KV 标记提供约 6 小时的节流窗口；这不是严格的分布式锁。未绑定 KV 的 D1 模式没有该节流标记。
+- **外部定时器**：低访问量站点可每 6 小时调用一次管理清理接口：
 
 ```bash
-# 0. 前置条件:Node.js ≥ 18;克隆本仓库后安装依赖
-npm install
+curl -X POST 'https://your-domain.example/api/admin/cleanup' \
+  -H 'Authorization: Bearer <ADMIN_TOKEN>'
+```
 
-# 1. 登录 Cloudflare(浏览器授权)
-npx wrangler login
+接口返回 `{"ok":true,"deletedShares":0,"abortedSessions":0}`。不要把管理令牌写入公开仓库。
 
-# 2. 构建 Pages 产物(= build:single + 复制为 dist/pages/_worker.js)
+## 更新已有部署
+
+1. 结束旧版本未完成的上传，再部署新版本。容量保护会统计已有对象，并兼容可见的旧上传会话。
+2. 检查控制台环境变量。旧的 `MAX_FILE_SIZE`、`PART_SIZE` 不会因更新代码而消失；要使用当前默认值，删除覆盖值或分别设置为 `10000000000`、`100000000`。
+3. Pages 重新构建部署；粘贴模式替换完整 `dist/worker.js`。修改分片大小后重新开始上传。
+4. 通过 `/api/config` 检查生效的单文件上限和分片大小，再测试上传、取件和删除。
+
+切换文件存储时，保留历史文件所在资源的绑定。KV 文件键以 `f:` 开头，R2 对象使用独立键；保留相应绑定才能读取旧文件。**切换 KV / D1 元数据后端需要迁移记录，代码不会自动完成迁移。**
+
+## 开发与测试
+
+本地开发使用 [wrangler.jsonc](wrangler.jsonc)。测试 R2 时启用其中的 `BUCKET` 绑定；测试 D1 时配置 `DB`、移除 `fileKV` 并初始化表。生产资源绑定仍在项目控制台管理。
+
+```bash
+npm ci
+npm run dev
+```
+
+将 [.dev.vars.example](.dev.vars.example) 复制为 `.dev.vars`，修改本地管理令牌。`.dev.vars` 已被 Git 忽略：
+
+```text
+ADMIN_TOKEN=your-local-test-token
+```
+
+常用检查命令：
+
+```bash
+npx tsc --noEmit
+node tools/check-i18n.mjs
+npm run test:limits
+npm run test:quota
 npm run build:pages
-
-# 3. 部署到 Pages(首次会询问项目名,如 file-relay;之后直接更新)
-npm run deploy
-
-# 4.(可选)本地创建 KV/R2/D1 资源,替代控制台手点:
-npx wrangler kv namespace create file-relay-meta
-npx wrangler r2 bucket create file-relay
-npx wrangler d1 create file-relay && npm run db:remote   # D1 建库+建表;本地调试 npm run db:local
 ```
 
-部署完成后获得 `https://<项目名>.pages.dev`。**`wrangler pages deploy` 只上传构建产物、不上传绑定**——KV 与变量仍按方式一第 5 步在控制台配置(一次配好,后续部署不覆盖),ADMIN_TOKEN 也可以用 `npx wrangler pages secret put ADMIN_TOKEN` 代替控制台添加。定时清理同方式一第 6 步。
-
-本地开发:`npm run dev`(仓库模式,直接热更新 TS 源码 + `public/`;追加 `--test-scheduled` 后访问 `/__scheduled` 可手动触发 cron 逻辑)。调试 Pages/单文件产物形态:`npm run build:pages && npm run dev:pages`。端到端测试:`python test/e2e_test.py`(默认请求 `http://localhost:8787`,可通过 BASE 参数指定目标地址)。
-
-> ⚠️ `wrangler pages dev` 会把 wrangler.jsonc 的 `assets`(./public)并入本地静态资产层,Pages 静态优先——本地 `/` 等页面路径不进 Worker(与生产行为相反:生产产物 dist/pages 只有 _worker.js,所有请求都先进 Worker)。调试首页触发的清理逻辑时,需临时移走 wrangler.jsonc 再启动 pages dev。
-
-### 方式三:单文件部署(控制台粘贴,免 GitHub 与 Node)
-
-整个服务(后端与全部前端页面)打包为**一个 `worker.js`**,粘贴至控制台编辑器即可运行——适合不便连接 Git 或安装 Node 的环境。纯控制台部署没有配置文件,绑定与 Secret 均在控制台管理,不存在前述「部署清除绑定」问题。
-
-#### 1. 获取 worker.js
-
-直接使用仓库内已构建的 [dist/worker.js](dist/worker.js)(约 240 KB)。如需在代码修改后重新生成:
+浏览器测试需要 Python、Playwright 和 Chromium：
 
 ```bash
-npm install
-npm run build:single     # 产出 dist/worker.js
+python -m pip install playwright
+python -m playwright install chromium
+npm run test:quota-runtime
 ```
 
-仓库中的 `dist/worker.js` 与源码同步维护;自行修改代码后需重新构建并替换该文件,以保持两者一致。
+`test:quota-runtime` 使用构建产物启动本地模拟环境，验证容量拦截、上传下载、取消删除及浏览器弹窗，不需要 Cloudflare 凭据。
 
-#### 2. 控制台创建并粘贴
+对已启动的本地服务进行 API / 页面测试：
 
-1. **Compute (Workers) → Create → Create Worker**(默认 Hello World 模板即可),名称如 `file-relay`
-2. 部署后进入 **Edit code**,清空编辑器,粘贴 `dist/worker.js` 全文,点击 **Deploy**
+```bash
+python test/e2e_test.py http://localhost:8787
+python test/ui_smoke.py http://localhost:8787
+```
 
-#### 3. 控制台配置
+这些测试会创建分享和测试文件；R2 API 测试使用超过一个分片大小的文件。不要把生产地址当作无副作用的检查目标。
 
-1. **Settings → Bindings → Add → KV namespace**:变量名必须为 `fileKV`,选中目标命名空间(必需)
-2. **Settings → Variables and Secrets → Add → Secret**:`ADMIN_TOKEN`(必需);可选 `ADMIN_PATH` 自定义管理入口
-3. **Settings → Triggers & Events → Cron Triggers → Add**:`0 */6 * * *`(每 6 小时清理过期分享)
-4. 各项 vars 均有代码默认值,可不设置;如需覆盖默认值,在 **Variables and Secrets** 中以纯文本变量(非 Secret)形式添加同名条目即可;如需大文件或强一致,再绑定 `BUCKET`(R2)/ `DB`(D1)
+## API
 
-#### 4. 验证
+`expiry`：`1d` / `7d` / `30d` / `forever`。`maxPickups`：1–999 的整数，或 `null` 表示不限次。
 
-访问 `https://<worker名>.<子域>.workers.dev`,发送一条文本分享并成功取件即部署完成。
-
-> **模式取舍**:三种方式功能完全一致且同一代码源——方式一/二(Pages)与方式三(Workers 粘贴)都是前端内联的单文件形态,修改页面后:Pages 走 push 自动构建(或重跑 `npm run build:pages` + deploy),粘贴模式需重新 `build:single` 并整文件替换。绑定同一个 KV 命名空间时,取件口令与数据跨方式互通。
-
-## API 接口
-
-除网页操作外,全部功能均可编程调用。参数约定:`expiry` 取值 `1d | 7d | 30d | forever`;`maxPickups` 取 1-999 或 `null`(不限次)。错误统一返回 `{error, message}`。
-
-| 方法 | 路径 | 说明 |
+| 方法 | 路径 | 用途 |
 |---|---|---|
-| GET | `/api/health` | 健康检查 |
-| GET | `/api/config` | 当前上传模式与限额(KV 模式 `fileBackend=kv`) |
-| POST | `/api/shares/text` | 创建文本分享,返回 `{code, expireAt, …}` |
-| POST | `/api/shares/file` | KV 模式文件直传(query 传 `filename`/`mime`/`expiry`/`maxPickups`,请求体为文件字节,≤24MB) |
-| POST | `/api/pickup` | 凭口令取件:文本直接返回内容;文件返回元数据(此步不计数) |
-| GET | `/api/pickup/:code/download` | 下载文件(此步计数) |
-| POST | `/api/uploads/init` 等 | R2 大存储模式分片上传四端点(init / `:id/parts/:n` / complete / abort) |
-| POST | `/api/admin/login` 等 | 管理接口(HMAC 签名 cookie 鉴权):`stats`、`shares` 列表、`DELETE shares/:code` 按口令删除(幂等:口令不存在同样返回 ok,应对 KV 最终一致窗口) |
-| POST | `/api/admin/cleanup` | 手动/外部定时触发清理(Pages 无 Cron 的补偿通道):管理 cookie 或 `Authorization: Bearer <ADMIN_TOKEN>` 鉴权,返回 `{ok, deletedShares, abortedSessions}` |
+| GET | `/api/health` | 健康检查，需要元数据绑定 |
+| GET | `/api/config` | 当前文件模式、单文件上限、文本上限和分片大小；不返回桶总占用 |
+| POST | `/api/shares/text` | 创建文本分享 |
+| POST | `/api/shares/file` | KV 原始字节直传，文件名等通过查询参数传入 |
+| POST | `/api/pickup` | 文本查看并计数；文件只返回元数据 |
+| GET | `/api/pickup/:code/download` | 下载文件并计数 |
+| POST | `/api/uploads/init` | R2 容量预留与上传初始化 |
+| PUT | `/api/uploads/:id/parts/:n` | 上传一个 R2 分片 |
+| POST | `/api/uploads/:id/complete` | 合并分片并创建分享 |
+| POST | `/api/uploads/:id/abort` | 取消上传并释放可回收的预留 |
+| POST | `/api/admin/login`、`/api/admin/logout` | 管理会话登录、退出 |
+| GET | `/api/admin/stats`、`/api/admin/shares` | 分享统计与列表；统计不是桶实际容量 |
+| DELETE | `/api/admin/shares/:code` | 删除分享及对应文件 |
+| POST | `/api/admin/cleanup` | 清理过期分享和遗留上传会话 |
 
-调用示例:
+管理接口使用签名 Cookie；清理接口额外支持 `Authorization: Bearer <ADMIN_TOKEN>`。
 
 ```bash
-# 文本分享 → {"code":"376966","expireAt":…}
-curl -X POST https://<你的域名>/api/shares/text \
+curl -X POST 'https://your-domain.example/api/shares/text' \
   -H 'Content-Type: application/json' \
   -d '{"text":"hello file-relay","expiry":"7d","maxPickups":null}'
 
-# 凭口令取件
-curl -X POST https://<你的域名>/api/pickup \
-  -H 'Content-Type: application/json' -d '{"code":"376966"}'
-
-# 文件直传(KV 模式,单文件 ≤24MB)
-curl -X POST 'https://<你的域名>/api/shares/file?filename=doc.zip&mime=application/zip&expiry=1d&maxPickups=5' \
-  --data-binary @doc.zip
+curl -X POST 'https://your-domain.example/api/pickup' \
+  -H 'Content-Type: application/json' \
+  -d '{"code":"376966"}'
 ```
 
-## 配置(环境变量 `vars`)
+R2 容量不足返回：
 
-所有 var 均有代码默认值,不设置亦可运行;标注 ❌ 者仅 R2 大存储模式使用,小存储(KV)模式可整体删除。
+```json
+{"error":"capacity_exceeded","message":"容量超出免费额度"}
+```
 
-| 变量 | 默认 | 适用 | 说明 |
-|---|---|---|---|
-| MAX_FILE_SIZE | 2 GiB | 两模式 | 单文件上限;KV 模式实际取 min(该值, 24MB) |
-| MAX_TEXT_LENGTH | 65536 | 两模式 | 文本字符上限 |
-| PART_SIZE | 10 MiB | 仅 R2 ❌ | 分片大小(非末片须 ≥5MB,且 <100MB 请求体限制) |
-| SESSION_TTL_MS | 24h | 仅 R2 ❌ | 孤儿分片会话判定阈值 |
-| MAX_PARTS | 10000 | 仅 R2 ❌ | R2 分片数上限 |
+HTTP 状态为 `507`；容量服务不可用时返回 `503`，单文件超限为 `413`。
 
-ADMIN_TOKEN 为 Secret(Pages 在控制台 Variables and Secrets 添加,或 `npx wrangler pages secret put ADMIN_TOKEN`;粘贴模式在控制台添加),任何模式均需设置。
+## 命令速查
 
-### Secrets
-
-| Secret | 必需 | 说明 |
+| 目的 | 命令 | 是否发布 |
 |---|---|---|
-| `ADMIN_TOKEN` | 是 | 管理后台登录令牌(强随机串) |
-| `ADMIN_PATH` | 可选 | 自定义管理入口:取值为字母/数字/`-`/`_` 组成的单段路径(1-64 位,如 `panel-x7k9`),设置后后台入口变为 `https://…/<该值>`,`/admin` 与 `/admin.html` 一律返回 404,以防被扫描;未设置则默认 `/admin`。请勿与 `/pickup`、`/api` 等现有路径同名。此 Secret 仅隐藏登录页,`/api/admin/*` 接口本身始终受 ADMIN_TOKEN 保护 |
+| 本地开发 | `npm run dev` | 否 |
+| 构建单文件 | `npm run build:single` | 否 |
+| 构建 Pages | `npm run build:pages` | 否 |
+| 本地预览 Pages | `npm run dev:pages`（先构建） | 否 |
+| 部署 Pages | `npm run deploy -- --project-name file-relay --branch main` | 是，先构建后发布 |
 
-## 设计取舍(已知边界)
-
-- **不支持断点续传**:刷新或关闭页面即放弃本次上传(R2 模式会尽力中止服务端会话,剩余依赖 cron 兜底)
-- **下载即计数**:次数限制按「开始下载」计,中途取消亦消耗(防止并发超取的必要代价);文本查看即计数,文件可先查看卡片再决定下载
-- **取件完成后不立即删除文件**:文件(KV 键/R2 对象)保留至自然过期或管理员删除,取件人可看到「次数已用完」而非「口令不存在」
-- 口令为 6 位数字(100 万空间):D1 依赖 UNIQUE 约束并以碰撞换码;KV 采用先查后写,极端并发下存在理论碰撞窗口
-- KV 模式取件计数为读改写,极端并发下可能超出次数上限 1-2 次(个人使用无感知)
+`dev:pages` 可能受到本地 Static Assets 优先路由影响；需要验证完整内联路由和容量弹窗时，使用 `npm run test:quota-runtime`。
 
 ## 常见问题
 
-- **接口返回 500「未绑定元数据库」**:未配置 KV/D1 绑定。三种部署方式的绑定都在控制台配置(Pages:Settings → Functions;粘贴:Settings → Bindings),且不会被部署覆盖——若你额外自行沿用旧的 `wrangler deploy`(Workers)流程,注意它以 wrangler.jsonc 为绑定唯一来源,未写入配置的绑定会被移除
-- **忘记 ADMIN_TOKEN**:Secret 不可查看,只能重设——Pages 在控制台 Variables and Secrets 重新编辑(或 `npx wrangler pages secret put ADMIN_TOKEN`),粘贴模式在 Worker 设置中重新编辑。重设后已登录的管理会话即失效
-- **中国大陆无法访问 `*.pages.dev` / `*.workers.dev`**:属预期现象;验证需使用代理,或绑定自定义域名后直连
-- **切换存储模式是否影响已有分享**:不影响。存储键按前缀自动路由(`f:` 前缀为 KV 文件,裸 uuid 为 R2 对象),新旧数据并存,无需迁移
-- **KV 写额度耗尽**:当日新分享创建失败,已有分享的读取与下载不受影响,次日额度自动重置;亦可持续大用量场景切换 D1 或升级付费套餐
+**桶中还不到 9.99 GB，为什么提示容量不足？** 还需计算新文件、未完成上传预留和台账本身。取消遗留上传或通过后台删除文件后重试；清理失败可能保留预留。
 
-## 结构
+**加上 D1 就能严格计数吗？** 不能。当前同时绑定 KV 和 D1 时优先 KV。D1 使用原子更新限制取件次数；KV 使用读改写，存在并发超取和口令碰撞窗口，没有“最多只多取一两次”的保证。
 
+**KV 写额度耗尽会影响下载吗？** 会。取件计数需要写回 KV，因此新分享、文本取件和文件下载都可能失败。
+
+**刷新后能继续上传吗？** 当前不支持断点续传。页面关闭时尽力取消会话，未完成会话由后续清理处理。
+
+**下载取消会返还次数吗？** 不会，文件开始下载即计数；文本查看即计数。
+
+**忘记管理令牌怎么办？** 在项目设置中重设 `ADMIN_TOKEN`，旧管理会话随之失效。
+
+**部署后提示没有元数据库？** 检查当前环境是否绑定 `fileKV` 或 `DB`，以及绑定名称是否一致。
+
+**如何排查访问失败？** 先检查部署日志、绑定和域名网络连通性。默认域名的可达性取决于所在网络，可根据需要绑定自定义域名。
+
+## 项目结构
+
+```text
+docs/       中英文部署指南
+src/        路由、KV/D1 元数据、文件存储、上传限制、R2 容量台账及清理
+public/     发送、取件、管理页面和原生 JavaScript
+schema/     D1 初始化 SQL
+tools/     构建和翻译检查脚本
+test/      边界、容量、运行时、API 和浏览器测试
+dist/      worker.js；Pages 产物位于 pages/_worker.js
 ```
-src/          Hono Worker:store(KV/D1 双后端)/ share(取件下载 + KV 直传)/ upload(R2 分片,大存储模式)/ admin / cleanup(cron + cleanup 接口 + 首页触发节流清理)
-              asset-resolver.ts 静态资源双模式(Static Assets / 单文件内联);standalone.ts 单文件部署入口
-public/       原生 JS 三页面(发送 / 取件 / 管理),本地 wrangler dev 由 Static Assets 托管,部署形态内联进 _worker.js
-dist/         build:single 产物 worker.js(已入库,用于方式三粘贴);build:pages 复制为 dist/pages/_worker.js(方式一/二 Pages 部署)
-tools/        构建(内联生成 / 收尾 / Pages 复制)与 i18n 校验脚本
-schema/       D1 初始化 SQL(仅切换 D1 元数据后端时需要,默认不用)
-test/         Python 端到端测试
-```
 
-## 致谢
+容量逻辑见 [src/quota.ts](src/quota.ts)，上传限制见 [src/limits.ts](src/limits.ts)，部署与测试命令见 [package.json](package.json)。
 
-- **[FileCodeBox](https://github.com/vastsa/FileCodeBox)** —— 本项目的灵感来源与产品原型
-- **[Hono](https://github.com/honojs/hono)** —— 轻量高性能的边缘 Web 框架
-- **[Wrangler](https://github.com/cloudflare/workers-sdk)** / **[@cloudflare/workers-types](https://github.com/cloudflare/workers-types)** —— Cloudflare Workers 官方工具链与类型
-- 托管于 [Cloudflare Workers](https://workers.cloudflare.com/) / [Workers KV](https://developers.cloudflare.com/kv/) / [R2](https://developers.cloudflare.com/r2/)(可选)/ [D1](https://developers.cloudflare.com/d1/)(可选)
+## 致谢与许可
 
-## 许可证
+灵感来自 [FileCodeBox](https://github.com/vastsa/FileCodeBox)。基于 [Hono](https://github.com/honojs/hono) 和 Cloudflare Workers / Pages、KV、R2、D1 构建。
 
-[MIT](LICENSE)
+[MIT License](LICENSE)

@@ -1,10 +1,17 @@
 import { Hono } from 'hono';
-import { num, type Env } from './types';
+import type { Env } from './types';
 import { err, parseExpiry, parseMaxPickups } from './util';
 import { getStore } from './store';
-import { fileMode } from './filestore';
+import { fileMode, fileMaxSize } from './filestore';
+import { uploadPartSize, uploadMaxParts } from './limits';
+import { reserveCapacity, releaseCapacity, CapacityError } from './quota';
 
 export const uploadRoutes = new Hono<{ Bindings: Env }>();
+uploadRoutes.onError((e, c) => {
+  if (e instanceof CapacityError) return c.json({ error: 'capacity_exceeded', message: e.message }, 507);
+  console.error('Upload failed', e);
+  return c.json({ error: 'internal', message: '上传服务暂不可用,请稍后重试' }, 503);
+});
 
 // 分片上传仅大存储模式(R2)可用;小存储模式(KV)走 POST /api/shares/file 直传
 uploadRoutes.use('*', async (c, next) => {
@@ -20,15 +27,14 @@ uploadRoutes.post('/init', async (c) => {
   if (!body) return err(c, 400, 'bad_request', '请求体必须是 JSON');
 
   const { filename, size, mime, expiry, maxPickups } = body;
-  const maxSize = num(c.env.MAX_FILE_SIZE, 2 * 1024 ** 3);
-  const partSize = num(c.env.PART_SIZE, 10 * 1024 ** 2);
-  const maxParts = num(c.env.MAX_PARTS, 10_000);
+  const maxSize = fileMaxSize(c.env);
+  const partSize = uploadPartSize(c.env);
+  const maxParts = uploadMaxParts(c.env);
 
   if (typeof filename !== 'string' || !filename.trim()) return err(c, 400, 'bad_request', '文件名不能为空');
-  if (typeof size !== 'number' || !Number.isInteger(size) || size < 1) return err(c, 400, 'bad_request', '文件大小非法');
+  if (typeof size !== 'number' || !Number.isSafeInteger(size) || size < 1) return err(c, 400, 'bad_request', '文件大小非法');
   if (size > maxSize) {
-    const limit = maxSize >= 1024 ** 3 ? `${Math.floor(maxSize / 1024 ** 3)} GB` : `${Math.floor(maxSize / 1024 ** 2)} MB`;
-    return err(c, 413, 'too_large', `文件超过上限 ${limit}`);
+    return err(c, 413, 'too_large', `文件超过上限 ${maxSize} 字节`);
   }
 
   const expMs = parseExpiry(expiry);
@@ -43,23 +49,31 @@ uploadRoutes.post('/init', async (c) => {
   const id = crypto.randomUUID(); // 会话 token,客户端只拿这个
   const r2Key = crypto.randomUUID(); // 预生成的对象键
 
-  const mpu = await c.env.BUCKET!.createMultipartUpload(r2Key, {
-    httpMetadata: { contentType },
-  });
+  await reserveCapacity(c.env, r2Key, size);
+  let mpu: R2MultipartUpload | undefined;
+  try {
+    mpu = await c.env.BUCKET!.createMultipartUpload(r2Key, {
+      httpMetadata: { contentType }, storageClass: 'Standard',
+    });
 
-  await getStore(c.env).createSession({
-    id,
-    uploadId: mpu.uploadId,
-    r2Key,
-    filename: filename.slice(0, 255),
-    mime: contentType,
-    size,
-    parts,
-    expiry: typeof expiry === 'string' ? expiry : null,
-    maxPickups: mp,
-    createdAt: Date.now(),
-  });
+    await getStore(c.env).createSession({
+      id,
+      uploadId: mpu.uploadId,
+      r2Key,
+      filename: filename.slice(0, 255),
+      mime: contentType,
+      size,
+      parts,
+      expiry: typeof expiry === 'string' ? expiry : null,
+      maxPickups: mp,
+      createdAt: Date.now(),
+    });
 
+  } catch (e) {
+    if (mpu) await mpu.abort();
+    await releaseCapacity(c.env, [r2Key]);
+    throw e;
+  }
   return c.json({ uploadId: id, partSize, parts, size });
 });
 
@@ -70,21 +84,34 @@ uploadRoutes.put('/:id/parts/:n', async (c) => {
 
   const sess = await getStore(c.env).getSession(id);
   if (!sess) return err(c, 404, 'not_found', '上传会话不存在或已过期');
+  if (sess.size > fileMaxSize(c.env)) return err(c, 413, 'too_large', '文件超过当前单文件上限,请重新上传');
   if (!Number.isInteger(n) || n < 1 || n > sess.parts) return err(c, 400, 'bad_request', '分片序号非法');
 
-  const partSize = num(c.env.PART_SIZE, 10 * 1024 ** 2);
+  const partSize = uploadPartSize(c.env);
   const contentLength = Number(c.req.raw.headers.get('content-length') || 0);
   if (contentLength && contentLength > partSize) return err(c, 400, 'bad_request', '分片过大');
 
   const body = c.req.raw.body;
   if (!body) return err(c, 400, 'bad_request', '请求体为空');
+  if (Math.ceil(sess.size / partSize) !== sess.parts) return err(c, 400, 'bad_request', '分片配置已变更,请重新上传');
+  const expected = Math.min(partSize, sess.size - (n - 1) * partSize);
+  if (contentLength && contentLength !== expected) return err(c, 400, 'bad_request', '分片大小与声明不一致');
+  await reserveCapacity(c.env, sess.r2Key, sess.size);
 
+  const abort = new AbortController();
   try {
     const mpu = c.env.BUCKET!.resumeMultipartUpload(sess.r2Key, sess.uploadId);
-    const part = await mpu.uploadPart(n, body);
+    // Bound actual streamed bytes, including requests without Content-Length.
+    const stream = new FixedLengthStream(expected);
+    const [part] = await Promise.all([
+      mpu.uploadPart(n, stream.readable),
+      body.pipeTo(stream.writable, { signal: abort.signal }),
+    ]);
     return c.json({ partNumber: part.partNumber, etag: part.etag });
   } catch {
     return err(c, 500, 'internal', '分片写入失败,请重试');
+  } finally {
+    abort.abort();
   }
 });
 
@@ -96,6 +123,7 @@ uploadRoutes.post('/:id/complete', async (c) => {
   const store = getStore(c.env);
   const sess = await store.getSession(id);
   if (!sess) return err(c, 404, 'not_found', '上传会话不存在或已过期');
+  if (sess.size > fileMaxSize(c.env)) return err(c, 413, 'too_large', '文件超过当前单文件上限,请重新上传');
 
   const parts = body?.parts;
   if (!Array.isArray(parts) || parts.length !== sess.parts) return err(c, 400, 'bad_request', '分片列表不完整');
@@ -115,6 +143,7 @@ uploadRoutes.post('/:id/complete', async (c) => {
   }
 
   let obj: R2Object;
+  await reserveCapacity(c.env, sess.r2Key, sess.size);
   try {
     const mpu = c.env.BUCKET!.resumeMultipartUpload(sess.r2Key, sess.uploadId);
     obj = await mpu.complete(r2parts);
@@ -123,9 +152,11 @@ uploadRoutes.post('/:id/complete', async (c) => {
   }
 
   // 声明大小造假的最后一道闸
-  if (obj.size !== sess.size) {
+  if (obj.size > fileMaxSize(c.env) || obj.size !== sess.size) {
     await c.env.BUCKET!.delete(sess.r2Key);
+    await releaseCapacity(c.env, [sess.r2Key]);
     await store.deleteSession(id);
+    if (obj.size > fileMaxSize(c.env)) return err(c, 413, 'too_large', '文件超过当前单文件上限');
     return err(c, 400, 'bad_request', '文件大小校验失败');
   }
 
@@ -161,11 +192,10 @@ uploadRoutes.post('/:id/abort', async (c) => {
   const store = getStore(c.env);
   const sess = await store.getSession(c.req.param('id'));
   if (sess) {
-    try {
-      await c.env.BUCKET!.resumeMultipartUpload(sess.r2Key, sess.uploadId).abort();
-    } catch {
-      // 已中止/不存在,忽略
-    }
+    // Do not release capacity when removal could not be confirmed.
+    await c.env.BUCKET!.resumeMultipartUpload(sess.r2Key, sess.uploadId).abort();
+    // A completed object may remain if metadata creation failed.
+    if (!(await c.env.BUCKET!.head(sess.r2Key))) await releaseCapacity(c.env, [sess.r2Key]);
     await store.deleteSession(sess.id);
   }
   return c.json({ ok: true });
