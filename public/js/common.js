@@ -16,6 +16,7 @@ export async function api(path, opts = {}) {
     const e = new Error(data?.message || t('req.fail', res.status));
     e.code = data?.error || 'unknown';
     e.status = res.status;
+    e.remainingBytes = data?.remainingBytes;
     throw e;
   }
   return data;

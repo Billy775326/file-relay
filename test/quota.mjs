@@ -42,9 +42,18 @@ function fixture(initial = [], sessions = []) {
 
 for (const size of [cap, cap + 1]) {
   const f = fixture([['existing', size]]);
-  await assert.rejects(reserveCapacity(f.env, 'new', 1), CapacityError);
+  await assert.rejects(reserveCapacity(f.env, 'new', 1), (e) => e instanceof CapacityError && e.remainingBytes === 0);
   assert.equal(f.writes(), 0);
 }
+const empty = fixture();
+const room = await reserveCapacity(empty.env, 'large', 9_900_000_000);
+assert.equal(room.capacityBytes, cap);
+assert.equal(room.remainingBytes, cap - 9_900_000_000 - empty.objects.get(QUOTA_KEY).size);
+const before = empty.writes();
+await assert.rejects(reserveCapacity(empty.env, 'next', 100_000_000), (e) =>
+  e instanceof CapacityError && e.remainingBytes > 89_999_000 && e.remainingBytes < 90_000_000);
+assert.equal(empty.writes(), before);
+
 const crossing = fixture([['existing', cap - 1000]]);
 await assert.rejects(reserveCapacity(crossing.env, 'new', 1001), CapacityError);
 

@@ -10,9 +10,20 @@ const mf = new miniflare.Miniflare(miniflare.convertV4MiniflareOptions?.(options
 const json = (body) => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 const call = (path, init) => mf.dispatchFetch('http://localhost' + path, init);
 try {
-  const denied = await call('/api/uploads/init', json({ filename: 'large', size: 10_000_000_000, expiry: '1d' }));
+  assert.equal((await (await call('/api/config')).json()).maxFileSize, 9_900_000_000);
+  assert.equal((await call('/api/uploads/init', json({ filename: 'oversized', size: 9_900_000_001, expiry: '1d' }))).status, 413);
+  const reserved = await call('/api/uploads/init', json({ filename: 'large', size: 9_900_000_000, expiry: '1d' }));
+  assert.equal(reserved.status, 200);
+  const reservation = await reserved.json();
+  assert.equal(reservation.capacityBytes, 9_990_000_000);
+  assert.ok(reservation.remainingBytes > 89_999_000 && reservation.remainingBytes < 90_000_000);
+  const denied = await call('/api/uploads/init', json({ filename: 'extra', size: 100_000_000, expiry: '1d' }));
   assert.equal(denied.status, 507);
-  assert.equal((await denied.json()).error, 'capacity_exceeded');
+  const rejection = await denied.json();
+  assert.equal(rejection.error, 'capacity_exceeded');
+  assert.equal(rejection.capacityBytes, 9_990_000_000);
+  assert.ok(rejection.remainingBytes > 89_999_000 && rejection.remainingBytes <= reservation.remainingBytes);
+  assert.equal((await call(`/api/uploads/${reservation.uploadId}/abort`, json({}))).status, 200);
   const upload = await (await call('/api/uploads/init', json({ filename: 'small', size: 3, expiry: '1d' }))).json();
   const part = await call(`/api/uploads/${upload.uploadId}/parts/1`, { method: 'PUT', body: 'abc' });
   assert.equal(part.status, 200, await part.clone().text());
@@ -41,7 +52,7 @@ with sync_playwright() as p:
     calls = []
     def deny(route):
         calls.append(1)
-        route.fulfill(status=507, content_type='application/json', body='{"error":"capacity_exceeded","message":"capacity exceeded"}')
+        route.fulfill(status=507, content_type='application/json', body='{"error":"capacity_exceeded","message":"capacity exceeded","remainingBytes":123456789,"capacityBytes":9990000000}')
     page.route('**/api/uploads/init', deny)
     with page.expect_response('**/api/config'):
         page.goto(sys.argv[1])
@@ -52,7 +63,9 @@ with sync_playwright() as p:
     with page.expect_event('dialog') as info:
         page.click('#btn-upload')
     dialog = info.value
-    assert dialog.message == '\u5bb9\u91cf\u8d85\u51fa\u514d\u8d39\u989d\u5ea6', dialog.message
+    assert '0.123 GB' in dialog.message, dialog.message
+    assert '123,456,789' in dialog.message, dialog.message
+    assert dialog.message.startswith( '\u5bb9\u91cf\u8d85\u51fa\u514d\u8d39\u989d\u5ea6'), dialog.message
     dialog.accept()
     page.wait_for_function("!document.querySelector('#btn-upload').disabled")
     assert len(calls) == 1, calls

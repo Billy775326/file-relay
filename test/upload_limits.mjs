@@ -56,8 +56,12 @@ assert.equal((await config(environment({ MAX_FILE_SIZE: '999999999999999' }))).m
 const r2 = environment({ BUCKET: bucket });
 const defaults = await config(r2);
 assert.equal(defaults.partSize, 100_000_000);
-assert.equal(defaults.maxFileSize, 10_000_000_000);
-assert.equal((await init(r2, defaults.maxFileSize)).status, 507); // Total-capacity policy is lower.
+assert.equal(defaults.maxFileSize, 9_900_000_000);
+const largest = await init(r2, defaults.maxFileSize);
+assert.equal(largest.status, 200);
+const capacity = await largest.json();
+assert.equal(capacity.capacityBytes, 9_990_000_000);
+assert.ok(capacity.remainingBytes > 89_999_000 && capacity.remainingBytes < 90_000_000);
 const boundary = await init(r2, 100_000_000);
 assert.equal(boundary.status, 200);
 const session = await boundary.json();
@@ -71,13 +75,13 @@ const oversizedPart = await request(r2, `/api/uploads/${session.uploadId}/parts/
 assert.equal(oversizedPart.status, 400);
 
 for (const [overrides, partSize, maxSize] of [
-  [{ PART_SIZE: String(10 * MiB) }, 10 * MiB, 10_000_000_000],
+  [{ PART_SIZE: String(10 * MiB) }, 10 * MiB, 9_900_000_000],
   [{ PART_SIZE: '1', MAX_PARTS: '2' }, 5 * MiB, 10 * MiB],
-  [{ PART_SIZE: '9999999999', MAX_PARTS: '20000' }, 100_000_000, 10_000_000_000],
+  [{ PART_SIZE: '9999999999', MAX_PARTS: '20000' }, 100_000_000, 9_900_000_000],
   [{ MAX_FILE_SIZE: '999999999999999' }, 100_000_000, 1_000_000_000_000],
-  [{ MAX_FILE_SIZE: 'invalid' }, 100_000_000, 10_000_000_000],
+  [{ MAX_FILE_SIZE: 'invalid' }, 100_000_000, 9_900_000_000],
   [{ MAX_FILE_SIZE: '2147483648' }, 100_000_000, 2147483648],
-  [{ PART_SIZE: 'invalid', MAX_PARTS: '-1' }, 100_000_000, 10_000_000_000],
+  [{ PART_SIZE: 'invalid', MAX_PARTS: '-1' }, 100_000_000, 9_900_000_000],
 ]) {
   const env = environment({ BUCKET: bucket, ...overrides });
   const cfg = await config(env);

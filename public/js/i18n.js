@@ -9,6 +9,7 @@
 const DICT = {
   zh: {
     'err.capacity': '容量超出免费额度',
+    'err.capacityRemaining': '容量超出免费额度，剩余可用空间约 {0} GB（{1} 字节）。',
     'doc.send': '文件中转站 - 发送',
     'doc.pickup': '文件中转站 - 取件',
     'doc.admin': '文件中转站 - 管理',
@@ -175,6 +176,7 @@ const DICT = {
 
   en: {
     'err.capacity': 'Storage capacity exceeds the free quota.',
+    'err.capacityRemaining': 'Storage capacity exceeds the free quota. Available space: approximately {0} GB ({1} bytes).',
     'doc.send': 'file-relay - Send',
     'doc.pickup': 'file-relay - Pickup',
     'doc.admin': 'file-relay - Admin',

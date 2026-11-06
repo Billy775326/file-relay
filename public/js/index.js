@@ -223,6 +223,7 @@ function xhrPut(url, blob, onProgress) {
         if (result.error === 'capacity_exceeded') {
           const error = new Error(result.message);
           error.code = result.error;
+          error.remainingBytes = result.remainingBytes;
           reject(error);
           return;
         }
@@ -336,7 +337,9 @@ async function startUpload() {
       ui.status.textContent = '✗';
       if (e.code === 'capacity_exceeded') {
         await abortUpload();
-        window.alert(t('err.capacity'));
+        window.alert(Number.isSafeInteger(e.remainingBytes) && e.remainingBytes >= 0
+          ? t('err.capacityRemaining', (e.remainingBytes / 1e9).toFixed(3), e.remainingBytes.toLocaleString())
+          : t('err.capacity'));
       } else if (!cancelled) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');
       break; // 一个失败即停,保留队列便于处理
     }

@@ -4,11 +4,11 @@ import { err, parseExpiry, parseMaxPickups } from './util';
 import { getStore } from './store';
 import { fileMode, fileMaxSize } from './filestore';
 import { uploadPartSize, uploadMaxParts } from './limits';
-import { reserveCapacity, releaseCapacity, CapacityError } from './quota';
+import { reserveCapacity, releaseCapacity, CapacityError, R2_CAPACITY_MAX } from './quota';
 
 export const uploadRoutes = new Hono<{ Bindings: Env }>();
 uploadRoutes.onError((e, c) => {
-  if (e instanceof CapacityError) return c.json({ error: 'capacity_exceeded', message: e.message }, 507);
+  if (e instanceof CapacityError) return c.json({ error: 'capacity_exceeded', message: e.message, remainingBytes: e.remainingBytes, capacityBytes: R2_CAPACITY_MAX }, 507);
   console.error('Upload failed', e);
   return c.json({ error: 'internal', message: '上传服务暂不可用,请稍后重试' }, 503);
 });
@@ -49,7 +49,7 @@ uploadRoutes.post('/init', async (c) => {
   const id = crypto.randomUUID(); // 会话 token,客户端只拿这个
   const r2Key = crypto.randomUUID(); // 预生成的对象键
 
-  await reserveCapacity(c.env, r2Key, size);
+  const capacity = await reserveCapacity(c.env, r2Key, size);
   let mpu: R2MultipartUpload | undefined;
   try {
     mpu = await c.env.BUCKET!.createMultipartUpload(r2Key, {
@@ -74,7 +74,7 @@ uploadRoutes.post('/init', async (c) => {
     await releaseCapacity(c.env, [r2Key]);
     throw e;
   }
-  return c.json({ uploadId: id, partSize, parts, size });
+  return c.json({ uploadId: id, partSize, parts, size, ...capacity });
 });
 
 /** 上传单个分片:原始字节流透传给 R2 uploadPart(流式,不缓冲整个分片) */

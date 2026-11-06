@@ -2,8 +2,8 @@ import { num, type Env } from './types';
 
 // https://developers.cloudflare.com/kv/platform/limits/
 export const KV_VALUE_MAX = 25 * 1024 ** 2;
-/** Whole-file policy limit (decimal 10 GB), overridable via MAX_FILE_SIZE. */
-export const DEFAULT_MAX_FILE_SIZE = 10_000_000_000;
+/** Whole-file policy limit (decimal 9.9 GB), overridable via MAX_FILE_SIZE. */
+export const DEFAULT_MAX_FILE_SIZE = 9_900_000_000;
 // Browser uploads pass through a Worker: Free request bodies are capped at
 // 100 MB (decimal), even though R2 itself accepts much larger parts.
 export const WORKER_REQUEST_MAX = 100_000_000;

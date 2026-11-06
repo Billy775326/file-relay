@@ -51,11 +51,11 @@ All applicable limits are enforced together. **MB / GB are decimal; MiB / GiB ar
 |---|---|---|
 | KV file | 25 MiB = 26,214,400 bytes | Raw bytes; share metadata is stored separately |
 | R2 part request | Default 100 MB = 100,000,000 bytes | Upload passes through a Free-plan Worker |
-| Complete file | `MAX_FILE_SIZE`, default 10 GB | All parts combined; checked server-side |
+| Complete file | `MAX_FILE_SIZE`, default 9.9 GB | All parts combined; checked server-side |
 | R2 part count | Default maximum 10,000 | Also constrained by `PART_SIZE` and `MAX_PARTS` |
 | R2 capacity protection | Fixed 9.99 GB = 9,990,000,000 bytes | Objects, upload reservations and ledger in the bound bucket |
 
-**The default configuration cannot accept a full 10 GB file:** the bucket-capacity guard rejects it first. An empty bucket also needs room for its ledger; existing files further reduce available space.
+The default per-file limit is 9.9 GB. Available bucket capacity is checked before uploading; insufficient space stops the upload and displays the remaining allowance.
 
 The upload path is browser → Worker → R2. R2's native single-request limit is not the limit of this Worker path. S3 presigned direct uploads are not implemented.
 
@@ -75,7 +75,7 @@ Configure production variables in Cloudflare project settings. [wrangler.jsonc](
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `MAX_FILE_SIZE` | `10000000000` | Complete-file byte limit; both modes; cannot override platform limits or remaining R2 capacity |
+| `MAX_FILE_SIZE` | `9900000000` | Complete-file byte limit; both modes; cannot override platform limits or remaining R2 capacity |
 | `MAX_TEXT_LENGTH` | `65536` | Server-side text length limit |
 | `PART_SIZE` | `100000000` | R2 part bytes, clamped to 5 MiB–100 MB |
 | `MAX_PARTS` | `10000` | R2 part count, clamped to 1–10,000 |
@@ -118,7 +118,7 @@ Response: `{"ok":true,"deletedShares":0,"abortedSessions":0}`. Keep admin tokens
 ## Updating a deployment
 
 1. Finish old in-progress uploads before upgrading. The guard counts existing objects and imports visible legacy sessions.
-2. Review dashboard variables. Old `MAX_FILE_SIZE` and `PART_SIZE` overrides survive code updates. Remove them or set `10000000000` and `100000000` to adopt current defaults.
+2. Review dashboard variables. Old `MAX_FILE_SIZE` and `PART_SIZE` overrides survive code updates. Remove them or set `9900000000` and `100000000` to adopt current defaults.
 3. Rebuild and deploy Pages, or replace the complete `dist/worker.js` in paste mode. Restart uploads after changing part size.
 4. Check `/api/config`, then verify upload, pickup and deletion.
 
@@ -204,10 +204,12 @@ curl -X POST 'https://your-domain.example/api/pickup' \
 Insufficient R2 capacity returns HTTP `507`:
 
 ```json
-{"error":"capacity_exceeded","message":"容量超出免费额度"}
+{"error":"capacity_exceeded","message":"容量超出免费额度","remainingBytes":123456789,"capacityBytes":9990000000}
 ```
 
 Capacity-service failures return `503`. Per-file size violations return `413`.
+
+The remaining amount above is an example. `remainingBytes` reports available bytes: after reserving the file on successful initialization, or available for the attempted upload on rejection.
 
 ## Command reference
 

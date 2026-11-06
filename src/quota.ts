@@ -6,7 +6,7 @@ export const R2_CAPACITY_MAX = 9_990_000_000;
 export const QUOTA_KEY = '__file-relay/quota-v1.json';
 type Ledger = { version: 1; revision: string; files: Record<string, number> };
 export class CapacityError extends Error {
-  constructor() { super('容量超出免费额度'); }
+  constructor(public readonly remainingBytes: number) { super('容量超出免费额度'); }
 }
 
 async function readLedger(bucket: R2Bucket) {
@@ -36,8 +36,7 @@ async function retryDelay(attempt: number) {
  * Completed files retain reservations until deletion, so completion/listing races cannot
  * undercount them. Existing/unmanaged bucket objects are included in every admission scan.
  */
-export async function reserveCapacity(env: Env, key: string, size: number): Promise<void> {
-  if (size > R2_CAPACITY_MAX) throw new CapacityError();
+export async function reserveCapacity(env: Env, key: string, size: number): Promise<{ remainingBytes: number; capacityBytes: number } | undefined> {
   const bucket = env.BUCKET!;
   for (let attempt = 0; attempt < 5; attempt++) {
     await retryDelay(attempt);
@@ -72,10 +71,12 @@ export async function reserveCapacity(env: Env, key: string, size: number): Prom
     const nextOverhead = new TextEncoder().encode(JSON.stringify({ ...ledger, revision: '0'.repeat(36) })).byteLength;
     const addition = sizes.has(key) ? 0 : size;
     if (used + overhead >= R2_CAPACITY_MAX || used + addition + Math.max(overhead, nextOverhead) > R2_CAPACITY_MAX) {
-      throw new CapacityError();
+      throw new CapacityError(Math.max(0, R2_CAPACITY_MAX - used - Math.max(overhead, nextOverhead)));
     }
     try {
-      if (await writeLedger(bucket, ledger, object?.etag)) return;
+      if (await writeLedger(bucket, ledger, object?.etag)) {
+        return { remainingBytes: Math.max(0, R2_CAPACITY_MAX - used - addition - Math.max(overhead, nextOverhead)), capacityBytes: R2_CAPACITY_MAX };
+      }
     } catch (e) {
       // R2 limits writes to the same key; contention is retried, other failures block admission.
       if (!/429|rate|too many/i.test(String(e))) throw e;

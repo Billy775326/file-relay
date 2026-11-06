@@ -38,8 +38,8 @@
   // 本地普通变量；ADMIN_TOKEN 写入 .dev.vars（参见 .dev.vars.example）。
   // 生产默认值相同；如需覆盖，在项目 Variables and Secrets 中设置。
   "vars": {
-    // 单个完整文件的上限(字节),含所有分片;10 GB,不是 10 GiB
-    "MAX_FILE_SIZE": "10000000000",
+    // 单个完整文件的上限(字节),含所有分片;9.9 GB,不是 9.9 GiB
+    "MAX_FILE_SIZE": "9900000000",
     "MAX_TEXT_LENGTH": "65536",
     "PART_SIZE": "100000000",
     "SESSION_TTL_MS": "86400000",
