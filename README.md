@@ -185,7 +185,7 @@ python test/ui_smoke.py http://localhost:8787
 | POST | `/api/uploads/:id/complete` | 合并分片并创建分享 |
 | POST | `/api/uploads/:id/abort` | 取消上传并释放可回收的预留 |
 | POST | `/api/admin/login`、`/api/admin/logout` | 管理会话登录、退出 |
-| GET | `/api/admin/stats`、`/api/admin/shares` | 分享统计与列表；统计不是桶实际容量 |
+| GET | `/api/admin/stats`、`/api/admin/shares` | 分享统计与列表；R2 容量包含桶内对象与上传预留 |
 | DELETE | `/api/admin/shares/:code` | 删除分享及对应文件 |
 | POST | `/api/admin/cleanup` | 清理过期分享和遗留上传会话 |
 

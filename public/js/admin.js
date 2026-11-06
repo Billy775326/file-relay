@@ -74,7 +74,9 @@ function renderStats(s) {
     el('div', { class: 'stat-card' }, el('b', {}, String(s.active)), el('small', { class: 'muted' }, t('ad.active'))),
     el('div', { class: 'stat-card' }, el('b', {}, String(s.files)), el('small', { class: 'muted' }, t('ad.files'))),
     el('div', { class: 'stat-card' }, el('b', {}, String(s.texts)), el('small', { class: 'muted' }, t('ad.texts'))),
-    el('div', { class: 'stat-card' }, el('b', {}, fmtBytes(s.totalBytes)), el('small', { class: 'muted' }, t('ad.storage'))),
+    el('div', { class: 'stat-card' }, el('b', { class: 'storage-value' }, s.fileBackend === 'r2'
+      ? (s.storage ? `${fmtBytes(s.storage.usedBytes)} / ${fmtBytes(s.storage.capacityBytes)}` : t('ad.storageUnavailable'))
+      : fmtBytes(s.totalBytes)), el('small', { class: 'muted' }, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes'))),
     el('div', { class: 'stat-card' }, el('b', {}, String(s.todayCreated)), el('small', { class: 'muted' }, t('ad.today'))),
   );
 }
@@ -87,7 +89,7 @@ async function loadStats() {
 }
 
 /** 删除成功后本地同步统计(服务端 KV 索引最长 60s 才反映删除,重拉会看到旧数) */
-function statsAfterDelete(r) {
+async function statsAfterDelete(r) {
   if (!lastStats) return;
   const s = { ...lastStats };
   s.total = Math.max(0, s.total - 1);
@@ -97,7 +99,13 @@ function statsAfterDelete(r) {
   if (r.status === 'active') s.active = Math.max(0, s.active - 1);
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   if (r.created_at >= todayStart.getTime()) s.todayCreated = Math.max(0, s.todayCreated - 1);
+  lastStats = s;
   renderStats(s);
+  if (s.fileBackend === 'r2') {
+    try { s.storage = (await api('/api/admin/stats')).storage; }
+    catch { s.storage = null; } // Do not present stale capacity as current after deletion.
+    if (lastStats === s) renderStats(s);
+  }
 }
 
 /* ---------- 列表 ---------- */

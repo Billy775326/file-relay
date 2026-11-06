@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="自托管文件/文本分享:上传生成 6 位取件口令,像取快递一样取件">
+<meta name="description" content="分享文件或文本，生成 6 位取件口令。支持链接和扫码取件，可设置有效期与可取次数。">
 <meta name="theme-color" content="#efe8d8">
 <title data-i18n="doc.send">文件中转站 - 发送</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
@@ -30,16 +30,16 @@
 
 <main class="container wide">
   <section class="flow-strip">
-    <div class="flow-step"><span class="flow-dot">📦</span><div class="flow-tt"><b data-i18n="flow.dropT">寄件</b><small data-i18n="flow.dropS">上传文件或文本,交寄柜台</small></div></div>
+    <div class="flow-step"><span class="flow-dot">📦</span><div class="flow-tt"><b data-i18n="flow.dropT">寄件</b><small data-i18n="flow.dropS">选择文件或输入文本</small></div></div>
     <div class="flow-link"></div>
-    <div class="flow-step"><span class="flow-dot">🎫</span><div class="flow-tt"><b data-i18n="flow.tickT">出票</b><small data-i18n="flow.tickS">生成 6 位取件口令</small></div></div>
+    <div class="flow-step"><span class="flow-dot">🎫</span><div class="flow-tt"><b data-i18n="flow.tickT">分享口令</b><small data-i18n="flow.tickS">生成 6 位取件口令</small></div></div>
     <div class="flow-link"></div>
-    <div class="flow-step"><span class="flow-dot">📥</span><div class="flow-tt"><b data-i18n="flow.pickT">取件</b><small data-i18n="flow.pickS">对方凭码一次领走</small></div></div>
+    <div class="flow-step"><span class="flow-dot">📥</span><div class="flow-tt"><b data-i18n="flow.pickT">取件</b><small data-i18n="flow.pickS">输入口令即可下载或查看</small></div></div>
   </section>
   <div class="send-grid">
   <section class="card form-card">
     <div class="card-cap">
-      <span data-i18n="send.cap">寄件单</span>
+      <span data-i18n="send.cap">分享内容</span>
       <span class="cap-date" id="cap-date"></span>
     </div>
     <div class="tabs">
@@ -96,28 +96,28 @@
     </section>
 
     <aside class="send-side">
-      <div class="side-cap" data-i18n="receipt.cap">回执</div>
+      <div class="side-cap" data-i18n="receipt.cap">分享结果</div>
       <div id="result-placeholder" class="result-placeholder">
-        <div class="ph-postmark">PENDING</div>
-        <p data-i18n="ph.title">待出票</p>
-        <small data-i18n="ph.sub">上传完成后,取件凭证会出现在这里</small>
+        <div class="ph-postmark">READY</div>
+        <p data-i18n="ph.title">等待分享</p>
+        <small data-i18n="ph.sub">分享成功后，在这里复制口令或链接</small>
         <div class="ph-route">
-          <div class="ph-leg"><span class="ph-ic">🧑</span><div><b data-i18n="route.senderT">寄件人 · 你</b><small data-i18n="route.senderS">把文件或文本交寄本柜台</small></div></div>
+          <div class="ph-leg"><span class="ph-ic">🧑</span><div><b data-i18n="route.senderT">寄件人 · 你</b><small data-i18n="route.senderS">选择内容，设置有效期和可取次数</small></div></div>
           <div class="ph-dash"></div>
-          <div class="ph-leg"><span class="ph-ic">☁️</span><div><b data-i18n="route.relayT">中转站 · 在途</b><small data-i18n="route.relayS">Cloudflare 边缘限时保管</small></div></div>
+          <div class="ph-leg"><span class="ph-ic">☁️</span><div><b data-i18n="route.relayT">生成分享</b><small data-i18n="route.relayS">把取件口令或链接发给对方</small></div></div>
           <div class="ph-dash"></div>
-          <div class="ph-leg"><span class="ph-ic">🧲</span><div><b data-i18n="route.takerT">取件人 · 对方</b><small data-i18n="route.takerS">凭 6 位口令领取,逾期退回虚无</small></div></div>
+          <div class="ph-leg"><span class="ph-ic">🧲</span><div><b data-i18n="route.takerT">取件人 · 对方</b><small data-i18n="route.takerS">输入口令或打开链接，即可取件</small></div></div>
         </div>
-        <div class="ph-fine" data-i18n="route.fine">限 次 · 限 时 · 到 期 即 毁</div>
+        <div class="ph-fine" data-i18n="route.fine">口令请妥善保管，仅分享给需要的人</div>
       </div>
       <div id="results" class="results"></div>
     </aside>
   </div>
   <section class="feat-band">
-    <div class="feat"><span class="feat-ic">🧩</span><div><b data-i18n="feat.splitT">分片直传</b><small data-i18n="feat.splitS">单文件至高 25 MiB</small></div></div>
-    <div class="feat"><span class="feat-ic">⏳</span><div><b data-i18n="feat.ttlT">时效可控</b><small data-i18n="feat.ttlS">1 ~ 30 天或永久</small></div></div>
+    <div class="feat"><span class="feat-ic">🧩</span><div><b data-i18n="feat.splitT">文件分享</b><small data-i18n="feat.splitS">选择文件后开始分享</small></div></div>
+    <div class="feat"><span class="feat-ic">⏳</span><div><b data-i18n="feat.ttlT">自选有效期</b><small data-i18n="feat.ttlS">1 ~ 30 天或永久</small></div></div>
     <div class="feat"><span class="feat-ic">🔢</span><div><b data-i18n="feat.limitT">限次取件</b><small data-i18n="feat.limitS">1 次 · 5 次 · 不限</small></div></div>
-    <div class="feat"><span class="feat-ic">🔒</span><div><b data-i18n="feat.selfT">自托管</b><small data-i18n="feat.selfS">数据在你自己的账号</small></div></div>
+    <div class="feat"><span class="feat-ic">🔒</span><div><b data-i18n="feat.selfT">便捷取件</b><small data-i18n="feat.selfS">支持口令、链接和扫码取件</small></div></div>
   </section>
 </main>
 

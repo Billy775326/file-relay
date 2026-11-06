@@ -6,6 +6,7 @@ import { err } from './util';
 import { getStore, shareStatusOf } from './store';
 import { deleteFile } from './filestore';
 import { runCleanup } from './cleanup';
+import { getCapacityUsage } from './quota';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
 
@@ -109,7 +110,13 @@ adminRoutes.post('/logout', (c) => {
 adminRoutes.get('/stats', async (c) => {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
-  return c.json(await getStore(c.env).stats(todayStart.getTime()));
+  const stats = await getStore(c.env).stats(todayStart.getTime());
+  let storage = null;
+  if (c.env.BUCKET) {
+    try { storage = await getCapacityUsage(c.env); }
+    catch (e) { console.error('Capacity statistics unavailable', e); }
+  }
+  return c.json({ ...stats, storage, fileBackend: c.env.BUCKET ? 'r2' : 'kv' });
 });
 
 /** 分享列表(状态惰性计算),?limit=50&offset=0;响应字段沿用 snake_case(前端契约) */

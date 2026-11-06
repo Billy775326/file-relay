@@ -185,7 +185,7 @@ These tests create shares and files. The R2 API test uses a file larger than one
 | POST | `/api/uploads/:id/complete` | Complete upload and create share |
 | POST | `/api/uploads/:id/abort` | Cancel and release reclaimable reservations |
 | POST | `/api/admin/login`, `/api/admin/logout` | Manage admin session |
-| GET | `/api/admin/stats`, `/api/admin/shares` | Share statistics and list; not actual bucket usage |
+| GET | `/api/admin/stats`, `/api/admin/shares` | Share statistics and list; R2 capacity includes bucket objects and upload reservations |
 | DELETE | `/api/admin/shares/:code` | Delete share and file |
 | POST | `/api/admin/cleanup` | Clean expired shares and stale upload sessions |
 

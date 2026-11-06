@@ -24,10 +24,10 @@ export async function api(path, opts = {}) {
 
 export function fmtBytes(n) {
   if (!Number.isFinite(n) || n < 0) return '-';
-  const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   let i = 0;
-  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
-  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 10) / 10;
+  while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }
+  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 100) / 100;
   return `${v} ${units[i]}`;
 }
 

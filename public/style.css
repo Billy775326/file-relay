@@ -814,3 +814,5 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
     transition-duration: 0.01ms !important;
   }
 }
+
+.stat-card b.storage-value { font-size: 18px; overflow-wrap: anywhere; }

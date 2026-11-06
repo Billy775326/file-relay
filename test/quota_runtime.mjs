@@ -36,6 +36,11 @@ try {
   assert.equal((await call(`/api/uploads/${unfinished.uploadId}/abort`, json({}))).status, 200);
   const login = await call('/api/admin/login', json({ token: 'quota-test-only' }));
   const cookie = login.headers.get('set-cookie').split(';')[0];
+  const stats = await (await call('/api/admin/stats', { headers: { Cookie: cookie } })).json();
+  assert.equal(stats.fileBackend, 'r2');
+  assert.equal(stats.storage.capacityBytes, 9_990_000_000);
+  assert.ok(stats.storage.usedBytes >= 3);
+
   assert.equal((await call(`/api/admin/shares/${share.code}`, { method: 'DELETE', headers: { Cookie: cookie } })).status, 200);
   const bucket = await mf.getR2Bucket('BUCKET');
   const ledger = await (await bucket.get('__file-relay/quota-v1.json')).json();
@@ -69,6 +74,38 @@ with sync_playwright() as p:
     dialog.accept()
     page.wait_for_function("!document.querySelector('#btn-upload').disabled")
     assert len(calls) == 1, calls
+    page.unroute('**/api/uploads/init')
+    for width in [1280, 390]:
+        page.set_viewport_size({'width': width, 'height': 900})
+        page.goto(sys.argv[1])
+        page.wait_for_function("document.querySelector('#dz-hint').textContent.includes('9.9 GB')")
+        assert 'Cloudflare' not in page.locator('body').inner_text()
+        assert 'GiB' not in page.locator('body').inner_text()
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    page.route('**/api/admin/stats', lambda route: route.fulfill(content_type='application/json', body='{"total":1,"active":1,"files":1,"texts":0,"totalBytes":2000000000,"todayCreated":1,"fileBackend":"r2","storage":{"usedBytes":2000000000,"capacityBytes":9990000000}}'))
+    page.route('**/api/admin/shares?*', lambda route: route.fulfill(content_type='application/json', body='{"total":0,"rows":[]}'))
+    page.goto(sys.argv[1].rstrip('/') + '/admin')
+    page.locator('#admin-panel').wait_for(state='visible')
+    assert page.locator('.storage-value').inner_text() == '2 GB / 9.99 GB'
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    with page.expect_popup() as popup:
+        page.locator('a[data-i18n="nav.send"]').click()
+    popup.value.wait_for_load_state()
+    assert page.url.endswith('/admin')
+    assert popup.value.evaluate('window.opener === null')
+    popup.value.close()
+    page.screenshot(path='.wrangler/admin-capacity-mobile.png', full_page=True, animations='disabled')
+    page.goto(sys.argv[1])
+    page.wait_for_function("document.querySelector('#dz-hint').textContent.includes('9.9 GB')")
+    page.screenshot(path='.wrangler/home-user-copy-mobile.png', full_page=True, animations='disabled')
+    page.set_viewport_size({'width': 1280, 'height': 900})
+    page.evaluate("localStorage.setItem('theme', 'dark'); localStorage.setItem('lang', 'en')")
+    page.reload()
+    page.wait_for_function("document.querySelector('#dz-hint').textContent.includes('9.9 GB')")
+    page.click('#lang-btn')
+    assert page.locator('[data-i18n="feat.selfT"]').inner_text() == 'Easy pickup'
+    assert 'Self-hosted' not in page.locator('body').inner_text()
+    page.screenshot(path='.wrangler/home-user-copy-desktop.png', full_page=True, animations='disabled')
     browser.close()
 print('PASS browser: quota alert and batch stops after first rejection')
 `;

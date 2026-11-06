@@ -32,6 +32,40 @@ async function retryDelay(attempt: number) {
   if (attempt) await new Promise((resolve) => setTimeout(resolve, 1100 + Math.random() * 200));
 }
 
+/** Read the same objects and reservations used by upload admission, without writing. */
+async function scanCapacity(env: Env, ledger: Ledger, hasLedger: boolean) {
+  const bucket = env.BUCKET!;
+  // Bootstrap sessions created before this feature. No TTL-based release: bytes must
+  // actually be aborted/deleted before their reservation can be reclaimed.
+  if (!hasLedger) {
+    for (const session of await getStore(env).listStaleSessions(Date.now() + 1, 0)) {
+      ledger.files[session.r2Key] = session.size;
+    }
+  }
+  const sizes = new Map(Object.entries(ledger.files));
+  let cursor: string | undefined;
+  let overhead = 0;
+  let pages = 0;
+  do {
+    if (++pages > 500) throw new Error('R2 capacity scan exceeds request budget');
+    const page = await bucket.list({ cursor, limit: 1000 });
+    for (const file of page.objects) {
+      if (file.key === QUOTA_KEY) { overhead = file.size; continue; }
+      sizes.set(file.key, Math.max(file.size, sizes.get(file.key) ?? 0));
+    }
+    cursor = page.truncated ? page.cursor : undefined;
+    if (page.truncated && !cursor) throw new Error('Invalid R2 pagination');
+  } while (cursor);
+  const used = [...sizes.values()].reduce((sum, n) => sum + n, 0);
+  return { sizes, used, overhead };
+}
+
+export async function getCapacityUsage(env: Env) {
+  const { object, ledger } = await readLedger(env.BUCKET!);
+  const { used, overhead } = await scanCapacity(env, ledger, !!object);
+  return { usedBytes: used + overhead, capacityBytes: R2_CAPACITY_MAX };
+}
+
 /** Reserve before accepting bytes. R2 conditional writes serialize concurrent admission.
  * Completed files retain reservations until deletion, so completion/listing races cannot
  * undercount them. Existing/unmanaged bucket objects are included in every admission scan.
@@ -44,28 +78,7 @@ export async function reserveCapacity(env: Env, key: string, size: number): Prom
     if (ledger.files[key] === size) return; // Already reserved, including uploads finishing at the cap.
     if (ledger.files[key] !== undefined) throw new Error('R2 reservation size mismatch');
 
-    // Bootstrap sessions created before this feature. No TTL-based release: bytes must
-    // actually be aborted/deleted before their reservation can be reclaimed.
-    if (!object) {
-      for (const session of await getStore(env).listStaleSessions(Date.now() + 1, 0)) {
-        ledger.files[session.r2Key] = session.size;
-      }
-    }
-    const sizes = new Map(Object.entries(ledger.files));
-    let cursor: string | undefined;
-    let overhead = 0;
-    let pages = 0;
-    do {
-      if (++pages > 500) throw new Error('R2 capacity scan exceeds request budget');
-      const page = await bucket.list({ cursor, limit: 1000 });
-      for (const file of page.objects) {
-        if (file.key === QUOTA_KEY) { overhead = file.size; continue; }
-        sizes.set(file.key, Math.max(file.size, sizes.get(file.key) ?? 0));
-      }
-      cursor = page.truncated ? page.cursor : undefined;
-      if (page.truncated && !cursor) throw new Error('Invalid R2 pagination');
-    } while (cursor);
-    const used = [...sizes.values()].reduce((sum, n) => sum + n, 0);
+    const { sizes, used, overhead } = await scanCapacity(env, ledger, !!object);
     ledger.files[key] = size;
     // Include the bookkeeping object's bytes too, reserving fixed-length revision space.
     const nextOverhead = new TextEncoder().encode(JSON.stringify({ ...ledger, revision: '0'.repeat(36) })).byteLength;

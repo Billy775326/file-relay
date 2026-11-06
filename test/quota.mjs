@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 const output = await build({ entryPoints: ['src/quota.ts'], bundle: true, format: 'esm', platform: 'node', write: false });
-const { reserveCapacity, releaseCapacity, R2_CAPACITY_MAX: cap, QUOTA_KEY, CapacityError } = await import(
+const { getCapacityUsage, reserveCapacity, releaseCapacity, R2_CAPACITY_MAX: cap, QUOTA_KEY, CapacityError } = await import(
   'data:text/javascript;base64,' + Buffer.from(output.outputFiles[0].text).toString('base64')
 );
 
@@ -49,6 +49,13 @@ const empty = fixture();
 const room = await reserveCapacity(empty.env, 'large', 9_900_000_000);
 assert.equal(room.capacityBytes, cap);
 assert.equal(room.remainingBytes, cap - 9_900_000_000 - empty.objects.get(QUOTA_KEY).size);
+const snapshot = await getCapacityUsage(empty.env);
+assert.equal(snapshot.usedBytes, 9_900_000_000 + empty.objects.get(QUOTA_KEY).size);
+assert.equal(snapshot.capacityBytes, cap);
+empty.objects.set('large', { key: 'large', size: 9_900_000_000 });
+assert.deepEqual(await getCapacityUsage(empty.env), snapshot); // Completed objects are not counted twice.
+empty.objects.set('external', { key: 'external', size: 10 });
+assert.equal((await getCapacityUsage(empty.env)).usedBytes, snapshot.usedBytes + 10);
 const before = empty.writes();
 await assert.rejects(reserveCapacity(empty.env, 'next', 100_000_000), (e) =>
   e instanceof CapacityError && e.remainingBytes > 89_999_000 && e.remainingBytes < 90_000_000);
