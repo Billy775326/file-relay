@@ -86,7 +86,7 @@ with sync_playwright() as p:
     page.route('**/api/admin/shares?*', lambda route: route.fulfill(content_type='application/json', body='{"total":0,"rows":[]}'))
     page.goto(sys.argv[1].rstrip('/') + '/admin')
     page.locator('#admin-panel').wait_for(state='visible')
-    assert page.locator('.storage-value').inner_text() == '2 GB / 9.99 GB'
+    assert page.locator('.storage-value').text_content() == '2 GB / 9.99 GB'
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     with page.expect_popup() as popup:
         page.locator('a[data-i18n="nav.send"]').click()
@@ -94,7 +94,21 @@ with sync_playwright() as p:
     assert page.url.endswith('/admin')
     assert popup.value.evaluate('window.opener === null')
     popup.value.close()
-    page.screenshot(path='.wrangler/admin-capacity-mobile.png', full_page=True, animations='disabled')
+    for theme in ['light', 'dark']:
+        page.evaluate('(theme) => document.documentElement.dataset.theme = theme', theme)
+        for width in [1135, 880, 390, 320]:
+            page.set_viewport_size({'width': width, 'height': 900})
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            assert page.locator('.storage-value b').evaluate('(el) => el.scrollWidth <= el.clientWidth')
+            assert page.locator('.storage-total').evaluate('(el) => el.scrollWidth <= el.clientWidth')
+            assert page.locator('.storage-meter').get_attribute('aria-label')
+            if width in [1135, 390]:
+                page.screenshot(path=f'.wrangler/admin-layout-{theme}-{width}.png', full_page=True, animations='disabled')
+    page.click('#lang-btn')
+    assert page.locator('.storage-card').inner_text().startswith('Storage')
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+    page.click('#lang-btn')
+    page.set_viewport_size({'width': 390, 'height': 900})
     page.goto(sys.argv[1])
     page.wait_for_function("document.querySelector('#dz-hint').textContent.includes('9.9 GB')")
     page.screenshot(path='.wrangler/home-user-copy-mobile.png', full_page=True, animations='disabled')

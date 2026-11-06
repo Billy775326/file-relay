@@ -69,15 +69,33 @@ $('#btn-logout').addEventListener('click', async () => {
 let lastStats = null; // 删除后本地递减用,避免立即重拉撞上 KV 最终一致窗口
 
 function renderStats(s) {
+  const counts = [
+    [s.total, 'ad.total'], [s.active, 'ad.active'], [s.files, 'ad.files'],
+    [s.texts, 'ad.texts'], [s.todayCreated, 'ad.today'],
+  ];
+  const capacity = s.fileBackend === 'r2' ? s.storage : null;
+  const storageCard = el('div', { class: 'stat-card storage-card' },
+    el('small', {}, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes')),
+    capacity
+      ? el('div', { class: 'storage-value' },
+          el('b', {}, fmtBytes(capacity.usedBytes)),
+          el('span', { class: 'storage-total' }, ` / ${fmtBytes(capacity.capacityBytes)}`))
+      : el('div', { class: 'storage-value' }, el('b', {}, s.fileBackend === 'r2'
+          ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),
+  );
+  if (capacity) {
+    const ratio = Math.min(1, Math.max(0, capacity.usedBytes / capacity.capacityBytes));
+    storageCard.append(
+      el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,
+        value: capacity.usedBytes, ariaLabel: t('ad.storage') }),
+      el('div', { class: 'storage-caption' },
+        el('small', {}, t('ad.storageReserved')), el('small', {}, `${Math.round(ratio * 100)}%`)),
+    );
+  }
   statsRow.replaceChildren(
-    el('div', { class: 'stat-card' }, el('b', {}, String(s.total)), el('small', { class: 'muted' }, t('ad.total'))),
-    el('div', { class: 'stat-card' }, el('b', {}, String(s.active)), el('small', { class: 'muted' }, t('ad.active'))),
-    el('div', { class: 'stat-card' }, el('b', {}, String(s.files)), el('small', { class: 'muted' }, t('ad.files'))),
-    el('div', { class: 'stat-card' }, el('b', {}, String(s.texts)), el('small', { class: 'muted' }, t('ad.texts'))),
-    el('div', { class: 'stat-card' }, el('b', { class: 'storage-value' }, s.fileBackend === 'r2'
-      ? (s.storage ? `${fmtBytes(s.storage.usedBytes)} / ${fmtBytes(s.storage.capacityBytes)}` : t('ad.storageUnavailable'))
-      : fmtBytes(s.totalBytes)), el('small', { class: 'muted' }, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes'))),
-    el('div', { class: 'stat-card' }, el('b', {}, String(s.todayCreated)), el('small', { class: 'muted' }, t('ad.today'))),
+    el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>
+      el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),
+    storageCard,
   );
 }
 
