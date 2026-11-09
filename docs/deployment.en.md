@@ -212,3 +212,7 @@ Changing bindings does not migrate existing KV shares. Migrate records and addre
 | Capacity alert | Delete unneeded shares or cancel unfinished uploads; see overview quota details |
 
 See [configuration](../README.en.md#configuration) for variables. Finish old uploads before upgrading and restart uploads after changing part size. Keep the bindings required to read historical files.
+
+## Existing D1 database upgrade
+
+Before deploying upload-source tracking, export a backup and apply [the source migration](../schema/migrations/0001-upload-source.sql) once. Fresh databases use the complete schema; do not also run this migration. KV deployments need no migration. See [upgrade commands and behavior](upload-sources.md).

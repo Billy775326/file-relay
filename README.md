@@ -43,6 +43,8 @@
 
 只在本地生成部署文件，使用 `npm run build:pages` 或 `npm run build:single`；这两个命令不会发布到 Cloudflare。
 
+后台的“上传来源”显示访客标识和 IP 属地；点击可查看完整 IP、编辑管理员备注。备注会替代该访客的列表标识，清空后恢复。历史上传显示“未记录”；城市信息不可用时仅显示已有地区。访客标识关联浏览器，不代表实名身份。详见 [上传来源与升级说明](docs/upload-sources.md)。
+
 ## 上传与容量限制
 
 以下限制同时生效，实际可上传大小以最严格的一项为准。**MB / GB 使用十进制；MiB / GiB 使用二进制。**
@@ -155,6 +157,7 @@ npm run build:pages
 python -m pip install playwright
 python -m playwright install chromium
 npm run test:quota-runtime
+npm run test:source
 ```
 
 `test:quota-runtime` 使用构建产物启动本地模拟环境，验证容量拦截、上传下载、取消删除及浏览器弹窗，不需要 Cloudflare 凭据。

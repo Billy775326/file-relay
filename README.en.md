@@ -43,6 +43,8 @@ Every method needs storage bindings and an `ADMIN_TOKEN` Secret in Cloudflare pr
 
 To generate files locally without publishing, use `npm run build:pages` or `npm run build:single`.
 
+The admin upload-source column shows a visitor ID and IP location. Open it for the full IP and an admin note; the note replaces that visitor’s list label until cleared. Old uploads show “Not recorded”. See [source tracking and upgrades](docs/upload-sources.md).
+
 ## Upload-and-capacity limits
 
 All applicable limits are enforced together. **MB / GB are decimal; MiB / GiB are binary.**
@@ -155,6 +157,7 @@ Browser testing requires Python, Playwright and Chromium:
 python -m pip install playwright
 python -m playwright install chromium
 npm run test:quota-runtime
+npm run test:source
 ```
 
 The quota runtime test starts a local emulator using the build output. It covers admission, upload/download, cancellation, deletion and the browser alert without Cloudflare credentials.

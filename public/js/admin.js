@@ -1,5 +1,5 @@
 import { $, api, fmtBytes, fmtDate, toast, initTheme, el } from './common.js';
-import { t, onLangChange, initI18n } from './i18n.js';
+import { LANG, t, onLangChange, initI18n } from './i18n.js';
 
 initTheme();
 initI18n();
@@ -21,6 +21,7 @@ let total = 0;
 
 /* 语言切换:面板可见时按新语言重拉文案 */
 onLangChange(() => {
+  if ($('#source-dialog').open) closeSource();
   if (!panel.hidden) {
     loadStats();
     loadList();
@@ -131,7 +132,7 @@ const STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted
 const KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };
 
 async function loadList() {
-  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));
+  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 10 }, t('ad.loading'))));
   try {
     const data = await api(`/api/admin/shares?limit=${LIMIT}&offset=${offset}`);
     total = data.total;
@@ -144,6 +145,7 @@ async function loadList() {
           el('td', { class: 'mono' }, r.code),
           el('td', {}, el('span', { class: `badge kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind))),
           el('td', { class: 'wrap' }, content),
+          sourceCell(r),
           el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),
           el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '∞'}`),
           el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),
@@ -154,11 +156,11 @@ async function loadList() {
       );
     }
     if (rows.length === 0) {
-      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));
+      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 10 }, t('ad.empty'))));
     }
     updatePager();
   } catch (e) {
-    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));
+    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 10 }, e.message || t('ad.loadFail'))));
   }
 }
 
@@ -171,7 +173,7 @@ function updatePager() {
 }
 btnPrev.addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); loadList(); });
 btnNext.addEventListener('click', () => { offset += LIMIT; loadList(); });
-btnRefresh.addEventListener('click', () => { loadStats(); loadList(); });
+btnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });
 
 /* ---------- 删除:票据风确认弹窗 + 本地同步(KV 最终一致,删除后立即重拉会看到残留索引) ---------- */
 const delMask = $('#del-mask');
@@ -222,3 +224,90 @@ async function remove(r, tr) {
     toast(e.message || t('ad.deleteFail'), 'error');
   }
 }
+
+/* Upload source details: source labels are text nodes, never interpolated HTML. */
+const sourceDialog = $('#source-dialog');
+const sourceForm = $('#source-form');
+const sourceNote = $('#source-note');
+const sourceSave = $('#source-save');
+const sourceError = $('#source-error');
+const noteOverrides = new Map(); // Read-your-write while KV propagation completes.
+let sourceRequest = 0;
+let activeSource = null;
+
+function visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }
+function sourceLabel(source) {
+  const override = noteOverrides.get(source.visitorId);
+  return (override !== undefined ? override : source.note) || visitorLabel(source.visitorId);
+}
+function locationLabel(source) {
+  let country = source.country;
+  if (country && /^[A-Z]{2}$/.test(country)) {
+    country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);
+  }
+  return [...new Set([country, source.region, source.city].filter(Boolean))].join(' · ') || t('ad.sourceUnknown');
+}
+function sourceCell(row) {
+  if (!row.source) return el('td', { class: 'source-cell muted' }, t('ad.sourceUnrecorded'));
+  const button = el('button', { class: 'source-link', type: 'button', onclick: () => openSource(row) }, sourceLabel(row.source));
+  button.dataset.visitor = row.source.visitorId;
+  button.title = t('ad.source');
+  return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));
+}
+async function openSource(row) {
+  const request = ++sourceRequest;
+  activeSource = null;
+  sourceForm.hidden = true;
+  sourceError.hidden = true;
+  sourceSave.disabled = false;
+  $('#source-detail').textContent = t('ad.loading');
+  sourceDialog.showModal();
+  try {
+    const { source } = await api(`/api/admin/shares/${row.code}/source`);
+    if (request !== sourceRequest || !sourceDialog.open) return;
+    if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }
+    activeSource = { code: row.code, visitorId: source.visitorId };
+    $('#source-detail').replaceChildren(...[
+      [t('ad.visitorId'), source.visitorId], [t('ad.sourceLocation'), locationLabel(source)],
+      ['IP', source.ip || t('ad.sourceUnknown')], [t('ad.sourceTime'), fmtDate(source.capturedAt)],
+    ].map(([label, value]) => el('div', { class: 'source-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));
+    sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';
+    sourceForm.hidden = false;
+    sourceNote.focus();
+  } catch (e) {
+    if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');
+  }
+}
+function closeSource() {
+  sourceRequest++;
+  activeSource = null;
+  sourceNote.value = '';
+  $('#source-detail').replaceChildren();
+  sourceDialog.close();
+}
+sourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });
+$('#source-close').addEventListener('click', closeSource);
+sourceForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!activeSource || sourceSave.disabled) return;
+  const { code } = activeSource;
+  const request = sourceRequest;
+  sourceSave.disabled = true;
+  sourceError.hidden = true;
+  try {
+    const result = await api(`/api/admin/shares/${code}/source`, { method: 'PUT', body: { note: sourceNote.value } });
+    noteOverrides.set(result.visitorId, result.note);
+    document.querySelectorAll('[data-visitor]').forEach((button) => {
+      if (button.dataset.visitor === result.visitorId) button.textContent = result.note || visitorLabel(result.visitorId);
+    });
+    if (request === sourceRequest) closeSource();
+    toast(t('ad.sourceSaved'));
+  } catch (error) {
+    if (request === sourceRequest) {
+      sourceError.textContent = error.message || t('ad.loadFail');
+      sourceError.hidden = false;
+    }
+  } finally {
+    if (request === sourceRequest) sourceSave.disabled = false;
+  }
+});

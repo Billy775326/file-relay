@@ -201,6 +201,10 @@ curl -X POST 'https://your-domain.example/api/admin/cleanup' \
 
 已有 KV 分享不能通过更换绑定自动迁移。先迁移元数据和处理历史 KV 文件，再切换；不要直接删除旧命名空间。
 
+### 已有 D1 部署升级
+
+启用上传来源前，先导出备份，再执行一次 [来源字段迁移](../schema/migrations/0001-upload-source.sql)，最后部署新代码。新建数据库直接使用完整 schema，不重复执行此迁移。KV 部署无需迁移。命令和回退边界见 [上传来源与升级说明](upload-sources.md)。
+
 ## 更新与常见问题
 
 | 情况 | 处理方法 |

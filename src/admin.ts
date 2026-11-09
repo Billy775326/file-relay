@@ -69,6 +69,7 @@ async function isValidCookie(env: Env, value: string | undefined): Promise<boole
 
 /** 鉴权中间件:除 /api/admin/login 外全部校验签名 cookie */
 adminRoutes.use('*', async (c, next) => {
+  c.header('Cache-Control', 'no-store');
   if (c.req.method === 'POST' && c.req.path === '/api/admin/login') return next();
   // cleanup 双通道:外部定时器/脚本带 Bearer token(Pages 无 Cron Triggers 的补偿),或管理页 cookie
   if (c.req.method === 'POST' && c.req.path === '/api/admin/cleanup') {
@@ -125,7 +126,10 @@ adminRoutes.get('/shares', async (c) => {
   const offset = Math.max(Number(c.req.query('offset') || 0) || 0, 0);
   const now = Date.now();
 
-  const { total, rows } = await getStore(c.env).listShares(limit, offset);
+  const store = getStore(c.env);
+  const { total, rows } = await store.listShares(limit, offset);
+  const ids = [...new Set(rows.flatMap((r) => r.source ? [r.source.visitorId] : []))];
+  const notes = await store.getVisitorNotes(ids);
   return c.json({
     total,
     rows: rows.map((r) => ({
@@ -140,8 +144,38 @@ adminRoutes.get('/shares', async (c) => {
       created_at: r.createdAt,
       status: shareStatusOf(r.expireAt, r.maxPickups, r.pickupCount, now),
       text_preview: r.textPreview,
+      source: r.source ? { ...r.source, note: notes.get(r.source.visitorId) ?? '' } : null,
     })),
   });
+});
+
+/** Full IP is returned only here, behind the admin middleware. */
+adminRoutes.get('/shares/:code/source', async (c) => {
+  const code = c.req.param('code');
+  if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
+  const store = getStore(c.env);
+  const record = await store.getByCode(code);
+  if (!record) return err(c, 404, 'not_found', '分享不存在');
+  return c.json({ source: record.source ? { ...record.source, note: await store.getVisitorNote(record.source.visitorId) } : null });
+});
+
+adminRoutes.put('/shares/:code/source', async (c) => {
+  const origin = c.req.header('Origin');
+  if (origin && origin !== new URL(c.req.url).origin) return c.json({ error: 'forbidden', message: '请求来源不匹配' }, 403);
+  if (!c.req.header('Content-Type')?.startsWith('application/json')) return c.json({ error: 'bad_request', message: '请使用 JSON' }, 415);
+  const code = c.req.param('code');
+  if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
+  const body = await c.req.json().catch(() => null) as { note?: unknown } | null;
+  if (typeof body?.note !== 'string' || body.note.length > 64 || /[\u0000-\u001f\u007f]/.test(body.note)) {
+    return err(c, 400, 'bad_request', '备注应为不超过 64 字符的单行文本');
+  }
+  const store = getStore(c.env);
+  const record = await store.getByCode(code);
+  if (!record) return err(c, 404, 'not_found', '分享不存在');
+  if (!record.source) return c.json({ error: 'source_unrecorded', message: '此记录没有访客来源' }, 409);
+  const note = body.note.trim();
+  await store.setVisitorNote(record.source.visitorId, note);
+  return c.json({ visitorId: record.source.visitorId, note });
 });
 
 /** 删除分享:按口令删(D1/KV 通吃),文件的先删存储对象(R2/KV 按键前缀路由)再删元数据。

@@ -1,3 +1,4 @@
+import { captureSource } from './upload-source';
 import { Hono } from 'hono';
 import type { Env } from './types';
 import { err, parseExpiry, parseMaxPickups } from './util';
@@ -49,6 +50,7 @@ uploadRoutes.post('/init', async (c) => {
   const id = crypto.randomUUID(); // 会话 token,客户端只拿这个
   const r2Key = crypto.randomUUID(); // 预生成的对象键
 
+  const source = await captureSource(c);
   const capacity = await reserveCapacity(c.env, r2Key, size);
   let mpu: R2MultipartUpload | undefined;
   try {
@@ -57,6 +59,7 @@ uploadRoutes.post('/init', async (c) => {
     });
 
     await getStore(c.env).createSession({
+      source,
       id,
       uploadId: mpu.uploadId,
       r2Key,
@@ -167,6 +170,7 @@ uploadRoutes.post('/:id/complete', async (c) => {
   const created = await store.createShare(
     {
       kind: 'file',
+      source: sess.source ?? null,
       filename: sess.filename,
       size: sess.size,
       mime: sess.mime,

@@ -1,3 +1,4 @@
+import { sourceSummary } from './upload-source';
 /**
  * Workers KV 实现:免建 D1 的轻量后端(最终一致)。
  * 键空间:s:{口令} = 分享全量 JSON,metadata 携带列表/统计投影(list 免逐键 get);
@@ -11,6 +12,7 @@
  */
 import { randCode } from './code';
 import type {
+  SourceSummary,
   SessionRecord,
   ShareListRow,
   ShareRecord,
@@ -26,6 +28,7 @@ const MAX_CODE_RETRIES = 8;
  *  字符串字段(n/p)必须纯 ASCII——KV metadata 经 HTTP 头传输,Unicode 会触发
  *  workerd 警告甚至报错,故统一 base64(UTF-8) 编码。 */
 interface ShareMeta {
+  o?: string; // Base64 source summary; full IP stays only in the private record.
   id: string;
   k: 'text' | 'file';
   n: string | null; // 文件名 base64(截断,列表展示用)
@@ -55,6 +58,7 @@ function b64decode(s: string): string {
 
 function metaOf(v: ShareRecord): ShareMeta {
   return {
+    o: v.source ? b64encode(JSON.stringify(sourceSummary(v.source))) : undefined,
     id: v.id,
     k: v.kind,
     n: v.filename ? b64encode(v.filename.slice(0, 40)) : null,
@@ -84,11 +88,27 @@ async function scanShareMeta(kv: KVNamespace): Promise<Array<{ code: string; m: 
 
 export function createKVStore(kv: KVNamespace): ShareStore {
   return {
+    async getVisitorNotes(ids) {
+      const notes = new Map<string, string>();
+      // KV bulk reads accept at most 100 keys; avoid a subrequest for every list row.
+      for (let i = 0; i < ids.length; i += 100) {
+        const batch = ids.slice(i, i + 100);
+        const values = await kv.get(batch.map(id => 'v:' + id), 'text');
+        for (const id of batch) notes.set(id, values.get('v:' + id) ?? '');
+      }
+      return notes;
+    },
+    async getVisitorNote(id) { return (await kv.get('v:' + id)) ?? ''; },
+    async setVisitorNote(id, note) {
+      if (note) await kv.put('v:' + id, note);
+      else await kv.delete('v:' + id);
+    },
     async createShare(s, closeSessionId) {
       for (let i = 0; i < MAX_CODE_RETRIES; i++) {
         const code = randCode();
         if ((await kv.get(SHARE_PREFIX + code)) !== null) continue; // 先查后写,尽力防碰撞
         const rec: ShareRecord = {
+          source: s.source ?? null,
           id: crypto.randomUUID(),
           code,
           kind: s.kind,
@@ -140,6 +160,7 @@ export function createKVStore(kv: KVNamespace): ShareStore {
         kept = page.filter((_, i) => alive[i]);
       }
       const rows = kept.map(({ code, m }): ShareListRow => ({
+        source: m.o ? JSON.parse(b64decode(m.o)) as SourceSummary : null,
         id: m.id, code, kind: m.k,
         filename: m.n ? b64decode(m.n) : null,
         size: m.s,

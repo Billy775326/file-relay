@@ -1,3 +1,4 @@
+import { sourceSummary } from './upload-source';
 /**
  * D1 实现:强一致后端(可选)。
  * 取件计数靠单条原子 UPDATE ... WHERE 有效性谓词 RETURNING;
@@ -14,6 +15,7 @@ import type {
 } from './store';
 
 interface ShareRow {
+  source_json: string | null;
   id: string;
   code: string;
   kind: 'text' | 'file';
@@ -29,6 +31,7 @@ interface ShareRow {
 }
 
 interface SessionRow {
+  source_json: string | null;
   id: string;
   upload_id: string;
   r2_key: string;
@@ -43,9 +46,10 @@ interface SessionRow {
 
 const MAX_CODE_RETRIES = 8;
 const SHARE_COLUMNS =
-  'id, code, kind, filename, size, mime, r2_key, text, max_pickups, pickup_count, created_at, expire_at';
+  'id, code, kind, filename, size, mime, r2_key, text, max_pickups, pickup_count, created_at, expire_at, source_json';
 
 const toRec = (r: ShareRow): ShareRecord => ({
+  source: r.source_json ? JSON.parse(r.source_json) : null,
   id: r.id,
   code: r.code,
   kind: r.kind,
@@ -61,6 +65,7 @@ const toRec = (r: ShareRow): ShareRecord => ({
 });
 
 const toSession = (r: SessionRow): SessionRecord => ({
+  source: r.source_json ? JSON.parse(r.source_json) : null,
   id: r.id,
   uploadId: r.upload_id,
   r2Key: r.r2_key,
@@ -77,17 +82,35 @@ function insertShareStmt(db: D1Database, id: string, code: string, s: NewShare, 
   return db
     .prepare(
       `INSERT INTO shares
-        (id, code, kind, filename, size, mime, r2_key, text, max_pickups, pickup_count, created_at, expire_at)
-       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,0,?10,?11)`,
+        (id, code, kind, filename, size, mime, r2_key, text, max_pickups, pickup_count, created_at, expire_at, source_json)
+       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,0,?10,?11,?12)`,
     )
     .bind(
       id, code, s.kind, s.filename ?? null, s.size, s.mime ?? null,
-      s.r2Key ?? null, s.text ?? null, s.maxPickups, now, s.expireAt,
+      s.r2Key ?? null, s.text ?? null, s.maxPickups, now, s.expireAt, s.source ? JSON.stringify(s.source) : null,
     );
 }
 
 export function createD1Store(db: D1Database): ShareStore {
   return {
+    async getVisitorNotes(ids) {
+      const notes = new Map<string, string>();
+      for (let i = 0; i < ids.length; i += 100) {
+        const batch = ids.slice(i, i + 100);
+        const rows = await db.prepare(`SELECT visitor_id, note FROM visitor_notes WHERE visitor_id IN (${batch.map(() => '?').join(',')})`)
+          .bind(...batch).all<{ visitor_id: string; note: string }>();
+        for (const row of rows.results) notes.set(row.visitor_id, row.note);
+      }
+      return notes;
+    },
+    async getVisitorNote(id) {
+      const row = await db.prepare('SELECT note FROM visitor_notes WHERE visitor_id = ?1').bind(id).first<{ note: string }>();
+      return row?.note ?? '';
+    },
+    async setVisitorNote(id, note) {
+      if (!note) { await db.prepare('DELETE FROM visitor_notes WHERE visitor_id = ?1').bind(id).run(); return; }
+      await db.prepare('INSERT INTO visitor_notes (visitor_id, note) VALUES (?1, ?2) ON CONFLICT(visitor_id) DO UPDATE SET note = excluded.note').bind(id, note).run();
+    },
     async createShare(s, closeSessionId) {
       const now = Date.now();
       for (let i = 0; i < MAX_CODE_RETRIES; i++) {
@@ -137,7 +160,7 @@ export function createD1Store(db: D1Database): ShareStore {
         (await db.prepare('SELECT COUNT(*) AS n FROM shares').first<{ n: number }>())?.n ?? 0;
       const rows = await db
         .prepare(
-          `SELECT id, code, kind, filename, size, pickup_count, max_pickups, expire_at, created_at,
+          `SELECT id, code, kind, filename, size, pickup_count, max_pickups, expire_at, created_at, source_json,
                   CASE WHEN kind = 'text' THEN substr(text, 1, 50) ELSE NULL END AS text_preview
            FROM shares ORDER BY created_at DESC LIMIT ?1 OFFSET ?2`,
         )
@@ -145,11 +168,12 @@ export function createD1Store(db: D1Database): ShareStore {
         .all<{
           id: string; code: string; kind: 'text' | 'file'; filename: string | null; size: number;
           pickup_count: number; max_pickups: number | null; expire_at: number | null; created_at: number;
-          text_preview: string | null;
+          text_preview: string | null; source_json: string | null;
         }>();
       return {
         total,
         rows: (rows.results ?? []).map((r): ShareListRow => ({
+          source: sourceSummary(r.source_json ? JSON.parse(r.source_json) : null),
           id: r.id, code: r.code, kind: r.kind, filename: r.filename, size: r.size,
           pickupCount: r.pickup_count, maxPickups: r.max_pickups,
           expireAt: r.expire_at, createdAt: r.created_at, textPreview: r.text_preview,
@@ -193,10 +217,10 @@ export function createD1Store(db: D1Database): ShareStore {
     async createSession(s) {
       await db
         .prepare(
-          `INSERT INTO upload_sessions (id, upload_id, r2_key, filename, mime, size, parts, expiry, max_pickups, created_at)
-           VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`,
+          `INSERT INTO upload_sessions (id, upload_id, r2_key, filename, mime, size, parts, expiry, max_pickups, created_at, source_json)
+           VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)`,
         )
-        .bind(s.id, s.uploadId, s.r2Key, s.filename, s.mime, s.size, s.parts, s.expiry, s.maxPickups, s.createdAt)
+        .bind(s.id, s.uploadId, s.r2Key, s.filename, s.mime, s.size, s.parts, s.expiry, s.maxPickups, s.createdAt, s.source ? JSON.stringify(s.source) : null)
         .run();
     },
 

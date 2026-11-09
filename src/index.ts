@@ -7,6 +7,7 @@ import { adminRoutes, adminPath } from './admin';
 import { runCleanup, cleanupIfDue } from './cleanup';
 import { fileMode, fileMaxSize } from './filestore';
 import { uploadPartSize } from './limits';
+import { ensureVisitor } from './upload-source';
 import { serveAsset } from './asset-resolver';
 
 const app = new Hono<{ Bindings: Env }>();
@@ -52,14 +53,16 @@ app.get('/', (c, next) => {
 });
 
 /** 前端据此选择上传方式:fileBackend=r2 走分片,kv 走单请求直传 */
-app.get('/api/config', (c) =>
-  c.json({
+app.get('/api/config', async (c) => {
+  await ensureVisitor(c);
+  c.header('Cache-Control', 'no-store');
+  return c.json({
     fileBackend: fileMode(c.env) ?? 'none',
     maxFileSize: fileMaxSize(c.env),
     maxTextLength: num(c.env.MAX_TEXT_LENGTH, 65_536),
     partSize: uploadPartSize(c.env),
-  }),
-);
+  });
+});
 app.route('/api/uploads', uploadRoutes);
 app.route('/api', shareRoutes);
 app.route('/api/admin', adminRoutes);

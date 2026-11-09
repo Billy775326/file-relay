@@ -835,3 +835,18 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
   .stats-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stats-counts .stat-card:last-child { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; min-height: 60px; }
 }
+
+/* Upload source labels and private admin details. */
+.source-cell { min-width: 150px; max-width: 210px; white-space: normal; }
+.source-cell small { display: block; font-size: 11px; overflow-wrap: anywhere; }
+.source-link { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.source-link:hover { color: var(--stamp); }
+.source-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow: auto; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); background: var(--paper); }
+.source-dialog::backdrop { background: var(--mask); }
+.source-dialog h3 { margin: 0 0 16px; }
+.source-field { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 12px; margin-bottom: 12px; }
+.source-field span { overflow-wrap: anywhere; }
+#source-form { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
+#source-note { width: 100%; padding: 10px; background: var(--bag); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+.source-disclaimer, .upload-privacy { font-size: 12px; line-height: 1.6; }
+.upload-privacy { margin: 12px 0 0; }

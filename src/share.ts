@@ -1,3 +1,4 @@
+import { captureSource } from './upload-source';
 import { Hono } from 'hono';
 import { num, type Env } from './types';
 import { err, parseExpiry, parseMaxPickups, contentDisposition } from './util';
@@ -26,6 +27,7 @@ shareRoutes.post('/shares/text', async (c) => {
   const expireAt = expMs === null ? null : now + expMs;
   const created = await getStore(c.env).createShare({
     kind: 'text',
+    source: await captureSource(c),
     size: text.length,
     text,
     maxPickups: mp,
@@ -84,6 +86,7 @@ shareRoutes.post('/shares/file', async (c) => {
   try {
     const created = await getStore(c.env).createShare({
       kind: 'file',
+      source: await captureSource(c),
       filename: filename.slice(0, 255),
       size: bytes.byteLength,
       mime,

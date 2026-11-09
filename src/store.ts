@@ -9,7 +9,18 @@ import type { Env } from './types';
 import { createD1Store } from './store-d1';
 import { createKVStore } from './store-kv';
 
+export interface UploadSource {
+  visitorId: string;
+  ip: string | null;
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  capturedAt: number;
+}
+export type SourceSummary = Omit<UploadSource, 'ip'>;
+
 export interface ShareRecord {
+  source?: UploadSource | null;
   id: string;
   code: string;
   kind: 'text' | 'file';
@@ -25,6 +36,7 @@ export interface ShareRecord {
 }
 
 export interface NewShare {
+  source?: UploadSource | null;
   kind: 'text' | 'file';
   filename?: string | null;
   size: number;
@@ -36,6 +48,7 @@ export interface NewShare {
 }
 
 export interface SessionRecord {
+  source?: UploadSource | null;
   id: string;
   uploadId: string;
   r2Key: string;
@@ -50,6 +63,7 @@ export interface SessionRecord {
 
 /** 管理列表行(字段够算状态 + 文本预览即可) */
 export interface ShareListRow {
+  source?: SourceSummary | null;
   id: string;
   code: string;
   kind: 'text' | 'file';
@@ -72,6 +86,9 @@ export interface ShareStats {
 }
 
 export interface ShareStore {
+  getVisitorNotes(visitorIds: string[]): Promise<Map<string, string>>;
+  getVisitorNote(visitorId: string): Promise<string>;
+  setVisitorNote(visitorId: string, note: string): Promise<void>;
   /** 创建分享(内部处理口令碰撞重试);closeSessionId 非空时原子关闭上传会话 */
   createShare(s: NewShare, closeSessionId?: string): Promise<{ id: string; code: string }>;
   getByCode(code: string): Promise<ShareRecord | null>;

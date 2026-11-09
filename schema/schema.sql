@@ -5,6 +5,7 @@
 -- 分享主表:文本与文件共用一张表,靠 kind 区分。
 -- 不设 status 列:有效/过期/取完由 expire_at / pickup_count / max_pickups 惰性计算。
 CREATE TABLE IF NOT EXISTS shares (
+  source_json  TEXT,                         -- 上传来源快照,仅管理接口展示
   id           TEXT PRIMARY KEY,             -- crypto.randomUUID()
   code         TEXT NOT NULL UNIQUE,         -- 6 位数字口令,UNIQUE 是防碰撞的最终裁决
   kind         TEXT NOT NULL CHECK (kind IN ('text','file')),
@@ -24,6 +25,7 @@ CREATE INDEX IF NOT EXISTS idx_shares_created ON shares(created_at DESC); -- 管
 -- 分片上传会话表:孤儿 multipart 的台账,cron 据此 abort。
 -- 客户端只持有 id(session token),拿不到 upload_id / r2_key。
 CREATE TABLE IF NOT EXISTS upload_sessions (
+  source_json TEXT,
   id          TEXT PRIMARY KEY,
   upload_id   TEXT NOT NULL,                 -- R2 multipart uploadId
   r2_key      TEXT NOT NULL UNIQUE,
@@ -36,3 +38,8 @@ CREATE TABLE IF NOT EXISTS upload_sessions (
   created_at  INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_created ON upload_sessions(created_at);
+
+CREATE TABLE IF NOT EXISTS visitor_notes (
+  visitor_id TEXT PRIMARY KEY,
+  note TEXT NOT NULL
+);
