@@ -132,7 +132,7 @@ const STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted
 const KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };
 
 async function loadList() {
-  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 10 }, t('ad.loading'))));
+  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 5 }, t('ad.loading'))));
   try {
     const data = await api(`/api/admin/shares?limit=${LIMIT}&offset=${offset}`);
     total = data.total;
@@ -140,27 +140,33 @@ async function loadList() {
     tbody.replaceChildren();
     for (const r of rows) {
       const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));
-      tbody.append(
-        el('tr', {},
-          el('td', { class: 'mono' }, r.code),
-          el('td', {}, el('span', { class: `badge kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind))),
-          el('td', { class: 'wrap' }, content),
-          sourceCell(r),
-          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),
-          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '∞'}`),
-          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),
-          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),
-          el('td', {}, fmtDate(r.created_at)),
-          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),
-        ),
-      );
+      const source = sourceCell(r);
+      source.dataset.label = t('ad.source');
+      const activity = el('td', { class: 'share-activity' },
+        el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status),
+        el('small', { class: 'muted' }, t('ad.pickupCount', r.pickup_count, r.max_pickups ?? '∞')));
+      activity.dataset.label = t('ad.activity');
+      const timeline = el('td', { class: 'share-timeline' },
+        el('div', { class: 'share-time-line' }, el('small', { class: 'muted' }, t('ad.createdShort')), el('span', {}, fmtDate(r.created_at))),
+        el('div', { class: 'share-time-line' }, el('small', { class: 'muted' }, t('ad.expiresShort')), el('span', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever'))));
+      timeline.dataset.label = t('ad.timeline');
+      tbody.append(el('tr', { class: 'share-row' },
+        el('td', { class: 'share-content' },
+          el('div', { class: 'share-name', title: content }, content),
+          el('div', { class: 'share-meta' },
+            el('span', { class: `badge kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)),
+            el('span', { class: 'mono' }, `${t('ad.th.code')} ${r.code}`),
+            el('span', { class: 'muted' }, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)))),
+        source, activity, timeline,
+        el('td', { class: 'share-actions' }, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),
+      ));
     }
     if (rows.length === 0) {
-      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 10 }, t('ad.empty'))));
+      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 5 }, t('ad.empty'))));
     }
     updatePager();
   } catch (e) {
-    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 10 }, e.message || t('ad.loadFail'))));
+    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 5 }, e.message || t('ad.loadFail'))));
   }
 }
 

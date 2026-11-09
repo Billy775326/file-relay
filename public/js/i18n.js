@@ -8,6 +8,12 @@
 
 const DICT = {
   zh: {
+    'ad.activity': '状态与取件',
+    'ad.timeline': '时间',
+    'ad.actions': '操作',
+    'ad.pickupCount': '已取 {0} / {1}',
+    'ad.createdShort': '上传',
+    'ad.expiresShort': '到期',
     'ad.source': '上传来源',
     'ad.visitor': '访客 {0}',
     'ad.visitorId': '访客标识',
@@ -192,6 +198,12 @@ const DICT = {
   },
 
   en: {
+    'ad.activity': 'Status / pickups',
+    'ad.timeline': 'Dates',
+    'ad.actions': 'Actions',
+    'ad.pickupCount': 'Picked up {0} / {1}',
+    'ad.createdShort': 'Created',
+    'ad.expiresShort': 'Expires',
     'ad.source': 'Upload source',
     'ad.visitor': 'Visitor {0}',
     'ad.visitorId': 'Visitor ID',
