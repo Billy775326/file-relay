@@ -851,39 +851,7 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 .source-disclaimer, .upload-privacy { font-size: 12px; line-height: 1.6; }
 .upload-privacy { margin: 12px 0 0; }
 
-/* Admin shares: five columns on desktop, labelled cards on narrow screens. */
-.share-table { table-layout: fixed; }
-.share-table th:nth-child(1) { width: 31%; }
-.share-table th:nth-child(2) { width: 20%; }
-.share-table th:nth-child(3) { width: 15%; }
-.share-table th:nth-child(4) { width: 24%; }
-.share-table th:nth-child(5) { width: 10%; }
-.share-table th, .share-table td { padding: 14px 10px; vertical-align: middle; }
-.share-table th { letter-spacing: 0.03em; white-space: normal; }
-.share-table td { white-space: normal; overflow-wrap: anywhere; }
-.share-table .source-cell { min-width: 0; max-width: none; }
-.share-table .source-cell small { margin-top: 5px; line-height: 1.5; }
-.share-name { font-weight: 600; line-height: 1.55; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.share-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-top: 7px; font-size: 11px; }
-.share-meta .badge { padding: 1px 7px; font-size: 11px; }
-.share-activity > small { display: block; margin-top: 6px; font-size: 11px; }
-.share-time-line { display: flex; align-items: baseline; gap: 8px; font-size: 11px; font-variant-numeric: tabular-nums; }
-.share-time-line + .share-time-line { margin-top: 6px; }
-.share-time-line > small { flex: 0 0 38px; font-size: 11px; }
-.share-time-line > span { white-space: nowrap; }
-.share-actions { text-align: right; }
-.share-actions .btn { white-space: nowrap; padding-inline: 9px; }
-@media (max-width: 960px) {
-  .share-table-wrap { overflow: visible; }
-  .share-table, .share-table tbody { display: block; }
-  .share-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .share-table .share-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; padding: 16px 0; border-bottom: 1px dashed var(--line); }
-  .share-table .share-row:last-child { border-bottom: 0; }
-  .share-table .share-row > td { display: block; padding: 0; border: 0; min-width: 0; }
-  .share-table .share-content, .share-table .source-cell, .share-table .share-actions { grid-column: 1 / -1; }
-  .share-table td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 6px; color: var(--muted); font-size: 11px; }
-  .share-time-line { flex-direction: column; gap: 0; }
-  .share-time-line > small { flex-basis: auto; }
-  .share-actions .btn { min-height: 36px; padding-inline: 18px; }
-  .share-name { -webkit-line-clamp: 3; }
-}
+/* Keep the type visible above the filename baseline, outside its ellipsis. */
+.share-filename-line { display: flex; align-items: baseline; gap: 5px; width: clamp(150px, 18vw, 220px); }
+.share-filename { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.share-kind.badge { flex: none; position: relative; top: -0.45em; padding: 0 4px; font-size: 10px; line-height: 1.4; }
