@@ -55,6 +55,7 @@ app.get('/', (c, next) => {
 app.get('/api/config', (c) =>
   c.json({
     fileBackend: fileMode(c.env) ?? 'none',
+    metadataBackend: c.env.fileKV ? 'kv' : 'd1',
     maxFileSize: fileMaxSize(c.env),
     maxTextLength: num(c.env.MAX_TEXT_LENGTH, 65_536),
     partSize: uploadPartSize(c.env),
