@@ -861,7 +861,6 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 #source-error { grid-column: 1 / -1; margin: 4px 0 0; }
 .source-footer { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: 8px; padding: 8px 16px; background: var(--paper); border-top: 1px solid var(--line); }
 .source-footer .btn { min-height: 36px; padding: 5px 12px; }
-.upload-privacy { font-size: 12px; line-height: 1.6; }
 @media (max-width: 420px) {
   .source-heading { padding: 10px 12px; }
   .source-body { padding: 10px 12px; }
@@ -869,7 +868,6 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
   .source-footer { padding: 8px 12px; }
   .source-footer .btn { flex: 1; min-height: 40px; }
 }
-.upload-privacy { margin: 12px 0 0; }
 
 /* Keep the type visible above the filename baseline, outside its ellipsis. */
 .share-filename-line { display: flex; align-items: baseline; gap: 5px; width: clamp(150px, 18vw, 220px); }
