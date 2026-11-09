@@ -841,14 +841,34 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 .source-cell small { display: block; font-size: 11px; overflow-wrap: anywhere; }
 .source-link { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .source-link:hover { color: var(--stamp); }
-.source-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow: auto; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); background: var(--paper); }
+.source-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); background: var(--paper); box-shadow: 0 20px 64px var(--mask); }
 .source-dialog::backdrop { background: var(--mask); }
-.source-dialog h3 { margin: 0 0 16px; }
-.source-field { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 12px; margin-bottom: 12px; }
+.source-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.source-heading h3 { margin: 0; font-size: 18px; }
+.source-heading h3:focus { outline: none; }
+.source-body { padding: 10px 16px; }
+#source-detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; font-size: 13px; }
+#source-detail:not(:has(.source-field)) { display: block; overflow-wrap: anywhere; }
+.source-field { min-width: 0; display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: baseline; gap: 10px; }
+.source-field-wide { grid-column: 1 / -1; }
+.source-field small { font-family: inherit; font-size: 12px; font-weight: 400; }
 .source-field span { overflow-wrap: anywhere; }
-#source-form { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
-#source-note { width: 100%; padding: 10px; background: var(--bag); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
-.source-disclaimer, .upload-privacy { font-size: 12px; line-height: 1.6; }
+.source-field.mono span { font-size: 12px; line-height: 1.6; }
+#source-form { display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: center; gap: 6px 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+#source-form label { font-size: 12px; color: var(--muted); }
+#source-note { width: 100%; min-width: 0; padding: 5px 8px; background: var(--bag); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-sm); font: inherit; font-size: 16px; }
+#source-note:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
+#source-error { grid-column: 1 / -1; margin: 4px 0 0; }
+.source-footer { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: 8px; padding: 8px 16px; background: var(--paper); border-top: 1px solid var(--line); }
+.source-footer .btn { min-height: 36px; padding: 5px 12px; }
+.upload-privacy { font-size: 12px; line-height: 1.6; }
+@media (max-width: 420px) {
+  .source-heading { padding: 10px 12px; }
+  .source-body { padding: 10px 12px; }
+  .source-field, #source-form { grid-template-columns: 64px minmax(0, 1fr); column-gap: 8px; }
+  .source-footer { padding: 8px 12px; }
+  .source-footer .btn { flex: 1; min-height: 40px; }
+}
 .upload-privacy { margin: 12px 0 0; }
 
 /* Keep the type visible above the filename baseline, outside its ellipsis. */

@@ -262,6 +262,8 @@ async function openSource(row) {
   sourceForm.hidden = true;
   sourceError.hidden = true;
   sourceSave.disabled = false;
+  sourceSave.hidden = true;
+  $('#source-context').textContent = `${t('ad.th.code')} ${row.code}`;
   $('#source-detail').textContent = t('ad.loading');
   sourceDialog.showModal();
   try {
@@ -270,12 +272,14 @@ async function openSource(row) {
     if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }
     activeSource = { code: row.code, visitorId: source.visitorId };
     $('#source-detail').replaceChildren(...[
-      [t('ad.visitorId'), source.visitorId], [t('ad.sourceLocation'), locationLabel(source)],
-      ['IP', source.ip || t('ad.sourceUnknown')], [t('ad.sourceTime'), fmtDate(source.capturedAt)],
-    ].map(([label, value]) => el('div', { class: 'source-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));
+      [t('ad.sourceLocation'), locationLabel(source), 'source-field-wide'],
+      ['IP', source.ip || t('ad.sourceUnknown'), 'mono'],
+      [t('ad.sourceTime'), fmtDate(source.capturedAt), ''],
+      [t('ad.visitorId'), source.visitorId, 'source-field-wide mono'],
+    ].map(([label, value, className]) => el('div', { class: `source-field ${className}` }, el('small', { class: 'muted' }, label), el('span', {}, value))));
     sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';
     sourceForm.hidden = false;
-    sourceNote.focus();
+    sourceSave.hidden = false;
   } catch (e) {
     if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');
   }
@@ -284,6 +288,9 @@ function closeSource() {
   sourceRequest++;
   activeSource = null;
   sourceNote.value = '';
+  sourceForm.hidden = true;
+  sourceSave.hidden = true;
+  $('#source-context').textContent = '';
   $('#source-detail').replaceChildren();
   sourceDialog.close();
 }

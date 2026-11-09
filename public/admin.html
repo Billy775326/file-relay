@@ -80,19 +80,22 @@
 </div>
 
 <dialog id="source-dialog" class="source-dialog" aria-labelledby="source-title">
-  <h3 id="source-title" data-i18n="ad.source">上传来源</h3>
-  <div id="source-detail"></div>
-  <form id="source-form" hidden>
-    <label for="source-note" data-i18n="ad.sourceNote">管理员备注</label>
-    <input id="source-note" type="text" maxlength="64" autocomplete="off">
-    <small class="muted" data-i18n="ad.sourceNoteHelp">同一访客的所有记录使用此备注；清空后恢复访客标识。</small>
-    <p class="error-box" id="source-error" hidden role="alert"></p>
-    <div class="modal-actions">
-      <button id="source-save" class="btn primary" type="submit" data-i18n="ad.sourceSave">保存备注</button>
-    </div>
-  </form>
-  <p class="muted source-disclaimer" data-i18n="ad.sourceDisclaimer">访客标识关联浏览器；IP 属地是网络出口的大致位置，不代表真实身份或精确位置。</p>
-  <button id="source-close" class="btn" type="button" data-i18n="ad.sourceClose">关闭</button>
+  <div class="source-heading">
+    <h3 id="source-title" tabindex="-1" autofocus data-i18n="ad.source">上传来源</h3>
+    <small id="source-context" class="muted mono"></small>
+  </div>
+  <div class="source-body">
+    <div id="source-detail" aria-live="polite"></div>
+    <form id="source-form" hidden>
+      <label for="source-note" data-i18n="ad.sourceNote">管理员备注</label>
+      <input id="source-note" type="text" maxlength="64" autocomplete="off">
+      <p class="error-box" id="source-error" hidden role="alert"></p>
+    </form>
+  </div>
+  <div class="source-footer">
+    <button id="source-close" class="btn ghost" type="button" data-i18n="ad.sourceClose">关闭</button>
+    <button id="source-save" class="btn primary" type="submit" form="source-form" hidden data-i18n="ad.sourceSave">保存备注</button>
+  </div>
 </dialog>
 <script type="module" src="/js/admin.js"></script>
 </body>
