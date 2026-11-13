@@ -11,8 +11,10 @@ import { getCapacityUsage } from './quota';
 import { getRetentionDays, setRetentionDays, validRetentionDays, RETENTION_DAY_MS } from './settings';
 import { getGuestLimits, setGuestLimits, validGuestLimits } from './upload-policy';
 import { checkLogin, recordLogin, loginIP, loginProtectionStatus, unblockLogin } from './login-protection';
+import { auditRequest, auditState, queryAudit } from './audit';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
+adminRoutes.use('*', auditRequest);
 
 /**
  * 管理后台入口路径:读 secret ADMIN_PATH(可选)。
@@ -84,13 +86,15 @@ adminRoutes.use('*', async (c, next) => {
       await checkLogin(c.env, ip);
       const valid = await safeEqual(bearer.slice(7), c.env.ADMIN_TOKEN);
       await recordLogin(c.env, ip, valid);
-      if (valid) return next();
+      if (valid) { auditState(c).authenticated = true; auditState(c).actor = 'token'; return next(); }
       return err(c, 401, 'unauthorized', '令牌无效');
     }
   }
   if (!(await isValidCookie(c.env, getCookie(c, 'admin')))) {
     return err(c, 401, 'unauthorized', '未登录或会话已过期');
   }
+  auditState(c).authenticated = true;
+  auditState(c).actor = 'admin';
   await next();
 });
 
@@ -107,6 +111,8 @@ adminRoutes.post('/login', async (c) => {
     return err(c, 401, 'unauthorized', '令牌无效');
   }
   await recordLogin(c.env, ip, true);
+  auditState(c).authenticated = true;
+  auditState(c).actor = 'admin';
   // 生产恒为 HTTPS;本地 http://localhost 下 Chrome/FF 仍接受 Secure cookie
   const secure = c.req.url.startsWith('https');
   setCookie(c, 'admin', await makeCookieValue(c.env), {
@@ -124,6 +130,18 @@ adminRoutes.post('/logout', (c) => {
   return c.json({ ok: true });
 });
 
+/** Read/export never expose raw headers, tokens or request bodies. */
+async function auditList(c: Context<{ Bindings: Env }>) {
+  try { return c.json(await queryAudit(c.env, c.req.query())); }
+  catch (error) {
+    return error instanceof RangeError
+      ? c.json({ error: 'bad_request', message: '日志筛选参数无效' }, 400)
+      : c.json({ error: 'audit_unavailable', message: '审计日志暂不可用，请稍后重试' }, 503);
+  }
+}
+adminRoutes.get('/audit-logs', auditList);
+adminRoutes.get('/audit-logs/export', auditList);
+
 /** Bans affect new logins only; existing authenticated sessions can inspect and unblock. */
 adminRoutes.get('/login-protection', async c => c.json(await loginProtectionStatus(c.env)));
 adminRoutes.post('/login-protection/unblock', async c => {
@@ -132,6 +150,7 @@ adminRoutes.post('/login-protection/unblock', async c => {
   if (!c.req.header('Content-Type')?.startsWith('application/json')) return c.json({ error: 'bad_request', message: '请使用 JSON' }, 415);
   const body = await c.req.json().catch(() => null) as { ip?: unknown } | null;
   if (typeof body?.ip !== 'string' || !/^(unknown|[0-9a-f:.]{3,45})$/.test(body.ip)) return err(c, 400, 'bad_request', 'IP 格式无效');
+  auditState(c).target = body.ip;
   await unblockLogin(c.env, body.ip);
   return c.json({ ok: true });
 });
@@ -144,6 +163,7 @@ adminRoutes.put('/settings', async (c) => {
   if (!c.req.header('Content-Type')?.startsWith('application/json')) return c.json({ error: 'bad_request', message: '请使用 JSON' }, 415);
   const body = await c.req.json().catch(() => null) as { expiredRetentionDays?: unknown } | null;
   if (!validRetentionDays(body?.expiredRetentionDays)) return err(c, 400, 'bad_request', '保留天数应为 0–3650 的整数');
+  auditState(c).detail.expiredRetentionDays = body.expiredRetentionDays;
   await setRetentionDays(c.env, body.expiredRetentionDays);
   return c.json({ expiredRetentionDays: body.expiredRetentionDays });
 });
@@ -157,6 +177,7 @@ adminRoutes.put('/upload-policy', async c => {
   const body: unknown = await c.req.json().catch(() => null);
   if (!validGuestLimits(body)) return err(c, 400, 'bad_request', '周次数应为 0–1000 的整数');
   const limits = { weeklyFileLimit: body.weeklyFileLimit };
+  auditState(c).detail.weeklyFileLimit = limits.weeklyFileLimit;
   await setGuestLimits(c.env, limits);
   return c.json(limits);
 });
@@ -235,6 +256,8 @@ adminRoutes.get('/shares/:code/download', async (c) => {
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
   const record = await getStore(c.env).getByCode(code);
   if (!record) return err(c, 404, 'not_found', '分享不存在');
+  auditState(c).detail.filename = (record.filename || '').slice(0, 160);
+  auditState(c).detail.sizeBytes = record.size;
   if (record.kind !== 'file') return err(c, 400, 'bad_request', '此分享不是文件');
   if (!record.r2Key) return err(c, 410, 'gone', '文件已被清理');
   const body = await readFileStream(c.env, record.r2Key);
@@ -273,6 +296,7 @@ adminRoutes.put('/shares/:code/source', async (c) => {
   if (!record) return err(c, 404, 'not_found', '分享不存在');
   if (!record.source) return c.json({ error: 'source_unrecorded', message: '此记录没有访客来源' }, 409);
   const note = body.note.trim();
+  auditState(c).detail.notePresent = !!note;
   await store.setVisitorNote(record.source.visitorId, note);
   return c.json({ visitorId: record.source.visitorId, note });
 });
@@ -285,7 +309,9 @@ adminRoutes.delete('/shares/:code', async (c) => {
 
   const store = getStore(c.env);
   const rec = await store.getByCode(code);
-  if (!rec) return c.json({ ok: true, already: true });
+  if (!rec) { auditState(c).detail.alreadyDeleted = true; return c.json({ ok: true, already: true }); }
+  auditState(c).detail.filename = (rec.filename || '').slice(0, 160);
+  auditState(c).detail.sizeBytes = rec.size;
 
   if (rec.kind === 'file') await deleteFile(c.env, rec.r2Key);
   await store.deleteByCode(code);
@@ -294,8 +320,10 @@ adminRoutes.delete('/shares/:code', async (c) => {
 
 /** 手动/外部定时触发清理:Pages 部署没有 Cron Triggers,用外部定时器打这里;
  *  Workers 粘贴部署也兼容(与 scheduled 共用 runCleanup)。鉴权见上方中间件(Bearer 或 cookie)。 */
-adminRoutes.post('/cleanup', async (c) =>
-  c.json({ ok: true, ...(await runCleanup(c.env)) }),
-);
+adminRoutes.post('/cleanup', async (c) => {
+  const result = await runCleanup(c.env);
+  auditState(c).detail = result;
+  return c.json({ ok: true, ...result });
+});
 
 export type AdminContext = Context<{ Bindings: Env }>;

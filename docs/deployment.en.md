@@ -39,6 +39,8 @@ Unnoted visitors default to five file-upload attempts per week; file sizes follo
 
 R2/D1 bindings automatically enable login protection: five failed logins within ten minutes block new logins from that IP for thirty minutes. KV-only deployments do not enable this protection. The same behavior applies to every deployment method; see the [admin guide](admin.md#登录防护).
 
+R2/D1 also enables admin audit logs without new secrets, across all deployment methods. See [audit logging](admin.md#日志审计) for retention, storage and coverage.
+
 ## A: Pages with GitHub
 
 ### 1. Create and build

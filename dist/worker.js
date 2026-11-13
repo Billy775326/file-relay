@@ -150,6 +150,12 @@ setInlineAssets({ "404.html": `<!doctype html>
   </section>\r
 \r
   <section id="admin-panel" hidden>\r
+    <nav class="admin-nav" aria-label="\u7BA1\u7406\u9875\u9762" data-i18n-aria="audit.navigation">\r
+      <button id="admin-files-tab" class="btn small" type="button" aria-pressed="true" data-i18n="audit.files">\u6587\u4EF6\u7BA1\u7406</button>\r
+      <button id="admin-audit-tab" class="btn small ghost" type="button" aria-pressed="false" data-i18n="audit.title">\u65E5\u5FD7\u5BA1\u8BA1</button>\r
+    </nav>\r
+    <p id="audit-write-warning" class="error-box" hidden role="alert" data-i18n="audit.writeFailed">\u64CD\u4F5C\u5DF2\u5904\u7406\uFF0C\u4F46\u5BA1\u8BA1\u8BB0\u5F55\u672A\u4FDD\u5B58\uFF0C\u8BF7\u68C0\u67E5\u65E5\u5FD7\u5B58\u50A8\u3002</p>\r
+    <div id="admin-files-view">\r
     <div class="stats-row" id="stats-row"></div>\r
     <div class="card" style="padding:14px">\r
       <div class="retention-settings">\r
@@ -204,6 +210,33 @@ setInlineAssets({ "404.html": `<!doctype html>
         <button id="btn-logout" class="btn ghost small" data-i18n="ad.logout">\u9000\u51FA\u767B\u5F55</button>\r
       </div>\r
     </div>\r
+    </div>\r
+    <section id="admin-audit-view" class="card audit-card" hidden aria-labelledby="audit-title">\r
+      <div class="audit-heading">\r
+        <div><h2 id="audit-title" data-i18n="audit.title">\u65E5\u5FD7\u5BA1\u8BA1</h2><small class="muted" data-i18n="audit.retention">\u6700\u8FD1 30 \u5929\uFF0C\u6700\u591A 1,000 \u6761\uFF1B\u65F6\u95F4\u6309\u672C\u5730\u65F6\u533A\u663E\u793A</small></div>\r
+        <div class="audit-actions"><button id="audit-export" class="btn small ghost" type="button" data-i18n="audit.export">\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C</button><button id="audit-refresh" class="btn small" type="button" data-i18n="ad.refresh">\u21BB \u5237\u65B0</button></div>\r
+      </div>\r
+      <div class="audit-categories" role="group" aria-label="\u65E5\u5FD7\u5206\u7C7B" data-i18n-aria="audit.categories">\r
+        <button type="button" data-category="all" aria-pressed="true" data-i18n="audit.all">\u5168\u90E8\u65E5\u5FD7</button>\r
+        <button type="button" data-category="login" aria-pressed="false" data-i18n="audit.login">\u767B\u5F55\u65E5\u5FD7</button>\r
+        <button type="button" data-category="operation" aria-pressed="false" data-i18n="audit.operation">\u64CD\u4F5C\u65E5\u5FD7</button>\r
+        <button type="button" data-category="security" aria-pressed="false" data-i18n="audit.security">\u5B89\u5168\u4E8B\u4EF6</button>\r
+      </div>\r
+      <form id="audit-filter" class="audit-filter">\r
+        <label><span data-i18n="audit.result">\u7ED3\u679C</span><select id="audit-result"><option value="all" data-i18n="audit.anyResult">\u5168\u90E8\u7ED3\u679C</option><option value="success" data-i18n="audit.success">\u6210\u529F</option><option value="failed" data-i18n="audit.failed">\u5931\u8D25</option><option value="blocked" data-i18n="audit.blocked">\u5DF2\u62E6\u622A</option></select></label>\r
+        <label><span data-i18n="audit.from">\u5F00\u59CB\u65E5\u671F</span><input id="audit-from" type="date"></label>\r
+        <label><span data-i18n="audit.to">\u7ED3\u675F\u65E5\u671F</span><input id="audit-to" type="date"></label>\r
+        <label class="audit-search"><span data-i18n="audit.keyword">IP / \u64CD\u4F5C\u5BF9\u8C61</span><input id="audit-q" type="search" maxlength="80" placeholder="\u641C\u7D22 IP \u6216\u53D6\u4EF6\u7801" data-i18n-ph="audit.search"></label>\r
+        <div class="audit-actions"><button class="btn small primary" type="submit" data-i18n="audit.filter">\u7B5B\u9009</button><button id="audit-reset" class="btn small ghost" type="button" data-i18n="audit.reset">\u91CD\u7F6E</button></div>\r
+      </form>\r
+      <p id="audit-error" class="error-box" role="alert" hidden></p>\r
+      <p id="audit-state" class="muted" role="status"></p>\r
+      <div class="table-wrap audit-table-wrap"><table class="audit-table">\r
+        <thead><tr><th data-i18n="audit.time">\u65F6\u95F4</th><th data-i18n="audit.action">\u64CD\u4F5C</th><th data-i18n="audit.result">\u7ED3\u679C</th><th data-i18n="audit.actor">\u64CD\u4F5C\u8EAB\u4EFD</th><th data-i18n="audit.source">\u6765\u6E90 IP / \u5C5E\u5730</th><th data-i18n="audit.target">\u64CD\u4F5C\u5BF9\u8C61</th><th data-i18n="audit.details">\u8BE6\u60C5</th></tr></thead>\r
+        <tbody id="audit-body"></tbody>\r
+      </table></div>\r
+      <div class="row-between audit-pager"><button id="audit-prev" class="btn small" type="button" disabled data-i18n="ad.prev">\u4E0A\u4E00\u9875</button><small id="audit-page" class="muted" role="status"></small><button id="audit-next" class="btn small" type="button" disabled data-i18n="ad.next">\u4E0B\u4E00\u9875</button></div>\r
+    </section>\r
   </section>\r
 </main>\r
 \r
@@ -251,6 +284,11 @@ setInlineAssets({ "404.html": `<!doctype html>
     <button id="file-close" class="btn ghost" type="button" data-i18n="ad.sourceClose">\u5173\u95ED</button>\r
     <a id="file-download" class="btn primary" target="_blank" rel="noopener noreferrer" hidden data-i18n="ad.download">\u4E0B\u8F7D</a>\r
   </div>\r
+</dialog>\r
+<dialog id="audit-dialog" class="source-dialog" aria-labelledby="audit-detail-title">\r
+  <div class="source-heading"><h3 id="audit-detail-title" tabindex="-1" autofocus data-i18n="audit.details">\u65E5\u5FD7\u8BE6\u60C5</h3></div>\r
+  <div class="source-body"><div id="audit-detail" class="file-detail-grid"></div></div>\r
+  <div class="source-footer"><button id="audit-close" class="btn ghost" type="button" data-i18n="ad.sourceClose">\u5173\u95ED</button></div>\r
 </dialog>\r
 <script type="module" src="/js/admin.js"><\/script>\r
 </body>\r
@@ -386,7 +424,7 @@ setInlineAssets({ "404.html": `<!doctype html>
 <script type="module" src="/js/index.js"><\/script>
 </body>
 </html>
-`, "js/admin.js": "import { $, api, fmtBytes, fmtDate, fmtDuration, toast, initTheme, el } from './common.js';\r\nimport { LANG, t, onLangChange, initI18n } from './i18n.js';\r\n\r\ninitTheme();\r\ninitI18n();\r\n\r\nconst loginCard = $('#admin-login');\r\nconst panel = $('#admin-panel');\r\nconst loginError = $('#login-error');\r\nconst tokenInput = $('#admin-token');\r\nconst statsRow = $('#stats-row');\r\nconst tbody = $('#shares-body');\r\nconst btnPrev = $('#btn-prev');\r\nconst btnNext = $('#btn-next');\r\nconst btnRefresh = $('#btn-refresh');\r\nconst pageInfo = $('#page-info');\r\n\r\nconst LIMIT = 20; // \u6BCF\u9875\u884C\u6570:\u540E\u7AEF\u5217\u8868\u4F1A\u9010\u884C\u9A8C\u6D3B(\u8BFB KV),\u9875\u5C0F\u4E00\u70B9\u7701 subrequest\r\nlet offset = 0;\r\nlet total = 0;\r\n\r\n/* \u8BED\u8A00\u5207\u6362:\u9762\u677F\u53EF\u89C1\u65F6\u6309\u65B0\u8BED\u8A00\u91CD\u62C9\u6587\u6848 */\r\nonLangChange(() => {\r\n  if ($('#source-dialog').open) closeSource();\r\n  if ($('#file-dialog').open) closeFileDetails();\r\n  if (!panel.hidden) {\r\n    loadStats();\r\n    loadList();\r\n    loadLoginProtection();\r\n  }\r\n});\r\n\r\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\r\n(async () => {\r\n  try {\r\n    await api('/api/admin/stats');\r\n    showPanel();\r\n  } catch {\r\n    loginCard.hidden = false;\r\n    tokenInput.focus();\r\n  }\r\n})();\r\n\r\nasync function login() {\r\n  const token = tokenInput.value.trim();\r\n  if (!token || $('#btn-login').disabled) return;\r\n  $('#btn-login').disabled = true;\r\n  loginError.hidden = true;\r\n  try {\r\n    await api('/api/admin/login', { method: 'POST', body: { token } });\r\n    showPanel();\r\n  } catch (e) {\r\n    loginError.textContent = e.code === 'login_blocked' ? t('ad.loginBlocked')\r\n      : e.code === 'login_protection_unavailable' ? t('ad.guardUnavailable') : e.message || t('ad.badToken');\r\n    loginError.hidden = false;\r\n  } finally { $('#btn-login').disabled = false; }\r\n}\r\n$('#btn-login').addEventListener('click', login);\r\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\r\n\r\nfunction showPanel() {\r\n  loginCard.hidden = true;\r\n  panel.hidden = false;\r\n  loadStats();\r\n  loadList();\r\n  loadSettings();\r\n  loadGuestPolicy();\r\n  loadLoginProtection();\r\n}\r\n\r\n$('#btn-logout').addEventListener('click', async () => {\r\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\r\n  location.reload();\r\n});\r\n\r\n/* ---------- \u7EDF\u8BA1 ---------- */\r\nlet lastStats = null; // \u5220\u9664\u540E\u672C\u5730\u9012\u51CF\u7528,\u907F\u514D\u7ACB\u5373\u91CD\u62C9\u649E\u4E0A KV \u6700\u7EC8\u4E00\u81F4\u7A97\u53E3\r\n\r\nfunction renderStats(s) {\r\n  const counts = [\r\n    [s.total, 'ad.total'], [s.active, 'ad.active'], [s.files, 'ad.files'],\r\n    [s.texts, 'ad.texts'], [s.todayCreated, 'ad.today'],\r\n  ];\r\n  const capacity = s.fileBackend === 'r2' ? s.storage : null;\r\n  const storageCard = el('div', { class: 'stat-card storage-card' },\r\n    el('small', {}, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes')),\r\n    capacity\r\n      ? el('div', { class: 'storage-value' },\r\n          el('b', {}, fmtBytes(capacity.usedBytes)),\r\n          el('span', { class: 'storage-total' }, ` / ${fmtBytes(capacity.capacityBytes)}`))\r\n      : el('div', { class: 'storage-value' }, el('b', {}, s.fileBackend === 'r2'\r\n          ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),\r\n  );\r\n  if (capacity) {\r\n    const ratio = Math.min(1, Math.max(0, capacity.usedBytes / capacity.capacityBytes));\r\n    storageCard.append(\r\n      el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,\r\n        value: capacity.usedBytes, ariaLabel: t('ad.storage') }),\r\n      el('div', { class: 'storage-caption' },\r\n        el('small', {}, t('ad.storageReserved')), el('small', {}, `${Math.round(ratio * 100)}%`)),\r\n    );\r\n  }\r\n  statsRow.replaceChildren(\r\n    el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>\r\n      el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),\r\n    storageCard,\r\n  );\r\n}\r\n\r\nasync function loadStats() {\r\n  try {\r\n    lastStats = await api('/api/admin/stats');\r\n    renderStats(lastStats);\r\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\r\n}\r\n\r\n/** \u5220\u9664\u6210\u529F\u540E\u672C\u5730\u540C\u6B65\u7EDF\u8BA1(\u670D\u52A1\u7AEF KV \u7D22\u5F15\u6700\u957F 60s \u624D\u53CD\u6620\u5220\u9664,\u91CD\u62C9\u4F1A\u770B\u5230\u65E7\u6570) */\r\nasync function statsAfterDelete(r) {\r\n  if (!lastStats) return;\r\n  const s = { ...lastStats };\r\n  s.total = Math.max(0, s.total - 1);\r\n  if (r.kind === 'file') s.files = Math.max(0, s.files - 1);\r\n  else s.texts = Math.max(0, s.texts - 1);\r\n  s.totalBytes = Math.max(0, s.totalBytes - r.size);\r\n  if (r.status === 'active') s.active = Math.max(0, s.active - 1);\r\n  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);\r\n  if (r.created_at >= todayStart.getTime()) s.todayCreated = Math.max(0, s.todayCreated - 1);\r\n  lastStats = s;\r\n  renderStats(s);\r\n  if (s.fileBackend === 'r2') {\r\n    try { s.storage = (await api('/api/admin/stats')).storage; }\r\n    catch { s.storage = null; } // Do not present stale capacity as current after deletion.\r\n    if (lastStats === s) renderStats(s);\r\n  }\r\n}\r\n\r\n/* ---------- \u5217\u8868 ---------- */\r\nconst STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };\r\nconst KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };\r\n\r\nasync function loadList() {\r\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));\r\n  try {\r\n    const data = await api(`/api/admin/shares?limit=${LIMIT}&offset=${offset}`);\r\n    total = data.total;\r\n    const rows = data.rows ?? [];\r\n    tbody.replaceChildren();\r\n    for (const r of rows) {\r\n      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\r\n      tbody.append(\r\n        el('tr', {},\r\n          el('td', { class: 'mono' }, r.code),\r\n          el('td', { class: 'share-content-cell' },\r\n            el('div', { class: 'share-filename-line' },\r\n              r.kind === 'file'\r\n                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)\r\n                : el('span', { class: 'share-filename', title: content }, content),\r\n              el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),\r\n          sourceCell(r),\r\n          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),\r\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\r\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),\r\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),\r\n          el('td', {}, fmtDate(r.created_at)),\r\n          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),\r\n        ),\r\n      );\r\n    }\r\n    if (rows.length === 0) {\r\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));\r\n    }\r\n    updatePager();\r\n  } catch (e) {\r\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));\r\n  }\r\n}\r\n\r\nfunction updatePager() {\r\n  const page = Math.floor(offset / LIMIT) + 1;\r\n  const pages = Math.max(1, Math.ceil(total / LIMIT));\r\n  pageInfo.textContent = t('ad.page', page, pages, total);\r\n  btnPrev.disabled = offset <= 0;\r\n  btnNext.disabled = offset + LIMIT >= total;\r\n}\r\nbtnPrev.addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); loadList(); });\r\nbtnNext.addEventListener('click', () => { offset += LIMIT; loadList(); });\r\nbtnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });\r\n\r\n/* ---------- \u5220\u9664:\u7968\u636E\u98CE\u786E\u8BA4\u5F39\u7A97 + \u672C\u5730\u540C\u6B65(KV \u6700\u7EC8\u4E00\u81F4,\u5220\u9664\u540E\u7ACB\u5373\u91CD\u62C9\u4F1A\u770B\u5230\u6B8B\u7559\u7D22\u5F15) ---------- */\r\nconst delMask = $('#del-mask');\r\nconst delTarget = $('#del-target');\r\nlet delResolve = null;\r\n\r\nfunction confirmDelete(r) {\r\n  const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\r\n  delTarget.replaceChildren(\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.code')), el('b', { class: 'mono' }, r.code)),\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.content')), el('span', {}, content)),\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),\r\n      el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),\r\n  );\r\n  delMask.hidden = false;\r\n  $('#del-cancel').focus();\r\n  return new Promise((resolve) => { delResolve = resolve; });\r\n}\r\n\r\nfunction closeDelModal(v) {\r\n  if (!delResolve) return;\r\n  delMask.hidden = true;\r\n  const resolve = delResolve;\r\n  delResolve = null;\r\n  resolve(v);\r\n}\r\n$('#del-cancel').addEventListener('click', () => closeDelModal(false));\r\n$('#del-ok').addEventListener('click', () => closeDelModal(true));\r\ndelMask.addEventListener('click', (e) => e.target === delMask && closeDelModal(false));\r\ndocument.addEventListener('keydown', (e) => e.key === 'Escape' && closeDelModal(false));\r\n\r\nasync function remove(r, tr) {\r\n  if (!(await confirmDelete(r))) return;\r\n  try {\r\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\r\n    toast(t('ad.deleted'), 'ok');\r\n    statsAfterDelete(r);\r\n    total = Math.max(0, total - 1);\r\n    tr?.remove();\r\n    // \u5F53\u524D\u9875\u5220\u7A7A\u4E14\u4E0D\u5728\u7B2C\u4E00\u9875:\u9000\u56DE\u4E0A\u4E00\u9875\u91CD\u62C9,\u907F\u514D\u505C\u5728\u7A7A\u9875\r\n    if (tbody.rows.length === 0 && offset > 0) {\r\n      offset = Math.max(0, offset - LIMIT);\r\n      loadList();\r\n    } else {\r\n      updatePager();\r\n    }\r\n  } catch (e) {\r\n    toast(e.message || t('ad.deleteFail'), 'error');\r\n  }\r\n}\r\n\r\n/* Upload source details: source labels are text nodes, never interpolated HTML. */\r\nconst sourceDialog = $('#source-dialog');\r\nconst sourceForm = $('#source-form');\r\nconst sourceNote = $('#source-note');\r\nconst sourceSave = $('#source-save');\r\nconst sourceError = $('#source-error');\r\nconst noteOverrides = new Map(); // Read-your-write while KV propagation completes.\r\nlet sourceRequest = 0;\r\nlet activeSource = null;\r\n\r\nfunction visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }\r\nfunction sourceLabel(source) {\r\n  const override = noteOverrides.get(source.visitorId);\r\n  return (override !== undefined ? override : source.note) || visitorLabel(source.visitorId);\r\n}\r\nfunction locationLabel(source) {\r\n  let country = source.country;\r\n  if (country && /^[A-Z]{2}$/.test(country)) {\r\n    country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\r\n  }\r\n  return [...new Set([country, source.region, source.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\r\n}\r\nfunction sourceCell(row) {\r\n  if (!row.source) return el('td', { class: 'source-cell muted' }, t('ad.sourceUnrecorded'));\r\n  const button = el('button', { class: 'source-link', type: 'button', onclick: () => openSource(row) }, sourceLabel(row.source));\r\n  button.dataset.visitor = row.source.visitorId;\r\n  button.title = t('ad.source');\r\n  return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));\r\n}\r\nasync function openSource(row) {\r\n  const request = ++sourceRequest;\r\n  activeSource = null;\r\n  sourceForm.hidden = true;\r\n  sourceError.hidden = true;\r\n  sourceSave.disabled = false;\r\n  sourceSave.hidden = true;\r\n  $('#source-context').textContent = `${t('ad.th.code')} ${row.code}`;\r\n  $('#source-detail').textContent = t('ad.loading');\r\n  sourceDialog.showModal();\r\n  try {\r\n    const { source } = await api(`/api/admin/shares/${row.code}/source`);\r\n    if (request !== sourceRequest || !sourceDialog.open) return;\r\n    if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }\r\n    activeSource = { code: row.code, visitorId: source.visitorId };\r\n    $('#source-detail').replaceChildren(...[\r\n      [t('ad.sourceLocation'), locationLabel(source), 'source-field-wide'],\r\n      ['IP', source.ip || t('ad.sourceUnknown'), 'mono'],\r\n      [t('ad.sourceTime'), fmtDate(source.capturedAt), ''],\r\n      [t('ad.visitorId'), source.visitorId, 'source-field-wide mono'],\r\n    ].map(([label, value, className]) => el('div', { class: `source-field ${className}` }, el('small', { class: 'muted' }, label), el('span', {}, value))));\r\n    sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';\r\n    sourceForm.hidden = false;\r\n    sourceSave.hidden = false;\r\n  } catch (e) {\r\n    if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');\r\n  }\r\n}\r\nfunction closeSource() {\r\n  sourceRequest++;\r\n  activeSource = null;\r\n  sourceNote.value = '';\r\n  sourceForm.hidden = true;\r\n  sourceSave.hidden = true;\r\n  $('#source-context').textContent = '';\r\n  $('#source-detail').replaceChildren();\r\n  sourceDialog.close();\r\n}\r\nsourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });\r\n$('#source-close').addEventListener('click', closeSource);\r\nsourceForm.addEventListener('submit', async (e) => {\r\n  e.preventDefault();\r\n  if (!activeSource || sourceSave.disabled) return;\r\n  const { code } = activeSource;\r\n  const request = sourceRequest;\r\n  sourceSave.disabled = true;\r\n  sourceError.hidden = true;\r\n  try {\r\n    const result = await api(`/api/admin/shares/${code}/source`, { method: 'PUT', body: { note: sourceNote.value } });\r\n    noteOverrides.set(result.visitorId, result.note);\r\n    document.querySelectorAll('[data-visitor]').forEach((button) => {\r\n      if (button.dataset.visitor === result.visitorId) button.textContent = result.note || visitorLabel(result.visitorId);\r\n    });\r\n    if (request === sourceRequest) closeSource();\r\n    toast(t('ad.sourceSaved'));\r\n  } catch (error) {\r\n    if (request === sourceRequest) {\r\n      sourceError.textContent = error.message || t('ad.loadFail');\r\n      sourceError.hidden = false;\r\n    }\r\n  } finally {\r\n    if (request === sourceRequest) sourceSave.disabled = false;\r\n  }\r\n});\r\n\r\n/* File details use their own request generation so closed dialogs stay empty. */\r\nconst fileDialog = $('#file-dialog');\r\nconst fileDetail = $('#file-detail');\r\nconst fileDownload = $('#file-download');\r\nlet fileRequest = 0;\r\nfunction fileFormat(filename) {\r\n  const ext = filename?.match(/\\.([a-z0-9]{1,12})$/i)?.[1]?.toLowerCase();\r\n  const groups = {\r\n    archive: ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'],\r\n    program: ['exe', 'msi', 'apk', 'dmg', 'deb', 'rpm'],\r\n    document: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'epub'],\r\n    image: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'bmp', 'ico', 'heic', 'avif'],\r\n    video: ['mp4', 'mkv', 'mov', 'avi', 'webm', 'm4v'],\r\n    audio: ['mp3', 'wav', 'flac', 'ogg', 'm4a', 'aac'],\r\n    text: ['txt', 'md', 'csv', 'json', 'xml', 'html', 'js', 'ts', 'py', 'log'],\r\n  };\r\n  if (!ext) return t('ad.formatUnknown');\r\n  const group = Object.entries(groups).find(([, extensions]) => extensions.includes(ext))?.[0] || 'file';\r\n  const keys = { archive: 'ad.format.archive', program: 'ad.format.program', document: 'ad.format.document', image: 'ad.format.image', video: 'ad.format.video', audio: 'ad.format.audio', text: 'ad.format.text', file: 'ad.format.file' };\r\n  return `${ext.toUpperCase()} \xB7 ${t(keys[group])}`;\r\n}\r\nfunction fileField(label, value, secondary) {\r\n  return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),\r\n    el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);\r\n}\r\n\r\nasync function openFileDetails(code) {\r\n  const request = ++fileRequest;\r\n  fileDownload.hidden = true;\r\n  fileDownload.removeAttribute('href');\r\n  fileDownload.removeAttribute('download');\r\n  $('#file-context').textContent = `${t('ad.th.code')} ${code}`;\r\n  fileDetail.textContent = t('ad.loading');\r\n  fileDialog.showModal();\r\n  try {\r\n    const detail = await api(`/api/admin/shares/${code}`);\r\n    if (request !== fileRequest || !fileDialog.open) return;\r\n    const now = detail.evaluatedAt ?? Date.now();\r\n    const state = detail.storage?.state || 'unknown';\r\n    const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };\r\n    const source = detail.source;\r\n    const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',\r\n      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }); },\r\n    }, sourceLabel(source)) : t('ad.sourceUnrecorded');\r\n    if (source) sourceButton.dataset.visitor = source.visitorId;\r\n    const lifetime = detail.expireAt === null ? null\r\n      : t(detail.expireAt > now ? 'ad.timeLeft' : 'ad.timeExpired', fmtDuration(Math.abs(detail.expireAt - now) / 1000));\r\n    const cleanupLabels = { permanent: 'ad.cleanupPermanent', active: 'ad.cleanupActive', retained: 'ad.cleanupRetained', pending: 'ad.cleanupPending' };\r\n    const cleanupLabel = t(cleanupLabels[detail.cleanupStatus] || 'ad.sourceUnknown', detail.retentionDays);\r\n    const technical = el('details', { class: 'file-technical file-wide' },\r\n      el('summary', {}, t('ad.technical')),\r\n      el('div', { class: 'file-technical-grid' },\r\n        fileField('MIME', detail.mime || t('ad.sourceUnknown')),\r\n        Number.isSafeInteger(detail.storage?.size) ? fileField(t('ad.storedSize'), t('ad.exactBytes', detail.storage.size.toLocaleString())) : null,\r\n        detail.storage?.uploadedAt != null ? fileField(t('ad.storedAt'), fmtDate(detail.storage.uploadedAt)) : null,\r\n      ), el('small', { class: 'muted' }, t('ad.formatHint')));\r\n    fileDetail.replaceChildren(\r\n      el('div', { class: 'file-identity file-wide' },\r\n        el('strong', {}, detail.filename || t('ad.unnamed')), el('small', { class: 'muted' }, fileFormat(detail.filename))),\r\n      fileField(t('ad.th.size'), fmtBytes(detail.size), t('ad.exactBytes', detail.size.toLocaleString())),\r\n      fileField(t('ad.fileAvailability'), el('span', { class: `badge ${state === 'available' ? 'active' : state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state]))),\r\n      fileField(t('ad.uploader'), sourceButton, source ? locationLabel(source) : null),\r\n      fileField(t('ad.shareState'), el('span', { class: `badge ${detail.status}` }, t(STATUS_KEY[detail.status]))),\r\n      fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '\u221E'}`),\r\n      fileField(t('ad.th.created'), fmtDate(detail.createdAt)),\r\n      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt), lifetime),\r\n      fileField(t('ad.cleanupAfter'), detail.cleanupAfter === null ? t('ad.forever') : fmtDate(detail.cleanupAfter), cleanupLabel),\r\n      technical,\r\n    );\r\n    fileDownload.href = `/api/admin/shares/${code}/download`;\r\n    fileDownload.download = detail.filename || 'file';\r\n    fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');\r\n    fileDownload.hidden = state === 'missing';\r\n  } catch (error) {\r\n    if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');\r\n  }\r\n}\r\nfunction closeFileDetails() {\r\n  fileRequest++;\r\n  fileDetail.replaceChildren();\r\n  $('#file-context').textContent = '';\r\n  fileDownload.hidden = true;\r\n  fileDownload.removeAttribute('href');\r\n  fileDownload.removeAttribute('download');\r\n  fileDialog.close();\r\n}\r\n$('#file-close').addEventListener('click', closeFileDetails);\r\nfileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });\r\n\r\n/* Keep unsaved input local; only a validated save changes retention. */\r\nconst retentionInput = $('#retention-days');\r\nconst retentionSave = $('#retention-save');\r\nconst retentionError = $('#retention-error');\r\nasync function loadSettings() {\r\n  retentionInput.disabled = true;\r\n  retentionSave.disabled = true;\r\n  retentionError.hidden = true;\r\n  $('#retention-retry').hidden = true;\r\n  try {\r\n    const settings = await api('/api/admin/settings');\r\n    if (!Number.isInteger(settings.expiredRetentionDays) || settings.expiredRetentionDays < 0 || settings.expiredRetentionDays > 3650) throw new Error(t('ad.loadFail'));\r\n    retentionInput.value = settings.expiredRetentionDays;\r\n    retentionInput.disabled = false;\r\n    retentionSave.disabled = false;\r\n  } catch (error) {\r\n    retentionError.textContent = error.message || t('ad.loadFail');\r\n    retentionError.hidden = false;\r\n    $('#retention-retry').hidden = false;\r\n  }\r\n}\r\n$('#retention-retry').addEventListener('click', loadSettings);\r\n$('#retention-form').addEventListener('submit', async e => {\r\n  e.preventDefault();\r\n  if (retentionSave.disabled || !retentionInput.reportValidity()) return;\r\n  retentionSave.disabled = true;\r\n  retentionInput.disabled = true;\r\n  retentionError.hidden = true;\r\n  try {\r\n    const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });\r\n    retentionInput.value = settings.expiredRetentionDays;\r\n    toast(t('ad.settingsSaved'), 'ok');\r\n  } catch (error) {\r\n    retentionError.textContent = error.message || t('ad.loadFail');\r\n    retentionError.hidden = false;\r\n  } finally {\r\n    retentionInput.disabled = false;\r\n    retentionSave.disabled = false;\r\n  }\r\n});\r\n\r\nconst guestWeekly = $('#guest-weekly');\r\nconst guestSave = $('#guest-save');\r\nconst guestError = $('#guest-error');\r\nfunction guestBusy(busy) {\r\n  for (const control of [guestWeekly, guestSave]) control.disabled = busy;\r\n}\r\nasync function loadGuestPolicy() {\r\n  guestBusy(true);\r\n  guestError.hidden = true;\r\n  $('#guest-retry').hidden = true;\r\n  try {\r\n    const policy = await api('/api/admin/upload-policy');\r\n    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000) throw new Error(t('ad.loadFail'));\r\n    guestWeekly.value = policy.weeklyFileLimit;\r\n    guestBusy(false);\r\n  } catch (error) {\r\n    guestError.textContent = error.message || t('ad.loadFail');\r\n    guestError.hidden = false;\r\n    $('#guest-retry').hidden = false;\r\n  }\r\n}\r\n$('#guest-retry').addEventListener('click', loadGuestPolicy);\r\n$('#guest-policy-form').addEventListener('submit', async e => {\r\n  e.preventDefault();\r\n  if (guestSave.disabled || !e.target.reportValidity()) return;\r\n  const body = { weeklyFileLimit: Number(guestWeekly.value) };\r\n  guestBusy(true);\r\n  guestError.hidden = true;\r\n  try {\r\n    await api('/api/admin/upload-policy', { method: 'PUT', body });\r\n    toast(t('ad.guestSaved'), 'ok');\r\n  } catch (error) {\r\n    guestError.textContent = error.message || t('ad.loadFail');\r\n    guestError.hidden = false;\r\n  } finally { guestBusy(false); }\r\n});\r\n\r\nlet guardRequest = 0;\r\nasync function loadLoginProtection() {\r\n  const request = ++guardRequest;\r\n  const refresh = $('#login-guard-refresh');\r\n  const error = $('#login-guard-error');\r\n  refresh.disabled = true;\r\n  error.hidden = true;\r\n  $('#login-guard-bans').replaceChildren();\r\n  $('#login-guard-status').textContent = '';\r\n  try {\r\n    const data = await api('/api/admin/login-protection');\r\n    if (request !== guardRequest) return;\r\n    if (typeof data.enabled !== 'boolean' || !Array.isArray(data.bans) ||\r\n        ![data.maxFailures, data.windowSeconds, data.banSeconds].every(n => Number.isInteger(n) && n > 0)) throw new Error(t('ad.loadFail'));\r\n    $('#login-guard-status').textContent = data.enabled\r\n      ? t('ad.guardRule', data.windowSeconds / 60, data.maxFailures, data.banSeconds / 60) : t('ad.guardDisabled');\r\n    if (!data.enabled) return;\r\n    if (!data.bans.length) $('#login-guard-bans').append(el('small', { class: 'muted' }, t('ad.guardEmpty')));\r\n    for (const ban of data.bans) {\r\n      const button = el('button', { class: 'btn small ghost', type: 'button' }, t('ad.guardUnblock'));\r\n      button.addEventListener('click', async () => {\r\n        button.disabled = true;\r\n        error.hidden = true;\r\n        try {\r\n          await api('/api/admin/login-protection/unblock', { method: 'POST', body: { ip: ban.ip } });\r\n          toast(t('ad.guardUnblocked'), 'ok');\r\n          await loadLoginProtection();\r\n        } catch (e) {\r\n          error.textContent = e.message || t('ad.loadFail');\r\n          error.hidden = false;\r\n          button.disabled = false;\r\n        }\r\n      });\r\n      $('#login-guard-bans').append(el('div', { class: 'login-guard-row' },\r\n        el('div', { class: 'login-guard-info' },\r\n          el('b', {}, ban.ip === 'unknown' ? t('ad.guardUnknown') : ban.ip),\r\n          el('small', { class: 'muted' }, t('ad.guardFailures', ban.failures) + ' \xB7 ' + t('ad.guardUntil', fmtDate(ban.bannedUntil))),\r\n          el('small', { class: 'muted' }, t('ad.guardLast', fmtDate(ban.lastFailedAt)))), button));\r\n    }\r\n  } catch (e) {\r\n    if (request !== guardRequest) return;\r\n    error.textContent = e.message || t('ad.loadFail');\r\n    error.hidden = false;\r\n  } finally { if (request === guardRequest) refresh.disabled = false; }\r\n}\r\n$('#login-guard-refresh').addEventListener('click', loadLoginProtection);\r\n", "js/common.js": "import { t } from './i18n.js';\n\nexport const $ = (sel, el = document) => el.querySelector(sel);\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\n\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\nexport async function api(path, opts = {}) {\n  const res = await fetch(path, {\n    method: opts.method || 'GET',\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\n  });\n  let data = null;\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\n  if (!res.ok) {\n    const e = new Error(data?.message || t('req.fail', res.status));\n    e.code = data?.error || 'unknown';\n    e.status = res.status;\n    e.remainingBytes = data?.remainingBytes;\n    throw e;\n  }\n  return data;\n}\n\nexport function fmtBytes(n) {\n  if (!Number.isFinite(n) || n < 0) return '-';\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\n  let i = 0;\n  while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 100) / 100;\n  return `${v} ${units[i]}`;\n}\n\n/** \u6C38\u4E45\u5206\u4EAB\u8FD4\u56DE null,\u7531\u8C03\u7528\u65B9\u6309\u8BED\u8A00\u6E32\u67D3\u300C\u6C38\u4E45 / Forever\u300D */\nexport function fmtDate(ms) {\n  if (ms === null || ms === undefined) return null;\n  const d = new Date(ms);\n  const p = (x) => String(x).padStart(2, '0');\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\n}\n\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6,\u5355\u4F4D\u8BCD\u968F\u8BED\u8A00 */\nexport function fmtDuration(sec) {\n  if (!Number.isFinite(sec) || sec < 0) return '-';\n  if (sec < 1) return t('dur.ms');\n  if (sec < 60) return t('dur.s', Math.round(sec));\n  if (sec < 3600) {\n    const m = Math.floor(sec / 60);\n    const s = Math.round(sec % 60);\n    return s ? t('dur.hm', m, s) : t('dur.h', m);\n  }\n  if (sec < 86400) {\n    const h = Math.floor(sec / 3600);\n    const m = Math.round((sec % 3600) / 60);\n    return m ? t('dur.hH', h, m) : t('dur.hH2', h);\n  }\n  return t('dur.d', Math.round(sec / 86400));\n}\n\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\nexport function iconFor(name = '', mime = '') {\n  const ext = (name.split('.').pop() || '').toLowerCase();\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\n  return '\u{1F4E6}';\n}\n\nexport async function copyText(text) {\n  try {\n    await navigator.clipboard.writeText(text);\n    return true;\n  } catch { /* \u8D70\u964D\u7EA7 */ }\n  try {\n    const ta = document.createElement('textarea');\n    ta.value = text;\n    ta.style.cssText = 'position:fixed;opacity:0';\n    document.body.appendChild(ta);\n    ta.select();\n    const ok = document.execCommand('copy');\n    ta.remove();\n    return ok;\n  } catch {\n    return false;\n  }\n}\n\nexport function toast(msg, type = 'info') {\n  let host = $('#toast-host');\n  if (!host) {\n    host = document.createElement('div');\n    host.id = 'toast-host';\n    document.body.appendChild(host);\n  }\n  const t = document.createElement('div');\n  t.className = `toast ${type}`;\n  t.textContent = msg;\n  host.appendChild(t);\n  requestAnimationFrame(() => t.classList.add('show'));\n  setTimeout(() => {\n    t.classList.remove('show');\n    setTimeout(() => t.remove(), 300);\n  }, 2400);\n}\n\nexport function initTheme() {\n  const btn = $('#theme-btn');\n  const meta = $('meta[name=\"theme-color\"]');\n  const sync = () => {\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\n  };\n  sync();\n  btn?.addEventListener('click', () => {\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\n    localStorage.setItem('theme', next);\n    document.documentElement.dataset.theme = next;\n    sync();\n  });\n}\n\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\nexport function el(tag, attrs = {}, ...children) {\n  const n = document.createElement(tag);\n  for (const [k, v] of Object.entries(attrs)) {\n    if (k === 'class') n.className = v;\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\n    else n[k] = v;\n  }\n  for (const c of children.flat(Infinity)) {\n    if (c == null || c === false) continue;\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\n  }\n  return n;\n}\n", "js/i18n.js": `/**\r
+`, "js/admin-audit.js": "import { $, api, el, fmtDate } from './common.js';\nimport { t, LANG, onLangChange } from './i18n.js';\n\nexport function initAudit() {\n  const view = $('#admin-audit-view');\n  const body = $('#audit-body');\n  const dialog = $('#audit-dialog');\n  let category = 'all', offset = 0, total = 0, request = 0;\n  let filters = {}, rows = [], available = false;\n  const limit = 20;\n  const action = row => t(`audit.action.${row.action}`);\n  const actor = row => t(`audit.actor.${row.actor}`);\n  const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;\n  function place(row) {\n    let country = row.country;\n    if (/^[A-Z]{2}$/.test(country)) country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n    return [...new Set([country, row.region, row.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n  }\n  function close() { dialog.close(); $('#audit-detail').replaceChildren(); }\n  function details(row) {\n    const fields = [\n      [t('audit.time'), fmtDate(row.at)], [t('audit.action'), action(row)],\n      [t('audit.result'), t(`audit.${row.result}`)], [t('audit.actor'), actor(row)],\n      ['IP', ip(row)], [t('ad.sourceLocation'), place(row)],\n      [t('audit.target'), row.target || '\u2014'], [t('audit.http'), `${row.method} \xB7 ${row.status}`],\n      [t('audit.duration'), `${row.durationMs} ms`], [t('audit.id'), row.id],\n      [t('audit.agent'), row.agent || '\u2014'],\n    ];\n    for (const [key, value] of Object.entries(row.detail)) {\n      fields.push([t(`audit.detail.${key}`), key === 'bannedUntil' ? fmtDate(value)\n        : typeof value === 'boolean' ? t(value ? 'audit.yes' : 'audit.no') : String(value)]);\n    }\n    if (row.action === 'download') fields.push([t('audit.description'), t('audit.downloadHint')]);\n    $('#audit-detail').replaceChildren(...fields.map(([label, value]) => el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));\n    dialog.showModal();\n  }\n  function render() {\n    body.replaceChildren(...rows.map(row => el('tr', {},\n      el('td', {}, fmtDate(row.at)),\n      el('td', {}, el('span', {}, action(row)), el('small', { class: 'muted' }, t(`audit.${row.category}`))),\n      el('td', {}, el('span', { class: `audit-result audit-${row.result}` }, t(`audit.${row.result}`))),\n      el('td', { class: 'audit-actor' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.actor')), actor(row)),\n      el('td', { class: 'audit-source' }, el('span', { class: 'mono' }, ip(row)),\n        row.country || row.region || row.city ? el('small', { class: 'muted' }, place(row)) : null),\n      el('td', { class: 'audit-target' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.target')), row.target || '\u2014'),\n      el('td', {}, el('button', { type: 'button', class: 'btn small ghost', onclick: () => details(row) }, t('audit.details'))),\n    )));\n    $('#audit-page').textContent = t('audit.page', Math.floor(offset / limit) + 1, Math.max(1, Math.ceil(total / limit)), total);\n    $('#audit-prev').disabled = offset === 0;\n    $('#audit-next').disabled = offset + limit >= total;\n  }\n  async function load() {\n    const ticket = ++request;\n    available = false;\n    $('#audit-error').hidden = true;\n    $('#audit-state').textContent = t('ad.loading');\n    $('#audit-page').textContent = '';\n    body.replaceChildren();\n    for (const id of ['audit-prev', 'audit-next', 'audit-export', 'audit-refresh']) $('#' + id).disabled = true;\n    try {\n      const params = new URLSearchParams({ ...filters, category, offset, limit });\n      const data = await api(`/api/admin/audit-logs?${params}`);\n      if (ticket !== request || view.hidden) return;\n      if (typeof data.enabled !== 'boolean' || !Array.isArray(data.rows) || !Number.isSafeInteger(data.total)) throw new Error(t('ad.loadFail'));\n      available = data.enabled;\n      rows = data.rows; total = data.total;\n      if (available && offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return load(); }\n      $('#audit-state').textContent = !available ? t('audit.disabled') : !total ? t('audit.empty') : '';\n      render();\n      $('#audit-export').disabled = !available || total === 0;\n    } catch (e) {\n      if (ticket !== request || view.hidden) return;\n      $('#audit-state').textContent = '';\n      $('#audit-error').textContent = e.message || t('ad.loadFail');\n      $('#audit-error').hidden = false;\n    } finally { if (ticket === request) $('#audit-refresh').disabled = false; }\n  }\n  function selectView(audit) {\n    view.hidden = !audit;\n    $('#admin-files-view').hidden = audit;\n    for (const [id, active] of [['admin-files-tab', !audit], ['admin-audit-tab', audit]]) {\n      $('#' + id).setAttribute('aria-pressed', String(active));\n      $('#' + id).classList.toggle('ghost', !active);\n    }\n    if (audit) load(); else { request++; close(); }\n  }\n  $('#admin-files-tab').addEventListener('click', () => selectView(false));\n  $('#admin-audit-tab').addEventListener('click', () => selectView(true));\n  $('#audit-filter').addEventListener('submit', e => {\n    e.preventDefault();\n    const from = $('#audit-from').value, to = $('#audit-to').value;\n    if (from && to && from > to) {\n      $('#audit-error').textContent = t('audit.dateError'); $('#audit-error').hidden = false; return;\n    }\n    filters = { result: $('#audit-result').value, q: $('#audit-q').value.trim() };\n    if (from) filters.from = new Date(`${from}T00:00:00`).getTime();\n    if (to) { const end = new Date(`${to}T00:00:00`); end.setDate(end.getDate() + 1); filters.to = end.getTime() - 1; }\n    offset = 0; load();\n  });\n  $('#audit-reset').addEventListener('click', () => { $('#audit-filter').reset(); filters = {}; offset = 0; load(); });\n  for (const button of document.querySelectorAll('.audit-categories button')) button.addEventListener('click', () => {\n    category = button.dataset.category; offset = 0;\n    for (const item of document.querySelectorAll('.audit-categories button')) item.setAttribute('aria-pressed', String(item === button));\n    load();\n  });\n  $('#audit-prev').addEventListener('click', () => { offset = Math.max(0, offset - limit); load(); });\n  $('#audit-next').addEventListener('click', () => { offset += limit; load(); });\n  $('#audit-refresh').addEventListener('click', load);\n  $('#audit-export').addEventListener('click', async () => {\n    $('#audit-export').disabled = true;\n    $('#audit-error').hidden = true;\n    const exportFilters = { ...filters, category };\n    try {\n      const params = new URLSearchParams({ ...exportFilters, offset: 0, limit: 1000 });\n      const data = await api(`/api/admin/audit-logs/export?${params}`);\n      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), filters: exportFilters, ...data }, null, 2)], { type: 'application/json' });\n      const url = URL.createObjectURL(blob);\n      const link = el('a', { href: url, download: `audit-${new Date().toISOString().slice(0, 10)}.json` });\n      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);\n    } catch (e) { $('#audit-error').textContent = e.message || t('ad.loadFail'); $('#audit-error').hidden = false; }\n    finally { $('#audit-export').disabled = !available || total === 0; }\n  });\n  $('#audit-close').addEventListener('click', close);\n  dialog.addEventListener('cancel', e => { e.preventDefault(); close(); });\n  window.addEventListener('audit-write-failed', () => { $('#audit-write-warning').hidden = false; });\n  onLangChange(() => { close(); if (!view.hidden) load(); });\n}\n", "js/admin.js": "import { $, api, fmtBytes, fmtDate, fmtDuration, toast, initTheme, el } from './common.js';\r\nimport { LANG, t, onLangChange, initI18n } from './i18n.js';\r\nimport { initAudit } from './admin-audit.js';\r\n\r\ninitTheme();\r\ninitI18n();\r\ninitAudit();\r\n\r\nconst loginCard = $('#admin-login');\r\nconst panel = $('#admin-panel');\r\nconst loginError = $('#login-error');\r\nconst tokenInput = $('#admin-token');\r\nconst statsRow = $('#stats-row');\r\nconst tbody = $('#shares-body');\r\nconst btnPrev = $('#btn-prev');\r\nconst btnNext = $('#btn-next');\r\nconst btnRefresh = $('#btn-refresh');\r\nconst pageInfo = $('#page-info');\r\n\r\nconst LIMIT = 20; // \u6BCF\u9875\u884C\u6570:\u540E\u7AEF\u5217\u8868\u4F1A\u9010\u884C\u9A8C\u6D3B(\u8BFB KV),\u9875\u5C0F\u4E00\u70B9\u7701 subrequest\r\nlet offset = 0;\r\nlet total = 0;\r\n\r\n/* \u8BED\u8A00\u5207\u6362:\u9762\u677F\u53EF\u89C1\u65F6\u6309\u65B0\u8BED\u8A00\u91CD\u62C9\u6587\u6848 */\r\nonLangChange(() => {\r\n  if ($('#source-dialog').open) closeSource();\r\n  if ($('#file-dialog').open) closeFileDetails();\r\n  if (!panel.hidden) {\r\n    loadStats();\r\n    loadList();\r\n    loadLoginProtection();\r\n  }\r\n});\r\n\r\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\r\n(async () => {\r\n  try {\r\n    await api('/api/admin/stats');\r\n    showPanel();\r\n  } catch {\r\n    loginCard.hidden = false;\r\n    tokenInput.focus();\r\n  }\r\n})();\r\n\r\nasync function login() {\r\n  const token = tokenInput.value.trim();\r\n  if (!token || $('#btn-login').disabled) return;\r\n  $('#btn-login').disabled = true;\r\n  loginError.hidden = true;\r\n  try {\r\n    await api('/api/admin/login', { method: 'POST', body: { token } });\r\n    showPanel();\r\n  } catch (e) {\r\n    loginError.textContent = e.code === 'login_blocked' ? t('ad.loginBlocked')\r\n      : e.code === 'login_protection_unavailable' ? t('ad.guardUnavailable') : e.message || t('ad.badToken');\r\n    loginError.hidden = false;\r\n  } finally { $('#btn-login').disabled = false; }\r\n}\r\n$('#btn-login').addEventListener('click', login);\r\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\r\n\r\nfunction showPanel() {\r\n  loginCard.hidden = true;\r\n  panel.hidden = false;\r\n  loadStats();\r\n  loadList();\r\n  loadSettings();\r\n  loadGuestPolicy();\r\n  loadLoginProtection();\r\n}\r\n\r\n$('#btn-logout').addEventListener('click', async () => {\r\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\r\n  location.reload();\r\n});\r\n\r\n/* ---------- \u7EDF\u8BA1 ---------- */\r\nlet lastStats = null; // \u5220\u9664\u540E\u672C\u5730\u9012\u51CF\u7528,\u907F\u514D\u7ACB\u5373\u91CD\u62C9\u649E\u4E0A KV \u6700\u7EC8\u4E00\u81F4\u7A97\u53E3\r\n\r\nfunction renderStats(s) {\r\n  const counts = [\r\n    [s.total, 'ad.total'], [s.active, 'ad.active'], [s.files, 'ad.files'],\r\n    [s.texts, 'ad.texts'], [s.todayCreated, 'ad.today'],\r\n  ];\r\n  const capacity = s.fileBackend === 'r2' ? s.storage : null;\r\n  const storageCard = el('div', { class: 'stat-card storage-card' },\r\n    el('small', {}, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes')),\r\n    capacity\r\n      ? el('div', { class: 'storage-value' },\r\n          el('b', {}, fmtBytes(capacity.usedBytes)),\r\n          el('span', { class: 'storage-total' }, ` / ${fmtBytes(capacity.capacityBytes)}`))\r\n      : el('div', { class: 'storage-value' }, el('b', {}, s.fileBackend === 'r2'\r\n          ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),\r\n  );\r\n  if (capacity) {\r\n    const ratio = Math.min(1, Math.max(0, capacity.usedBytes / capacity.capacityBytes));\r\n    storageCard.append(\r\n      el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,\r\n        value: capacity.usedBytes, ariaLabel: t('ad.storage') }),\r\n      el('div', { class: 'storage-caption' },\r\n        el('small', {}, t('ad.storageReserved')), el('small', {}, `${Math.round(ratio * 100)}%`)),\r\n    );\r\n  }\r\n  statsRow.replaceChildren(\r\n    el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>\r\n      el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),\r\n    storageCard,\r\n  );\r\n}\r\n\r\nasync function loadStats() {\r\n  try {\r\n    lastStats = await api('/api/admin/stats');\r\n    renderStats(lastStats);\r\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\r\n}\r\n\r\n/** \u5220\u9664\u6210\u529F\u540E\u672C\u5730\u540C\u6B65\u7EDF\u8BA1(\u670D\u52A1\u7AEF KV \u7D22\u5F15\u6700\u957F 60s \u624D\u53CD\u6620\u5220\u9664,\u91CD\u62C9\u4F1A\u770B\u5230\u65E7\u6570) */\r\nasync function statsAfterDelete(r) {\r\n  if (!lastStats) return;\r\n  const s = { ...lastStats };\r\n  s.total = Math.max(0, s.total - 1);\r\n  if (r.kind === 'file') s.files = Math.max(0, s.files - 1);\r\n  else s.texts = Math.max(0, s.texts - 1);\r\n  s.totalBytes = Math.max(0, s.totalBytes - r.size);\r\n  if (r.status === 'active') s.active = Math.max(0, s.active - 1);\r\n  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);\r\n  if (r.created_at >= todayStart.getTime()) s.todayCreated = Math.max(0, s.todayCreated - 1);\r\n  lastStats = s;\r\n  renderStats(s);\r\n  if (s.fileBackend === 'r2') {\r\n    try { s.storage = (await api('/api/admin/stats')).storage; }\r\n    catch { s.storage = null; } // Do not present stale capacity as current after deletion.\r\n    if (lastStats === s) renderStats(s);\r\n  }\r\n}\r\n\r\n/* ---------- \u5217\u8868 ---------- */\r\nconst STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };\r\nconst KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };\r\n\r\nasync function loadList() {\r\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));\r\n  try {\r\n    const data = await api(`/api/admin/shares?limit=${LIMIT}&offset=${offset}`);\r\n    total = data.total;\r\n    const rows = data.rows ?? [];\r\n    tbody.replaceChildren();\r\n    for (const r of rows) {\r\n      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\r\n      tbody.append(\r\n        el('tr', {},\r\n          el('td', { class: 'mono' }, r.code),\r\n          el('td', { class: 'share-content-cell' },\r\n            el('div', { class: 'share-filename-line' },\r\n              r.kind === 'file'\r\n                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)\r\n                : el('span', { class: 'share-filename', title: content }, content),\r\n              el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),\r\n          sourceCell(r),\r\n          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),\r\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\r\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),\r\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),\r\n          el('td', {}, fmtDate(r.created_at)),\r\n          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),\r\n        ),\r\n      );\r\n    }\r\n    if (rows.length === 0) {\r\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));\r\n    }\r\n    updatePager();\r\n  } catch (e) {\r\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));\r\n  }\r\n}\r\n\r\nfunction updatePager() {\r\n  const page = Math.floor(offset / LIMIT) + 1;\r\n  const pages = Math.max(1, Math.ceil(total / LIMIT));\r\n  pageInfo.textContent = t('ad.page', page, pages, total);\r\n  btnPrev.disabled = offset <= 0;\r\n  btnNext.disabled = offset + LIMIT >= total;\r\n}\r\nbtnPrev.addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); loadList(); });\r\nbtnNext.addEventListener('click', () => { offset += LIMIT; loadList(); });\r\nbtnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });\r\n\r\n/* ---------- \u5220\u9664:\u7968\u636E\u98CE\u786E\u8BA4\u5F39\u7A97 + \u672C\u5730\u540C\u6B65(KV \u6700\u7EC8\u4E00\u81F4,\u5220\u9664\u540E\u7ACB\u5373\u91CD\u62C9\u4F1A\u770B\u5230\u6B8B\u7559\u7D22\u5F15) ---------- */\r\nconst delMask = $('#del-mask');\r\nconst delTarget = $('#del-target');\r\nlet delResolve = null;\r\n\r\nfunction confirmDelete(r) {\r\n  const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\r\n  delTarget.replaceChildren(\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.code')), el('b', { class: 'mono' }, r.code)),\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.content')), el('span', {}, content)),\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),\r\n      el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),\r\n  );\r\n  delMask.hidden = false;\r\n  $('#del-cancel').focus();\r\n  return new Promise((resolve) => { delResolve = resolve; });\r\n}\r\n\r\nfunction closeDelModal(v) {\r\n  if (!delResolve) return;\r\n  delMask.hidden = true;\r\n  const resolve = delResolve;\r\n  delResolve = null;\r\n  resolve(v);\r\n}\r\n$('#del-cancel').addEventListener('click', () => closeDelModal(false));\r\n$('#del-ok').addEventListener('click', () => closeDelModal(true));\r\ndelMask.addEventListener('click', (e) => e.target === delMask && closeDelModal(false));\r\ndocument.addEventListener('keydown', (e) => e.key === 'Escape' && closeDelModal(false));\r\n\r\nasync function remove(r, tr) {\r\n  if (!(await confirmDelete(r))) return;\r\n  try {\r\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\r\n    toast(t('ad.deleted'), 'ok');\r\n    statsAfterDelete(r);\r\n    total = Math.max(0, total - 1);\r\n    tr?.remove();\r\n    // \u5F53\u524D\u9875\u5220\u7A7A\u4E14\u4E0D\u5728\u7B2C\u4E00\u9875:\u9000\u56DE\u4E0A\u4E00\u9875\u91CD\u62C9,\u907F\u514D\u505C\u5728\u7A7A\u9875\r\n    if (tbody.rows.length === 0 && offset > 0) {\r\n      offset = Math.max(0, offset - LIMIT);\r\n      loadList();\r\n    } else {\r\n      updatePager();\r\n    }\r\n  } catch (e) {\r\n    toast(e.message || t('ad.deleteFail'), 'error');\r\n  }\r\n}\r\n\r\n/* Upload source details: source labels are text nodes, never interpolated HTML. */\r\nconst sourceDialog = $('#source-dialog');\r\nconst sourceForm = $('#source-form');\r\nconst sourceNote = $('#source-note');\r\nconst sourceSave = $('#source-save');\r\nconst sourceError = $('#source-error');\r\nconst noteOverrides = new Map(); // Read-your-write while KV propagation completes.\r\nlet sourceRequest = 0;\r\nlet activeSource = null;\r\n\r\nfunction visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }\r\nfunction sourceLabel(source) {\r\n  const override = noteOverrides.get(source.visitorId);\r\n  return (override !== undefined ? override : source.note) || visitorLabel(source.visitorId);\r\n}\r\nfunction locationLabel(source) {\r\n  let country = source.country;\r\n  if (country && /^[A-Z]{2}$/.test(country)) {\r\n    country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\r\n  }\r\n  return [...new Set([country, source.region, source.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\r\n}\r\nfunction sourceCell(row) {\r\n  if (!row.source) return el('td', { class: 'source-cell muted' }, t('ad.sourceUnrecorded'));\r\n  const button = el('button', { class: 'source-link', type: 'button', onclick: () => openSource(row) }, sourceLabel(row.source));\r\n  button.dataset.visitor = row.source.visitorId;\r\n  button.title = t('ad.source');\r\n  return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));\r\n}\r\nasync function openSource(row) {\r\n  const request = ++sourceRequest;\r\n  activeSource = null;\r\n  sourceForm.hidden = true;\r\n  sourceError.hidden = true;\r\n  sourceSave.disabled = false;\r\n  sourceSave.hidden = true;\r\n  $('#source-context').textContent = `${t('ad.th.code')} ${row.code}`;\r\n  $('#source-detail').textContent = t('ad.loading');\r\n  sourceDialog.showModal();\r\n  try {\r\n    const { source } = await api(`/api/admin/shares/${row.code}/source`);\r\n    if (request !== sourceRequest || !sourceDialog.open) return;\r\n    if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }\r\n    activeSource = { code: row.code, visitorId: source.visitorId };\r\n    $('#source-detail').replaceChildren(...[\r\n      [t('ad.sourceLocation'), locationLabel(source), 'source-field-wide'],\r\n      ['IP', source.ip || t('ad.sourceUnknown'), 'mono'],\r\n      [t('ad.sourceTime'), fmtDate(source.capturedAt), ''],\r\n      [t('ad.visitorId'), source.visitorId, 'source-field-wide mono'],\r\n    ].map(([label, value, className]) => el('div', { class: `source-field ${className}` }, el('small', { class: 'muted' }, label), el('span', {}, value))));\r\n    sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';\r\n    sourceForm.hidden = false;\r\n    sourceSave.hidden = false;\r\n  } catch (e) {\r\n    if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');\r\n  }\r\n}\r\nfunction closeSource() {\r\n  sourceRequest++;\r\n  activeSource = null;\r\n  sourceNote.value = '';\r\n  sourceForm.hidden = true;\r\n  sourceSave.hidden = true;\r\n  $('#source-context').textContent = '';\r\n  $('#source-detail').replaceChildren();\r\n  sourceDialog.close();\r\n}\r\nsourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });\r\n$('#source-close').addEventListener('click', closeSource);\r\nsourceForm.addEventListener('submit', async (e) => {\r\n  e.preventDefault();\r\n  if (!activeSource || sourceSave.disabled) return;\r\n  const { code } = activeSource;\r\n  const request = sourceRequest;\r\n  sourceSave.disabled = true;\r\n  sourceError.hidden = true;\r\n  try {\r\n    const result = await api(`/api/admin/shares/${code}/source`, { method: 'PUT', body: { note: sourceNote.value } });\r\n    noteOverrides.set(result.visitorId, result.note);\r\n    document.querySelectorAll('[data-visitor]').forEach((button) => {\r\n      if (button.dataset.visitor === result.visitorId) button.textContent = result.note || visitorLabel(result.visitorId);\r\n    });\r\n    if (request === sourceRequest) closeSource();\r\n    toast(t('ad.sourceSaved'));\r\n  } catch (error) {\r\n    if (request === sourceRequest) {\r\n      sourceError.textContent = error.message || t('ad.loadFail');\r\n      sourceError.hidden = false;\r\n    }\r\n  } finally {\r\n    if (request === sourceRequest) sourceSave.disabled = false;\r\n  }\r\n});\r\n\r\n/* File details use their own request generation so closed dialogs stay empty. */\r\nconst fileDialog = $('#file-dialog');\r\nconst fileDetail = $('#file-detail');\r\nconst fileDownload = $('#file-download');\r\nlet fileRequest = 0;\r\nfunction fileFormat(filename) {\r\n  const ext = filename?.match(/\\.([a-z0-9]{1,12})$/i)?.[1]?.toLowerCase();\r\n  const groups = {\r\n    archive: ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'],\r\n    program: ['exe', 'msi', 'apk', 'dmg', 'deb', 'rpm'],\r\n    document: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'epub'],\r\n    image: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'bmp', 'ico', 'heic', 'avif'],\r\n    video: ['mp4', 'mkv', 'mov', 'avi', 'webm', 'm4v'],\r\n    audio: ['mp3', 'wav', 'flac', 'ogg', 'm4a', 'aac'],\r\n    text: ['txt', 'md', 'csv', 'json', 'xml', 'html', 'js', 'ts', 'py', 'log'],\r\n  };\r\n  if (!ext) return t('ad.formatUnknown');\r\n  const group = Object.entries(groups).find(([, extensions]) => extensions.includes(ext))?.[0] || 'file';\r\n  const keys = { archive: 'ad.format.archive', program: 'ad.format.program', document: 'ad.format.document', image: 'ad.format.image', video: 'ad.format.video', audio: 'ad.format.audio', text: 'ad.format.text', file: 'ad.format.file' };\r\n  return `${ext.toUpperCase()} \xB7 ${t(keys[group])}`;\r\n}\r\nfunction fileField(label, value, secondary) {\r\n  return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),\r\n    el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);\r\n}\r\n\r\nasync function openFileDetails(code) {\r\n  const request = ++fileRequest;\r\n  fileDownload.hidden = true;\r\n  fileDownload.removeAttribute('href');\r\n  fileDownload.removeAttribute('download');\r\n  $('#file-context').textContent = `${t('ad.th.code')} ${code}`;\r\n  fileDetail.textContent = t('ad.loading');\r\n  fileDialog.showModal();\r\n  try {\r\n    const detail = await api(`/api/admin/shares/${code}`);\r\n    if (request !== fileRequest || !fileDialog.open) return;\r\n    const now = detail.evaluatedAt ?? Date.now();\r\n    const state = detail.storage?.state || 'unknown';\r\n    const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };\r\n    const source = detail.source;\r\n    const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',\r\n      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }); },\r\n    }, sourceLabel(source)) : t('ad.sourceUnrecorded');\r\n    if (source) sourceButton.dataset.visitor = source.visitorId;\r\n    const lifetime = detail.expireAt === null ? null\r\n      : t(detail.expireAt > now ? 'ad.timeLeft' : 'ad.timeExpired', fmtDuration(Math.abs(detail.expireAt - now) / 1000));\r\n    const cleanupLabels = { permanent: 'ad.cleanupPermanent', active: 'ad.cleanupActive', retained: 'ad.cleanupRetained', pending: 'ad.cleanupPending' };\r\n    const cleanupLabel = t(cleanupLabels[detail.cleanupStatus] || 'ad.sourceUnknown', detail.retentionDays);\r\n    const technical = el('details', { class: 'file-technical file-wide' },\r\n      el('summary', {}, t('ad.technical')),\r\n      el('div', { class: 'file-technical-grid' },\r\n        fileField('MIME', detail.mime || t('ad.sourceUnknown')),\r\n        Number.isSafeInteger(detail.storage?.size) ? fileField(t('ad.storedSize'), t('ad.exactBytes', detail.storage.size.toLocaleString())) : null,\r\n        detail.storage?.uploadedAt != null ? fileField(t('ad.storedAt'), fmtDate(detail.storage.uploadedAt)) : null,\r\n      ), el('small', { class: 'muted' }, t('ad.formatHint')));\r\n    fileDetail.replaceChildren(\r\n      el('div', { class: 'file-identity file-wide' },\r\n        el('strong', {}, detail.filename || t('ad.unnamed')), el('small', { class: 'muted' }, fileFormat(detail.filename))),\r\n      fileField(t('ad.th.size'), fmtBytes(detail.size), t('ad.exactBytes', detail.size.toLocaleString())),\r\n      fileField(t('ad.fileAvailability'), el('span', { class: `badge ${state === 'available' ? 'active' : state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state]))),\r\n      fileField(t('ad.uploader'), sourceButton, source ? locationLabel(source) : null),\r\n      fileField(t('ad.shareState'), el('span', { class: `badge ${detail.status}` }, t(STATUS_KEY[detail.status]))),\r\n      fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '\u221E'}`),\r\n      fileField(t('ad.th.created'), fmtDate(detail.createdAt)),\r\n      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt), lifetime),\r\n      fileField(t('ad.cleanupAfter'), detail.cleanupAfter === null ? t('ad.forever') : fmtDate(detail.cleanupAfter), cleanupLabel),\r\n      technical,\r\n    );\r\n    fileDownload.href = `/api/admin/shares/${code}/download`;\r\n    fileDownload.download = detail.filename || 'file';\r\n    fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');\r\n    fileDownload.hidden = state === 'missing';\r\n  } catch (error) {\r\n    if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');\r\n  }\r\n}\r\nfunction closeFileDetails() {\r\n  fileRequest++;\r\n  fileDetail.replaceChildren();\r\n  $('#file-context').textContent = '';\r\n  fileDownload.hidden = true;\r\n  fileDownload.removeAttribute('href');\r\n  fileDownload.removeAttribute('download');\r\n  fileDialog.close();\r\n}\r\n$('#file-close').addEventListener('click', closeFileDetails);\r\nfileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });\r\n\r\n/* Keep unsaved input local; only a validated save changes retention. */\r\nconst retentionInput = $('#retention-days');\r\nconst retentionSave = $('#retention-save');\r\nconst retentionError = $('#retention-error');\r\nasync function loadSettings() {\r\n  retentionInput.disabled = true;\r\n  retentionSave.disabled = true;\r\n  retentionError.hidden = true;\r\n  $('#retention-retry').hidden = true;\r\n  try {\r\n    const settings = await api('/api/admin/settings');\r\n    if (!Number.isInteger(settings.expiredRetentionDays) || settings.expiredRetentionDays < 0 || settings.expiredRetentionDays > 3650) throw new Error(t('ad.loadFail'));\r\n    retentionInput.value = settings.expiredRetentionDays;\r\n    retentionInput.disabled = false;\r\n    retentionSave.disabled = false;\r\n  } catch (error) {\r\n    retentionError.textContent = error.message || t('ad.loadFail');\r\n    retentionError.hidden = false;\r\n    $('#retention-retry').hidden = false;\r\n  }\r\n}\r\n$('#retention-retry').addEventListener('click', loadSettings);\r\n$('#retention-form').addEventListener('submit', async e => {\r\n  e.preventDefault();\r\n  if (retentionSave.disabled || !retentionInput.reportValidity()) return;\r\n  retentionSave.disabled = true;\r\n  retentionInput.disabled = true;\r\n  retentionError.hidden = true;\r\n  try {\r\n    const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });\r\n    retentionInput.value = settings.expiredRetentionDays;\r\n    toast(t('ad.settingsSaved'), 'ok');\r\n  } catch (error) {\r\n    retentionError.textContent = error.message || t('ad.loadFail');\r\n    retentionError.hidden = false;\r\n  } finally {\r\n    retentionInput.disabled = false;\r\n    retentionSave.disabled = false;\r\n  }\r\n});\r\n\r\nconst guestWeekly = $('#guest-weekly');\r\nconst guestSave = $('#guest-save');\r\nconst guestError = $('#guest-error');\r\nfunction guestBusy(busy) {\r\n  for (const control of [guestWeekly, guestSave]) control.disabled = busy;\r\n}\r\nasync function loadGuestPolicy() {\r\n  guestBusy(true);\r\n  guestError.hidden = true;\r\n  $('#guest-retry').hidden = true;\r\n  try {\r\n    const policy = await api('/api/admin/upload-policy');\r\n    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000) throw new Error(t('ad.loadFail'));\r\n    guestWeekly.value = policy.weeklyFileLimit;\r\n    guestBusy(false);\r\n  } catch (error) {\r\n    guestError.textContent = error.message || t('ad.loadFail');\r\n    guestError.hidden = false;\r\n    $('#guest-retry').hidden = false;\r\n  }\r\n}\r\n$('#guest-retry').addEventListener('click', loadGuestPolicy);\r\n$('#guest-policy-form').addEventListener('submit', async e => {\r\n  e.preventDefault();\r\n  if (guestSave.disabled || !e.target.reportValidity()) return;\r\n  const body = { weeklyFileLimit: Number(guestWeekly.value) };\r\n  guestBusy(true);\r\n  guestError.hidden = true;\r\n  try {\r\n    await api('/api/admin/upload-policy', { method: 'PUT', body });\r\n    toast(t('ad.guestSaved'), 'ok');\r\n  } catch (error) {\r\n    guestError.textContent = error.message || t('ad.loadFail');\r\n    guestError.hidden = false;\r\n  } finally { guestBusy(false); }\r\n});\r\n\r\nlet guardRequest = 0;\r\nasync function loadLoginProtection() {\r\n  const request = ++guardRequest;\r\n  const refresh = $('#login-guard-refresh');\r\n  const error = $('#login-guard-error');\r\n  refresh.disabled = true;\r\n  error.hidden = true;\r\n  $('#login-guard-bans').replaceChildren();\r\n  $('#login-guard-status').textContent = '';\r\n  try {\r\n    const data = await api('/api/admin/login-protection');\r\n    if (request !== guardRequest) return;\r\n    if (typeof data.enabled !== 'boolean' || !Array.isArray(data.bans) ||\r\n        ![data.maxFailures, data.windowSeconds, data.banSeconds].every(n => Number.isInteger(n) && n > 0)) throw new Error(t('ad.loadFail'));\r\n    $('#login-guard-status').textContent = data.enabled\r\n      ? t('ad.guardRule', data.windowSeconds / 60, data.maxFailures, data.banSeconds / 60) : t('ad.guardDisabled');\r\n    if (!data.enabled) return;\r\n    if (!data.bans.length) $('#login-guard-bans').append(el('small', { class: 'muted' }, t('ad.guardEmpty')));\r\n    for (const ban of data.bans) {\r\n      const button = el('button', { class: 'btn small ghost', type: 'button' }, t('ad.guardUnblock'));\r\n      button.addEventListener('click', async () => {\r\n        button.disabled = true;\r\n        error.hidden = true;\r\n        try {\r\n          await api('/api/admin/login-protection/unblock', { method: 'POST', body: { ip: ban.ip } });\r\n          toast(t('ad.guardUnblocked'), 'ok');\r\n          await loadLoginProtection();\r\n        } catch (e) {\r\n          error.textContent = e.message || t('ad.loadFail');\r\n          error.hidden = false;\r\n          button.disabled = false;\r\n        }\r\n      });\r\n      $('#login-guard-bans').append(el('div', { class: 'login-guard-row' },\r\n        el('div', { class: 'login-guard-info' },\r\n          el('b', {}, ban.ip === 'unknown' ? t('ad.guardUnknown') : ban.ip),\r\n          el('small', { class: 'muted' }, t('ad.guardFailures', ban.failures) + ' \xB7 ' + t('ad.guardUntil', fmtDate(ban.bannedUntil))),\r\n          el('small', { class: 'muted' }, t('ad.guardLast', fmtDate(ban.lastFailedAt)))), button));\r\n    }\r\n  } catch (e) {\r\n    if (request !== guardRequest) return;\r\n    error.textContent = e.message || t('ad.loadFail');\r\n    error.hidden = false;\r\n  } finally { if (request === guardRequest) refresh.disabled = false; }\r\n}\r\n$('#login-guard-refresh').addEventListener('click', loadLoginProtection);\r\n", "js/common.js": "import { t } from './i18n.js';\r\n\r\nexport const $ = (sel, el = document) => el.querySelector(sel);\r\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\r\n\r\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\r\nexport async function api(path, opts = {}) {\r\n  const res = await fetch(path, {\r\n    method: opts.method || 'GET',\r\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\r\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\r\n  });\r\n  if (res.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\r\n  let data = null;\r\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\r\n  if (!res.ok) {\r\n    const e = new Error(data?.message || t('req.fail', res.status));\r\n    e.code = data?.error || 'unknown';\r\n    e.status = res.status;\r\n    e.remainingBytes = data?.remainingBytes;\r\n    throw e;\r\n  }\r\n  return data;\r\n}\r\n\r\nexport function fmtBytes(n) {\r\n  if (!Number.isFinite(n) || n < 0) return '-';\r\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\r\n  let i = 0;\r\n  while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }\r\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 100) / 100;\r\n  return `${v} ${units[i]}`;\r\n}\r\n\r\n/** \u6C38\u4E45\u5206\u4EAB\u8FD4\u56DE null,\u7531\u8C03\u7528\u65B9\u6309\u8BED\u8A00\u6E32\u67D3\u300C\u6C38\u4E45 / Forever\u300D */\r\nexport function fmtDate(ms) {\r\n  if (ms === null || ms === undefined) return null;\r\n  const d = new Date(ms);\r\n  const p = (x) => String(x).padStart(2, '0');\r\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\r\n}\r\n\r\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6,\u5355\u4F4D\u8BCD\u968F\u8BED\u8A00 */\r\nexport function fmtDuration(sec) {\r\n  if (!Number.isFinite(sec) || sec < 0) return '-';\r\n  if (sec < 1) return t('dur.ms');\r\n  if (sec < 60) return t('dur.s', Math.round(sec));\r\n  if (sec < 3600) {\r\n    const m = Math.floor(sec / 60);\r\n    const s = Math.round(sec % 60);\r\n    return s ? t('dur.hm', m, s) : t('dur.h', m);\r\n  }\r\n  if (sec < 86400) {\r\n    const h = Math.floor(sec / 3600);\r\n    const m = Math.round((sec % 3600) / 60);\r\n    return m ? t('dur.hH', h, m) : t('dur.hH2', h);\r\n  }\r\n  return t('dur.d', Math.round(sec / 86400));\r\n}\r\n\r\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\r\nexport function iconFor(name = '', mime = '') {\r\n  const ext = (name.split('.').pop() || '').toLowerCase();\r\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\r\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\r\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\r\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\r\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\r\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\r\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\r\n  return '\u{1F4E6}';\r\n}\r\n\r\nexport async function copyText(text) {\r\n  try {\r\n    await navigator.clipboard.writeText(text);\r\n    return true;\r\n  } catch { /* \u8D70\u964D\u7EA7 */ }\r\n  try {\r\n    const ta = document.createElement('textarea');\r\n    ta.value = text;\r\n    ta.style.cssText = 'position:fixed;opacity:0';\r\n    document.body.appendChild(ta);\r\n    ta.select();\r\n    const ok = document.execCommand('copy');\r\n    ta.remove();\r\n    return ok;\r\n  } catch {\r\n    return false;\r\n  }\r\n}\r\n\r\nexport function toast(msg, type = 'info') {\r\n  let host = $('#toast-host');\r\n  if (!host) {\r\n    host = document.createElement('div');\r\n    host.id = 'toast-host';\r\n    document.body.appendChild(host);\r\n  }\r\n  const t = document.createElement('div');\r\n  t.className = `toast ${type}`;\r\n  t.textContent = msg;\r\n  host.appendChild(t);\r\n  requestAnimationFrame(() => t.classList.add('show'));\r\n  setTimeout(() => {\r\n    t.classList.remove('show');\r\n    setTimeout(() => t.remove(), 300);\r\n  }, 2400);\r\n}\r\n\r\nexport function initTheme() {\r\n  const btn = $('#theme-btn');\r\n  const meta = $('meta[name=\"theme-color\"]');\r\n  const sync = () => {\r\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\r\n  };\r\n  sync();\r\n  btn?.addEventListener('click', () => {\r\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\r\n    localStorage.setItem('theme', next);\r\n    document.documentElement.dataset.theme = next;\r\n    sync();\r\n  });\r\n}\r\n\r\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\r\nexport function el(tag, attrs = {}, ...children) {\r\n  const n = document.createElement(tag);\r\n  for (const [k, v] of Object.entries(attrs)) {\r\n    if (k === 'class') n.className = v;\r\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\r\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\r\n    else n[k] = v;\r\n  }\r\n  for (const c of children.flat(Infinity)) {\r\n    if (c == null || c === false) continue;\r\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\r\n  }\r\n  return n;\r\n}\r\n", "js/i18n.js": `/**\r
  * \u8F7B\u91CF i18n:HTML \u9759\u6001\u6587\u6848\u7528 data-i18n / data-i18n-ph / data-i18n-title \u6807\u8BB0,\r
  * JS \u52A8\u6001\u5B57\u7B26\u4E32\u7528 t('key', \u2026args);{n} \u5360\u4F4D\u3002\r
  * \u8BED\u8A00\u4F18\u5148\u7EA7:localStorage('lang') > \u6D4F\u89C8\u5668\u8BED\u8A00(en \u5F00\u5934\u2192\u82F1\u6587)> \u4E2D\u6587\u3002\r
@@ -396,6 +434,71 @@ setInlineAssets({ "404.html": `<!doctype html>
 \r
 const DICT = {\r
   zh: {\r
+    'audit.detail.filename': '\u6587\u4EF6\u540D',\r
+    'audit.detail.sizeBytes': '\u5927\u5C0F\uFF08\u5B57\u8282\uFF09',\r
+    'audit.navigation': "\u7BA1\u7406\u9875\u9762",\r
+    'audit.files': "\u6587\u4EF6\u7BA1\u7406",\r
+    'audit.title': "\u65E5\u5FD7\u5BA1\u8BA1",\r
+    'audit.retention': "\u6700\u8FD1 30 \u5929\uFF0C\u6700\u591A 1,000 \u6761\uFF1B\u65F6\u95F4\u6309\u672C\u5730\u65F6\u533A\u663E\u793A",\r
+    'audit.export': "\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C",\r
+    'audit.categories': "\u65E5\u5FD7\u5206\u7C7B",\r
+    'audit.all': "\u5168\u90E8\u65E5\u5FD7",\r
+    'audit.login': "\u767B\u5F55\u65E5\u5FD7",\r
+    'audit.operation': "\u64CD\u4F5C\u65E5\u5FD7",\r
+    'audit.security': "\u5B89\u5168\u4E8B\u4EF6",\r
+    'audit.result': "\u7ED3\u679C",\r
+    'audit.anyResult': "\u5168\u90E8\u7ED3\u679C",\r
+    'audit.success': "\u6210\u529F",\r
+    'audit.failed': "\u5931\u8D25",\r
+    'audit.blocked': "\u5DF2\u62E6\u622A",\r
+    'audit.from': "\u5F00\u59CB\u65E5\u671F",\r
+    'audit.to': "\u7ED3\u675F\u65E5\u671F",\r
+    'audit.keyword': "IP / \u64CD\u4F5C\u5BF9\u8C61",\r
+    'audit.search': "\u641C\u7D22 IP \u6216\u53D6\u4EF6\u7801",\r
+    'audit.filter': "\u7B5B\u9009",\r
+    'audit.reset': "\u91CD\u7F6E",\r
+    'audit.time': "\u65F6\u95F4",\r
+    'audit.action': "\u64CD\u4F5C",\r
+    'audit.actor': "\u64CD\u4F5C\u8EAB\u4EFD",\r
+    'audit.source': "\u6765\u6E90 IP / \u5C5E\u5730",\r
+    'audit.target': "\u64CD\u4F5C\u5BF9\u8C61",\r
+    'audit.details': "\u8BE6\u60C5",\r
+    'audit.empty': "\u6682\u65E0\u5339\u914D\u65E5\u5FD7\u3002\u65E5\u5FD7\u4ECE\u529F\u80FD\u4E0A\u7EBF\u540E\u5F00\u59CB\u8BB0\u5F55\u3002",\r
+    'audit.disabled': "\u672A\u542F\u7528\u65E5\u5FD7\u5BA1\u8BA1\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1\u3002",\r
+    'audit.page': "\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761",\r
+    'audit.dateError': "\u5F00\u59CB\u65E5\u671F\u4E0D\u80FD\u665A\u4E8E\u7ED3\u675F\u65E5\u671F",\r
+    'audit.http': "\u8BF7\u6C42 / \u72B6\u6001\u7801",\r
+    'audit.duration': "\u5904\u7406\u8017\u65F6",\r
+    'audit.id': "\u65E5\u5FD7\u7F16\u53F7",\r
+    'audit.agent': "\u6D4F\u89C8\u5668\u6807\u8BC6\uFF08\u5BA2\u6237\u7AEF\u63D0\u4F9B\uFF09",\r
+    'audit.yes': "\u662F",\r
+    'audit.no': "\u5426",\r
+    'audit.description': "\u8BF4\u660E",\r
+    'audit.downloadHint': "\u5DF2\u5F00\u59CB\u8FD4\u56DE\u6587\u4EF6\u6D41\uFF0C\u4E0D\u4EE3\u8868\u6D4F\u89C8\u5668\u5DF2\u5B8C\u6210\u4E0B\u8F7D\u3002",\r
+    'audit.writeFailed': "\u64CD\u4F5C\u5DF2\u5904\u7406\uFF0C\u4F46\u5BA1\u8BA1\u8BB0\u5F55\u672A\u4FDD\u5B58\uFF0C\u8BF7\u68C0\u67E5\u65E5\u5FD7\u5B58\u50A8\u3002",\r
+    'audit.action.login': "\u7BA1\u7406\u5458\u767B\u5F55",\r
+    'audit.action.logout': "\u9000\u51FA\u767B\u5F55",\r
+    'audit.action.retention': "\u4FEE\u6539\u8FC7\u671F\u4FDD\u7559\u5929\u6570",\r
+    'audit.action.uploadPolicy': "\u4FEE\u6539\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",\r
+    'audit.action.unblock': "\u624B\u52A8\u89E3\u5C01 IP",\r
+    'audit.action.cleanup': "\u6267\u884C\u8FC7\u671F\u6E05\u7406",\r
+    'audit.action.export': "\u5BFC\u51FA\u5BA1\u8BA1\u65E5\u5FD7",\r
+    'audit.action.ban': "\u89E6\u53D1\u767B\u5F55\u5C01\u7981",\r
+    'audit.action.delete': "\u5220\u9664\u5206\u4EAB",\r
+    'audit.action.note': "\u4FEE\u6539\u8BBF\u5BA2\u5907\u6CE8",\r
+    'audit.action.viewSource': "\u67E5\u770B\u6765\u6E90\u8BE6\u60C5",\r
+    'audit.action.download': "\u4E0B\u8F7D\u6587\u4EF6",\r
+    'audit.actor.admin': "\u7BA1\u7406\u5458",\r
+    'audit.actor.token': "\u5B9A\u65F6\u5668 / \u4EE4\u724C",\r
+    'audit.actor.anonymous': "\u672A\u8BA4\u8BC1",\r
+    'audit.detail.bannedUntil': "\u5C01\u7981\u622A\u6B62",\r
+    'audit.detail.expiredRetentionDays': "\u8FC7\u671F\u4FDD\u7559\u5929\u6570",\r
+    'audit.detail.weeklyFileLimit': "\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",\r
+    'audit.detail.notePresent': "\u8BBE\u7F6E\u5907\u6CE8",\r
+    'audit.detail.alreadyDeleted': "\u5206\u4EAB\u5DF2\u4E0D\u5B58\u5728",\r
+    'audit.detail.deletedShares': "\u5DF2\u6E05\u7406\u5206\u4EAB",\r
+    'audit.detail.abortedSessions': "\u5DF2\u53D6\u6D88\u4E0A\u4F20\u4F1A\u8BDD",\r
+\r
     'ad.loginProtection': "\u767B\u5F55\u9632\u62A4",\r
     'ad.guardRule': "{0} \u5206\u949F\u5185\u5931\u8D25 {1} \u6B21\uFF0C\u5C01\u7981\u767B\u5F55 {2} \u5206\u949F",\r
     'ad.guardDisabled': "\u672A\u542F\u7528\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1",\r
@@ -637,6 +740,71 @@ const DICT = {\r
   },\r
 \r
   en: {\r
+    'audit.detail.filename': 'Filename',\r
+    'audit.detail.sizeBytes': 'Size (bytes)',\r
+    'audit.navigation': "Admin pages",\r
+    'audit.files': "Files",\r
+    'audit.title': "Audit logs",\r
+    'audit.retention': "Last 30 days, up to 1,000 entries; times shown in your local timezone",\r
+    'audit.export': "Export results",\r
+    'audit.categories': "Log categories",\r
+    'audit.all': "All logs",\r
+    'audit.login': "Login logs",\r
+    'audit.operation': "Operations",\r
+    'audit.security': "Security",\r
+    'audit.result': "Result",\r
+    'audit.anyResult': "All results",\r
+    'audit.success': "Success",\r
+    'audit.failed': "Failed",\r
+    'audit.blocked': "Blocked",\r
+    'audit.from': "Start date",\r
+    'audit.to': "End date",\r
+    'audit.keyword': "IP / Target",\r
+    'audit.search': "Search IP or pickup code",\r
+    'audit.filter': "Filter",\r
+    'audit.reset': "Reset",\r
+    'audit.time': "Time",\r
+    'audit.action': "Action",\r
+    'audit.actor': "Actor",\r
+    'audit.source': "Source IP / Location",\r
+    'audit.target': "Target",\r
+    'audit.details': "Details",\r
+    'audit.empty': "No matching logs. Recording starts when this feature is deployed.",\r
+    'audit.disabled': "Audit logging is not enabled: bind R2 or D1.",\r
+    'audit.page': "Page {0} / {1} \xB7 {2} entries",\r
+    'audit.dateError': "Start date must not be after end date",\r
+    'audit.http': "Request / Status",\r
+    'audit.duration': "Processing time",\r
+    'audit.id': "Log ID",\r
+    'audit.agent': "Browser identifier (client supplied)",\r
+    'audit.yes': "Yes",\r
+    'audit.no': "No",\r
+    'audit.description': "Description",\r
+    'audit.downloadHint': "The file stream was opened; this does not confirm the browser finished downloading.",\r
+    'audit.writeFailed': "The operation was processed, but its audit record could not be saved. Check log storage.",\r
+    'audit.action.login': "Admin login",\r
+    'audit.action.logout': "Log out",\r
+    'audit.action.retention': "Change expired retention",\r
+    'audit.action.uploadPolicy': "Change weekly upload quota",\r
+    'audit.action.unblock': "Unblock IP",\r
+    'audit.action.cleanup': "Run expired cleanup",\r
+    'audit.action.export': "Export audit logs",\r
+    'audit.action.ban': "Trigger login ban",\r
+    'audit.action.delete': "Delete share",\r
+    'audit.action.note': "Change visitor note",\r
+    'audit.action.viewSource': "View source details",\r
+    'audit.action.download': "Download file",\r
+    'audit.actor.admin': "Administrator",\r
+    'audit.actor.token': "Scheduler / Token",\r
+    'audit.actor.anonymous': "Unauthenticated",\r
+    'audit.detail.bannedUntil': "Blocked until",\r
+    'audit.detail.expiredRetentionDays': "Expired retention days",\r
+    'audit.detail.weeklyFileLimit': "Weekly upload limit",\r
+    'audit.detail.notePresent': "Note set",\r
+    'audit.detail.alreadyDeleted': "Share already absent",\r
+    'audit.detail.deletedShares': "Shares deleted",\r
+    'audit.detail.abortedSessions': "Upload sessions aborted",\r
+\r
     'ad.loginProtection': "Login protection",\r
     'ad.guardRule': "{1} failures in {0} minutes block login for {2} minutes",\r
     'ad.guardDisabled': "Not enabled: bind R2 or D1",\r
@@ -3262,7 +3430,1055 @@ var qrcode = function() {
 <script type="module" src="/js/pickup.js"><\/script>
 </body>
 </html>
-`, "style.css": "/* ============================================================\n   \u90AE\u653F\u7968\u636E\u4E3B\u9898:\u725B\u76AE\u7EB8\u5E95 \xB7 \u58A8\u7EFF\u6CB9\u58A8 \xB7 \u6A59\u8272\u90AE\u6233 \xB7 \u786C\u6295\u5F71\u63CF\u8FB9\n   \u7ED3\u679C\u5361\u7247 = \u53D6\u4EF6\u51ED\u8BC1(\u7968\u5934 + \u90AE\u6233\u53E3\u4EE4\u74E6\u7247 + \u6495\u7968\u7EBF + \u7968\u811A)\n   ============================================================ */\n:root {\n  --bag: #efe8d8;            /* \u725B\u76AE\u7EB8\u5E95 */\n  --paper: #fffdf6;          /* \u7968\u636E\u7EB8\u9762 */\n  --ink: #26382c;            /* \u6CB9\u58A8(\u6B63\u6587/\u4E3B\u8272) */\n  --line: #26382c;           /* \u63CF\u8FB9 */\n  --muted: #6b7563;          /* \u892A\u8272\u58A8 */\n  --stamp: #d96f32;          /* \u90AE\u6233\u6A59 */\n  --stamp-dark: #b85a24;\n  --ok: #3c7a52;\n  --ok-soft: #eef3ec;\n  --danger: #b3403a;\n  --danger-soft: #f7e9e4;\n  --warn: #a2661c;\n  --warn-soft: #f8efdd;\n  --rowbg: #f7f2e4;          /* \u6587\u4EF6\u884C\u5E95 */\n  --track: #e6dfca;          /* \u8FDB\u5EA6\u69FD */\n  --tkhead-bg: #26382c;      /* \u7968\u5934\u5E95 */\n  --tkhead-fg: #f4efdd;      /* \u7968\u5934\u5B57 */\n  --hard: rgba(38, 56, 44, 0.9);   /* \u786C\u6295\u5F71 */\n  --mask: rgba(24, 20, 12, 0.55);  /* \u5F39\u7A97\u906E\u7F69 */\n  --hard-soft: rgba(38, 56, 44, 0.35);\n  --dots: rgba(38, 56, 44, 0.05);  /* \u7EB8\u9762\u7F51\u70B9\u7EB9\u7406 */\n  --radius: 14px;\n  --radius-sm: 9px;\n  --serif: Georgia, 'Times New Roman', 'Songti SC', 'SimSun', serif;\n  /* \u52A8\u6548\u8282\u594F */\n  --t-fast: 0.15s;\n  --t-med: 0.25s;\n  --t-slow: 0.35s;\n  --ease: cubic-bezier(0.2, 0, 0, 1);\n}\n[data-theme='dark'] {\n  /* \u58A8\u84DD\u591C\u822A:\u85CF\u84DD\u7EB8\u9762,\u84DD\u6A59\u4E92\u8865,\u90AE\u6233\u6A59\u591C\u91CC\u6700\u8DF3 */\n  --bag: #12161f;\n  --paper: #1a2130;\n  --ink: #e8e5d6;\n  --line: #46516b;\n  --muted: #a9b2c9;\n  --stamp: #e68d4f;\n  --stamp-dark: #c9702f;\n  --ok: #7fc79c;\n  --ok-soft: #254432;\n  --danger: #e08a7c;\n  --danger-soft: #462822;\n  --warn: #d9ab63;\n  --warn-soft: #413120;\n  --rowbg: #222b44;\n  --track: #151b28;\n  --tkhead-bg: #33415c;\n  --tkhead-fg: #f0eee0;\n  --hard: rgba(0, 0, 0, 0.5);\n  --hard-soft: rgba(0, 0, 0, 0.32);\n  /* \u6DF1\u8272\u4E0B\u540C\u900F\u660E\u5EA6\u7684\u906E\u7F69\u51E0\u4E4E\u770B\u4E0D\u51FA\u6765,\u52A0\u6DF1\u4E00\u6863\u4FDD\u4F4F\u5F39\u7A97\u4E0E\u80CC\u666F\u7684\u5206\u79BB\u611F */\n  --mask: rgba(4, 7, 14, 0.72);\n  --dots: rgba(232, 229, 214, 0.05);\n}\n\n* { box-sizing: border-box; }\n/* [hidden] \u515C\u5E95:\u7C7B\u4E0A\u7684 display:flex/inline-flex \u4F1A\u76D6\u8FC7 UA \u6837\u5F0F\u8868\u7684 [hidden]{display:none},\n   \u5BFC\u81F4 .result-placeholder/.file-list \u7B49\u8BBE\u4E86 hidden \u4ECD\u53EF\u89C1 */\n[hidden] { display: none !important; }\nhtml { -webkit-text-size-adjust: 100%; }\nbody {\n  margin: 0;\n  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto,\n    'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei', sans-serif;\n  font-size: 15px;\n  line-height: 1.6;\n  color: var(--ink);\n  min-height: 100vh;\n  /* \u7EB5\u5411 flex \u9AA8\u67B6:main \u5403\u6389\u5269\u4F59\u9AD8\u5EA6,\u9875\u811A\u8D34\u89C6\u53E3\u5E95 */\n  display: flex;\n  flex-direction: column;\n  background:\n    radial-gradient(var(--dots) 1px, transparent 1px) 0 0 / 22px 22px,\n    var(--bag);\n  -webkit-font-smoothing: antialiased;\n  text-rendering: optimizeLegibility;\n}\n\n::selection { background: var(--stamp); color: #fff; }\n\n/* \u7EC6\u6EDA\u52A8\u6761 */\n* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }\n::-webkit-scrollbar { width: 8px; height: 8px; }\n::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }\n::-webkit-scrollbar-track { background: transparent; }\n\n/* ============ \u9876\u680F ============ */\n.topbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 22px 20px 14px;\n  width: 100%; /* body \u6539\u7EB5\u5411 flex \u540E,auto margin \u6761\u76EE\u4F1A\u6536\u7F29\u5230\u5185\u5BB9\u5BBD,\u663E\u5F0F\u62C9\u6EE1\u518D\u7531 max-width \u6536\u53E3 */\n  max-width: 720px;\n  margin: 0 auto 26px;\n  border-bottom: 3px double var(--line);\n}\n.topbar.wide { max-width: 1080px; }\n.brand { display: flex; align-items: center; gap: 12px; }\n.brand .logo {\n  display: grid;\n  place-items: center;\n  width: 42px;\n  height: 42px;\n  font-size: 21px;\n  border-radius: 10px;\n  background: var(--paper);\n  border: 1.5px solid var(--line);\n  box-shadow: 3px 3px 0 var(--hard);\n}\n.brand b {\n  font-family: var(--serif);\n  font-size: 18px;\n  font-weight: 700;\n  display: block;\n  line-height: 1.25;\n  letter-spacing: 0.05em;\n}\n.brand small { color: var(--muted); font-size: 12px; }\n.actions { display: flex; align-items: center; gap: 8px; }\n\n/* ============ \u5E03\u5C40 ============ */\n.container { width: 100%; max-width: 720px; margin: 0 auto; padding: 8px 16px 48px; }\n.container.wide { max-width: 1080px; }\n.container.narrow { max-width: 460px; }\n.card {\n  background: var(--paper);\n  border: 1.5px solid var(--line);\n  border-radius: var(--radius);\n  box-shadow: 6px 6px 0 var(--hard);\n  padding: 24px;\n  margin-bottom: 18px;\n}\n.card.center { text-align: center; }\n.muted { color: var(--muted); }\n.row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }\n\nmain { flex: 1 0 auto; } /* \u6491\u6EE1\u89C6\u53E3\u5269\u4F59\u9AD8\u5EA6,\u628A\u9875\u811A\u63A8\u5230\u5E95 */\n/* \u515C\u5E95:\u5373\u4F7F main \u6CA1\u6491\u5F00(\u5F02\u5E38\u9875\u9762)\u4E5F\u628A\u9875\u811A\u63A8\u5230\u5E95 */\n.foot {\n  margin-top: auto;\n  text-align: center;\n  color: var(--muted);\n  font-size: 12px;\n  letter-spacing: 0.14em;\n  padding: 32px 16px 10px;\n}\n\n/* ============ \u90AE\u8DEF\u4E09\u6B65\u6761(\u67DC\u53F0\u4E0A\u65B9:\u5BC4\u4EF6\u2192\u51FA\u7968\u2192\u53D6\u4EF6) ============ */\n.flow-strip {\n  display: flex;\n  align-items: center;\n  background: var(--paper);\n  border: 1.5px solid var(--line);\n  border-radius: 13px;\n  box-shadow: 6px 6px 0 var(--hard);\n  padding: 18px 26px;\n  margin-bottom: 24px;\n  animation: fade-up var(--t-slow) var(--ease) both;\n}\n.flow-step { flex: 1; display: flex; align-items: center; gap: 13px; min-width: 0; }\n.flow-dot {\n  width: 46px; height: 46px; flex: none;\n  border: 2.5px double var(--stamp); border-radius: 50%;\n  display: grid; place-items: center;\n  font-size: 20px; color: var(--stamp); font-family: var(--serif);\n}\n.flow-step:nth-child(1) .flow-dot { transform: rotate(-7deg); }\n.flow-step:nth-child(3) .flow-dot { transform: rotate(5deg); }\n.flow-step:nth-child(5) .flow-dot { transform: rotate(-4deg); }\n.flow-tt b { display: block; font-size: 14px; font-family: var(--serif); letter-spacing: 0.06em; }\n.flow-tt small { color: var(--muted); font-size: 12px; }\n.flow-link { flex: 0 0 58px; border-top: 2px dashed var(--line); margin: 0 12px; position: relative; }\n.flow-link::after {\n  content: '\u2708'; position: absolute; right: -4px; top: -11px;\n  font-size: 12px; color: var(--stamp);\n}\n\n/* ============ \u53D1\u9001\u9875:\u67DC\u53F0\u53CC\u680F(\u5DE6\u5BC4\u4EF6\u5355 / \u53F3\u56DE\u6267\u5E38\u9A7B) ============ */\n/* \u5185\u5BB9\u4E0D\u8DB3\u4E00\u5C4F\u65F6\u67DC\u53F0\u4E0A/\u4E0B\u7559\u767D\u5747\u8861;\u8D85\u51FA\u4E00\u5C4F\u65F6 main \u9AD8\u5EA6=\u5185\u5BB9\u9AD8,\u81EA\u52A8\u9000\u5316\u4E3A\u9876\u5BF9\u9F50 */\nmain:has(> .send-grid) { display: flex; flex-direction: column; justify-content: center; }\n.send-grid {\n  display: grid;\n  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);\n  gap: 26px;\n  align-items: stretch; /* \u4E24\u680F\u540C\u9AD8:\u7A7A\u6001\u65F6\u53F3\u680F\u5360\u4F4D\u6491\u5230\u4E0E\u8868\u5355\u5361\u9F50\u5E95 */\n}\n.form-card { min-width: 0; margin-bottom: 0; align-self: stretch; display: flex; flex-direction: column; } /* \u4E24\u680F\u9F50\u5E95:\u8868\u5355\u5361\u540C\u6837\u62C9\u4F38(\u56DE\u6267\u680F\u5185\u5BB9\u66F4\u9AD8\u65F6\u4E0D\u518D\u53C2\u5DEE) */\n/* \u62C9\u4F38\u540E\u7684\u591A\u4F59\u9AD8\u5EA6\u4EA4\u7ED9\u8F93\u5165\u533A\u5438\u6536:\u62D6\u62FD\u533A/\u6587\u672C\u6846/\u6587\u4EF6\u961F\u5217\u957F\u9AD8,\u9009\u9879\u548C\u6309\u94AE\u4E0D\u88AB\u9876\u5F97\u60AC\u7A7A */\n.form-card .panel { display: flex; flex-direction: column; flex: 1; }\n.form-card .dropzone, .form-card textarea, .form-card .file-list { flex: 1; }\n.form-card .dropzone { display: flex; flex-direction: column; justify-content: center; }\n.card-cap, .side-cap {\n  display: flex;\n  justify-content: space-between;\n  align-items: baseline;\n  margin: -4px 0 16px;\n  font-size: 11.5px;\n  letter-spacing: 0.3em;\n  color: var(--muted);\n  font-weight: 600;\n}\n.card-cap .cap-date {\n  font-family: var(--serif);\n  color: var(--stamp);\n  letter-spacing: 0.08em;\n  font-size: 12.5px;\n}\n/* \u53F3\u680F\u968F\u884C\u9AD8\u62C9\u4F38:sticky \u5728 stretch \u4E0B\u4E0D\u518D\u751F\u6548(\u4E24\u680F\u6C38\u8FDC\u540C\u9AD8,\u65E0\u53EF\u7C98\u6EDE\u4F59\u91CF),\u6539\u4E3A flex \u7EB5\u5411\u680F */\n.send-side { display: flex; flex-direction: column; min-width: 0; }\n.send-side .results { margin-top: 0; }\n/* \u56DE\u6267\u7A7A\u6001:\u5F85\u51FA\u7968\u90AE\u6233 */\n.result-placeholder {\n  border: 1.5px dashed var(--line);\n  border-radius: 13px;\n  padding: 38px 20px;\n  min-height: 340px; /* \u4E0E\u5DE6\u680F\u8868\u5355\u5361\u89C6\u89C9\u5E73\u8861 */\n  flex: 1; /* \u53F3\u680F\u88AB\u62C9\u4F38\u65F6\u5360\u4F4D\u968F\u4E4B\u957F\u9AD8,\u5E95\u8FB9\u4E0E\u8868\u5355\u5361\u5BF9\u9F50 */\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  align-items: center;\n  text-align: center;\n  animation: fade-up var(--t-slow) var(--ease) both;\n}\n.ph-postmark {\n  width: 76px;\n  height: 76px;\n  margin: 0 auto 14px;\n  border: 2.5px double var(--stamp);\n  border-radius: 50%;\n  display: grid;\n  place-items: center;\n  color: var(--stamp);\n  font-family: var(--serif);\n  font-size: 10px;\n  letter-spacing: 0.22em;\n  text-indent: 0.22em; /* \u8865\u507F\u5B57\u8DDD,\u8BA9\u5706\u5F62\u90AE\u6233\u89C6\u89C9\u5C45\u4E2D */\n  transform: rotate(-8deg);\n  opacity: 0.8;\n}\n.result-placeholder p { margin: 0 0 4px; font-weight: 700; font-family: var(--serif); letter-spacing: 0.08em; }\n.result-placeholder small { color: var(--muted); font-size: 12.5px; }\n/* \u7A7A\u6001\u5185\u5D4C\u300C\u5728\u9014\u90AE\u8DEF\u300D\u7AD6\u5411\u65F6\u95F4\u7EBF:\u53F3\u680F\u4E0D\u7A7A */\n.ph-route { margin-top: 24px; width: 100%; max-width: 300px; text-align: left; }\n.ph-leg { display: flex; gap: 13px; align-items: flex-start; }\n.ph-ic {\n  width: 40px; height: 40px; flex: none;\n  border: 1.5px solid var(--line); border-radius: 50%;\n  background: var(--rowbg);\n  display: grid; place-items: center; font-size: 17px;\n}\n.ph-leg:nth-child(1) .ph-ic { transform: rotate(-6deg); }\n.ph-leg b { display: block; font-size: 13px; font-family: var(--serif); letter-spacing: 0.04em; }\n.ph-leg small { color: var(--muted); font-size: 11.5px; line-height: 1.5; }\n.ph-dash { width: 0; height: 22px; border-left: 2px dashed var(--line); margin: 3px 0 3px 19px; }\n.ph-fine {\n  margin-top: 22px; padding-top: 13px; width: 100%; max-width: 300px;\n  border-top: 1.5px dashed var(--line);\n  color: var(--muted); font-size: 11px; letter-spacing: 0.12em; text-align: center;\n}\n\n/* ============ \u6309\u94AE:\u90AE\u6233\u7AE0 ============ */\n.btn {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 6px;\n  padding: 9px 18px;\n  border-radius: var(--radius-sm);\n  border: 1.5px solid var(--line);\n  background: var(--paper);\n  color: var(--ink);\n  font-size: 14px;\n  font-weight: 600;\n  cursor: pointer;\n  text-decoration: none;\n  box-shadow: 2px 2px 0 var(--hard-soft);\n  transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast), color var(--t-fast), opacity var(--t-fast);\n}\n.btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--hard-soft); }\n.btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--hard-soft); }\n.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: 2px 2px 0 var(--hard-soft); }\n.btn.primary {\n  background: var(--tkhead-bg);\n  border-color: var(--line);\n  color: var(--tkhead-fg);\n  box-shadow: 3px 3px 0 var(--stamp);\n}\n.btn.primary:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--stamp); }\n.btn.primary:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--stamp); }\n.btn.primary:disabled { box-shadow: 2px 2px 0 var(--hard-soft); } /* \u7981\u7528\u65F6\u4E0D\u4EAE\u6A59\u5F71,\u907F\u514D\u8BEF\u8BFB\u4E3A\u53EF\u70B9 */\n.btn.ghost { background: transparent; box-shadow: none; border-color: var(--line); }\n.btn.ghost:hover { background: var(--rowbg); transform: none; }\n.btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 2px 2px 0 var(--hard-soft); }\n.btn.small { padding: 5px 12px; font-size: 13px; border-radius: 8px; }\n.btn.block { width: 100%; margin-top: 16px; }\n.btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }\n.icon-btn {\n  background: transparent;\n  border: none;\n  font-size: 17px;\n  cursor: pointer;\n  color: var(--muted);\n  padding: 7px 9px;\n  border-radius: 8px;\n  transition: background var(--t-fast), color var(--t-fast);\n}\n.icon-btn:hover { background: var(--rowbg); color: var(--ink); }\n/* \u8BED\u8A00\u5207\u6362:\u663E\u793A\u76EE\u6807\u8BED\u8A00(\u7528\u5168\u58A8\u8272,\u907F\u514D\u6DF1\u8272\u6A21\u5F0F\u4E0B\u8FC7\u6DE1) */\n.lang-btn { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; padding: 7px 10px; color: var(--ink); }\n.lang-float { position: fixed; top: 14px; right: 14px; z-index: 10; background: var(--paper); border: 1.5px solid var(--line); box-shadow: 3px 3px 0 var(--hard); }\n\n/* ============ Tabs:\u7968\u6839 ============ */\n.tabs { display: flex; gap: 10px; margin-bottom: 20px; }\n.tab {\n  flex: 1;\n  padding: 9px;\n  border: 1.5px dashed var(--line);\n  background: transparent;\n  border-radius: var(--radius-sm);\n  font-size: 14px;\n  font-weight: 600;\n  color: var(--muted);\n  cursor: pointer;\n  transition: color var(--t-fast), background var(--t-fast), border-color var(--t-fast);\n}\n.tab:hover { color: var(--ink); background: var(--rowbg); }\n.tab.active { border-style: solid; background: var(--tkhead-bg); border-color: var(--line); color: var(--tkhead-fg); }\n\n/* ============ \u62D6\u62FD\u533A:\u5305\u88F9\u5355 ============ */\n.dropzone {\n  border: 2px dashed var(--line);\n  border-radius: 12px;\n  padding: 36px 16px;\n  text-align: center;\n  cursor: pointer;\n  transition: background var(--t-fast);\n  outline: none;\n}\n.dropzone:hover, .dropzone:focus-visible, .dropzone.dragover { background: var(--rowbg); }\n.dz-icon { font-size: 34px; margin-bottom: 8px; transition: transform var(--t-med) ease; }\n.dropzone:hover .dz-icon, .dropzone.dragover .dz-icon { transform: scale(1.1) translateY(-2px); }\n.dropzone p { margin: 0 0 6px; font-size: 14px; }\n.dropzone p b { font-weight: 700; }\n.dropzone small { color: var(--muted); font-size: 13px; }\n\n/* ============ \u6587\u4EF6\u961F\u5217(\u591A\u9009\u6279\u91CF) ============ */\n.file-list { display: flex; flex-direction: column; gap: 8px; }\n.file-row {\n  position: relative;\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  background: var(--rowbg);\n  border: 1.5px solid var(--line);\n  border-radius: 10px;\n  padding: 10px 12px;\n  overflow: hidden;\n  animation: fade-up var(--t-slow) var(--ease) both;\n}\n.file-row.uploading { background: var(--warn-soft); }\n.file-row.done { background: var(--ok-soft); }\n.file-row.fail { background: var(--danger-soft); }\n.fr-icon { font-size: 20px; flex: none; }\n.fr-meta { flex: 1; min-width: 0; }\n.fr-meta b { display: block; font-size: 13.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.fr-meta small { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.fr-status { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--serif); }\n.file-row.done .fr-status { color: var(--ok); font-weight: 700; }\n.file-row.fail .fr-status { color: var(--danger); font-weight: 700; }\n.fr-remove { padding: 5px 7px; font-size: 13px; flex: none; }\n/* \u8FF7\u4F60\u8FDB\u5EA6\u6761:\u8D34\u884C\u5E95\u7F18(\u8721\u5C01\u6761) */\n.fr-bar {\n  position: absolute;\n  left: 0;\n  bottom: 0;\n  height: 3px;\n  width: 0;\n  border-radius: 999px;\n  background: var(--stamp);\n  transition: width var(--t-med) ease;\n}\n.file-row.done .fr-bar { width: 100%; background: var(--ok); }\n.file-row.fail .fr-bar { width: 100%; background: var(--danger); }\n\n/* ============ \u6587\u672C\u8F93\u5165 ============ */\ntextarea {\n  width: 100%;\n  border: 1.5px solid var(--line);\n  border-radius: 10px;\n  background: var(--paper);\n  color: var(--ink);\n  padding: 12px 14px;\n  font-size: 14px;\n  font-family: inherit;\n  line-height: 1.65;\n  resize: vertical;\n  transition: box-shadow var(--t-fast);\n}\ntextarea:focus { outline: none; box-shadow: 3px 3px 0 var(--hard-soft); }\n\n/* ============ \u9009\u9879 segmented:\u90AE\u8D44\u6807\u7B7E ============ */\n.options { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; margin: 22px 0 6px; }\n.opt-group label {\n  display: block;\n  font-size: 11.5px;\n  color: var(--muted);\n  letter-spacing: 0.18em;\n  margin-bottom: 7px;\n}\n.seg { display: flex; gap: 6px; flex-wrap: wrap; }\n.seg button {\n  padding: 6px 13px;\n  border: 1.5px solid var(--line);\n  background: transparent;\n  border-radius: 8px;\n  font-size: 13px;\n  font-weight: 600;\n  color: var(--muted);\n  cursor: pointer;\n  transition: color var(--t-fast), background var(--t-fast);\n}\n.seg button:hover { color: var(--ink); background: var(--rowbg); }\n.seg button.active { background: var(--stamp); border-color: var(--stamp); color: #fff; }\n\n/* ============ \u8FDB\u5EA6\u6761 ============ */\n.progress { margin-top: 18px; }\n.bar {\n  height: 12px;\n  background: var(--track);\n  border: 1.5px solid var(--line);\n  border-radius: 999px;\n  overflow: hidden;\n}\n.bar > div {\n  height: 100%;\n  width: 0;\n  background: linear-gradient(90deg, var(--stamp-dark), var(--stamp));\n  border-radius: 999px;\n  transition: width var(--t-med) ease;\n}\n.progress small { color: var(--muted); font-variant-numeric: tabular-nums; }\n\n/* ============ \u7ED3\u679C:\u53D6\u4EF6\u51ED\u8BC1(\u7968\u636E) ============ */\n.results { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }\n.result {\n  background: var(--paper);\n  border: 1.5px solid var(--line);\n  border-radius: 13px;\n  box-shadow: 6px 6px 0 var(--hard);\n  overflow: hidden;\n}\n/* \u6279\u91CF\u5934\u90E8 */\n.result-batch-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n  padding: 13px 16px;\n  border-radius: 13px;\n  background: var(--ok-soft);\n  border: 1.5px solid var(--line);\n  box-shadow: 4px 4px 0 var(--hard);\n}\n.result-batch-head .result-title { margin: 0; }\n.result-batch-head .btn-row { margin: 0; flex-wrap: nowrap; }\n.result-title { margin: 0; font-weight: 700; font-size: 14.5px; }\n.result-title.batch { font-family: var(--serif); letter-spacing: 0.04em; }\n/* \u7968\u5934 */\n.tk-head {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  background: var(--tkhead-bg);\n  color: var(--tkhead-fg);\n  padding: 9px 16px;\n  font-size: 12px;\n  letter-spacing: 0.3em;\n  font-weight: 600;\n}\n.tk-head .tk-no { letter-spacing: 0.08em; color: var(--stamp); font-family: var(--serif); }\n/* \u7968\u8EAB */\n.tk-body { padding: 18px 16px 14px; text-align: center; }\n.result-main { display: flex; align-items: center; justify-content: center; gap: 22px; flex-wrap: wrap; }\n.result-col { display: flex; flex-direction: column; align-items: center; min-width: 0; }\n.result-file-name { font-size: 13px; color: var(--muted); word-break: break-all; margin-bottom: 2px; }\n/* \u53E3\u4EE4\u74E6\u7247:\u90AE\u6233 */\n.code { display: flex; justify-content: center; gap: 8px; margin: 8px 0 10px; }\n.code span {\n  display: grid;\n  place-items: center;\n  width: 46px;\n  height: 58px;\n  font-family: var(--serif);\n  font-size: 30px;\n  font-weight: 700;\n  font-variant-numeric: tabular-nums;\n  color: var(--ink);\n  background: var(--paper);\n  border: 1.5px solid var(--line);\n  border-radius: 7px;\n  box-shadow: 2px 2px 0 var(--hard-soft);\n  user-select: all;\n}\n.code span:nth-child(odd) { transform: rotate(-1.6deg); }\n.code span:nth-child(even) { transform: rotate(1.4deg); }\n.result-link { color: var(--muted); font-size: 12px; word-break: break-all; }\n.result-meta { color: var(--muted); font-size: 12.5px; margin-top: 8px; }\n/* \u4E8C\u7EF4\u7801:\u767D\u5E95\u4FDD\u8BC1\u6DF1\u8272\u6A21\u5F0F\u53EF\u626B\u63CF */\n.qr-wrap {\n  flex: none;\n  background: #fff;\n  padding: 8px;\n  border-radius: 9px;\n  border: 1.5px solid var(--line);\n  box-shadow: 2px 2px 0 var(--hard-soft);\n}\n.qr-wrap svg { display: block; width: 110px; height: 110px; }\n.qr-hint { text-align: center; font-size: 10.5px; color: #6b7280; margin-top: 5px; letter-spacing: 0.18em; }\n/* \u6495\u7968\u7EBF(\u5E26\u7F3A\u53E3) */\n.tk-tear { border-top: 2px dashed var(--line); position: relative; margin: 0 14px; }\n.tk-tear::before, .tk-tear::after {\n  content: '';\n  position: absolute;\n  top: -9px;\n  width: 16px;\n  height: 16px;\n  border-radius: 50%;\n  background: var(--bag);\n  border: 1.5px solid var(--line);\n}\n.tk-tear::before { left: -24px; }\n.tk-tear::after { right: -24px; }\n/* \u7968\u811A */\n.tk-foot { display: flex; gap: 10px; justify-content: center; padding: 14px; flex-wrap: wrap; }\n.result .btn-row { justify-content: center; }\n\n/* ============ \u7279\u6027\u5E26(\u67DC\u53F0\u4E0B\u65B9:\u4E00\u6392\u4E1A\u52A1\u516C\u544A\u7AE0) ============ */\n.feat-band { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 28px; }\n.feat {\n  background: var(--paper);\n  border: 1.5px dashed var(--line);\n  border-radius: 11px;\n  box-shadow: 3px 3px 0 var(--hard-soft);\n  padding: 14px 16px;\n  display: flex; gap: 12px; align-items: center;\n  animation: fade-up var(--t-slow) var(--ease) both;\n}\n.feat:nth-child(2) { transform: rotate(0.4deg); }\n.feat:nth-child(3) { transform: rotate(-0.3deg); }\n.feat-ic {\n  width: 40px; height: 40px; flex: none;\n  border: 2px double var(--stamp); border-radius: 50%;\n  display: grid; place-items: center; font-size: 17px;\n}\n.feat b { display: block; font-size: 13.5px; font-family: var(--serif); letter-spacing: 0.04em; }\n.feat small { color: var(--muted); font-size: 12px; }\n\n/* ============ \u53D6\u4EF6\u9875 ============ */\nh2.title { margin: 8px 0 6px; font-size: 22px; font-weight: 700; line-height: 1.3; font-family: var(--serif); letter-spacing: 0.04em; }\n.pk-sub { margin: 0 0 16px; font-size: 13.5px; }\n.error-box {\n  margin-top: 14px;\n  padding: 12px 14px;\n  border-radius: var(--radius-sm);\n  background: var(--danger-soft);\n  border: 1.5px solid var(--danger);\n  color: var(--danger);\n  font-size: 14px;\n}\n.share-card {\n  display: flex;\n  align-items: center;\n  gap: 14px;\n  background: var(--rowbg);\n  border: 1.5px dashed var(--line);\n  border-radius: 10px;\n  padding: 16px;\n}\n.sc-icon { font-size: 32px; }\n.sc-meta { flex: 1; min-width: 0; text-align: left; }\n.sc-meta b { display: block; font-size: 15px; font-weight: 700; word-break: break-all; }\n.sc-meta small { color: var(--muted); }\n.meta-line { color: var(--muted); font-size: 13px; margin: 12px 2px 0; text-align: left; }\npre.text-body {\n  background: var(--rowbg);\n  border: 1.5px solid var(--line);\n  border-radius: 10px;\n  padding: 14px 16px;\n  white-space: pre-wrap;\n  word-break: break-all;\n  font-size: 13px;\n  line-height: 1.7;\n  max-height: 340px;\n  overflow: auto;\n  margin: 0 0 4px;\n  text-align: left;\n}\n\n/* ============ \u7BA1\u7406\u9875 ============ */\n.stats-row { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; margin-bottom: 20px; }\n.stats-counts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }\n.stats-counts .stat-card { display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0; }\n.stat-card {\n  background: var(--paper);\n  border: 1.5px solid var(--line);\n  border-radius: 11px;\n  padding: 16px 12px;\n  text-align: center;\n  box-shadow: 3px 3px 0 var(--hard-soft);\n}\n.stat-card b { display: block; font-size: 24px; font-weight: 700; font-family: var(--serif); font-variant-numeric: tabular-nums; line-height: 1.3; }\n.stat-card small { color: var(--muted); font-size: 12px; letter-spacing: 0.08em; }\n.table-wrap { overflow-x: auto; }\ntable { width: 100%; border-collapse: collapse; font-size: 13px; }\nth, td { text-align: left; padding: 10px; border-bottom: 1px dashed var(--line); white-space: nowrap; }\nth { color: var(--muted); font-weight: 600; font-size: 11.5px; letter-spacing: 0.1em; }\ntbody tr:last-child td { border-bottom: none; }\ntbody tr:hover td { background: var(--rowbg); }\ntd.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }\n.badge {\n  display: inline-block;\n  padding: 2px 10px;\n  border-radius: 999px;\n  border: 1.5px solid transparent;\n  font-size: 12px;\n  font-weight: 600;\n}\n.badge.active { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }\n.badge.expired { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }\n.badge.exhausted { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }\n.badge.kind-file { background: transparent; color: var(--stamp); border-color: var(--stamp); }\n.badge.kind-text { background: transparent; color: var(--muted); border-color: var(--line); }\n.token-input {\n  width: 100%;\n  padding: 11px 13px;\n  border: 1.5px solid var(--line);\n  border-radius: var(--radius-sm);\n  background: var(--paper);\n  color: var(--ink);\n  font-size: 14px;\n  margin: 12px 0 4px;\n  transition: box-shadow var(--t-fast);\n}\n.token-input:focus { outline: none; box-shadow: 3px 3px 0 var(--hard-soft); }\n.admin-foot { margin-top: 18px; display: flex; justify-content: flex-end; }\n.pager-btns { display: flex; gap: 8px; }\n\n/* ============ \u4F5C\u5E9F\u786E\u8BA4\u5F39\u7A97(\u7BA1\u7406\u9875):\u7968\u636E\u5361 + \u786C\u504F\u79FB\u6295\u5F71 ============ */\n.modal-mask {\n  position: fixed;\n  inset: 0;\n  z-index: 90;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  padding: 20px;\n  background: var(--mask);\n}\n.modal-mask[hidden] { display: none; }\n.modal-card {\n  background: var(--paper);\n  border: 2px solid var(--line);\n  border-radius: var(--radius);\n  box-shadow: 8px 8px 0 var(--hard);\n  padding: 22px 22px 18px;\n  width: min(430px, 100%);\n  animation: pop-in 0.18s ease-out;\n}\n.modal-title { margin: 0 0 14px; font-family: var(--serif); font-size: 19px; letter-spacing: 0.04em; }\n.del-target {\n  border: 1.5px dashed var(--line);\n  border-radius: var(--radius-sm);\n  background: var(--rowbg);\n  padding: 10px 14px;\n  margin-bottom: 12px;\n  display: grid;\n  gap: 6px;\n}\n.del-line { display: flex; gap: 10px; align-items: baseline; min-width: 0; }\n.del-line > :first-child { flex: 0 0 4em; font-size: 12px; letter-spacing: 0.08em; }\n.del-line > :last-child { min-width: 0; overflow-wrap: anywhere; }\n.del-warn { margin: 0 0 16px; color: var(--danger); font-size: 13px; line-height: 1.5; }\n.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }\n@keyframes pop-in { from { transform: translateY(8px); opacity: 0; } }\n\n/* ============ toast:\u58A8\u6761 ============ */\n#toast-host {\n  position: fixed;\n  bottom: calc(24px + env(safe-area-inset-bottom, 0px));\n  left: 50%;\n  transform: translateX(-50%);\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n  z-index: 99;\n  pointer-events: none;\n}\n.toast {\n  background: var(--tkhead-bg);\n  color: var(--tkhead-fg);\n  padding: 10px 18px;\n  border: 1.5px solid var(--line);\n  border-radius: 10px;\n  font-size: 14px;\n  box-shadow: 3px 3px 0 var(--hard);\n  opacity: 0;\n  transform: translateY(8px);\n  transition: opacity var(--t-med), transform var(--t-med);\n}\n.toast.show { opacity: 1; transform: translateY(0); }\n.toast.ok { background: var(--ok); border-color: var(--ok); color: #fff; }\n.toast.error { background: var(--danger); border-color: var(--danger); color: #fff; }\n\n/* ============ \u79FB\u52A8\u7AEF ============ */\n/* \u53CC\u680F\u5E76\u56DE\u5355\u680F:\u53F3\u680F\u56DE\u5230\u8868\u5355\u4E0B\u65B9,\u7A7A\u6001\u5360\u4F4D\u9690\u85CF */\n@media (max-width: 880px) {\n  .send-grid { grid-template-columns: 1fr; gap: 18px; }\n  .send-side .side-cap, .result-placeholder { display: none; }\n  /* \u90AE\u8DEF\u6761\u7AD6\u6392,\u8FDE\u7EBF\u8F6C\u4E3A\u5411\u4E0B\u865A\u7EBF;\u7279\u6027\u5E26\u4E24\u5217 */\n  .flow-strip { flex-direction: column; align-items: stretch; gap: 14px; padding: 16px 18px; }\n  .flow-link { flex: 0 0 0; width: 0; height: 26px; border-top: none; border-left: 2px dashed var(--line); margin: 0 0 0 22px; }\n  .flow-link::after { right: -6px; top: 12px; }\n  .feat-band { grid-template-columns: repeat(2, 1fr); margin-top: 20px; gap: 12px; }\n}\n@media (max-width: 640px) {\n  .options { grid-template-columns: 1fr; }\n  .card { padding: 18px; }\n  .topbar { padding: 14px 16px 8px; }\n  .code { gap: 6px; }\n  .code span { width: 42px; height: 52px; font-size: 27px; }\n  .otp-row { gap: 6px; }\n  .otp-box { width: 42px; height: 54px; font-size: 24px; }\n  .btn-row .btn { flex: 1; }\n  th, td { padding: 8px 6px; }\n  .row-between { flex-wrap: wrap; }\n  .stat-card b { font-size: 21px; }\n  .result-main { gap: 14px; }\n  .qr-wrap svg { width: 92px; height: 92px; }\n  .tk-tear::before, .tk-tear::after { width: 13px; height: 13px; top: -7.5px; }\n  .tk-tear::before { left: -20px; }\n  .tk-tear::after { right: -20px; }\n}\n\n/* ============ \u52A8\u6548 ============ */\n@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }\n@keyframes pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }\n.card { animation: fade-up var(--t-slow) var(--ease) both; }\n.result:not([hidden]) { animation: pop var(--t-slow) var(--ease) both; }\n\n@keyframes shake {\n  10%, 90% { transform: translateX(-2px); }\n  20%, 80% { transform: translateX(3px); }\n  30%, 50%, 70% { transform: translateX(-5px); }\n  40%, 60% { transform: translateX(5px); }\n}\n.shake { animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }\n\n/* \u952E\u76D8\u7126\u70B9\u53EF\u89C1\u6027 */\n.btn:focus-visible, .icon-btn:focus-visible, .tab:focus-visible,\n.seg button:focus-visible, a:focus-visible, .otp-box:focus-visible {\n  outline: 2px solid var(--stamp);\n  outline-offset: 2px;\n}\n\n/* \u53D6\u4EF6\u9875:6 \u683C\u53E3\u4EE4\u8F93\u5165(\u90AE\u6233\u683C) */\n.otp-row { display: flex; gap: 8px; justify-content: center; margin: 4px 0 8px; }\n.otp-box {\n  width: 46px;\n  height: 58px;\n  padding: 0;\n  text-align: center;\n  font-family: var(--serif);\n  font-size: 26px;\n  font-weight: 700;\n  font-variant-numeric: tabular-nums;\n  border: 1.5px solid var(--line);\n  border-radius: 9px;\n  background: var(--paper);\n  color: var(--ink);\n  caret-color: var(--stamp);\n  box-shadow: 2px 2px 0 var(--hard-soft);\n  transition: box-shadow var(--t-fast), border-color var(--t-fast);\n}\n.otp-box:focus { outline: none; border-color: var(--stamp); box-shadow: 3px 3px 0 var(--stamp); }\n\n/* \u8FDB\u5EA6\u6761:\u7B49\u5F85\u6001\u6D41\u5149 */\n@keyframes pending-slide { from { background-position: 0 0; } to { background-position: 34px 0; } }\n.bar > div.pending {\n  background-image: repeating-linear-gradient(\n    45deg,\n    rgba(255, 255, 255, 0) 0,\n    rgba(255, 255, 255, 0) 12px,\n    rgba(255, 255, 255, 0.3) 12px,\n    rgba(255, 255, 255, 0.3) 24px\n  );\n  background-size: 34px 34px;\n  animation: pending-slide 0.8s linear infinite;\n}\n\n.mono { font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace; font-variant-numeric: tabular-nums; }\n\n/* \u52A8\u753B\u654F\u611F\u7528\u6237 */\n@media (prefers-reduced-motion: reduce) {\n  *, *::before, *::after {\n    animation-duration: 0.01ms !important;\n    animation-iteration-count: 1 !important;\n    transition-duration: 0.01ms !important;\n  }\n}\n\n.storage-card { padding: 14px 18px; text-align: left; min-width: 0; }\n.storage-card small { letter-spacing: 0; }\n.storage-value { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }\n.storage-value b { font-size: 24px; white-space: nowrap; }\n.storage-total { font-size: 14px; color: var(--muted); white-space: nowrap; }\n.storage-meter { display: block; width: 100%; height: 6px; border: 0; background: var(--track); border-radius: 4px; overflow: hidden; }\n.storage-meter::-webkit-meter-bar { background: var(--track); border: 0; border-radius: 4px; height: 6px; }\n.storage-meter::-webkit-meter-optimum-value { background: var(--stamp); border-radius: 4px; }\n.storage-meter::-moz-meter-bar { background: var(--stamp); border-radius: 4px; }\n.storage-caption { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; }\n@media (max-width: 1000px) {\n  .stats-row { grid-template-columns: minmax(0, 1fr); gap: 12px; }\n  .stats-counts .stat-card { min-height: 90px; }\n}\n@media (max-width: 540px) {\n  .stats-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }\n  .stats-counts .stat-card:last-child { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; min-height: 60px; }\n}\n\n/* Upload source labels and private admin details. */\n.source-cell { min-width: 150px; max-width: 210px; white-space: normal; }\n.source-cell small { display: block; font-size: 11px; overflow-wrap: anywhere; }\n.source-link { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }\n.source-link:hover { color: var(--stamp); }\n.source-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); background: var(--paper); box-shadow: 0 20px 64px var(--mask); }\n.source-dialog::backdrop { background: var(--mask); }\n.source-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }\n.source-heading h3 { margin: 0; font-size: 18px; }\n.source-heading h3:focus { outline: none; }\n.source-body { padding: 10px 16px; }\n#source-detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; font-size: 13px; }\n#source-detail:not(:has(.source-field)) { display: block; overflow-wrap: anywhere; }\n.source-field { min-width: 0; display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: baseline; gap: 10px; }\n.source-field-wide { grid-column: 1 / -1; }\n.source-field small { font-family: inherit; font-size: 12px; font-weight: 400; }\n.source-field span { overflow-wrap: anywhere; }\n.source-field.mono span { font-size: 12px; line-height: 1.6; }\n#source-form { display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: center; gap: 6px 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }\n#source-form label { font-size: 12px; color: var(--muted); }\n#source-note { width: 100%; min-width: 0; padding: 5px 8px; background: var(--bag); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-sm); font: inherit; font-size: 16px; }\n#source-note:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\n#source-error { grid-column: 1 / -1; margin: 4px 0 0; }\n.source-footer { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: 8px; padding: 8px 16px; background: var(--paper); border-top: 1px solid var(--line); }\n.source-footer .btn { min-height: 36px; padding: 5px 12px; }\n@media (max-width: 420px) {\n  .source-heading { padding: 10px 12px; }\n  .source-body { padding: 10px 12px; }\n  .source-field, #source-form { grid-template-columns: 64px minmax(0, 1fr); column-gap: 8px; }\n  .source-footer { padding: 8px 12px; }\n  .source-footer .btn { flex: 1; min-height: 40px; }\n}\n\n/* Keep the type visible above the filename baseline, outside its ellipsis. */\n.share-filename-line { display: flex; align-items: baseline; gap: 5px; width: clamp(150px, 18vw, 220px); }\n.share-filename { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.share-kind.badge { flex: none; position: relative; top: -0.45em; padding: 0 4px; font-size: 10px; line-height: 1.4; }\n\n/* Phone layouts keep the primary action close to the input. */\n@media (max-width: 640px) {\n  .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; margin-bottom: 12px; }\n  .brand { min-width: 0; gap: 8px; }\n  .brand .logo { width: 34px; height: 34px; font-size: 18px; flex: none; }\n  .brand b { font-size: 16px; letter-spacing: 0; }\n  .brand small { display: block; font-size: 11px; }\n  .actions { gap: 2px; }\n  .actions .btn, .actions .icon-btn { min-height: 40px; min-width: 40px; padding: 7px 8px; }\n  .container { padding: 4px 12px 24px; }\n  .card { padding: 14px; box-shadow: 3px 3px 0 var(--hard); }\n  main:has(> .send-grid) { justify-content: flex-start; }\n  .send-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }\n  .flow-strip { flex-direction: row; gap: 6px; padding: 10px; margin-bottom: 12px; box-shadow: 3px 3px 0 var(--hard); }\n  .flow-step { flex-direction: column; gap: 3px; text-align: center; }\n  .flow-dot { width: 28px; height: 28px; font-size: 15px; }\n  .flow-tt b { font-size: 12px; letter-spacing: 0; }\n  .flow-tt small, .flow-link { display: none; }\n  .card-cap { margin: 0 0 10px; letter-spacing: 0.1em; }\n  .tabs { gap: 8px; margin-bottom: 12px; }\n  .tab { min-height: 42px; }\n  .dropzone { padding: 20px 12px; }\n  .dz-icon { font-size: 28px; margin-bottom: 4px; }\n  .options { gap: 12px; margin: 14px 0 0; }\n  .opt-group label { margin-bottom: 5px; letter-spacing: 0.04em; }\n  .seg { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 5px; }\n  .seg button { min-height: 40px; padding: 6px 4px; font-size: 12px; }\n  .btn.block { min-height: 44px; margin-top: 12px; }\n  textarea, .token-input { font-size: 16px; }\n  .file-row { gap: 8px; padding: 8px; }\n  .fr-remove { min-width: 40px; min-height: 40px; }\n  .fr-status { max-width: 5em; white-space: normal; overflow-wrap: anywhere; font-size: 12px; }\n  .feat-band { gap: 8px; margin-top: 14px; }\n  .feat { gap: 8px; padding: 10px; align-items: flex-start; }\n  .feat-ic { width: 28px; height: 28px; font-size: 14px; }\n  .feat > div { min-width: 0; overflow-wrap: anywhere; }\n  .feat b { font-size: 12px; letter-spacing: 0; }\n  .feat small { font-size: 11px; }\n  .foot { padding: 18px 12px 12px; letter-spacing: 0.06em; }\n  .otp-row, .code { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; width: 100%; max-width: 320px; margin-inline: auto; }\n  .otp-box, .code span { width: 100%; min-width: 0; height: 48px; font-size: 24px; }\n  .code { padding-inline: 2px; } /* Leave room for the tilted digit borders. */\n  .result-col { width: 100%; }\n  .result-batch-head { padding: 12px; gap: 8px; }\n  .result-batch-head .btn-row { width: 100%; flex-wrap: wrap; }\n  .result-batch-head .btn { min-width: 0; padding: 8px; }\n  .tk-head { gap: 8px; letter-spacing: 0.1em; }\n  .tk-body { padding: 14px 12px; }\n  .tk-foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; gap: 8px; }\n  .tk-foot .btn { min-height: 42px; padding: 8px 6px; }\n  .sc-meta small { overflow-wrap: anywhere; }\n  .modal-mask { padding: 12px; }\n  .modal-card { padding: 16px; max-height: calc(100dvh - 24px); overflow: auto; }\n  .modal-actions .btn { flex: 1; min-height: 42px; padding: 8px; }\n  .stats-counts { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }\n  .stats-counts .stat-card { grid-column: span 2; min-height: 66px; padding: 10px 6px; gap: 3px; }\n  .stats-counts .stat-card:nth-last-child(-n+2) { grid-column: span 3; }\n  .stats-counts .stat-card:last-child { flex-direction: column; }\n  .stat-card small { letter-spacing: 0; font-size: 11px; }\n  .storage-card { padding: 12px 14px; }\n  #admin-panel .table-wrap { overscroll-behavior-x: contain; }\n  #admin-panel td .btn { min-height: 40px; }\n  .admin-pager { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 14px; }\n  .admin-pager .pager-btns { display: flex; gap: 6px; }\n  .admin-pager .btn { min-height: 40px; padding-inline: 8px; }\n  .admin-pager #page-info { grid-column: 1 / -1; grid-row: 2; text-align: center; }\n}\n@media (max-width: 360px) {\n  .topbar .brand .logo { display: none; }\n  .feat { gap: 6px; padding: 8px; }\n}\n\n.file-detail-link { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }\n.file-detail-link:hover { color: var(--stamp); }\n.guest-settings { margin: 0 0 12px; font-size: 13px; }\n.guest-settings summary { cursor: pointer; padding: 4px 0; }\n.login-guard-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; }\n.login-guard-heading .btn, .login-guard-row .btn { flex-shrink: 0; }\n.login-guard-bans { display: grid; gap: 8px; max-height: 320px; overflow: auto; }\n.login-guard-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px dashed var(--line); }\n.login-guard-info { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }\n@media (max-width: 540px) { #login-protection .btn { min-height: 40px; } }\n#guest-policy-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 10px 0; }\n#guest-policy-form label { display: grid; gap: 4px; }\n#guest-policy-form input { width: 110px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; }\n#guest-policy-form input:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\n#upload-policy-hint { display: block; margin: 0 0 8px; font-size: 12px; }\n.seg button:disabled { opacity: .4; cursor: not-allowed; }\n.file-detail-link:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\n.file-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; font-size: 13px; overflow-wrap: anywhere; }\n.file-wide { grid-column: 1 / -1; }\n.file-identity { display: grid; gap: 4px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }\n.file-identity strong { font-size: 14px; font-weight: 600; line-height: 1.5; }\n.file-field { display: grid; align-content: start; gap: 3px; min-width: 0; }\n.file-field-value { min-width: 0; font-variant-numeric: tabular-nums; }\n.file-field .badge { white-space: normal; }\n.file-source-link { max-width: 100%; text-align: left; overflow-wrap: anywhere; }\n.file-technical { border-top: 1px dashed var(--line); padding-top: 8px; }\n.file-technical summary { cursor: pointer; color: var(--muted); }\n.file-technical-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }\n.file-technical-grid > :first-child { grid-column: 1 / -1; }\n#file-dialog .source-body { padding-top: 12px; padding-bottom: 12px; }\n.retention-settings { padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px dashed var(--line); }\n#retention-form { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; }\n#retention-days { width: 80px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; }\n#retention-days:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\n#retention-error { margin: 8px 0; }\n@media (max-width: 640px) {\n  #retention-form .btn, #retention-days { min-height: 40px; }\n}\n" });
+`, "style.css": `/* ============================================================\r
+   \u90AE\u653F\u7968\u636E\u4E3B\u9898:\u725B\u76AE\u7EB8\u5E95 \xB7 \u58A8\u7EFF\u6CB9\u58A8 \xB7 \u6A59\u8272\u90AE\u6233 \xB7 \u786C\u6295\u5F71\u63CF\u8FB9\r
+   \u7ED3\u679C\u5361\u7247 = \u53D6\u4EF6\u51ED\u8BC1(\u7968\u5934 + \u90AE\u6233\u53E3\u4EE4\u74E6\u7247 + \u6495\u7968\u7EBF + \u7968\u811A)\r
+   ============================================================ */\r
+:root {\r
+  --bag: #efe8d8;            /* \u725B\u76AE\u7EB8\u5E95 */\r
+  --paper: #fffdf6;          /* \u7968\u636E\u7EB8\u9762 */\r
+  --ink: #26382c;            /* \u6CB9\u58A8(\u6B63\u6587/\u4E3B\u8272) */\r
+  --line: #26382c;           /* \u63CF\u8FB9 */\r
+  --muted: #6b7563;          /* \u892A\u8272\u58A8 */\r
+  --stamp: #d96f32;          /* \u90AE\u6233\u6A59 */\r
+  --stamp-dark: #b85a24;\r
+  --ok: #3c7a52;\r
+  --ok-soft: #eef3ec;\r
+  --danger: #b3403a;\r
+  --danger-soft: #f7e9e4;\r
+  --warn: #a2661c;\r
+  --warn-soft: #f8efdd;\r
+  --rowbg: #f7f2e4;          /* \u6587\u4EF6\u884C\u5E95 */\r
+  --track: #e6dfca;          /* \u8FDB\u5EA6\u69FD */\r
+  --tkhead-bg: #26382c;      /* \u7968\u5934\u5E95 */\r
+  --tkhead-fg: #f4efdd;      /* \u7968\u5934\u5B57 */\r
+  --hard: rgba(38, 56, 44, 0.9);   /* \u786C\u6295\u5F71 */\r
+  --mask: rgba(24, 20, 12, 0.55);  /* \u5F39\u7A97\u906E\u7F69 */\r
+  --hard-soft: rgba(38, 56, 44, 0.35);\r
+  --dots: rgba(38, 56, 44, 0.05);  /* \u7EB8\u9762\u7F51\u70B9\u7EB9\u7406 */\r
+  --radius: 14px;\r
+  --radius-sm: 9px;\r
+  --serif: Georgia, 'Times New Roman', 'Songti SC', 'SimSun', serif;\r
+  /* \u52A8\u6548\u8282\u594F */\r
+  --t-fast: 0.15s;\r
+  --t-med: 0.25s;\r
+  --t-slow: 0.35s;\r
+  --ease: cubic-bezier(0.2, 0, 0, 1);\r
+}\r
+[data-theme='dark'] {\r
+  /* \u58A8\u84DD\u591C\u822A:\u85CF\u84DD\u7EB8\u9762,\u84DD\u6A59\u4E92\u8865,\u90AE\u6233\u6A59\u591C\u91CC\u6700\u8DF3 */\r
+  --bag: #12161f;\r
+  --paper: #1a2130;\r
+  --ink: #e8e5d6;\r
+  --line: #46516b;\r
+  --muted: #a9b2c9;\r
+  --stamp: #e68d4f;\r
+  --stamp-dark: #c9702f;\r
+  --ok: #7fc79c;\r
+  --ok-soft: #254432;\r
+  --danger: #e08a7c;\r
+  --danger-soft: #462822;\r
+  --warn: #d9ab63;\r
+  --warn-soft: #413120;\r
+  --rowbg: #222b44;\r
+  --track: #151b28;\r
+  --tkhead-bg: #33415c;\r
+  --tkhead-fg: #f0eee0;\r
+  --hard: rgba(0, 0, 0, 0.5);\r
+  --hard-soft: rgba(0, 0, 0, 0.32);\r
+  /* \u6DF1\u8272\u4E0B\u540C\u900F\u660E\u5EA6\u7684\u906E\u7F69\u51E0\u4E4E\u770B\u4E0D\u51FA\u6765,\u52A0\u6DF1\u4E00\u6863\u4FDD\u4F4F\u5F39\u7A97\u4E0E\u80CC\u666F\u7684\u5206\u79BB\u611F */\r
+  --mask: rgba(4, 7, 14, 0.72);\r
+  --dots: rgba(232, 229, 214, 0.05);\r
+}\r
+\r
+* { box-sizing: border-box; }\r
+/* [hidden] \u515C\u5E95:\u7C7B\u4E0A\u7684 display:flex/inline-flex \u4F1A\u76D6\u8FC7 UA \u6837\u5F0F\u8868\u7684 [hidden]{display:none},\r
+   \u5BFC\u81F4 .result-placeholder/.file-list \u7B49\u8BBE\u4E86 hidden \u4ECD\u53EF\u89C1 */\r
+[hidden] { display: none !important; }\r
+html { -webkit-text-size-adjust: 100%; }\r
+body {\r
+  margin: 0;\r
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto,\r
+    'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei', sans-serif;\r
+  font-size: 15px;\r
+  line-height: 1.6;\r
+  color: var(--ink);\r
+  min-height: 100vh;\r
+  /* \u7EB5\u5411 flex \u9AA8\u67B6:main \u5403\u6389\u5269\u4F59\u9AD8\u5EA6,\u9875\u811A\u8D34\u89C6\u53E3\u5E95 */\r
+  display: flex;\r
+  flex-direction: column;\r
+  background:\r
+    radial-gradient(var(--dots) 1px, transparent 1px) 0 0 / 22px 22px,\r
+    var(--bag);\r
+  -webkit-font-smoothing: antialiased;\r
+  text-rendering: optimizeLegibility;\r
+}\r
+\r
+::selection { background: var(--stamp); color: #fff; }\r
+\r
+/* \u7EC6\u6EDA\u52A8\u6761 */\r
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }\r
+::-webkit-scrollbar { width: 8px; height: 8px; }\r
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }\r
+::-webkit-scrollbar-track { background: transparent; }\r
+\r
+/* ============ \u9876\u680F ============ */\r
+.topbar {\r
+  display: flex;\r
+  align-items: center;\r
+  justify-content: space-between;\r
+  padding: 22px 20px 14px;\r
+  width: 100%; /* body \u6539\u7EB5\u5411 flex \u540E,auto margin \u6761\u76EE\u4F1A\u6536\u7F29\u5230\u5185\u5BB9\u5BBD,\u663E\u5F0F\u62C9\u6EE1\u518D\u7531 max-width \u6536\u53E3 */\r
+  max-width: 720px;\r
+  margin: 0 auto 26px;\r
+  border-bottom: 3px double var(--line);\r
+}\r
+.topbar.wide { max-width: 1080px; }\r
+.brand { display: flex; align-items: center; gap: 12px; }\r
+.brand .logo {\r
+  display: grid;\r
+  place-items: center;\r
+  width: 42px;\r
+  height: 42px;\r
+  font-size: 21px;\r
+  border-radius: 10px;\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  box-shadow: 3px 3px 0 var(--hard);\r
+}\r
+.brand b {\r
+  font-family: var(--serif);\r
+  font-size: 18px;\r
+  font-weight: 700;\r
+  display: block;\r
+  line-height: 1.25;\r
+  letter-spacing: 0.05em;\r
+}\r
+.brand small { color: var(--muted); font-size: 12px; }\r
+.actions { display: flex; align-items: center; gap: 8px; }\r
+\r
+/* ============ \u5E03\u5C40 ============ */\r
+.container { width: 100%; max-width: 720px; margin: 0 auto; padding: 8px 16px 48px; }\r
+.container.wide { max-width: 1080px; }\r
+.container.narrow { max-width: 460px; }\r
+.card {\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: var(--radius);\r
+  box-shadow: 6px 6px 0 var(--hard);\r
+  padding: 24px;\r
+  margin-bottom: 18px;\r
+}\r
+.card.center { text-align: center; }\r
+.muted { color: var(--muted); }\r
+.row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }\r
+\r
+main { flex: 1 0 auto; } /* \u6491\u6EE1\u89C6\u53E3\u5269\u4F59\u9AD8\u5EA6,\u628A\u9875\u811A\u63A8\u5230\u5E95 */\r
+/* \u515C\u5E95:\u5373\u4F7F main \u6CA1\u6491\u5F00(\u5F02\u5E38\u9875\u9762)\u4E5F\u628A\u9875\u811A\u63A8\u5230\u5E95 */\r
+.foot {\r
+  margin-top: auto;\r
+  text-align: center;\r
+  color: var(--muted);\r
+  font-size: 12px;\r
+  letter-spacing: 0.14em;\r
+  padding: 32px 16px 10px;\r
+}\r
+\r
+/* ============ \u90AE\u8DEF\u4E09\u6B65\u6761(\u67DC\u53F0\u4E0A\u65B9:\u5BC4\u4EF6\u2192\u51FA\u7968\u2192\u53D6\u4EF6) ============ */\r
+.flow-strip {\r
+  display: flex;\r
+  align-items: center;\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 13px;\r
+  box-shadow: 6px 6px 0 var(--hard);\r
+  padding: 18px 26px;\r
+  margin-bottom: 24px;\r
+  animation: fade-up var(--t-slow) var(--ease) both;\r
+}\r
+.flow-step { flex: 1; display: flex; align-items: center; gap: 13px; min-width: 0; }\r
+.flow-dot {\r
+  width: 46px; height: 46px; flex: none;\r
+  border: 2.5px double var(--stamp); border-radius: 50%;\r
+  display: grid; place-items: center;\r
+  font-size: 20px; color: var(--stamp); font-family: var(--serif);\r
+}\r
+.flow-step:nth-child(1) .flow-dot { transform: rotate(-7deg); }\r
+.flow-step:nth-child(3) .flow-dot { transform: rotate(5deg); }\r
+.flow-step:nth-child(5) .flow-dot { transform: rotate(-4deg); }\r
+.flow-tt b { display: block; font-size: 14px; font-family: var(--serif); letter-spacing: 0.06em; }\r
+.flow-tt small { color: var(--muted); font-size: 12px; }\r
+.flow-link { flex: 0 0 58px; border-top: 2px dashed var(--line); margin: 0 12px; position: relative; }\r
+.flow-link::after {\r
+  content: '\u2708'; position: absolute; right: -4px; top: -11px;\r
+  font-size: 12px; color: var(--stamp);\r
+}\r
+\r
+/* ============ \u53D1\u9001\u9875:\u67DC\u53F0\u53CC\u680F(\u5DE6\u5BC4\u4EF6\u5355 / \u53F3\u56DE\u6267\u5E38\u9A7B) ============ */\r
+/* \u5185\u5BB9\u4E0D\u8DB3\u4E00\u5C4F\u65F6\u67DC\u53F0\u4E0A/\u4E0B\u7559\u767D\u5747\u8861;\u8D85\u51FA\u4E00\u5C4F\u65F6 main \u9AD8\u5EA6=\u5185\u5BB9\u9AD8,\u81EA\u52A8\u9000\u5316\u4E3A\u9876\u5BF9\u9F50 */\r
+main:has(> .send-grid) { display: flex; flex-direction: column; justify-content: center; }\r
+.send-grid {\r
+  display: grid;\r
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);\r
+  gap: 26px;\r
+  align-items: stretch; /* \u4E24\u680F\u540C\u9AD8:\u7A7A\u6001\u65F6\u53F3\u680F\u5360\u4F4D\u6491\u5230\u4E0E\u8868\u5355\u5361\u9F50\u5E95 */\r
+}\r
+.form-card { min-width: 0; margin-bottom: 0; align-self: stretch; display: flex; flex-direction: column; } /* \u4E24\u680F\u9F50\u5E95:\u8868\u5355\u5361\u540C\u6837\u62C9\u4F38(\u56DE\u6267\u680F\u5185\u5BB9\u66F4\u9AD8\u65F6\u4E0D\u518D\u53C2\u5DEE) */\r
+/* \u62C9\u4F38\u540E\u7684\u591A\u4F59\u9AD8\u5EA6\u4EA4\u7ED9\u8F93\u5165\u533A\u5438\u6536:\u62D6\u62FD\u533A/\u6587\u672C\u6846/\u6587\u4EF6\u961F\u5217\u957F\u9AD8,\u9009\u9879\u548C\u6309\u94AE\u4E0D\u88AB\u9876\u5F97\u60AC\u7A7A */\r
+.form-card .panel { display: flex; flex-direction: column; flex: 1; }\r
+.form-card .dropzone, .form-card textarea, .form-card .file-list { flex: 1; }\r
+.form-card .dropzone { display: flex; flex-direction: column; justify-content: center; }\r
+.card-cap, .side-cap {\r
+  display: flex;\r
+  justify-content: space-between;\r
+  align-items: baseline;\r
+  margin: -4px 0 16px;\r
+  font-size: 11.5px;\r
+  letter-spacing: 0.3em;\r
+  color: var(--muted);\r
+  font-weight: 600;\r
+}\r
+.card-cap .cap-date {\r
+  font-family: var(--serif);\r
+  color: var(--stamp);\r
+  letter-spacing: 0.08em;\r
+  font-size: 12.5px;\r
+}\r
+/* \u53F3\u680F\u968F\u884C\u9AD8\u62C9\u4F38:sticky \u5728 stretch \u4E0B\u4E0D\u518D\u751F\u6548(\u4E24\u680F\u6C38\u8FDC\u540C\u9AD8,\u65E0\u53EF\u7C98\u6EDE\u4F59\u91CF),\u6539\u4E3A flex \u7EB5\u5411\u680F */\r
+.send-side { display: flex; flex-direction: column; min-width: 0; }\r
+.send-side .results { margin-top: 0; }\r
+/* \u56DE\u6267\u7A7A\u6001:\u5F85\u51FA\u7968\u90AE\u6233 */\r
+.result-placeholder {\r
+  border: 1.5px dashed var(--line);\r
+  border-radius: 13px;\r
+  padding: 38px 20px;\r
+  min-height: 340px; /* \u4E0E\u5DE6\u680F\u8868\u5355\u5361\u89C6\u89C9\u5E73\u8861 */\r
+  flex: 1; /* \u53F3\u680F\u88AB\u62C9\u4F38\u65F6\u5360\u4F4D\u968F\u4E4B\u957F\u9AD8,\u5E95\u8FB9\u4E0E\u8868\u5355\u5361\u5BF9\u9F50 */\r
+  display: flex;\r
+  flex-direction: column;\r
+  justify-content: center;\r
+  align-items: center;\r
+  text-align: center;\r
+  animation: fade-up var(--t-slow) var(--ease) both;\r
+}\r
+.ph-postmark {\r
+  width: 76px;\r
+  height: 76px;\r
+  margin: 0 auto 14px;\r
+  border: 2.5px double var(--stamp);\r
+  border-radius: 50%;\r
+  display: grid;\r
+  place-items: center;\r
+  color: var(--stamp);\r
+  font-family: var(--serif);\r
+  font-size: 10px;\r
+  letter-spacing: 0.22em;\r
+  text-indent: 0.22em; /* \u8865\u507F\u5B57\u8DDD,\u8BA9\u5706\u5F62\u90AE\u6233\u89C6\u89C9\u5C45\u4E2D */\r
+  transform: rotate(-8deg);\r
+  opacity: 0.8;\r
+}\r
+.result-placeholder p { margin: 0 0 4px; font-weight: 700; font-family: var(--serif); letter-spacing: 0.08em; }\r
+.result-placeholder small { color: var(--muted); font-size: 12.5px; }\r
+/* \u7A7A\u6001\u5185\u5D4C\u300C\u5728\u9014\u90AE\u8DEF\u300D\u7AD6\u5411\u65F6\u95F4\u7EBF:\u53F3\u680F\u4E0D\u7A7A */\r
+.ph-route { margin-top: 24px; width: 100%; max-width: 300px; text-align: left; }\r
+.ph-leg { display: flex; gap: 13px; align-items: flex-start; }\r
+.ph-ic {\r
+  width: 40px; height: 40px; flex: none;\r
+  border: 1.5px solid var(--line); border-radius: 50%;\r
+  background: var(--rowbg);\r
+  display: grid; place-items: center; font-size: 17px;\r
+}\r
+.ph-leg:nth-child(1) .ph-ic { transform: rotate(-6deg); }\r
+.ph-leg b { display: block; font-size: 13px; font-family: var(--serif); letter-spacing: 0.04em; }\r
+.ph-leg small { color: var(--muted); font-size: 11.5px; line-height: 1.5; }\r
+.ph-dash { width: 0; height: 22px; border-left: 2px dashed var(--line); margin: 3px 0 3px 19px; }\r
+.ph-fine {\r
+  margin-top: 22px; padding-top: 13px; width: 100%; max-width: 300px;\r
+  border-top: 1.5px dashed var(--line);\r
+  color: var(--muted); font-size: 11px; letter-spacing: 0.12em; text-align: center;\r
+}\r
+\r
+/* ============ \u6309\u94AE:\u90AE\u6233\u7AE0 ============ */\r
+.btn {\r
+  display: inline-flex;\r
+  align-items: center;\r
+  justify-content: center;\r
+  gap: 6px;\r
+  padding: 9px 18px;\r
+  border-radius: var(--radius-sm);\r
+  border: 1.5px solid var(--line);\r
+  background: var(--paper);\r
+  color: var(--ink);\r
+  font-size: 14px;\r
+  font-weight: 600;\r
+  cursor: pointer;\r
+  text-decoration: none;\r
+  box-shadow: 2px 2px 0 var(--hard-soft);\r
+  transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast), color var(--t-fast), opacity var(--t-fast);\r
+}\r
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--hard-soft); }\r
+.btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--hard-soft); }\r
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: 2px 2px 0 var(--hard-soft); }\r
+.btn.primary {\r
+  background: var(--tkhead-bg);\r
+  border-color: var(--line);\r
+  color: var(--tkhead-fg);\r
+  box-shadow: 3px 3px 0 var(--stamp);\r
+}\r
+.btn.primary:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--stamp); }\r
+.btn.primary:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--stamp); }\r
+.btn.primary:disabled { box-shadow: 2px 2px 0 var(--hard-soft); } /* \u7981\u7528\u65F6\u4E0D\u4EAE\u6A59\u5F71,\u907F\u514D\u8BEF\u8BFB\u4E3A\u53EF\u70B9 */\r
+.btn.ghost { background: transparent; box-shadow: none; border-color: var(--line); }\r
+.btn.ghost:hover { background: var(--rowbg); transform: none; }\r
+.btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 2px 2px 0 var(--hard-soft); }\r
+.btn.small { padding: 5px 12px; font-size: 13px; border-radius: 8px; }\r
+.btn.block { width: 100%; margin-top: 16px; }\r
+.btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }\r
+.icon-btn {\r
+  background: transparent;\r
+  border: none;\r
+  font-size: 17px;\r
+  cursor: pointer;\r
+  color: var(--muted);\r
+  padding: 7px 9px;\r
+  border-radius: 8px;\r
+  transition: background var(--t-fast), color var(--t-fast);\r
+}\r
+.icon-btn:hover { background: var(--rowbg); color: var(--ink); }\r
+/* \u8BED\u8A00\u5207\u6362:\u663E\u793A\u76EE\u6807\u8BED\u8A00(\u7528\u5168\u58A8\u8272,\u907F\u514D\u6DF1\u8272\u6A21\u5F0F\u4E0B\u8FC7\u6DE1) */\r
+.lang-btn { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; padding: 7px 10px; color: var(--ink); }\r
+.lang-float { position: fixed; top: 14px; right: 14px; z-index: 10; background: var(--paper); border: 1.5px solid var(--line); box-shadow: 3px 3px 0 var(--hard); }\r
+\r
+/* ============ Tabs:\u7968\u6839 ============ */\r
+.tabs { display: flex; gap: 10px; margin-bottom: 20px; }\r
+.tab {\r
+  flex: 1;\r
+  padding: 9px;\r
+  border: 1.5px dashed var(--line);\r
+  background: transparent;\r
+  border-radius: var(--radius-sm);\r
+  font-size: 14px;\r
+  font-weight: 600;\r
+  color: var(--muted);\r
+  cursor: pointer;\r
+  transition: color var(--t-fast), background var(--t-fast), border-color var(--t-fast);\r
+}\r
+.tab:hover { color: var(--ink); background: var(--rowbg); }\r
+.tab.active { border-style: solid; background: var(--tkhead-bg); border-color: var(--line); color: var(--tkhead-fg); }\r
+\r
+/* ============ \u62D6\u62FD\u533A:\u5305\u88F9\u5355 ============ */\r
+.dropzone {\r
+  border: 2px dashed var(--line);\r
+  border-radius: 12px;\r
+  padding: 36px 16px;\r
+  text-align: center;\r
+  cursor: pointer;\r
+  transition: background var(--t-fast);\r
+  outline: none;\r
+}\r
+.dropzone:hover, .dropzone:focus-visible, .dropzone.dragover { background: var(--rowbg); }\r
+.dz-icon { font-size: 34px; margin-bottom: 8px; transition: transform var(--t-med) ease; }\r
+.dropzone:hover .dz-icon, .dropzone.dragover .dz-icon { transform: scale(1.1) translateY(-2px); }\r
+.dropzone p { margin: 0 0 6px; font-size: 14px; }\r
+.dropzone p b { font-weight: 700; }\r
+.dropzone small { color: var(--muted); font-size: 13px; }\r
+\r
+/* ============ \u6587\u4EF6\u961F\u5217(\u591A\u9009\u6279\u91CF) ============ */\r
+.file-list { display: flex; flex-direction: column; gap: 8px; }\r
+.file-row {\r
+  position: relative;\r
+  display: flex;\r
+  align-items: center;\r
+  gap: 12px;\r
+  background: var(--rowbg);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 10px;\r
+  padding: 10px 12px;\r
+  overflow: hidden;\r
+  animation: fade-up var(--t-slow) var(--ease) both;\r
+}\r
+.file-row.uploading { background: var(--warn-soft); }\r
+.file-row.done { background: var(--ok-soft); }\r
+.file-row.fail { background: var(--danger-soft); }\r
+.fr-icon { font-size: 20px; flex: none; }\r
+.fr-meta { flex: 1; min-width: 0; }\r
+.fr-meta b { display: block; font-size: 13.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r
+.fr-meta small { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r
+.fr-status { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--serif); }\r
+.file-row.done .fr-status { color: var(--ok); font-weight: 700; }\r
+.file-row.fail .fr-status { color: var(--danger); font-weight: 700; }\r
+.fr-remove { padding: 5px 7px; font-size: 13px; flex: none; }\r
+/* \u8FF7\u4F60\u8FDB\u5EA6\u6761:\u8D34\u884C\u5E95\u7F18(\u8721\u5C01\u6761) */\r
+.fr-bar {\r
+  position: absolute;\r
+  left: 0;\r
+  bottom: 0;\r
+  height: 3px;\r
+  width: 0;\r
+  border-radius: 999px;\r
+  background: var(--stamp);\r
+  transition: width var(--t-med) ease;\r
+}\r
+.file-row.done .fr-bar { width: 100%; background: var(--ok); }\r
+.file-row.fail .fr-bar { width: 100%; background: var(--danger); }\r
+\r
+/* ============ \u6587\u672C\u8F93\u5165 ============ */\r
+textarea {\r
+  width: 100%;\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 10px;\r
+  background: var(--paper);\r
+  color: var(--ink);\r
+  padding: 12px 14px;\r
+  font-size: 14px;\r
+  font-family: inherit;\r
+  line-height: 1.65;\r
+  resize: vertical;\r
+  transition: box-shadow var(--t-fast);\r
+}\r
+textarea:focus { outline: none; box-shadow: 3px 3px 0 var(--hard-soft); }\r
+\r
+/* ============ \u9009\u9879 segmented:\u90AE\u8D44\u6807\u7B7E ============ */\r
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; margin: 22px 0 6px; }\r
+.opt-group label {\r
+  display: block;\r
+  font-size: 11.5px;\r
+  color: var(--muted);\r
+  letter-spacing: 0.18em;\r
+  margin-bottom: 7px;\r
+}\r
+.seg { display: flex; gap: 6px; flex-wrap: wrap; }\r
+.seg button {\r
+  padding: 6px 13px;\r
+  border: 1.5px solid var(--line);\r
+  background: transparent;\r
+  border-radius: 8px;\r
+  font-size: 13px;\r
+  font-weight: 600;\r
+  color: var(--muted);\r
+  cursor: pointer;\r
+  transition: color var(--t-fast), background var(--t-fast);\r
+}\r
+.seg button:hover { color: var(--ink); background: var(--rowbg); }\r
+.seg button.active { background: var(--stamp); border-color: var(--stamp); color: #fff; }\r
+\r
+/* ============ \u8FDB\u5EA6\u6761 ============ */\r
+.progress { margin-top: 18px; }\r
+.bar {\r
+  height: 12px;\r
+  background: var(--track);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 999px;\r
+  overflow: hidden;\r
+}\r
+.bar > div {\r
+  height: 100%;\r
+  width: 0;\r
+  background: linear-gradient(90deg, var(--stamp-dark), var(--stamp));\r
+  border-radius: 999px;\r
+  transition: width var(--t-med) ease;\r
+}\r
+.progress small { color: var(--muted); font-variant-numeric: tabular-nums; }\r
+\r
+/* ============ \u7ED3\u679C:\u53D6\u4EF6\u51ED\u8BC1(\u7968\u636E) ============ */\r
+.results { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }\r
+.result {\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 13px;\r
+  box-shadow: 6px 6px 0 var(--hard);\r
+  overflow: hidden;\r
+}\r
+/* \u6279\u91CF\u5934\u90E8 */\r
+.result-batch-head {\r
+  display: flex;\r
+  align-items: center;\r
+  justify-content: space-between;\r
+  gap: 12px;\r
+  flex-wrap: wrap;\r
+  padding: 13px 16px;\r
+  border-radius: 13px;\r
+  background: var(--ok-soft);\r
+  border: 1.5px solid var(--line);\r
+  box-shadow: 4px 4px 0 var(--hard);\r
+}\r
+.result-batch-head .result-title { margin: 0; }\r
+.result-batch-head .btn-row { margin: 0; flex-wrap: nowrap; }\r
+.result-title { margin: 0; font-weight: 700; font-size: 14.5px; }\r
+.result-title.batch { font-family: var(--serif); letter-spacing: 0.04em; }\r
+/* \u7968\u5934 */\r
+.tk-head {\r
+  display: flex;\r
+  justify-content: space-between;\r
+  align-items: center;\r
+  background: var(--tkhead-bg);\r
+  color: var(--tkhead-fg);\r
+  padding: 9px 16px;\r
+  font-size: 12px;\r
+  letter-spacing: 0.3em;\r
+  font-weight: 600;\r
+}\r
+.tk-head .tk-no { letter-spacing: 0.08em; color: var(--stamp); font-family: var(--serif); }\r
+/* \u7968\u8EAB */\r
+.tk-body { padding: 18px 16px 14px; text-align: center; }\r
+.result-main { display: flex; align-items: center; justify-content: center; gap: 22px; flex-wrap: wrap; }\r
+.result-col { display: flex; flex-direction: column; align-items: center; min-width: 0; }\r
+.result-file-name { font-size: 13px; color: var(--muted); word-break: break-all; margin-bottom: 2px; }\r
+/* \u53E3\u4EE4\u74E6\u7247:\u90AE\u6233 */\r
+.code { display: flex; justify-content: center; gap: 8px; margin: 8px 0 10px; }\r
+.code span {\r
+  display: grid;\r
+  place-items: center;\r
+  width: 46px;\r
+  height: 58px;\r
+  font-family: var(--serif);\r
+  font-size: 30px;\r
+  font-weight: 700;\r
+  font-variant-numeric: tabular-nums;\r
+  color: var(--ink);\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 7px;\r
+  box-shadow: 2px 2px 0 var(--hard-soft);\r
+  user-select: all;\r
+}\r
+.code span:nth-child(odd) { transform: rotate(-1.6deg); }\r
+.code span:nth-child(even) { transform: rotate(1.4deg); }\r
+.result-link { color: var(--muted); font-size: 12px; word-break: break-all; }\r
+.result-meta { color: var(--muted); font-size: 12.5px; margin-top: 8px; }\r
+/* \u4E8C\u7EF4\u7801:\u767D\u5E95\u4FDD\u8BC1\u6DF1\u8272\u6A21\u5F0F\u53EF\u626B\u63CF */\r
+.qr-wrap {\r
+  flex: none;\r
+  background: #fff;\r
+  padding: 8px;\r
+  border-radius: 9px;\r
+  border: 1.5px solid var(--line);\r
+  box-shadow: 2px 2px 0 var(--hard-soft);\r
+}\r
+.qr-wrap svg { display: block; width: 110px; height: 110px; }\r
+.qr-hint { text-align: center; font-size: 10.5px; color: #6b7280; margin-top: 5px; letter-spacing: 0.18em; }\r
+/* \u6495\u7968\u7EBF(\u5E26\u7F3A\u53E3) */\r
+.tk-tear { border-top: 2px dashed var(--line); position: relative; margin: 0 14px; }\r
+.tk-tear::before, .tk-tear::after {\r
+  content: '';\r
+  position: absolute;\r
+  top: -9px;\r
+  width: 16px;\r
+  height: 16px;\r
+  border-radius: 50%;\r
+  background: var(--bag);\r
+  border: 1.5px solid var(--line);\r
+}\r
+.tk-tear::before { left: -24px; }\r
+.tk-tear::after { right: -24px; }\r
+/* \u7968\u811A */\r
+.tk-foot { display: flex; gap: 10px; justify-content: center; padding: 14px; flex-wrap: wrap; }\r
+.result .btn-row { justify-content: center; }\r
+\r
+/* ============ \u7279\u6027\u5E26(\u67DC\u53F0\u4E0B\u65B9:\u4E00\u6392\u4E1A\u52A1\u516C\u544A\u7AE0) ============ */\r
+.feat-band { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 28px; }\r
+.feat {\r
+  background: var(--paper);\r
+  border: 1.5px dashed var(--line);\r
+  border-radius: 11px;\r
+  box-shadow: 3px 3px 0 var(--hard-soft);\r
+  padding: 14px 16px;\r
+  display: flex; gap: 12px; align-items: center;\r
+  animation: fade-up var(--t-slow) var(--ease) both;\r
+}\r
+.feat:nth-child(2) { transform: rotate(0.4deg); }\r
+.feat:nth-child(3) { transform: rotate(-0.3deg); }\r
+.feat-ic {\r
+  width: 40px; height: 40px; flex: none;\r
+  border: 2px double var(--stamp); border-radius: 50%;\r
+  display: grid; place-items: center; font-size: 17px;\r
+}\r
+.feat b { display: block; font-size: 13.5px; font-family: var(--serif); letter-spacing: 0.04em; }\r
+.feat small { color: var(--muted); font-size: 12px; }\r
+\r
+/* ============ \u53D6\u4EF6\u9875 ============ */\r
+h2.title { margin: 8px 0 6px; font-size: 22px; font-weight: 700; line-height: 1.3; font-family: var(--serif); letter-spacing: 0.04em; }\r
+.pk-sub { margin: 0 0 16px; font-size: 13.5px; }\r
+.error-box {\r
+  margin-top: 14px;\r
+  padding: 12px 14px;\r
+  border-radius: var(--radius-sm);\r
+  background: var(--danger-soft);\r
+  border: 1.5px solid var(--danger);\r
+  color: var(--danger);\r
+  font-size: 14px;\r
+}\r
+.share-card {\r
+  display: flex;\r
+  align-items: center;\r
+  gap: 14px;\r
+  background: var(--rowbg);\r
+  border: 1.5px dashed var(--line);\r
+  border-radius: 10px;\r
+  padding: 16px;\r
+}\r
+.sc-icon { font-size: 32px; }\r
+.sc-meta { flex: 1; min-width: 0; text-align: left; }\r
+.sc-meta b { display: block; font-size: 15px; font-weight: 700; word-break: break-all; }\r
+.sc-meta small { color: var(--muted); }\r
+.meta-line { color: var(--muted); font-size: 13px; margin: 12px 2px 0; text-align: left; }\r
+pre.text-body {\r
+  background: var(--rowbg);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 10px;\r
+  padding: 14px 16px;\r
+  white-space: pre-wrap;\r
+  word-break: break-all;\r
+  font-size: 13px;\r
+  line-height: 1.7;\r
+  max-height: 340px;\r
+  overflow: auto;\r
+  margin: 0 0 4px;\r
+  text-align: left;\r
+}\r
+\r
+/* ============ \u7BA1\u7406\u9875 ============ */\r
+.stats-row { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; margin-bottom: 20px; }\r
+.stats-counts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }\r
+.stats-counts .stat-card { display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0; }\r
+.stat-card {\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 11px;\r
+  padding: 16px 12px;\r
+  text-align: center;\r
+  box-shadow: 3px 3px 0 var(--hard-soft);\r
+}\r
+.stat-card b { display: block; font-size: 24px; font-weight: 700; font-family: var(--serif); font-variant-numeric: tabular-nums; line-height: 1.3; }\r
+.stat-card small { color: var(--muted); font-size: 12px; letter-spacing: 0.08em; }\r
+.table-wrap { overflow-x: auto; }\r
+table { width: 100%; border-collapse: collapse; font-size: 13px; }\r
+th, td { text-align: left; padding: 10px; border-bottom: 1px dashed var(--line); white-space: nowrap; }\r
+th { color: var(--muted); font-weight: 600; font-size: 11.5px; letter-spacing: 0.1em; }\r
+tbody tr:last-child td { border-bottom: none; }\r
+tbody tr:hover td { background: var(--rowbg); }\r
+td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }\r
+.badge {\r
+  display: inline-block;\r
+  padding: 2px 10px;\r
+  border-radius: 999px;\r
+  border: 1.5px solid transparent;\r
+  font-size: 12px;\r
+  font-weight: 600;\r
+}\r
+.badge.active { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }\r
+.badge.expired { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }\r
+.badge.exhausted { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }\r
+.badge.kind-file { background: transparent; color: var(--stamp); border-color: var(--stamp); }\r
+.badge.kind-text { background: transparent; color: var(--muted); border-color: var(--line); }\r
+.token-input {\r
+  width: 100%;\r
+  padding: 11px 13px;\r
+  border: 1.5px solid var(--line);\r
+  border-radius: var(--radius-sm);\r
+  background: var(--paper);\r
+  color: var(--ink);\r
+  font-size: 14px;\r
+  margin: 12px 0 4px;\r
+  transition: box-shadow var(--t-fast);\r
+}\r
+.token-input:focus { outline: none; box-shadow: 3px 3px 0 var(--hard-soft); }\r
+.admin-foot { margin-top: 18px; display: flex; justify-content: flex-end; }\r
+.pager-btns { display: flex; gap: 8px; }\r
+\r
+/* ============ \u4F5C\u5E9F\u786E\u8BA4\u5F39\u7A97(\u7BA1\u7406\u9875):\u7968\u636E\u5361 + \u786C\u504F\u79FB\u6295\u5F71 ============ */\r
+.modal-mask {\r
+  position: fixed;\r
+  inset: 0;\r
+  z-index: 90;\r
+  display: flex;\r
+  align-items: center;\r
+  justify-content: center;\r
+  padding: 20px;\r
+  background: var(--mask);\r
+}\r
+.modal-mask[hidden] { display: none; }\r
+.modal-card {\r
+  background: var(--paper);\r
+  border: 2px solid var(--line);\r
+  border-radius: var(--radius);\r
+  box-shadow: 8px 8px 0 var(--hard);\r
+  padding: 22px 22px 18px;\r
+  width: min(430px, 100%);\r
+  animation: pop-in 0.18s ease-out;\r
+}\r
+.modal-title { margin: 0 0 14px; font-family: var(--serif); font-size: 19px; letter-spacing: 0.04em; }\r
+.del-target {\r
+  border: 1.5px dashed var(--line);\r
+  border-radius: var(--radius-sm);\r
+  background: var(--rowbg);\r
+  padding: 10px 14px;\r
+  margin-bottom: 12px;\r
+  display: grid;\r
+  gap: 6px;\r
+}\r
+.del-line { display: flex; gap: 10px; align-items: baseline; min-width: 0; }\r
+.del-line > :first-child { flex: 0 0 4em; font-size: 12px; letter-spacing: 0.08em; }\r
+.del-line > :last-child { min-width: 0; overflow-wrap: anywhere; }\r
+.del-warn { margin: 0 0 16px; color: var(--danger); font-size: 13px; line-height: 1.5; }\r
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }\r
+@keyframes pop-in { from { transform: translateY(8px); opacity: 0; } }\r
+\r
+/* ============ toast:\u58A8\u6761 ============ */\r
+#toast-host {\r
+  position: fixed;\r
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));\r
+  left: 50%;\r
+  transform: translateX(-50%);\r
+  display: flex;\r
+  flex-direction: column;\r
+  gap: 8px;\r
+  z-index: 99;\r
+  pointer-events: none;\r
+}\r
+.toast {\r
+  background: var(--tkhead-bg);\r
+  color: var(--tkhead-fg);\r
+  padding: 10px 18px;\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 10px;\r
+  font-size: 14px;\r
+  box-shadow: 3px 3px 0 var(--hard);\r
+  opacity: 0;\r
+  transform: translateY(8px);\r
+  transition: opacity var(--t-med), transform var(--t-med);\r
+}\r
+.toast.show { opacity: 1; transform: translateY(0); }\r
+.toast.ok { background: var(--ok); border-color: var(--ok); color: #fff; }\r
+.toast.error { background: var(--danger); border-color: var(--danger); color: #fff; }\r
+\r
+/* ============ \u79FB\u52A8\u7AEF ============ */\r
+/* \u53CC\u680F\u5E76\u56DE\u5355\u680F:\u53F3\u680F\u56DE\u5230\u8868\u5355\u4E0B\u65B9,\u7A7A\u6001\u5360\u4F4D\u9690\u85CF */\r
+@media (max-width: 880px) {\r
+  .send-grid { grid-template-columns: 1fr; gap: 18px; }\r
+  .send-side .side-cap, .result-placeholder { display: none; }\r
+  /* \u90AE\u8DEF\u6761\u7AD6\u6392,\u8FDE\u7EBF\u8F6C\u4E3A\u5411\u4E0B\u865A\u7EBF;\u7279\u6027\u5E26\u4E24\u5217 */\r
+  .flow-strip { flex-direction: column; align-items: stretch; gap: 14px; padding: 16px 18px; }\r
+  .flow-link { flex: 0 0 0; width: 0; height: 26px; border-top: none; border-left: 2px dashed var(--line); margin: 0 0 0 22px; }\r
+  .flow-link::after { right: -6px; top: 12px; }\r
+  .feat-band { grid-template-columns: repeat(2, 1fr); margin-top: 20px; gap: 12px; }\r
+}\r
+@media (max-width: 640px) {\r
+  .options { grid-template-columns: 1fr; }\r
+  .card { padding: 18px; }\r
+  .topbar { padding: 14px 16px 8px; }\r
+  .code { gap: 6px; }\r
+  .code span { width: 42px; height: 52px; font-size: 27px; }\r
+  .otp-row { gap: 6px; }\r
+  .otp-box { width: 42px; height: 54px; font-size: 24px; }\r
+  .btn-row .btn { flex: 1; }\r
+  th, td { padding: 8px 6px; }\r
+  .row-between { flex-wrap: wrap; }\r
+  .stat-card b { font-size: 21px; }\r
+  .result-main { gap: 14px; }\r
+  .qr-wrap svg { width: 92px; height: 92px; }\r
+  .tk-tear::before, .tk-tear::after { width: 13px; height: 13px; top: -7.5px; }\r
+  .tk-tear::before { left: -20px; }\r
+  .tk-tear::after { right: -20px; }\r
+}\r
+\r
+/* ============ \u52A8\u6548 ============ */\r
+@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }\r
+@keyframes pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }\r
+.card { animation: fade-up var(--t-slow) var(--ease) both; }\r
+.result:not([hidden]) { animation: pop var(--t-slow) var(--ease) both; }\r
+\r
+@keyframes shake {\r
+  10%, 90% { transform: translateX(-2px); }\r
+  20%, 80% { transform: translateX(3px); }\r
+  30%, 50%, 70% { transform: translateX(-5px); }\r
+  40%, 60% { transform: translateX(5px); }\r
+}\r
+.shake { animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }\r
+\r
+/* \u952E\u76D8\u7126\u70B9\u53EF\u89C1\u6027 */\r
+.btn:focus-visible, .icon-btn:focus-visible, .tab:focus-visible,\r
+.seg button:focus-visible, a:focus-visible, .otp-box:focus-visible {\r
+  outline: 2px solid var(--stamp);\r
+  outline-offset: 2px;\r
+}\r
+\r
+/* \u53D6\u4EF6\u9875:6 \u683C\u53E3\u4EE4\u8F93\u5165(\u90AE\u6233\u683C) */\r
+.otp-row { display: flex; gap: 8px; justify-content: center; margin: 4px 0 8px; }\r
+.otp-box {\r
+  width: 46px;\r
+  height: 58px;\r
+  padding: 0;\r
+  text-align: center;\r
+  font-family: var(--serif);\r
+  font-size: 26px;\r
+  font-weight: 700;\r
+  font-variant-numeric: tabular-nums;\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 9px;\r
+  background: var(--paper);\r
+  color: var(--ink);\r
+  caret-color: var(--stamp);\r
+  box-shadow: 2px 2px 0 var(--hard-soft);\r
+  transition: box-shadow var(--t-fast), border-color var(--t-fast);\r
+}\r
+.otp-box:focus { outline: none; border-color: var(--stamp); box-shadow: 3px 3px 0 var(--stamp); }\r
+\r
+/* \u8FDB\u5EA6\u6761:\u7B49\u5F85\u6001\u6D41\u5149 */\r
+@keyframes pending-slide { from { background-position: 0 0; } to { background-position: 34px 0; } }\r
+.bar > div.pending {\r
+  background-image: repeating-linear-gradient(\r
+    45deg,\r
+    rgba(255, 255, 255, 0) 0,\r
+    rgba(255, 255, 255, 0) 12px,\r
+    rgba(255, 255, 255, 0.3) 12px,\r
+    rgba(255, 255, 255, 0.3) 24px\r
+  );\r
+  background-size: 34px 34px;\r
+  animation: pending-slide 0.8s linear infinite;\r
+}\r
+\r
+.mono { font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace; font-variant-numeric: tabular-nums; }\r
+\r
+/* \u52A8\u753B\u654F\u611F\u7528\u6237 */\r
+@media (prefers-reduced-motion: reduce) {\r
+  *, *::before, *::after {\r
+    animation-duration: 0.01ms !important;\r
+    animation-iteration-count: 1 !important;\r
+    transition-duration: 0.01ms !important;\r
+  }\r
+}\r
+\r
+.storage-card { padding: 14px 18px; text-align: left; min-width: 0; }\r
+.storage-card small { letter-spacing: 0; }\r
+.storage-value { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }\r
+.storage-value b { font-size: 24px; white-space: nowrap; }\r
+.storage-total { font-size: 14px; color: var(--muted); white-space: nowrap; }\r
+.storage-meter { display: block; width: 100%; height: 6px; border: 0; background: var(--track); border-radius: 4px; overflow: hidden; }\r
+.storage-meter::-webkit-meter-bar { background: var(--track); border: 0; border-radius: 4px; height: 6px; }\r
+.storage-meter::-webkit-meter-optimum-value { background: var(--stamp); border-radius: 4px; }\r
+.storage-meter::-moz-meter-bar { background: var(--stamp); border-radius: 4px; }\r
+.storage-caption { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; }\r
+@media (max-width: 1000px) {\r
+  .stats-row { grid-template-columns: minmax(0, 1fr); gap: 12px; }\r
+  .stats-counts .stat-card { min-height: 90px; }\r
+}\r
+@media (max-width: 540px) {\r
+  .stats-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }\r
+  .stats-counts .stat-card:last-child { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; min-height: 60px; }\r
+}\r
+\r
+/* Upload source labels and private admin details. */\r
+.source-cell { min-width: 150px; max-width: 210px; white-space: normal; }\r
+.source-cell small { display: block; font-size: 11px; overflow-wrap: anywhere; }\r
+.source-link { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }\r
+.source-link:hover { color: var(--stamp); }\r
+.source-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); background: var(--paper); box-shadow: 0 20px 64px var(--mask); }\r
+.source-dialog::backdrop { background: var(--mask); }\r
+.source-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }\r
+.source-heading h3 { margin: 0; font-size: 18px; }\r
+.source-heading h3:focus { outline: none; }\r
+.source-body { padding: 10px 16px; }\r
+#source-detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; font-size: 13px; }\r
+#source-detail:not(:has(.source-field)) { display: block; overflow-wrap: anywhere; }\r
+.source-field { min-width: 0; display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: baseline; gap: 10px; }\r
+.source-field-wide { grid-column: 1 / -1; }\r
+.source-field small { font-family: inherit; font-size: 12px; font-weight: 400; }\r
+.source-field span { overflow-wrap: anywhere; }\r
+.source-field.mono span { font-size: 12px; line-height: 1.6; }\r
+#source-form { display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: center; gap: 6px 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }\r
+#source-form label { font-size: 12px; color: var(--muted); }\r
+#source-note { width: 100%; min-width: 0; padding: 5px 8px; background: var(--bag); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-sm); font: inherit; font-size: 16px; }\r
+#source-note:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\r
+#source-error { grid-column: 1 / -1; margin: 4px 0 0; }\r
+.source-footer { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: 8px; padding: 8px 16px; background: var(--paper); border-top: 1px solid var(--line); }\r
+.source-footer .btn { min-height: 36px; padding: 5px 12px; }\r
+@media (max-width: 420px) {\r
+  .source-heading { padding: 10px 12px; }\r
+  .source-body { padding: 10px 12px; }\r
+  .source-field, #source-form { grid-template-columns: 64px minmax(0, 1fr); column-gap: 8px; }\r
+  .source-footer { padding: 8px 12px; }\r
+  .source-footer .btn { flex: 1; min-height: 40px; }\r
+}\r
+\r
+/* Keep the type visible above the filename baseline, outside its ellipsis. */\r
+.share-filename-line { display: flex; align-items: baseline; gap: 5px; width: clamp(150px, 18vw, 220px); }\r
+.share-filename { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r
+.share-kind.badge { flex: none; position: relative; top: -0.45em; padding: 0 4px; font-size: 10px; line-height: 1.4; }\r
+\r
+/* Phone layouts keep the primary action close to the input. */\r
+@media (max-width: 640px) {\r
+  .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; margin-bottom: 12px; }\r
+  .brand { min-width: 0; gap: 8px; }\r
+  .brand .logo { width: 34px; height: 34px; font-size: 18px; flex: none; }\r
+  .brand b { font-size: 16px; letter-spacing: 0; }\r
+  .brand small { display: block; font-size: 11px; }\r
+  .actions { gap: 2px; }\r
+  .actions .btn, .actions .icon-btn { min-height: 40px; min-width: 40px; padding: 7px 8px; }\r
+  .container { padding: 4px 12px 24px; }\r
+  .card { padding: 14px; box-shadow: 3px 3px 0 var(--hard); }\r
+  main:has(> .send-grid) { justify-content: flex-start; }\r
+  .send-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }\r
+  .flow-strip { flex-direction: row; gap: 6px; padding: 10px; margin-bottom: 12px; box-shadow: 3px 3px 0 var(--hard); }\r
+  .flow-step { flex-direction: column; gap: 3px; text-align: center; }\r
+  .flow-dot { width: 28px; height: 28px; font-size: 15px; }\r
+  .flow-tt b { font-size: 12px; letter-spacing: 0; }\r
+  .flow-tt small, .flow-link { display: none; }\r
+  .card-cap { margin: 0 0 10px; letter-spacing: 0.1em; }\r
+  .tabs { gap: 8px; margin-bottom: 12px; }\r
+  .tab { min-height: 42px; }\r
+  .dropzone { padding: 20px 12px; }\r
+  .dz-icon { font-size: 28px; margin-bottom: 4px; }\r
+  .options { gap: 12px; margin: 14px 0 0; }\r
+  .opt-group label { margin-bottom: 5px; letter-spacing: 0.04em; }\r
+  .seg { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 5px; }\r
+  .seg button { min-height: 40px; padding: 6px 4px; font-size: 12px; }\r
+  .btn.block { min-height: 44px; margin-top: 12px; }\r
+  textarea, .token-input { font-size: 16px; }\r
+  .file-row { gap: 8px; padding: 8px; }\r
+  .fr-remove { min-width: 40px; min-height: 40px; }\r
+  .fr-status { max-width: 5em; white-space: normal; overflow-wrap: anywhere; font-size: 12px; }\r
+  .feat-band { gap: 8px; margin-top: 14px; }\r
+  .feat { gap: 8px; padding: 10px; align-items: flex-start; }\r
+  .feat-ic { width: 28px; height: 28px; font-size: 14px; }\r
+  .feat > div { min-width: 0; overflow-wrap: anywhere; }\r
+  .feat b { font-size: 12px; letter-spacing: 0; }\r
+  .feat small { font-size: 11px; }\r
+  .foot { padding: 18px 12px 12px; letter-spacing: 0.06em; }\r
+  .otp-row, .code { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; width: 100%; max-width: 320px; margin-inline: auto; }\r
+  .otp-box, .code span { width: 100%; min-width: 0; height: 48px; font-size: 24px; }\r
+  .code { padding-inline: 2px; } /* Leave room for the tilted digit borders. */\r
+  .result-col { width: 100%; }\r
+  .result-batch-head { padding: 12px; gap: 8px; }\r
+  .result-batch-head .btn-row { width: 100%; flex-wrap: wrap; }\r
+  .result-batch-head .btn { min-width: 0; padding: 8px; }\r
+  .tk-head { gap: 8px; letter-spacing: 0.1em; }\r
+  .tk-body { padding: 14px 12px; }\r
+  .tk-foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; gap: 8px; }\r
+  .tk-foot .btn { min-height: 42px; padding: 8px 6px; }\r
+  .sc-meta small { overflow-wrap: anywhere; }\r
+  .modal-mask { padding: 12px; }\r
+  .modal-card { padding: 16px; max-height: calc(100dvh - 24px); overflow: auto; }\r
+  .modal-actions .btn { flex: 1; min-height: 42px; padding: 8px; }\r
+  .stats-counts { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }\r
+  .stats-counts .stat-card { grid-column: span 2; min-height: 66px; padding: 10px 6px; gap: 3px; }\r
+  .stats-counts .stat-card:nth-last-child(-n+2) { grid-column: span 3; }\r
+  .stats-counts .stat-card:last-child { flex-direction: column; }\r
+  .stat-card small { letter-spacing: 0; font-size: 11px; }\r
+  .storage-card { padding: 12px 14px; }\r
+  #admin-panel .table-wrap { overscroll-behavior-x: contain; }\r
+  #admin-panel td .btn { min-height: 40px; }\r
+  .admin-pager { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 14px; }\r
+  .admin-pager .pager-btns { display: flex; gap: 6px; }\r
+  .admin-pager .btn { min-height: 40px; padding-inline: 8px; }\r
+  .admin-pager #page-info { grid-column: 1 / -1; grid-row: 2; text-align: center; }\r
+}\r
+@media (max-width: 360px) {\r
+  .topbar .brand .logo { display: none; }\r
+  .feat { gap: 6px; padding: 8px; }\r
+}\r
+\r
+.file-detail-link { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }\r
+.file-detail-link:hover { color: var(--stamp); }\r
+.guest-settings { margin: 0 0 12px; font-size: 13px; }\r
+.guest-settings summary { cursor: pointer; padding: 4px 0; }\r
+.login-guard-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; }\r
+.login-guard-heading .btn, .login-guard-row .btn { flex-shrink: 0; }\r
+.login-guard-bans { display: grid; gap: 8px; max-height: 320px; overflow: auto; }\r
+.login-guard-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px dashed var(--line); }\r
+.login-guard-info { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }\r
+@media (max-width: 540px) { #login-protection .btn { min-height: 40px; } }\r
+#guest-policy-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 10px 0; }\r
+#guest-policy-form label { display: grid; gap: 4px; }\r
+#guest-policy-form input { width: 110px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; }\r
+#guest-policy-form input:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\r
+#upload-policy-hint { display: block; margin: 0 0 8px; font-size: 12px; }\r
+.seg button:disabled { opacity: .4; cursor: not-allowed; }\r
+.file-detail-link:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\r
+.file-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; font-size: 13px; overflow-wrap: anywhere; }\r
+.file-wide { grid-column: 1 / -1; }\r
+.file-identity { display: grid; gap: 4px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }\r
+.file-identity strong { font-size: 14px; font-weight: 600; line-height: 1.5; }\r
+.file-field { display: grid; align-content: start; gap: 3px; min-width: 0; }\r
+.file-field-value { min-width: 0; font-variant-numeric: tabular-nums; }\r
+.file-field .badge { white-space: normal; }\r
+.file-source-link { max-width: 100%; text-align: left; overflow-wrap: anywhere; }\r
+.file-technical { border-top: 1px dashed var(--line); padding-top: 8px; }\r
+.file-technical summary { cursor: pointer; color: var(--muted); }\r
+.file-technical-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }\r
+.file-technical-grid > :first-child { grid-column: 1 / -1; }\r
+#file-dialog .source-body { padding-top: 12px; padding-bottom: 12px; }\r
+.retention-settings { padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px dashed var(--line); }\r
+#retention-form { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; }\r
+#retention-days { width: 80px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; }\r
+#retention-days:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\r
+#retention-error { margin: 8px 0; }\r
+@media (max-width: 640px) {\r
+  #retention-form .btn, #retention-days { min-height: 40px; }\r
+}\r
+\r
+/* Admin audit keeps the existing theme while separating logs from file management. */\r
+.admin-nav { display: flex; gap: 8px; margin: 0 0 16px; }\r
+.audit-card { padding: 20px; }\r
+.audit-heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; }\r
+.audit-heading h2 { margin: 0 0 4px; font-size: 19px; }\r
+.audit-actions { display: flex; gap: 8px; align-items: center; }\r
+.audit-categories { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }\r
+.audit-categories button { padding: 9px 12px; background: transparent; color: var(--muted); font: inherit; font-size: 13px; border: 0; border-bottom: 2px solid transparent; cursor: pointer; }\r
+.audit-categories button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--stamp); font-weight: bold; }\r
+.audit-categories button:focus-visible { outline: 2px solid var(--stamp); outline-offset: -2px; }\r
+.audit-filter { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }\r
+.audit-filter label { display: grid; gap: 5px; font-size: 12px; min-width: 0; }\r
+.audit-filter input, .audit-filter select { min-width: 0; max-width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 14px; height: 36px; box-sizing: border-box; }\r
+.audit-filter input:focus-visible, .audit-filter select:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\r
+.audit-search { flex: 1; min-width: 140px !important; }\r
+.audit-table { width: 100%; font-size: 12px; }\r
+.audit-table td { padding-top: 12px; padding-bottom: 12px; vertical-align: middle; }\r
+.audit-table td small { display: block; margin-top: 3px; }\r
+.audit-table td .audit-mobile-label { display: none; }\r
+.audit-table td.audit-source, .audit-table td.audit-target { white-space: normal; min-width: 125px; max-width: 220px; overflow-wrap: anywhere; }\r
+.audit-result { display: inline-block; border-radius: 5px; padding: 2px 7px; white-space: nowrap; }\r
+.audit-success { color: #25814c; background: #53b77c22; }\r
+.audit-failed { color: #c34b3d; background: #d45e5022; }\r
+.audit-blocked { color: #bd791f; background: #dd9e3522; }\r
+[data-theme="dark"] .audit-success { color: #8cd2a9; }\r
+[data-theme="dark"] .audit-failed { color: #f09a8f; }\r
+[data-theme="dark"] .audit-blocked { color: #ebbd72; }\r
+.audit-pager { gap: 10px; margin-top: 14px; }\r
+#audit-detail .file-field { min-width: 0; overflow-wrap: anywhere; }\r
+#audit-detail .file-field:nth-child(10), #audit-detail .file-field:nth-child(11) { grid-column: 1 / -1; }\r
+@media (max-width: 600px) {\r
+  .audit-card { padding: 12px; }\r
+  .audit-heading { align-items: flex-start; flex-direction: column; gap: 10px; }\r
+  .audit-heading .audit-actions { width: 100%; }\r
+  .audit-heading .audit-actions .btn { flex: 1; }\r
+  .audit-categories { gap: 0; }\r
+  .audit-categories button { flex: 1; padding: 9px 5px; font-size: 12px; }\r
+  .audit-filter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }\r
+  .audit-filter .audit-search { min-width: 0 !important; }\r
+  .audit-filter .audit-actions { grid-column: 1 / -1; }\r
+  .audit-filter .audit-actions .btn { flex: 1; }\r
+  .audit-filter input, .audit-filter select { width: 100%; font-size: 16px; height: 40px; }\r
+  #admin-audit-view .btn, .admin-nav .btn { min-height: 40px; }\r
+  .audit-table-wrap { overflow: visible; }\r
+  .audit-table, .audit-table tbody { display: block; min-width: 0; }\r
+  .audit-table thead { display: none; }\r
+  .audit-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; padding: 12px 0; border-top: 1px dashed var(--line); }\r
+  .audit-table tbody tr:hover { background: var(--rowbg); }\r
+  .audit-table tbody tr:hover td { background: transparent; }\r
+  .audit-table td { padding: 2px 0; border: 0; min-width: 0; white-space: normal; }\r
+  .audit-table td:nth-child(1) { grid-row: 2; grid-column: 1; color: var(--muted); }\r
+  .audit-table td:nth-child(2) { grid-row: 1; grid-column: 1; }\r
+  .audit-table td:nth-child(2) small { display: none; }\r
+  .audit-table td:nth-child(3) { grid-row: 1; grid-column: 2; text-align: right; }\r
+  .audit-table td:nth-child(4) { grid-row: 4; grid-column: 1; }\r
+  .audit-table td:nth-child(5) { grid-row: 3; grid-column: 1; }\r
+  .audit-table td:nth-child(6) { grid-row: 5; grid-column: 1 / -1; }\r
+  .audit-table td:nth-child(7) { grid-row: 2 / 5; grid-column: 2; align-self: center; }\r
+  .audit-table td.audit-source, .audit-table td.audit-target { min-width: 0; max-width: none; }\r
+  .audit-table td .audit-mobile-label { display: inline; margin-right: 8px; }\r
+}\r
+` });
 
 // node_modules/hono/dist/compose.js
 var compose = /* @__PURE__ */ __name((middleware, onError, onNotFound) => {
@@ -3742,7 +4958,7 @@ var HonoRequest = class {
    * ```
    */
   json() {
-    return this.#cachedBody("text").then((text) => JSON.parse(text));
+    return this.#cachedBody("text").then((text2) => JSON.parse(text2));
   }
   /**
    * `.text()` can parse Request body of type `text/plain`
@@ -4311,9 +5527,9 @@ var Context = class {
    * })
    * ```
    */
-  text = /* @__PURE__ */ __name((text, arg, headers) => {
-    return !this.#preparedHeaders && !this.#status && !arg && !headers && !this.finalized ? new Response(text) : this.#newResponse(
-      text,
+  text = /* @__PURE__ */ __name((text2, arg, headers) => {
+    return !this.#preparedHeaders && !this.#status && !arg && !headers && !this.finalized ? new Response(text2) : this.#newResponse(
+      text2,
       arg,
       setDefaultContentType(TEXT_PLAIN, headers)
     );
@@ -5024,13 +6240,13 @@ var RegExpRouter = class {
   }
   add(method, path, handler) {
     const middleware = this.#middleware;
-    const routes = this.#routes;
+    const routes2 = this.#routes;
     if (!middleware) {
       throw new Error(MESSAGE_MATCHER_IS_ALREADY_BUILT);
     }
     if (!middleware[method]) {
       this.#tries[method] = new Trie();
-      for (const handlerMap of [middleware, routes]) {
+      for (const handlerMap of [middleware, routes2]) {
         handlerMap[method] = createNullObject();
         for (const p in handlerMap[METHOD_NAME_ALL]) {
           handlerMap[method][p] = [...handlerMap[METHOD_NAME_ALL][p]];
@@ -5050,7 +6266,7 @@ var RegExpRouter = class {
           middleware[m][path] = findMiddleware(middleware[m], path) || findMiddleware(middleware[METHOD_NAME_ALL], path) || [];
         }
       }
-      for (const handlerMap of [middleware, routes]) {
+      for (const handlerMap of [middleware, routes2]) {
         for (const m of methods) {
           for (const p in handlerMap[m]) {
             re.test(p) && handlerMap[m][p].push([handler, path]);
@@ -5062,11 +6278,11 @@ var RegExpRouter = class {
     const paths = checkOptionalParameter(path) || [path];
     for (const path2 of paths) {
       for (const m of methods) {
-        if (!routes[m][path2]) {
+        if (!routes2[m][path2]) {
           this.#insertPath(m, path2);
-          routes[m][path2] = findMiddleware(middleware[m], path2) || findMiddleware(middleware[METHOD_NAME_ALL], path2) || [];
+          routes2[m][path2] = findMiddleware(middleware[m], path2) || findMiddleware(middleware[METHOD_NAME_ALL], path2) || [];
         }
-        routes[m][path2].push([handler, path2]);
+        routes2[m][path2].push([handler, path2]);
       }
     }
   }
@@ -5082,12 +6298,12 @@ var RegExpRouter = class {
   }
   #buildMatcher(method) {
     const middleware = this.#middleware[method];
-    const routes = this.#routes[method];
+    const routes2 = this.#routes[method];
     const trie = this.#tries[method];
     const staticMap = createNullObject();
     const handlerData = [];
     const [regexp, indexReplacementMap, paramReplacementMap] = trie.buildRegExp();
-    for (const r of [middleware, routes]) {
+    for (const r of [middleware, routes2]) {
       for (const path in r) {
         const handlers = r[path];
         const pathData = trie.paths[path];
@@ -5130,15 +6346,15 @@ var SmartRouter = class {
       throw new Error("Fatal error");
     }
     const routers = this.#routers;
-    const routes = this.#routes;
+    const routes2 = this.#routes;
     const len = routers.length;
     let i = 0;
     let res;
     for (; i < len; i++) {
       const router = routers[i];
       try {
-        for (let i2 = 0, len2 = routes.length; i2 < len2; i2++) {
-          router.add(...routes[i2]);
+        for (let i2 = 0, len2 = routes2.length; i2 < len2; i2++) {
+          router.add(...routes2[i2]);
         }
         res = router.match(method, path);
       } catch (e) {
@@ -6725,10 +7941,10 @@ shareRoutes.onError((error, c) => {
 shareRoutes.post("/shares/text", async (c) => {
   const body = await c.req.json().catch(() => null);
   if (!body) return err(c, 400, "bad_request", "\u8BF7\u6C42\u4F53\u5FC5\u987B\u662F JSON");
-  const text = body.text;
+  const text2 = body.text;
   const maxLen = num(c.env.MAX_TEXT_LENGTH, 65536);
-  if (typeof text !== "string" || !text.trim()) return err(c, 400, "bad_request", "\u6587\u672C\u5185\u5BB9\u4E0D\u80FD\u4E3A\u7A7A");
-  if (text.length > maxLen) return err(c, 400, "bad_request", `\u6587\u672C\u8D85\u8FC7\u4E0A\u9650 ${maxLen} \u5B57\u7B26`);
+  if (typeof text2 !== "string" || !text2.trim()) return err(c, 400, "bad_request", "\u6587\u672C\u5185\u5BB9\u4E0D\u80FD\u4E3A\u7A7A");
+  if (text2.length > maxLen) return err(c, 400, "bad_request", `\u6587\u672C\u8D85\u8FC7\u4E0A\u9650 ${maxLen} \u5B57\u7B26`);
   const expMs = parseExpiry(body.expiry);
   if (expMs === void 0) return err(c, 400, "bad_request", "\u6709\u6548\u671F\u53C2\u6570\u975E\u6CD5");
   const mp = parseMaxPickups(body.maxPickups);
@@ -6740,8 +7956,8 @@ shareRoutes.post("/shares/text", async (c) => {
   const created = await getStore(c.env).createShare({
     kind: "text",
     source: access.source,
-    size: text.length,
-    text,
+    size: text2.length,
+    text: text2,
     maxPickups: mp,
     expireAt
   });
@@ -6749,7 +7965,7 @@ shareRoutes.post("/shares/text", async (c) => {
     {
       code: created.code,
       kind: "text",
-      size: text.length,
+      size: text2.length,
       expireAt,
       maxPickups: mp,
       pickupUrl: `/pickup?code=${created.code}`
@@ -6950,11 +8166,13 @@ var LOGIN_GUARD_KEY = "__file-relay/login-guard-v1.json";
 var LOGIN_RULES = { maxFailures: 5, windowSeconds: 600, banSeconds: 1800 };
 var MAX_RECORDS = 1e3;
 var LoginProtectionError = class extends Error {
-  constructor(retryAt) {
+  constructor(retryAt, newBan = false) {
     super("Login protection unavailable");
     this.retryAt = retryAt;
+    this.newBan = newBan;
   }
   retryAt;
+  newBan;
   static {
     __name(this, "LoginProtectionError");
   }
@@ -7075,7 +8293,7 @@ async function recordLogin(env, ip, success) {
     if (!entry) data.entries.push(next);
     return true;
   });
-  if (bannedUntil) throw new LoginProtectionError(bannedUntil);
+  if (bannedUntil) throw new LoginProtectionError(bannedUntil, true);
 }
 __name(recordLogin, "recordLogin");
 async function loginProtectionStatus(env) {
@@ -7100,8 +8318,158 @@ async function unblockLogin(env, ip) {
 }
 __name(unblockLogin, "unblockLogin");
 
+// src/audit.ts
+var AUDIT_KEY = "__file-relay/audit-v1.json";
+var AUDIT_DAYS = 30;
+var AUDIT_LIMIT = 1e3;
+var states = /* @__PURE__ */ new WeakMap();
+function auditState(c) {
+  let state = states.get(c);
+  if (!state) {
+    state = { authenticated: false, actor: "anonymous", detail: {} };
+    states.set(c, state);
+  }
+  return state;
+}
+__name(auditState, "auditState");
+function auditEnabled(env) {
+  return !!(env.BUCKET || env.DB);
+}
+__name(auditEnabled, "auditEnabled");
+var text = /* @__PURE__ */ __name((value, max = 80) => typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").slice(0, max) : "", "text");
+function parse3(raw2, now) {
+  if (raw2 === null) return { version: 1, revision: "", entries: [] };
+  const data = JSON.parse(raw2);
+  if (data?.version !== 1 || typeof data.revision !== "string" || !Array.isArray(data.entries) || data.entries.length > AUDIT_LIMIT || data.entries.some((e) => !e || typeof e.id !== "string" || !Number.isSafeInteger(e.at) || !["login", "operation", "security"].includes(e.category) || !["success", "failed", "blocked"].includes(e.result) || !["admin", "token", "anonymous"].includes(e.actor) || !Number.isInteger(e.status) || !Number.isFinite(e.durationMs) || !["action", "ip", "country", "region", "city", "method", "target", "agent"].every((k) => typeof e[k] === "string") || !e.detail || typeof e.detail !== "object" || Array.isArray(e.detail))) throw new Error("Invalid audit state");
+  data.entries = data.entries.filter((e) => e.at >= now - AUDIT_DAYS * 864e5);
+  return data;
+}
+__name(parse3, "parse");
+async function read2(env) {
+  const now = Date.now();
+  if (env.BUCKET) {
+    const object = await env.BUCKET.get(AUDIT_KEY);
+    return { data: parse3(object ? await object.text() : null, now), previous: object?.etag ?? null };
+  }
+  await env.DB.prepare(CREATE_SETTINGS).run();
+  const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key=?").bind(AUDIT_KEY).first();
+  return { data: parse3(row?.value ?? null, now), previous: row?.value ?? null };
+}
+__name(read2, "read");
+async function write2(env, data, previous) {
+  data.revision = crypto.randomUUID();
+  const value = JSON.stringify(data);
+  if (env.BUCKET) return !!await env.BUCKET.put(AUDIT_KEY, value, {
+    onlyIf: previous === null ? { etagDoesNotMatch: "*" } : { etagMatches: previous },
+    httpMetadata: { contentType: "application/json" },
+    storageClass: "Standard"
+  });
+  const result = previous === null ? await env.DB.prepare("INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO NOTHING").bind(AUDIT_KEY, value).run() : await env.DB.prepare("UPDATE app_settings SET value=? WHERE key=? AND value=?").bind(value, AUDIT_KEY, previous).run();
+  return result.meta.changes === 1;
+}
+__name(write2, "write");
+async function appendAudit(env, event) {
+  if (!auditEnabled(env)) return false;
+  try {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      if (attempt) await new Promise((resolve) => setTimeout(resolve, 1100 + Math.random() * 200));
+      const { data, previous } = await read2(env);
+      if (data.entries.some((e) => e.id === event.id)) return true;
+      data.entries.push(event);
+      data.entries.sort((a, b) => b.at - a.at || b.id.localeCompare(a.id));
+      data.entries = data.entries.slice(0, AUDIT_LIMIT);
+      try {
+        if (await write2(env, data, previous)) return true;
+      } catch (error) {
+        if (!/429|rate|too many/i.test(String(error))) throw error;
+      }
+    }
+  } catch {
+  }
+  console.warn("Audit record could not be saved");
+  return false;
+}
+__name(appendAudit, "appendAudit");
+var routes = {
+  "POST /api/admin/login": ["login", "login"],
+  "POST /api/admin/logout": ["login", "logout"],
+  "PUT /api/admin/settings": ["operation", "retention"],
+  "PUT /api/admin/upload-policy": ["operation", "uploadPolicy"],
+  "POST /api/admin/login-protection/unblock": ["security", "unblock"],
+  "POST /api/admin/cleanup": ["operation", "cleanup"],
+  "GET /api/admin/audit-logs/export": ["operation", "export"]
+};
+async function auditRequest(c, next) {
+  const start = Date.now();
+  await next();
+  if (!auditEnabled(c.env)) return;
+  const state = auditState(c);
+  const path = c.req.path;
+  let selected = routes[`${c.req.method} ${path}`];
+  let target = state.target ?? "";
+  const share = /^\/api\/admin\/shares\/(\d{6})(?:\/(source|download))?$/.exec(path);
+  if (share) {
+    target = share[1];
+    if (c.req.method === "DELETE" && !share[2]) selected = ["operation", "delete"];
+    if (c.req.method === "PUT" && share[2] === "source") selected = ["operation", "note"];
+    if (c.req.method === "GET" && share[2] === "source") selected = ["operation", "viewSource"];
+    if (c.req.method === "GET" && share[2] === "download") selected = ["operation", "download"];
+  }
+  if (!selected) return;
+  const isLogin = path === "/api/admin/login";
+  const bearer = path === "/api/admin/cleanup" && c.req.header("Authorization")?.startsWith("Bearer ");
+  if (!state.authenticated && !isLogin && !bearer) return;
+  if (isLogin && c.res.status === 403) return;
+  const protectionError = c.error instanceof LoginProtectionError ? c.error : null;
+  if (protectionError?.retryAt && !protectionError.newBan) return;
+  let [category, action] = selected;
+  if (protectionError?.newBan) {
+    category = "security";
+    action = "ban";
+    state.detail.bannedUntil = protectionError.retryAt;
+  }
+  const cf = c.req.raw.cf;
+  const event = {
+    id: crypto.randomUUID(),
+    at: start,
+    category,
+    action,
+    result: c.res.status === 429 ? "blocked" : c.res.status < 400 ? "success" : "failed",
+    actor: state.actor,
+    ip: loginIP(c),
+    country: text(cf?.country, 2),
+    region: text(cf?.region),
+    city: text(cf?.city),
+    method: c.req.method,
+    status: c.res.status,
+    target: text(target),
+    agent: text(c.req.header("User-Agent"), 200),
+    durationMs: Math.max(0, Date.now() - start),
+    detail: state.detail
+  };
+  if (!await appendAudit(c.env, event)) c.header("X-Audit-Status", "unavailable");
+}
+__name(auditRequest, "auditRequest");
+async function queryAudit(env, query) {
+  const category = query.category || "all";
+  const result = query.result || "all";
+  const from = query.from ? Number(query.from) : 0;
+  const to = query.to ? Number(query.to) : Date.now();
+  const offset = query.offset ? Number(query.offset) : 0;
+  const limit = query.limit ? Number(query.limit) : 20;
+  const q = (query.q || "").trim().toLowerCase();
+  if (!["all", "login", "operation", "security"].includes(category) || !["all", "success", "failed", "blocked"].includes(result) || ![from, to, offset, limit].every(Number.isSafeInteger) || from < 0 || to < from || offset < 0 || limit < 1 || limit > AUDIT_LIMIT || q.length > 80) throw new RangeError("Invalid audit filters");
+  const enabled = auditEnabled(env);
+  const entries = enabled ? (await read2(env)).data.entries : [];
+  entries.sort((a, b) => b.at - a.at || b.id.localeCompare(a.id));
+  const matched = entries.filter((e) => (category === "all" || e.category === category) && (result === "all" || e.result === result) && e.at >= from && e.at <= to && (!q || `${e.ip} ${e.target} ${e.action}`.toLowerCase().includes(q)));
+  return { enabled, retentionDays: AUDIT_DAYS, maxEntries: AUDIT_LIMIT, total: matched.length, offset, limit, rows: matched.slice(offset, offset + limit) };
+}
+__name(queryAudit, "queryAudit");
+
 // src/admin.ts
 var adminRoutes = new Hono2();
+adminRoutes.use("*", auditRequest);
 function adminPath(env) {
   const raw2 = env.ADMIN_PATH?.trim();
   if (!raw2) return "/admin";
@@ -7157,13 +8525,19 @@ adminRoutes.use("*", async (c, next) => {
       await checkLogin(c.env, ip);
       const valid = await safeEqual(bearer.slice(7), c.env.ADMIN_TOKEN);
       await recordLogin(c.env, ip, valid);
-      if (valid) return next();
+      if (valid) {
+        auditState(c).authenticated = true;
+        auditState(c).actor = "token";
+        return next();
+      }
       return err(c, 401, "unauthorized", "\u4EE4\u724C\u65E0\u6548");
     }
   }
   if (!await isValidCookie(c.env, getCookie(c, "admin"))) {
     return err(c, 401, "unauthorized", "\u672A\u767B\u5F55\u6216\u4F1A\u8BDD\u5DF2\u8FC7\u671F");
   }
+  auditState(c).authenticated = true;
+  auditState(c).actor = "admin";
   await next();
 });
 adminRoutes.post("/login", async (c) => {
@@ -7179,6 +8553,8 @@ adminRoutes.post("/login", async (c) => {
     return err(c, 401, "unauthorized", "\u4EE4\u724C\u65E0\u6548");
   }
   await recordLogin(c.env, ip, true);
+  auditState(c).authenticated = true;
+  auditState(c).actor = "admin";
   const secure = c.req.url.startsWith("https");
   setCookie(c, "admin", await makeCookieValue(c.env), {
     httpOnly: true,
@@ -7193,6 +8569,16 @@ adminRoutes.post("/logout", (c) => {
   deleteCookie(c, "admin", { path: "/" });
   return c.json({ ok: true });
 });
+async function auditList(c) {
+  try {
+    return c.json(await queryAudit(c.env, c.req.query()));
+  } catch (error) {
+    return error instanceof RangeError ? c.json({ error: "bad_request", message: "\u65E5\u5FD7\u7B5B\u9009\u53C2\u6570\u65E0\u6548" }, 400) : c.json({ error: "audit_unavailable", message: "\u5BA1\u8BA1\u65E5\u5FD7\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5" }, 503);
+  }
+}
+__name(auditList, "auditList");
+adminRoutes.get("/audit-logs", auditList);
+adminRoutes.get("/audit-logs/export", auditList);
 adminRoutes.get("/login-protection", async (c) => c.json(await loginProtectionStatus(c.env)));
 adminRoutes.post("/login-protection/unblock", async (c) => {
   const origin = c.req.header("Origin");
@@ -7200,6 +8586,7 @@ adminRoutes.post("/login-protection/unblock", async (c) => {
   if (!c.req.header("Content-Type")?.startsWith("application/json")) return c.json({ error: "bad_request", message: "\u8BF7\u4F7F\u7528 JSON" }, 415);
   const body = await c.req.json().catch(() => null);
   if (typeof body?.ip !== "string" || !/^(unknown|[0-9a-f:.]{3,45})$/.test(body.ip)) return err(c, 400, "bad_request", "IP \u683C\u5F0F\u65E0\u6548");
+  auditState(c).target = body.ip;
   await unblockLogin(c.env, body.ip);
   return c.json({ ok: true });
 });
@@ -7210,6 +8597,7 @@ adminRoutes.put("/settings", async (c) => {
   if (!c.req.header("Content-Type")?.startsWith("application/json")) return c.json({ error: "bad_request", message: "\u8BF7\u4F7F\u7528 JSON" }, 415);
   const body = await c.req.json().catch(() => null);
   if (!validRetentionDays(body?.expiredRetentionDays)) return err(c, 400, "bad_request", "\u4FDD\u7559\u5929\u6570\u5E94\u4E3A 0\u20133650 \u7684\u6574\u6570");
+  auditState(c).detail.expiredRetentionDays = body.expiredRetentionDays;
   await setRetentionDays(c.env, body.expiredRetentionDays);
   return c.json({ expiredRetentionDays: body.expiredRetentionDays });
 });
@@ -7221,6 +8609,7 @@ adminRoutes.put("/upload-policy", async (c) => {
   const body = await c.req.json().catch(() => null);
   if (!validGuestLimits(body)) return err(c, 400, "bad_request", "\u5468\u6B21\u6570\u5E94\u4E3A 0\u20131000 \u7684\u6574\u6570");
   const limits = { weeklyFileLimit: body.weeklyFileLimit };
+  auditState(c).detail.weeklyFileLimit = limits.weeklyFileLimit;
   await setGuestLimits(c.env, limits);
   return c.json(limits);
 });
@@ -7303,6 +8692,8 @@ adminRoutes.get("/shares/:code/download", async (c) => {
   if (!/^\d{6}$/.test(code)) return err(c, 400, "bad_request", "\u53E3\u4EE4\u975E\u6CD5");
   const record = await getStore(c.env).getByCode(code);
   if (!record) return err(c, 404, "not_found", "\u5206\u4EAB\u4E0D\u5B58\u5728");
+  auditState(c).detail.filename = (record.filename || "").slice(0, 160);
+  auditState(c).detail.sizeBytes = record.size;
   if (record.kind !== "file") return err(c, 400, "bad_request", "\u6B64\u5206\u4EAB\u4E0D\u662F\u6587\u4EF6");
   if (!record.r2Key) return err(c, 410, "gone", "\u6587\u4EF6\u5DF2\u88AB\u6E05\u7406");
   const body = await readFileStream(c.env, record.r2Key);
@@ -7338,6 +8729,7 @@ adminRoutes.put("/shares/:code/source", async (c) => {
   if (!record) return err(c, 404, "not_found", "\u5206\u4EAB\u4E0D\u5B58\u5728");
   if (!record.source) return c.json({ error: "source_unrecorded", message: "\u6B64\u8BB0\u5F55\u6CA1\u6709\u8BBF\u5BA2\u6765\u6E90" }, 409);
   const note = body.note.trim();
+  auditState(c).detail.notePresent = !!note;
   await store.setVisitorNote(record.source.visitorId, note);
   return c.json({ visitorId: record.source.visitorId, note });
 });
@@ -7346,15 +8738,21 @@ adminRoutes.delete("/shares/:code", async (c) => {
   if (!/^\d{6}$/.test(code)) return err(c, 400, "bad_request", "\u53E3\u4EE4\u975E\u6CD5");
   const store = getStore(c.env);
   const rec = await store.getByCode(code);
-  if (!rec) return c.json({ ok: true, already: true });
+  if (!rec) {
+    auditState(c).detail.alreadyDeleted = true;
+    return c.json({ ok: true, already: true });
+  }
+  auditState(c).detail.filename = (rec.filename || "").slice(0, 160);
+  auditState(c).detail.sizeBytes = rec.size;
   if (rec.kind === "file") await deleteFile(c.env, rec.r2Key);
   await store.deleteByCode(code);
   return c.json({ ok: true });
 });
-adminRoutes.post(
-  "/cleanup",
-  async (c) => c.json({ ok: true, ...await runCleanup(c.env) })
-);
+adminRoutes.post("/cleanup", async (c) => {
+  const result = await runCleanup(c.env);
+  auditState(c).detail = result;
+  return c.json({ ok: true, ...result });
+});
 
 // src/index.ts
 var app = new Hono2();

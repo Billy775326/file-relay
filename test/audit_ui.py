@@ -1,0 +1,92 @@
+import json
+import sys
+from pathlib import Path
+from playwright.sync_api import sync_playwright, expect
+
+base = sys.argv[1].rstrip('/')
+with sync_playwright() as p:
+    browser = p.chromium.launch()
+    context = browser.new_context(viewport={'width': 1135, 'height': 900}, accept_downloads=True)
+    context.add_init_script("if (!localStorage.getItem('lang')) localStorage.setItem('lang', 'zh')")
+    assert context.request.post(base + '/api/admin/login', data={'token': 'audit-test-only'}).status == 200
+    page = context.new_page()
+    errors = []
+    page.on('pageerror', lambda e: errors.append(str(e)))
+    page.goto(base + '/admin')
+    expect(page.locator('#admin-files-view')).to_be_visible()
+    page.click('#admin-audit-tab')
+    expect(page.locator('#admin-files-view')).to_be_hidden()
+    expect(page.locator('#audit-body tr')).to_have_count(20)
+    page.click('#audit-next')
+    expect(page.locator('#audit-page')).to_contain_text('第 2 /')
+    page.click('#audit-prev')
+    expect(page.locator('#audit-page')).to_contain_text('第 1 /')
+    page.click('[data-category="login"]')
+    page.select_option('#audit-result', 'failed')
+    page.locator('#audit-filter button[type=submit]').click()
+    expect(page.locator('#audit-body tr')).to_have_count(4)
+    page.locator('#audit-body button').first.click()
+    expect(page.locator('#audit-dialog')).to_be_visible()
+    expect(page.locator('#audit-detail')).to_contain_text('<img src=x onerror=alert(1)> fixture')
+    expect(page.locator('#audit-detail img')).to_have_count(0)
+    page.keyboard.press('Escape')
+    expect(page.locator('#audit-dialog')).not_to_be_visible()
+    page.click('#audit-reset')
+    page.click('[data-category="security"]')
+    expect(page.locator('#audit-body tr')).to_have_count(2)
+    with page.expect_download() as download:
+        page.click('#audit-export')
+    exported = json.loads(Path(download.value.path()).read_text(encoding='utf-8'))
+    assert exported['total'] == 2
+    assert all(row['category'] == 'security' for row in exported['rows'])
+    assert 'audit-test-only' not in json.dumps(exported)
+    page.click('[data-category="all"]')
+    page.fill('#audit-q', 'does-not-exist')
+    page.locator('#audit-filter button[type=submit]').click()
+    expect(page.locator('#audit-state')).to_contain_text('暂无匹配日志')
+    expect(page.locator('#audit-export')).to_be_disabled()
+    page.fill('#audit-from', '2026-11-14')
+    page.fill('#audit-to', '2026-11-13')
+    page.locator('#audit-filter button[type=submit]').click()
+    expect(page.locator('#audit-error')).to_contain_text('开始日期不能晚于结束日期')
+    page.click('#audit-reset')
+    expect(page.locator('#audit-body tr')).to_have_count(20)
+    for lang in ['zh', 'en']:
+        if lang == 'en':
+            page.click('#lang-btn')
+            expect(page.locator('#audit-title')).to_have_text('Audit logs')
+        for theme in ['dark', 'light']:
+            page.evaluate('(v) => document.documentElement.dataset.theme = v', theme)
+            for width in [320, 390, 1135]:
+                page.set_viewport_size({'width': width, 'height': 900})
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                assert page.locator('#audit-export').is_visible()
+                page.locator('#audit-body button').first.click()
+                expect(page.locator('#audit-dialog')).to_be_visible()
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                page.click('#audit-close')
+                if lang == 'zh' and theme == 'dark' and width in [390, 1135]:
+                    page.screenshot(path=f'.wrangler/audit-{width}.png', animations='disabled')
+    page.route('**/api/admin/audit-logs?*', lambda r: r.fulfill(status=503, json={'message': 'Audit unavailable'}))
+    page.click('#audit-refresh')
+    expect(page.locator('#audit-error')).to_have_text('Audit unavailable')
+    expect(page.locator('#audit-body tr')).to_have_count(0)
+    expect(page.locator('#audit-refresh')).to_be_enabled()
+    page.unroute('**/api/admin/audit-logs?*')
+    page.click('#audit-refresh')
+    expect(page.locator('#audit-body tr')).to_have_count(20)
+    page.route('**/api/admin/audit-logs?*', lambda r: r.fulfill(json={'enabled': False, 'total': 0, 'rows': []}))
+    page.click('#audit-refresh')
+    expect(page.locator('#audit-state')).to_contain_text('bind R2 or D1')
+    expect(page.locator('#audit-export')).to_be_disabled()
+    page.unroute('**/api/admin/audit-logs?*')
+    # A completed settings change with an audit failure displays a warning without asking to repeat the change.
+    page.click('#admin-files-tab')
+    page.route('**/api/admin/settings', lambda r: r.fulfill(headers={'X-Audit-Status': 'unavailable'}, json={'expiredRetentionDays': 7}))
+    page.fill('#retention-days', '7')
+    page.click('#retention-save')
+    expect(page.locator('#audit-write-warning')).to_be_visible()
+    expect(page.locator('#retention-error')).to_be_hidden()
+    assert not errors, errors
+    browser.close()
+print('PASS audit UI: navigation, category/result filters, pagination, details, XSS safety, export, empty/error/disabled/write-failure states, languages/themes and mobile widths')

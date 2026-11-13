@@ -1,8 +1,10 @@
 import { $, api, fmtBytes, fmtDate, fmtDuration, toast, initTheme, el } from './common.js';
 import { LANG, t, onLangChange, initI18n } from './i18n.js';
+import { initAudit } from './admin-audit.js';
 
 initTheme();
 initI18n();
+initAudit();
 
 const loginCard = $('#admin-login');
 const panel = $('#admin-panel');

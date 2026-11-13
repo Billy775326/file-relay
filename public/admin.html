@@ -38,6 +38,12 @@
   </section>
 
   <section id="admin-panel" hidden>
+    <nav class="admin-nav" aria-label="管理页面" data-i18n-aria="audit.navigation">
+      <button id="admin-files-tab" class="btn small" type="button" aria-pressed="true" data-i18n="audit.files">文件管理</button>
+      <button id="admin-audit-tab" class="btn small ghost" type="button" aria-pressed="false" data-i18n="audit.title">日志审计</button>
+    </nav>
+    <p id="audit-write-warning" class="error-box" hidden role="alert" data-i18n="audit.writeFailed">操作已处理，但审计记录未保存，请检查日志存储。</p>
+    <div id="admin-files-view">
     <div class="stats-row" id="stats-row"></div>
     <div class="card" style="padding:14px">
       <div class="retention-settings">
@@ -92,6 +98,33 @@
         <button id="btn-logout" class="btn ghost small" data-i18n="ad.logout">退出登录</button>
       </div>
     </div>
+    </div>
+    <section id="admin-audit-view" class="card audit-card" hidden aria-labelledby="audit-title">
+      <div class="audit-heading">
+        <div><h2 id="audit-title" data-i18n="audit.title">日志审计</h2><small class="muted" data-i18n="audit.retention">最近 30 天，最多 1,000 条；时间按本地时区显示</small></div>
+        <div class="audit-actions"><button id="audit-export" class="btn small ghost" type="button" data-i18n="audit.export">导出筛选结果</button><button id="audit-refresh" class="btn small" type="button" data-i18n="ad.refresh">↻ 刷新</button></div>
+      </div>
+      <div class="audit-categories" role="group" aria-label="日志分类" data-i18n-aria="audit.categories">
+        <button type="button" data-category="all" aria-pressed="true" data-i18n="audit.all">全部日志</button>
+        <button type="button" data-category="login" aria-pressed="false" data-i18n="audit.login">登录日志</button>
+        <button type="button" data-category="operation" aria-pressed="false" data-i18n="audit.operation">操作日志</button>
+        <button type="button" data-category="security" aria-pressed="false" data-i18n="audit.security">安全事件</button>
+      </div>
+      <form id="audit-filter" class="audit-filter">
+        <label><span data-i18n="audit.result">结果</span><select id="audit-result"><option value="all" data-i18n="audit.anyResult">全部结果</option><option value="success" data-i18n="audit.success">成功</option><option value="failed" data-i18n="audit.failed">失败</option><option value="blocked" data-i18n="audit.blocked">已拦截</option></select></label>
+        <label><span data-i18n="audit.from">开始日期</span><input id="audit-from" type="date"></label>
+        <label><span data-i18n="audit.to">结束日期</span><input id="audit-to" type="date"></label>
+        <label class="audit-search"><span data-i18n="audit.keyword">IP / 操作对象</span><input id="audit-q" type="search" maxlength="80" placeholder="搜索 IP 或取件码" data-i18n-ph="audit.search"></label>
+        <div class="audit-actions"><button class="btn small primary" type="submit" data-i18n="audit.filter">筛选</button><button id="audit-reset" class="btn small ghost" type="button" data-i18n="audit.reset">重置</button></div>
+      </form>
+      <p id="audit-error" class="error-box" role="alert" hidden></p>
+      <p id="audit-state" class="muted" role="status"></p>
+      <div class="table-wrap audit-table-wrap"><table class="audit-table">
+        <thead><tr><th data-i18n="audit.time">时间</th><th data-i18n="audit.action">操作</th><th data-i18n="audit.result">结果</th><th data-i18n="audit.actor">操作身份</th><th data-i18n="audit.source">来源 IP / 属地</th><th data-i18n="audit.target">操作对象</th><th data-i18n="audit.details">详情</th></tr></thead>
+        <tbody id="audit-body"></tbody>
+      </table></div>
+      <div class="row-between audit-pager"><button id="audit-prev" class="btn small" type="button" disabled data-i18n="ad.prev">上一页</button><small id="audit-page" class="muted" role="status"></small><button id="audit-next" class="btn small" type="button" disabled data-i18n="ad.next">下一页</button></div>
+    </section>
   </section>
 </main>
 
@@ -139,6 +172,11 @@
     <button id="file-close" class="btn ghost" type="button" data-i18n="ad.sourceClose">关闭</button>
     <a id="file-download" class="btn primary" target="_blank" rel="noopener noreferrer" hidden data-i18n="ad.download">下载</a>
   </div>
+</dialog>
+<dialog id="audit-dialog" class="source-dialog" aria-labelledby="audit-detail-title">
+  <div class="source-heading"><h3 id="audit-detail-title" tabindex="-1" autofocus data-i18n="audit.details">日志详情</h3></div>
+  <div class="source-body"><div id="audit-detail" class="file-detail-grid"></div></div>
+  <div class="source-footer"><button id="audit-close" class="btn ghost" type="button" data-i18n="ad.sourceClose">关闭</button></div>
 </dialog>
 <script type="module" src="/js/admin.js"></script>
 </body>

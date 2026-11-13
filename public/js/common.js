@@ -10,6 +10,7 @@ export async function api(path, opts = {}) {
     headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},
     body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
   });
+  if (res.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));
   let data = null;
   try { data = await res.json(); } catch { /* 非 JSON 响应 */ }
   if (!res.ok) {

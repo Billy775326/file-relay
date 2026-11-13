@@ -9,7 +9,7 @@ type Entry = { ip: string; failures: number; failedAt: number[]; firstFailedAt: 
 type Ledger = { version: 1; revision: string; entries: Entry[] };
 
 export class LoginProtectionError extends Error {
-  constructor(public readonly retryAt?: number) { super('Login protection unavailable'); }
+  constructor(public readonly retryAt?: number, public readonly newBan = false) { super('Login protection unavailable'); }
 }
 
 export function loginProtectionResponse(c: Context<{ Bindings: Env }>, error: unknown): Response | undefined {
@@ -132,7 +132,7 @@ export async function recordLogin(env: Env, ip: string, success: boolean): Promi
     if (!entry) data.entries.push(next);
     return true;
   });
-  if (bannedUntil) throw new LoginProtectionError(bannedUntil);
+  if (bannedUntil) throw new LoginProtectionError(bannedUntil, true);
 }
 
 export async function loginProtectionStatus(env: Env) {
