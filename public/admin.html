@@ -31,7 +31,7 @@
 <main class="container wide">
   <section class="card center" id="admin-login" hidden>
     <h2 class="title" data-i18n="ad.loginTitle">管理登录</h2>
-    <p class="muted" style="margin:0" data-i18n="ad.loginSub">输入部署时设置的管理令牌(ADMIN_TOKEN)</p>
+    <label class="muted" for="admin-token" data-i18n="ad.loginSub">使用管理令牌登录</label>
     <input id="admin-token" class="token-input" type="password" data-i18n-ph="ad.tokenPh" placeholder="管理令牌" autocomplete="current-password">
     <button id="btn-login" class="btn primary block" data-i18n="ad.login">登录</button>
     <div id="login-error" class="error-box" hidden></div>
@@ -45,8 +45,9 @@
     <p id="audit-write-warning" class="error-box" hidden role="alert" data-i18n="audit.writeFailed">操作已处理，但审计记录未保存，请检查日志存储。</p>
     <div id="admin-files-view">
     <div class="stats-row" id="stats-row"></div>
-    <div class="card" style="padding:14px">
-      <div class="retention-settings">
+    <div class="admin-settings">
+      <details class="settings-section retention-settings" open>
+        <summary data-i18n="ad.retentionTitle">自动清理</summary>
         <form id="retention-form">
           <label for="retention-days" data-i18n="ad.retentionDays">过期后保留</label>
           <input id="retention-days" type="number" min="0" max="3650" step="1" required disabled>
@@ -55,8 +56,8 @@
         </form>
         <p id="retention-error" class="error-box" hidden role="alert"></p>
         <button id="retention-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">重试</button>
-      </div>
-      <details class="guest-settings">
+      </details>
+      <details class="settings-section guest-settings">
         <summary data-i18n="ad.guestLimits">未备注访客限制</summary>
         <form id="guest-policy-form">
           <label><span data-i18n="ad.weeklyFiles">每周文件数</span><input id="guest-weekly" type="number" min="0" max="1000" step="1" required disabled></label>
@@ -66,7 +67,7 @@
         <p id="guest-error" class="error-box" hidden role="alert"></p>
         <button id="guest-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">重试</button>
       </details>
-      <details class="guest-settings" id="login-protection">
+      <details class="settings-section guest-settings" id="login-protection">
         <summary data-i18n="ad.loginProtection">登录防护</summary>
         <div class="login-guard-heading">
           <small class="muted" id="login-guard-status" role="status"></small>
@@ -75,6 +76,8 @@
         <p id="login-guard-error" class="error-box" hidden role="alert"></p>
         <div id="login-guard-bans" class="login-guard-bans"></div>
       </details>
+    </div>
+    <div class="card admin-list-card">
       <div class="table-wrap">
         <table>
           <thead>
@@ -129,8 +132,8 @@
 </main>
 
 <!-- 作废确认弹窗:票据风,替代原生 confirm(ESC / 点遮罩 = 取消) -->
-<div class="modal-mask" id="del-mask" hidden>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="del-title">
+<dialog class="delete-dialog" id="del-mask" aria-labelledby="del-title">
+  <div class="modal-card">
     <h3 class="modal-title" id="del-title" data-i18n="ad.delTitle">作废这张取件凭证?</h3>
     <div class="del-target" id="del-target"></div>
     <p class="del-warn" data-i18n="ad.delWarn">作废后口令立即失效,对方将无法取件,且不可恢复。</p>
@@ -139,7 +142,7 @@
       <button id="del-ok" class="btn danger" data-i18n="ad.delOk">确认作废</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <dialog id="source-dialog" class="source-dialog" aria-labelledby="source-title">
   <div class="source-heading">
@@ -151,11 +154,17 @@
     <form id="source-form" hidden>
       <label for="source-note" data-i18n="ad.sourceNote">管理员备注</label>
       <input id="source-note" type="text" maxlength="64" autocomplete="off">
-      <small class="muted" data-i18n="ad.notePrivileges">备注后免除访客上传限制，并允许永久、不限次分享；清空备注恢复限制。</small>
+      <small class="muted note-privileges" data-i18n="ad.notePrivileges">备注将授予上传豁免；清空恢复限制。</small>
       <p class="error-box" id="source-error" hidden role="alert"></p>
     </form>
+    <details id="source-history" class="source-history" hidden>
+      <summary data-i18n="ad.recentUploads">近期上传</summary>
+      <small class="muted" data-i18n="ad.historyScope">最近 10 条现存分享</small>
+      <div id="source-history-list" aria-live="polite"></div>
+    </details>
   </div>
   <div class="source-footer">
+    <button id="source-back" class="btn ghost" type="button" hidden data-i18n="ad.backFile">返回文件</button>
     <button id="source-close" class="btn ghost" type="button" data-i18n="ad.sourceClose">关闭</button>
     <button id="source-save" class="btn primary" type="submit" form="source-form" hidden data-i18n="ad.sourceSave">保存备注</button>
   </div>

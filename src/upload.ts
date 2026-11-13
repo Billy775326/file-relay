@@ -1,4 +1,4 @@
-import { captureSource } from './upload-source';
+import { captureSource, parseSubmission } from './upload-source';
 import { Hono } from 'hono';
 import type { Env } from './types';
 import { err, parseExpiry, parseMaxPickups } from './util';
@@ -29,6 +29,8 @@ uploadRoutes.use('*', async (c, next) => {
 uploadRoutes.post('/init', async (c) => {
   const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return err(c, 400, 'bad_request', '请求体必须是 JSON');
+  const submission = parseSubmission(body);
+  if (!submission) return err(c, 400, 'bad_request', '称呼限 40 字，说明限 300 字');
 
   const { filename, size, mime, expiry, maxPickups } = body;
   const maxSize = fileMaxSize(c.env);
@@ -56,7 +58,7 @@ uploadRoutes.post('/init', async (c) => {
   const access = await uploadAccess(c);
   checkUploadOptions(access, size, expMs, mp);
   await admitFile(c.env, access);
-  const source = { ...access.source, uploadTier: access.noted ? 'noted' as const : 'guest' as const };
+  const source = { ...access.source, submission, uploadTier: access.noted ? 'noted' as const : 'guest' as const };
   const capacity = await reserveCapacity(c.env, r2Key, size);
   let mpu: R2MultipartUpload | undefined;
   try {

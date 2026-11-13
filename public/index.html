@@ -58,14 +58,28 @@
     </div>
 
     <div id="panel-text" class="panel" hidden>
-      <textarea id="text-input" rows="6" maxlength="65536" data-i18n-ph="text.placeholder" placeholder="粘贴或输入要分享的文本…"></textarea>
+      <textarea id="text-input" rows="6" maxlength="65536" data-i18n-aria="tab.text" aria-label="发文本" data-i18n-ph="text.placeholder" placeholder="粘贴或输入要分享的文本…"></textarea>
       <div class="row-between"><small class="muted" id="text-counter">0 / 65536</small></div>
     </div>
+
+    <details class="upload-context">
+      <summary data-i18n="context.add">补充信息（选填）</summary>
+      <div class="context-fields">
+        <label for="upload-name" data-i18n="context.name">怎么称呼你</label>
+        <input id="upload-name" type="text" maxlength="40" autocomplete="nickname">
+        <div id="upload-description-field">
+          <label for="upload-description" data-i18n="context.description">文件说明（本批文件）</label>
+          <textarea id="upload-description" rows="2" maxlength="300" aria-describedby="description-count"></textarea>
+          <small id="description-count" class="muted">0 / 300</small>
+        </div>
+        <small class="muted" data-i18n="context.visibility">补充信息仅管理员可见</small>
+      </div>
+    </details>
 
     <div class="options">
       <div class="opt-group">
         <label data-i18n="opt.expiry">有效期</label>
-        <div class="seg" id="seg-expiry">
+        <div class="seg" id="seg-expiry" role="group" data-i18n-aria="opt.expiry" aria-label="有效期">
           <button type="button" data-v="1d" data-i18n="seg.1d">1 天</button>
           <button type="button" data-v="7d" class="active" data-i18n="seg.7d">7 天</button>
           <button type="button" data-v="30d" data-i18n="seg.30d">30 天</button>
@@ -74,7 +88,7 @@
       </div>
       <div class="opt-group">
         <label data-i18n="opt.pickups">可取次数</label>
-        <div class="seg" id="seg-pickups">
+        <div class="seg" id="seg-pickups" role="group" data-i18n-aria="opt.pickups" aria-label="可取次数">
           <button type="button" data-v="1" data-i18n="seg.p1">1 次</button>
           <button type="button" data-v="5" class="active" data-i18n="seg.p5">5 次</button>
           <button type="button" data-v="null" data-i18n="seg.punlimited" disabled>不限</button>

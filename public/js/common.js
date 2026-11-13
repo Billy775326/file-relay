@@ -3,6 +3,25 @@ import { t } from './i18n.js';
 export const $ = (sel, el = document) => el.querySelector(sel);
 export const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
+/** Keep Tab within modal content, including the wrap past the final button. */
+export function initDialogs() {
+  for (const dialog of $$('dialog')) {
+    dialog.addEventListener('keydown', event => {
+      if (event.key !== 'Tab') return;
+      const controls = $$('button, a[href], input, select, textarea, summary, [tabindex]', dialog)
+        .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (!first) { event.preventDefault(); return; }
+      if (!controls.includes(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
+        event.preventDefault(); (event.shiftKey ? last : first).focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus();
+      }
+    });
+  }
+}
+
 /** fetch JSON 封装:非 2xx 抛错(带服务端的中文 message 与机器码) */
 export async function api(path, opts = {}) {
   const res = await fetch(path, {

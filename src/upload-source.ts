@@ -41,9 +41,25 @@ export async function captureSource(c: Context<{ Bindings: Env }>): Promise<Uplo
   const ip = rawIP && /^[0-9a-fA-F:.]{3,45}$/.test(rawIP) ? rawIP : null;
   return {
     visitorId: await ensureVisitor(c), ip,
+    asn: typeof cf?.asn === 'number' && Number.isSafeInteger(cf.asn) && cf.asn > 0 ? cf.asn : null,
+    organization: boundedText(cf?.asOrganization, 120),
+    userAgent: boundedText(c.req.header('User-Agent'), 256),
     country: typeof cf?.country === 'string' && /^[A-Z]{2}$/.test(cf.country) ? cf.country : null,
     region: location(cf?.region), city: location(cf?.city), capturedAt: Date.now(),
   };
+}
+
+function boundedText(value: unknown, max: number): string | null {
+  return typeof value === 'string' ? value.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max) || null : null;
+}
+
+/** Explicit user input only. Reject invalid fields before admission consumes a quota. */
+export function parseSubmission(body: Record<string, unknown>): UploadSource['submission'] | null {
+  const displayName = body.displayName ?? '';
+  const description = body.description ?? '';
+  if (typeof displayName !== 'string' || displayName.length > 40 || /[\u0000-\u001f\u007f]/.test(displayName) ||
+      typeof description !== 'string' || description.length > 300 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(description)) return null;
+  return { displayName: displayName.trim(), description: description.trim() };
 }
 
 export function sourceSummary(source?: UploadSource | null): SourceSummary | null {

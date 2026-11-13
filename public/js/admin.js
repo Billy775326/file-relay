@@ -1,9 +1,10 @@
-import { $, api, fmtBytes, fmtDate, fmtDuration, toast, initTheme, el } from './common.js';
+import { $, api, fmtBytes, fmtDate, fmtDuration, toast, copyText, initTheme, initDialogs, el } from './common.js';
 import { LANG, t, onLangChange, initI18n } from './i18n.js';
 import { initAudit } from './admin-audit.js';
 
 initTheme();
 initI18n();
+initDialogs();
 initAudit();
 
 const loginCard = $('#admin-login');
@@ -201,14 +202,14 @@ function confirmDelete(r) {
     el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),
       el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),
   );
-  delMask.hidden = false;
+  delMask.showModal();
   $('#del-cancel').focus();
   return new Promise((resolve) => { delResolve = resolve; });
 }
 
 function closeDelModal(v) {
   if (!delResolve) return;
-  delMask.hidden = true;
+  delMask.close();
   const resolve = delResolve;
   delResolve = null;
   resolve(v);
@@ -216,7 +217,7 @@ function closeDelModal(v) {
 $('#del-cancel').addEventListener('click', () => closeDelModal(false));
 $('#del-ok').addEventListener('click', () => closeDelModal(true));
 delMask.addEventListener('click', (e) => e.target === delMask && closeDelModal(false));
-document.addEventListener('keydown', (e) => e.key === 'Escape' && closeDelModal(false));
+delMask.addEventListener('cancel', e => { e.preventDefault(); closeDelModal(false); });
 
 async function remove(r, tr) {
   if (!(await confirmDelete(r))) return;
@@ -247,6 +248,21 @@ const sourceError = $('#source-error');
 const noteOverrides = new Map(); // Read-your-write while KV propagation completes.
 let sourceRequest = 0;
 let activeSource = null;
+let sourceReturnCode = null;
+let sourceHistoryLoaded = false;
+
+function sourceField(label, value, className = '') {
+  return el('div', { class: `source-field ${className}` },
+    el('small', { class: 'muted' }, label), el('span', {}, value));
+}
+function browserLabel(ua) {
+  if (!ua) return t('ad.sourceUnrecorded');
+  const browser = /Edg\//.test(ua) ? 'Edge' : /Firefox\//.test(ua) ? 'Firefox'
+    : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : t('ad.sourceUnknown');
+  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS'
+    : /Windows/.test(ua) ? 'Windows' : /Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';
+  return [browser, os].filter(Boolean).join(' · ');
+}
 
 function visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }
 function sourceLabel(source) {
@@ -267,9 +283,15 @@ function sourceCell(row) {
   button.title = t('ad.source');
   return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));
 }
-async function openSource(row) {
+async function openSource(row, returnCode = null) {
   const request = ++sourceRequest;
   activeSource = null;
+  sourceReturnCode = returnCode;
+  $('#source-back').hidden = !returnCode;
+  $('#source-history').hidden = true;
+  $('#source-history').open = false;
+  $('#source-history-list').replaceChildren();
+  sourceHistoryLoaded = false;
   sourceForm.hidden = true;
   sourceError.hidden = true;
   sourceSave.disabled = false;
@@ -282,12 +304,22 @@ async function openSource(row) {
     if (request !== sourceRequest || !sourceDialog.open) return;
     if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }
     activeSource = { code: row.code, visitorId: source.visitorId };
-    $('#source-detail').replaceChildren(...[
-      [t('ad.sourceLocation'), locationLabel(source), 'source-field-wide'],
-      ['IP', source.ip || t('ad.sourceUnknown'), 'mono'],
-      [t('ad.sourceTime'), fmtDate(source.capturedAt), ''],
-      [t('ad.visitorId'), source.visitorId, 'source-field-wide mono'],
-    ].map(([label, value, className]) => el('div', { class: `source-field ${className}` }, el('small', { class: 'muted' }, label), el('span', {}, value))));
+    const ip = el('span', { class: 'source-ip' }, source.ip || t('ad.sourceUnknown'));
+    if (source.ip) ip.append(el('button', { class: 'btn small ghost', type: 'button',
+      onclick: async () => toast(t(await copyText(source.ip) ? 'ad.ipCopied' : 'ad.copyFailed')) }, t('ad.copyIP')));
+    $('#source-detail').replaceChildren(
+      sourceField(t('ad.visitorId'), source.visitorId, 'mono'),
+      ...(source.displayName ? [sourceField(t('ad.submittedName'), source.displayName)] : []),
+      sourceField(t('ad.requestIP'), ip),
+      sourceField(t('ad.sourceLocation'), locationLabel(source)),
+      ...(source.asn || source.organization ? [sourceField(t('ad.network'),
+        [source.organization, source.asn ? `AS${source.asn}` : null].filter(Boolean).join(' · '))] : []),
+      sourceField(t('ad.browserReported'), browserLabel(source.userAgent)),
+      sourceField(t('ad.sourceTime'), fmtDate(source.capturedAt)),
+      ...(source.userAgent ? [el('details', { class: 'source-agent' }, el('summary', {}, 'User-Agent'),
+        el('p', { class: 'mono' }, source.userAgent))] : []),
+    );
+    $('#source-history').hidden = false;
     sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';
     sourceForm.hidden = false;
     sourceSave.hidden = false;
@@ -298,6 +330,11 @@ async function openSource(row) {
 function closeSource() {
   sourceRequest++;
   activeSource = null;
+  sourceReturnCode = null;
+  $('#source-history').open = false;
+  $('#source-history').hidden = true;
+  $('#source-history-list').replaceChildren();
+  $('#source-back').hidden = true;
   sourceNote.value = '';
   sourceForm.hidden = true;
   sourceSave.hidden = true;
@@ -307,6 +344,35 @@ function closeSource() {
 }
 sourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });
 $('#source-close').addEventListener('click', closeSource);
+$('#source-back').addEventListener('click', () => {
+  const code = sourceReturnCode;
+  closeSource();
+  if (code) openFileDetails(code);
+});
+$('#source-history').addEventListener('toggle', async () => {
+  if (!$('#source-history').open || !activeSource || sourceHistoryLoaded) return;
+  sourceHistoryLoaded = true;
+  const request = sourceRequest;
+  const list = $('#source-history-list');
+  list.textContent = t('ad.loading');
+  try {
+    const { rows } = await api(`/api/admin/shares/${activeSource.code}/source/activity`);
+    if (request !== sourceRequest || !sourceDialog.open) return;
+    list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },
+      el('div', { class: 'activity-head' }, el('span', { title: row.filename || t('ad.textFallback') }, row.filename || t('ad.textFallback')),
+        el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),
+      el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} · ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} · ${row.code}`),
+      row.ip || row.country || row.region || row.city
+        ? el('small', { class: 'muted' }, [row.ip, row.country || row.region || row.city ? locationLabel(row) : null].filter(Boolean).join(' · ')) : null,
+    )));
+    if (!rows.length) list.textContent = t('ad.empty');
+  } catch (error) {
+    if (request !== sourceRequest || !sourceDialog.open) return;
+    sourceHistoryLoaded = false;
+    list.replaceChildren(el('p', { class: 'error-box', role: 'alert' }, error.message || t('ad.loadFail')),
+      el('button', { type: 'button', class: 'btn small ghost', onclick: () => $('#source-history').dispatchEvent(new Event('toggle')) }, t('ad.retry')));
+  }
+});
 sourceForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!activeSource || sourceSave.disabled) return;
@@ -374,7 +440,7 @@ async function openFileDetails(code) {
     const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };
     const source = detail.source;
     const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',
-      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }); },
+      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }, code); },
     }, sourceLabel(source)) : t('ad.sourceUnrecorded');
     if (source) sourceButton.dataset.visitor = source.visitorId;
     const lifetime = detail.expireAt === null ? null
@@ -387,13 +453,15 @@ async function openFileDetails(code) {
         fileField('MIME', detail.mime || t('ad.sourceUnknown')),
         Number.isSafeInteger(detail.storage?.size) ? fileField(t('ad.storedSize'), t('ad.exactBytes', detail.storage.size.toLocaleString())) : null,
         detail.storage?.uploadedAt != null ? fileField(t('ad.storedAt'), fmtDate(detail.storage.uploadedAt)) : null,
-      ), el('small', { class: 'muted' }, t('ad.formatHint')));
+      ));
     fileDetail.replaceChildren(
       el('div', { class: 'file-identity file-wide' },
         el('strong', {}, detail.filename || t('ad.unnamed')), el('small', { class: 'muted' }, fileFormat(detail.filename))),
-      fileField(t('ad.th.size'), fmtBytes(detail.size), t('ad.exactBytes', detail.size.toLocaleString())),
+      ...(detail.description ? [el('div', { class: 'file-description file-wide' },
+        el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),
+      fileField(t('ad.th.size'), fmtBytes(detail.size), detail.size >= 1000 ? t('ad.exactBytes', detail.size.toLocaleString()) : null),
       fileField(t('ad.fileAvailability'), el('span', { class: `badge ${state === 'available' ? 'active' : state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state]))),
-      fileField(t('ad.uploader'), sourceButton, source ? locationLabel(source) : null),
+      fileField(t('ad.source'), sourceButton),
       fileField(t('ad.shareState'), el('span', { class: `badge ${detail.status}` }, t(STATUS_KEY[detail.status]))),
       fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '∞'}`),
       fileField(t('ad.th.created'), fmtDate(detail.createdAt)),

@@ -93,7 +93,11 @@ Workers 的 Cron、Pages 首页触发和外部定时调用共用此规则。Page
 | `GET /api/admin/shares/:code` | 六位口令；返回文件详情，不增加取件次数 |
 | `GET /api/admin/shares/:code/download` | 返回文件流及附件文件名；不增加取件次数 |
 
-文件详情包含 `code`、`filename`、`size`（字节）、`mime`、`createdAt`、`expireAt`、`cleanupAfter`、`pickupCount`、`maxPickups`、`status` 和 `downloadUrl`，另含 `evaluatedAt`（检查时间）、`retentionDays`、`cleanupStatus`、`storage` 与 `source`。时间使用 Unix 毫秒；永久分享的 `expireAt`、`cleanupAfter` 为 `null`，不限次时 `maxPickups` 为 `null`。详情不包含完整 IP 或内部文件存储键。
+文件详情包含 `code`、`filename`、`size`（字节）、`mime`、`description`（用户填写的文件说明，未填为 `null`）、`createdAt`、`expireAt`、`cleanupAfter`、`pickupCount`、`maxPickups`、`status` 和 `downloadUrl`，另含 `evaluatedAt`（检查时间）、`retentionDays`、`cleanupStatus`、`storage` 与 `source`。时间使用 Unix 毫秒；永久分享的 `expireAt`、`cleanupAfter` 为 `null`，不限次时 `maxPickups` 为 `null`。详情不包含完整 IP、浏览器信息、自填称呼或内部文件存储键。
+
+界面按信息用途分开：文件弹窗显示文件说明、属性、有效期与下载，来源仅保留入口；来源弹窗显示访客、网络和近期上传，从文件打开时可返回文件详情。空说明不显示占位段落，原始 User-Agent、技术属性与近期上传默认折叠。后台设置分别放在自动清理、访客限制、登录防护三个区块，手机端纵向排列。
+
+交互参照 [WAI 模态弹窗模式](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/) 与 [WCAG 2.2 控件尺寸说明](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)：弹窗有标题、关闭操作和 Tab 循环，删除确认默认聚焦取消；焦点可见，主要手机控件至少 44px 高。这些是本次实现与检查范围，不代表已通过完整 WCAG 合规认证。
 
 - `cleanupStatus`：`permanent` 不自动清理、`active` 未过期、`retained` 过期保留中、`pending` 已达到清理时间。它与文件是否实际存在分别显示。
 - `storage`：`state` 为 `available`、`missing` 或 `unknown`；R2 对象存在时附 `size`（字节）和 `uploadedAt`（入库时间），KV 或无法取得时相应值为 `null`。存储检查失败仍返回详情，不能将 `unknown` 当作删除。

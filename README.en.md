@@ -19,6 +19,7 @@ Designed for the **Cloudflare Free plan**. KV stores text and small files from n
 - Direct KV uploads; multipart uploads with cancellation when R2 is bound.
 - A capacity alert stops the upload batch when R2 space is insufficient.
 - Token-protected admin page with statistics, file details and downloads, deletion and an optional custom entry path.
+- Optional uploader name and file description; separate file and source dialogs, with recent uploads available in source details.
 - R2/D1 deployments automatically block repeated failed admin logins; the admin page lists blocked IPs and supports unblocking.
 - Admin audit logs include login, operation and security categories with filtering, details and JSON export.
 - Expiry cleanup, Chinese and English UI, dark mode and mobile layouts.

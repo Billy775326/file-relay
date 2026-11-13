@@ -93,6 +93,12 @@ function insertShareStmt(db: D1Database, id: string, code: string, s: NewShare, 
 
 export function createD1Store(db: D1Database): ShareStore {
   return {
+    async visitorShares(visitorId) {
+      const rows = await db.prepare(`SELECT ${SHARE_COLUMNS} FROM shares
+        WHERE json_extract(source_json, '$.visitorId') = ?1 ORDER BY created_at DESC, code ASC LIMIT 10`)
+        .bind(visitorId).all<ShareRow>();
+      return (rows.results ?? []).map(toRec);
+    },
     async getVisitorNotes(ids) {
       const notes = new Map<string, string>();
       for (let i = 0; i < ids.length; i += 100) {

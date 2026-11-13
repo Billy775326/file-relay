@@ -5,6 +5,7 @@ import { err, parseExpiry, parseMaxPickups, contentDisposition } from './util';
 import { getStore, shareStatusOf } from './store';
 import { fileMode, KV_FILE_PREFIX, putFileBytes, deleteFile, readFileStream } from './filestore';
 import type { Context } from 'hono';
+import { parseSubmission } from './upload-source';
 
 export const shareRoutes = new Hono<{ Bindings: Env }>();
 shareRoutes.onError((error, c) => {
@@ -18,6 +19,8 @@ shareRoutes.onError((error, c) => {
 shareRoutes.post('/shares/text', async (c) => {
   const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return err(c, 400, 'bad_request', '请求体必须是 JSON');
+  const submission = parseSubmission(body);
+  if (!submission) return err(c, 400, 'bad_request', '称呼限 40 字，说明限 300 字');
 
   const text = body.text;
   const maxLen = num(c.env.MAX_TEXT_LENGTH, 65_536);
@@ -35,7 +38,7 @@ shareRoutes.post('/shares/text', async (c) => {
   const expireAt = expMs === null ? null : now + expMs;
   const created = await getStore(c.env).createShare({
     kind: 'text',
-    source: access.source,
+    source: { ...access.source, submission },
     size: text.length,
     text,
     maxPickups: mp,
@@ -66,6 +69,15 @@ shareRoutes.post('/shares/file', async (c) => {
   }
 
   const filename = c.req.query('filename')?.trim();
+  // Header keeps free-text descriptions out of request URLs and access logs.
+  let context: Record<string, unknown>;
+  try {
+    if ((c.req.header('X-Upload-Context') || '').length > 8192) throw new Error('too long');
+    context = JSON.parse(decodeURIComponent(c.req.header('X-Upload-Context') || '%7B%7D'));
+    if (!context || typeof context !== 'object' || Array.isArray(context)) throw new Error('invalid');
+  } catch { return err(c, 400, 'bad_request', '上传说明格式错误'); }
+  const submission = parseSubmission(context);
+  if (!submission) return err(c, 400, 'bad_request', '称呼限 40 字，说明限 300 字');
   if (!filename) return err(c, 400, 'bad_request', '缺少 filename 查询参数');
   const expMs = parseExpiry(c.req.query('expiry'));
   if (expMs === undefined) return err(c, 400, 'bad_request', '有效期参数非法');
@@ -112,7 +124,7 @@ shareRoutes.post('/shares/file', async (c) => {
   try {
     const created = await getStore(c.env).createShare({
       kind: 'file',
-      source: access.source,
+      source: { ...access.source, submission },
       filename: filename.slice(0, 255),
       size: bytes.byteLength,
       mime,

@@ -62,6 +62,7 @@ function updateHint() {
     : cfg.fileUploadAvailable === false ? t('policy.contact')
     : cfg.weeklyFileLimit !== null && cfg.weeklyFileLimit !== undefined
       ? t('policy.remaining', cfg.uploadsRemaining, cfg.weeklyFileLimit, fmtDate(cfg.uploadsResetAt)) : '';
+  $$('.seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));
 }
 async function refreshPolicy() {
   try {
@@ -94,6 +95,8 @@ $$('.tab').forEach((tb) =>
     const tab = tb.dataset.tab;
     $('#panel-file').hidden = tab !== 'file';
     $('#panel-text').hidden = tab !== 'text';
+    $('#upload-description-field').hidden = tab !== 'file';
+    $$('.tab').forEach(x => x.setAttribute('aria-pressed', String(x === tb)));
     els.btnUpload.hidden = tab !== 'file';
     els.btnText.hidden = tab !== 'text';
     hideResult();
@@ -105,14 +108,23 @@ for (const id of ['seg-expiry', 'seg-pickups']) {
   $(`#${id}`).addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
-    $$('button', $(`#${id}`)).forEach((x) => x.classList.toggle('active', x === b));
+    $$('button', $(`#${id}`)).forEach((x) => {
+      x.classList.toggle('active', x === b);
+      x.setAttribute('aria-pressed', String(x === b));
+    });
   });
 }
 function readOptions() {
   const exp = $('#seg-expiry .active').dataset.v;
   const pk = $('#seg-pickups .active').dataset.v;
-  return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk) };
+  return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk),
+    displayName: $('#upload-name').value.trim(),
+    description: $('#panel-file').hidden ? '' : $('#upload-description').value.trim() };
 }
+$$('.tab, .seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));
+$('#upload-description').addEventListener('input', e => {
+  $('#description-count').textContent = `${e.target.value.length} / 300`;
+});
 
 /* ---------- 文件队列:点击 / 全窗口拖拽 / 智能粘贴,再选即整体替换 ---------- */
 els.dropzone.addEventListener('click', () => els.fileInput.click());
@@ -274,11 +286,12 @@ async function putPartWithRetry(uploadId, n, blob, onProgress) {
   return null;
 }
 
-function xhrJson(method, url, blob, onProgress) {
+function xhrJson(method, url, blob, onProgress, context) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     currentXhr = xhr;
     xhr.open(method, url);
+    if (context) xhr.setRequestHeader('X-Upload-Context', encodeURIComponent(JSON.stringify(context)));
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }
@@ -399,7 +412,8 @@ async function directUpload(f, opts, onProgress) {
   for (let attempt = 0; attempt < 3; attempt++) {
     if (cancelled) throw new Error('cancelled');
     setPending(false);
-    const res = await xhrJson('POST', `/api/shares/file?${qs}`, f, onProgress);
+    const res = await xhrJson('POST', `/api/shares/file?${qs}`, f, onProgress,
+      { displayName: opts.displayName, description: opts.description });
     if (res) return res;
     if (cancelled) throw new Error('cancelled');
     setPending(true);
@@ -467,6 +481,7 @@ async function abortUpload() {
 }
 
 function setBusy(busy) {
+  for (const field of [$('#upload-name'), $('#upload-description')]) field.disabled = busy;
   els.btnUpload.disabled = busy || files.length === 0 || !canUploadFiles();
   els.btnText.disabled = busy || !policyReady || !els.textInput.value.trim();
 }

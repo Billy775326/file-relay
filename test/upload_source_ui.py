@@ -19,6 +19,23 @@ with sync_playwright() as p:
     page.locator('#source-form').wait_for(state='visible')
     assert visitor in page.locator('#source-detail').inner_text()
     assert 'IP' in page.locator('#source-detail').inner_text()
+    page.locator('#source-history summary').click()
+    page.locator('.source-activity').first.wait_for()
+    assert page.locator('.source-activity').count() <= 10
+    assert page.locator('#source-history-list img').count() == 0
+    page.locator('#source-history summary').click()
+    page.route('**/api/admin/shares/*/source/activity', lambda route: route.fulfill(status=503, content_type='application/json', body='{"message":"History unavailable"}'))
+    page.keyboard.press('Escape')
+    buttons.first.click()
+    page.locator('#source-form').wait_for(state='visible')
+    page.locator('#source-history summary').click()
+    page.locator('#source-history-list .error-box').wait_for()
+    page.unroute('**/api/admin/shares/*/source/activity')
+    page.locator('#source-history-list button').click()
+    page.locator('.source-activity').first.wait_for()
+    page.keyboard.press('Escape')
+    buttons.first.click()
+    page.locator('#source-form').wait_for(state='visible')
     note = '<img src=x onerror=alert(1)> 同事'
     page.fill('#source-note', note)
     page.click('#source-save')
@@ -31,7 +48,7 @@ with sync_playwright() as p:
     assert visitor in page.locator('#source-detail').inner_text()
     for theme in ['light', 'dark']:
         page.evaluate('(t) => document.documentElement.dataset.theme = t', theme)
-        for width in [1280, 390]:
+        for width in [1280, 390, 320]:
             page.set_viewport_size({'width': width, 'height': 900})
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             assert page.locator('#source-dialog').evaluate('(el) => el.scrollWidth <= el.clientWidth')

@@ -241,6 +241,7 @@ adminRoutes.get('/shares/:code', async (c) => {
   const cleanupStatus = cleanupAfter === null ? 'permanent' : record.expireAt! > evaluatedAt ? 'active'
     : cleanupAfter > evaluatedAt ? 'retained' : 'pending';
   return c.json({ code, filename: record.filename, size: record.size, mime: record.mime,
+    description: record.source?.submission?.description || null,
     createdAt: record.createdAt, expireAt: record.expireAt,
     cleanupAfter, cleanupStatus, retentionDays: days, evaluatedAt, storage,
     source: record.source ? { ...sourceSummary(record.source), note } : null,
@@ -278,7 +279,26 @@ adminRoutes.get('/shares/:code/source', async (c) => {
   const store = getStore(c.env);
   const record = await store.getByCode(code);
   if (!record) return err(c, 404, 'not_found', '分享不存在');
-  return c.json({ source: record.source ? { ...record.source, note: await store.getVisitorNote(record.source.visitorId) } : null });
+  if (!record.source) return c.json({ source: null });
+  const { submission, ...source } = record.source;
+  return c.json({ source: { ...source, displayName: submission?.displayName || null,
+    note: await store.getVisitorNote(source.visitorId) } });
+});
+
+/** On-demand history is bounded and excludes deleted shares and file descriptions. */
+adminRoutes.get('/shares/:code/source/activity', async c => {
+  const code = c.req.param('code');
+  if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
+  const store = getStore(c.env);
+  const record = await store.getByCode(code);
+  if (!record) return err(c, 404, 'not_found', '分享不存在');
+  const rows = record.source ? await store.visitorShares(record.source.visitorId) : [];
+  return c.json({ limit: 10, rows: rows.map(row => ({ code: row.code, kind: row.kind,
+    filename: row.filename, size: row.size, createdAt: row.createdAt,
+    status: shareStatusOf(row.expireAt, row.maxPickups, row.pickupCount, Date.now()),
+    ip: row.source?.ip ?? null, country: row.source?.country ?? null,
+    region: row.source?.region ?? null, city: row.source?.city ?? null,
+  })) });
 });
 
 adminRoutes.put('/shares/:code/source', async (c) => {

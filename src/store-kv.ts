@@ -12,7 +12,6 @@ import { sourceSummary } from './upload-source';
  */
 import { randCode } from './code';
 import type {
-  SourceSummary,
   SessionRecord,
   ShareListRow,
   ShareRecord,
@@ -88,6 +87,13 @@ async function scanShareMeta(kv: KVNamespace): Promise<Array<{ code: string; m: 
 
 export function createKVStore(kv: KVNamespace): ShareStore {
   return {
+    async visitorShares(visitorId) {
+      const matches = (await scanShareMeta(kv))
+        .filter(({ m }) => m.o && JSON.parse(b64decode(m.o)).visitorId === visitorId)
+        .sort((a, b) => b.m.t - a.m.t || a.code.localeCompare(b.code)).slice(0, 10);
+      const records = await Promise.all(matches.map(({ code }) => kv.get<ShareRecord>(SHARE_PREFIX + code, 'json')));
+      return records.filter((record): record is ShareRecord => !!record && record.source?.visitorId === visitorId);
+    },
     async getVisitorNotes(ids) {
       const notes = new Map<string, string>();
       // KV bulk reads accept at most 100 keys; avoid a subrequest for every list row.
@@ -160,7 +166,7 @@ export function createKVStore(kv: KVNamespace): ShareStore {
         kept = page.filter((_, i) => alive[i]);
       }
       const rows = kept.map(({ code, m }): ShareListRow => ({
-        source: m.o ? JSON.parse(b64decode(m.o)) as SourceSummary : null,
+        source: m.o ? sourceSummary(JSON.parse(b64decode(m.o))) : null,
         id: m.id, code, kind: m.k,
         filename: m.n ? b64decode(m.n) : null,
         size: m.s,

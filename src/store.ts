@@ -10,6 +10,11 @@ import { createD1Store } from './store-d1';
 import { createKVStore } from './store-kv';
 
 export interface UploadSource {
+  /** Private, optional upload context; omitted from the compact list projection. */
+  submission?: { displayName: string; description: string };
+  asn?: number | null;
+  organization?: string | null;
+  userAgent?: string | null;
   /** Upload admission snapshot; older records may not have it. */
   uploadTier?: 'guest' | 'noted';
   visitorId: string;
@@ -19,7 +24,7 @@ export interface UploadSource {
   city: string | null;
   capturedAt: number;
 }
-export type SourceSummary = Omit<UploadSource, 'ip'>;
+export type SourceSummary = Pick<UploadSource, 'visitorId' | 'country' | 'region' | 'city' | 'capturedAt'>;
 
 export interface ShareRecord {
   source?: UploadSource | null;
@@ -88,6 +93,8 @@ export interface ShareStats {
 }
 
 export interface ShareStore {
+  /** Latest retained shares for one signed visitor; never infer identity from a shared IP. */
+  visitorShares(visitorId: string): Promise<ShareRecord[]>;
   getVisitorNotes(visitorIds: string[]): Promise<Map<string, string>>;
   getVisitorNote(visitorId: string): Promise<string>;
   setVisitorNote(visitorId: string, note: string): Promise<void>;
