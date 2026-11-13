@@ -7,7 +7,7 @@ const COOKIE = 'relay_visitor';
 const MAX_AGE = 365 * 24 * 60 * 60;
 const ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
-/** Browser association only, never an authorization credential. */
+/** Signed browser association. Notes grant upload privileges, not proof of real identity. */
 export async function ensureVisitor(c: Context<{ Bindings: Env }>): Promise<string> {
   if (!c.env.ADMIN_TOKEN) return crypto.randomUUID(); // No secret: do not trust or issue persistent cookies.
   const secret = `upload-source:${c.env.ADMIN_TOKEN}`;

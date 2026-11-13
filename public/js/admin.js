@@ -61,6 +61,7 @@ function showPanel() {
   loadStats();
   loadList();
   loadSettings();
+  loadGuestPolicy();
 }
 
 $('#btn-logout').addEventListener('click', async () => {
@@ -409,4 +410,44 @@ $('#retention-form').addEventListener('submit', async e => {
     retentionInput.disabled = false;
     retentionSave.disabled = false;
   }
+});
+
+const guestWeekly = $('#guest-weekly');
+const guestSize = $('#guest-size');
+const guestSave = $('#guest-save');
+const guestError = $('#guest-error');
+function guestBusy(busy) {
+  for (const control of [guestWeekly, guestSize, guestSave]) control.disabled = busy;
+}
+async function loadGuestPolicy() {
+  guestBusy(true);
+  guestError.hidden = true;
+  $('#guest-retry').hidden = true;
+  try {
+    const policy = await api('/api/admin/upload-policy');
+    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000 ||
+        !Number.isInteger(policy.maxFileSizeMB) || policy.maxFileSizeMB < 1 || policy.maxFileSizeMB > 9900) throw new Error(t('ad.loadFail'));
+    guestWeekly.value = policy.weeklyFileLimit;
+    guestSize.value = policy.maxFileSizeMB;
+    guestBusy(false);
+  } catch (error) {
+    guestError.textContent = error.message || t('ad.loadFail');
+    guestError.hidden = false;
+    $('#guest-retry').hidden = false;
+  }
+}
+$('#guest-retry').addEventListener('click', loadGuestPolicy);
+$('#guest-policy-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (guestSave.disabled || !e.target.reportValidity()) return;
+  const body = { weeklyFileLimit: Number(guestWeekly.value), maxFileSizeMB: Number(guestSize.value) };
+  guestBusy(true);
+  guestError.hidden = true;
+  try {
+    await api('/api/admin/upload-policy', { method: 'PUT', body });
+    toast(t('ad.guestSaved'), 'ok');
+  } catch (error) {
+    guestError.textContent = error.message || t('ad.loadFail');
+    guestError.hidden = false;
+  } finally { guestBusy(false); }
 });

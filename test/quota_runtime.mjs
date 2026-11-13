@@ -1,3 +1,4 @@
+import { notedVisitor } from './noted_visitor.mjs';
 // Run after build:pages; local workerd/R2 emulator plus Python Playwright.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -8,8 +9,11 @@ const options = {
 };
 const mf = new miniflare.Miniflare(miniflare.convertV4MiniflareOptions?.(options) ?? options);
 const json = (body) => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-const call = (path, init) => mf.dispatchFetch('http://localhost' + path, init);
+let visitorCookie;
+const call = (path, init = {}) => mf.dispatchFetch('http://localhost' + path, { ...init,
+  headers: { Cookie: visitorCookie || '', ...init.headers } });
 try {
+  visitorCookie = await notedVisitor(mf);
   assert.equal((await (await call('/api/config')).json()).maxFileSize, 9_900_000_000);
   assert.equal((await call('/api/uploads/init', json({ filename: 'oversized', size: 9_900_000_001, expiry: '1d' }))).status, 413);
   const reserved = await call('/api/uploads/init', json({ filename: 'large', size: 9_900_000_000, expiry: '1d' }));
@@ -53,6 +57,8 @@ from playwright.sync_api import sync_playwright
 with sync_playwright() as p:
     browser = p.chromium.launch()
     page = browser.new_page()
+    cookie_name, cookie_value = sys.argv[2].split('=', 1)
+    page.context.add_cookies([{'name':cookie_name, 'value':cookie_value, 'url':sys.argv[1]}])
     page.add_init_script("localStorage.setItem('lang', 'zh')")
     calls = []
     def deny(route):
@@ -124,7 +130,7 @@ with sync_playwright() as p:
 print('PASS browser: quota alert and batch stops after first rejection')
 `;
   await new Promise((resolve, reject) => {
-    const child = spawn('python', ['-', url], { stdio: ['pipe', 'inherit', 'inherit'] });
+    const child = spawn('python', ['-', url, visitorCookie], { stdio: ['pipe', 'inherit', 'inherit'] });
     child.on('error', reject);
     child.on('exit', (code) => code === 0 ? resolve() : reject(new Error(`UI test exited ${code}`)));
     child.stdin.end(python);

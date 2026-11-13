@@ -4,7 +4,7 @@
 
 A file and text sharing service for Cloudflare Workers / Pages. Upload content, receive a **six-digit pickup code**, and share it through a code, link or QR code.
 
-Designed for the **Cloudflare Free plan**. The default deployment needs one KV namespace. Adding an R2 bucket enables multipart uploads and **9.99 GB bucket-capacity protection**.
+Designed for the **Cloudflare Free plan**. KV stores text and small files from noted visitors. File uploads from unnoted visitors require R2 or D1 for concurrent quota enforcement. Adding an R2 bucket enables multipart uploads and **9.99 GB bucket-capacity protection**.
 
 > Request limits, per-file limits and free storage allowances are separate concepts. Capacity protection covers the bound bucket; it does not guarantee zero charges for the entire account.
 
@@ -14,7 +14,8 @@ Designed for the **Cloudflare Free plan**. The default deployment needs one KV n
 
 - File and text sharing through pickup codes, links and QR codes.
 - Select up to 10 files, upload sequentially and receive a separate code for each; progress, speed and retries included.
-- Expiry options: 1, 7 or 30 days, or forever. The UI offers 1, 5 or unlimited pickups.
+- Expiry options: 1, 7 or 30 days. Noted visitors can also create permanent or unlimited-pickup shares.
+- Unnoted visitors default to five file-upload attempts per week and 100 MB per file, editable in the admin page.
 - Direct KV uploads; multipart uploads with cancellation when R2 is bound.
 - A capacity alert stops the upload batch when R2 space is insufficient.
 - Token-protected admin page with statistics, file details and downloads, deletion and an optional custom entry path.
@@ -35,7 +36,7 @@ Every method needs storage bindings and an `ADMIN_TOKEN` Secret in Cloudflare pr
 
 | Use case | Bindings | Details |
 |---|---|---|
-| Small files and text | `fileKV` → KV | Default; files and metadata share KV |
+| Small files and text | `fileKV` → KV | Files and metadata share KV; only noted visitors can upload files |
 | Large files | `fileKV` → KV; `BUCKET` → R2 | R2 files with KV metadata |
 | Strict concurrent pickup counting | `DB` → D1; `BUCKET` → R2 | Initialize the database; see the guide's D1 steps |
 
@@ -43,7 +44,7 @@ Every method needs storage bindings and an `ADMIN_TOKEN` Secret in Cloudflare pr
 
 To generate files locally without publishing, use `npm run build:pages` or `npm run build:single`.
 
-The admin upload-source column shows a visitor ID and IP location. Open it for the full IP and an admin note; the note replaces that visitor’s list label until cleared. Old uploads show “Not recorded”. See [source tracking and upgrades](docs/upload-sources.md).
+The admin upload-source column shows a visitor ID and IP location. Open it for the full IP and an admin note; the note replaces that visitor’s list label and grants an exemption from guest upload restrictions until cleared. Old uploads show “Not recorded”. See [source tracking and upgrades](docs/upload-sources.md).
 
 ## Upload-and-capacity limits
 
@@ -57,7 +58,7 @@ All applicable limits are enforced together. **MB / GB are decimal; MiB / GiB ar
 | R2 part count | Default maximum 10,000 | Also constrained by `PART_SIZE` and `MAX_PARTS` |
 | R2 capacity protection | Fixed 9.99 GB = 9,990,000,000 bytes | Objects, upload reservations and ledger in the bound bucket |
 
-The default per-file limit is 9.9 GB. Available bucket capacity is checked before uploading; insufficient space stops the upload and displays the remaining allowance.
+Noted visitors default to 9.9 GB per file. Unnoted visitors default to 100 MB per file and five accepted file-upload attempts per week, subject to storage limits. Quotas reset Monday at 00:00 Asia/Shanghai; cancellation does not refund attempts. Available bucket capacity is also checked. See the [admin guide](docs/admin.md).
 
 The upload path is browser → Worker → R2. R2's native single-request limit is not the limit of this Worker path. S3 presigned direct uploads are not implemented.
 
@@ -160,6 +161,7 @@ npm run test:quota-runtime
 npm run test:source
 npm run test:admin-download
 npm run test:retention
+npm run test:upload-policy
 ```
 
 The quota runtime test starts a local emulator using the build output. It covers admission, upload/download, cancellation, deletion and the browser alert without Cloudflare credentials.
@@ -167,6 +169,7 @@ The quota runtime test starts a local emulator using the build output. It covers
 For a running local server:
 
 ```bash
+# Set FILE_RELAY_VISITOR_COOKIE to a noted visitor cookie first
 python test/e2e_test.py http://localhost:8787
 python test/ui_smoke.py http://localhost:8787
 ```
@@ -175,7 +178,7 @@ These tests create shares and files. The R2 API test uses a file larger than one
 
 ## API
 
-`expiry`: `1d`, `7d`, `30d` or `forever`. `maxPickups`: an integer from 1–999, or `null` for unlimited pickups.
+`expiry`: `1d`, `7d`, `30d` or `forever`. `maxPickups`: an integer from 1–999, or `null` for unlimited pickups. `forever` and `null` require a noted visitor. Multipart clients must retain the visitor cookie returned during initialization.
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -191,6 +194,7 @@ These tests create shares and files. The R2 API test uses a file larger than one
 | POST | `/api/uploads/:id/abort` | Cancel and release reclaimable reservations |
 | POST | `/api/admin/login`, `/api/admin/logout` | Manage admin session |
 | GET | `/api/admin/stats`, `/api/admin/shares` | Share statistics and list; R2 capacity includes bucket objects and upload reservations |
+| GET / PUT | `/api/admin/upload-policy` | Read or save unnoted visitor upload limits |
 | GET / PUT | `/api/admin/settings` | Read or save retention days after expiry |
 | GET | `/api/admin/shares/:code` | Full file details and earliest cleanup time |
 | GET | `/api/admin/shares/:code/download` | Admin file download without counting pickups; retained expired files are allowed |

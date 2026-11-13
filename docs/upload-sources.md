@@ -4,12 +4,14 @@
 
 ## 识别范围
 
-- 访客通过服务端签名、HttpOnly、SameSite=Lax 的 Cookie 关联，HTTPS 下增加 Secure。Cookie 有效期为一年；清除浏览器数据、换浏览器或失效后会分配新标识。它不提供访问权限，也不能证明实际操作者身份。
+- 访客通过服务端签名、HttpOnly、SameSite=Lax 的 Cookie 关联，HTTPS 下增加 Secure。Cookie 有效期为一年；清除浏览器数据、换浏览器或失效后会分配新标识。管理员为该标识添加备注后会授予上传豁免权限，但该标识不能证明实际操作者身份；不要仅为陌生访客添加描述性备注就误授权限。
 - `ADMIN_TOKEN` 用于签名；更换令牌后旧 Cookie 失效。未设置令牌时不签发持久 Cookie，每次上传生成新的临时标识。生产部署应配置管理员令牌。
 - 来源 IP 从 Cloudflare 入口的 `CF-Connecting-IP` 读取；不使用客户端填写的 IP 或 `X-Forwarded-For`。地理信息读取 `request.cf` 的国家、地区、城市；本地无可信入口信息时不推测来源。
 - 城市缺失时保留可用的国家、地区，全部缺失显示“未知”；未记录来源的旧文件显示“未记录”。地名沿用 Cloudflare 提供的名称，可能是英文。属地反映网络出口，不是精确位置。
-- R2 在初始化时固定快照，后续分片、更换网络、修改 Cookie 或完成上传均不会覆盖它。KV 文件和文本在创建分享时记录。
+- R2 在初始化时固定快照，后续分片、更换网络或完成上传均不会覆盖它；分片、完成和取消操作必须携带同一签名访客 Cookie。KV 文件和文本在创建分享时记录。
 - 备注最长 64 个字符，仅允许单行；作为纯文本显示。KV 传播存在延迟，当前页面保存后会立即更新，其他页面可能稍后才显示。来源随分享清理；备注独立保留至管理员清空，以关联该访客后续上传。
+
+备注的上传权限与周配额规则见 [后台管理说明](admin.md#未备注访客限制)。清空备注后，已完成分享不受影响，新请求恢复限制；KV 权限变更可能有短暂传播延迟。
 
 ## 升级现有部署
 
@@ -54,6 +56,7 @@ npm run test:quota
 npm run build:pages
 npm run test:quota-runtime
 npm run test:source
+npm run test:upload-policy
 ```
 
 `test:source` 使用独立 Miniflare/workerd 实例，覆盖 KV 元数据 + KV 文件、KV 元数据 + R2 文件、D1 元数据 + R2 文件；执行既有 `e2e_test.py` 校验上传下载哈希、取件和后台删除，并补充签名 Cookie 防篡改、来源快照、备注、鉴权、公开响应隔离、D1 旧数据迁移及浏览器详情交互。需要 Python Playwright 与 Chromium；不连接生产存储。

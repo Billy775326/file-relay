@@ -13,7 +13,8 @@ def call(method, path, body=None, raw=None, headers=None):
     data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
     h = {"User-Agent": "file-relay-e2e-test/1.0"}  # workers.dev 默认拦截 Python-urllib UA(error 1010)
     if body is not None and raw is None: h["Content-Type"] = "application/json"
-    if ADMIN_COOKIE: h["Cookie"] = ADMIN_COOKIE
+    cookies = [value for value in [os.environ.get("FILE_RELAY_VISITOR_COOKIE"), ADMIN_COOKIE] if value]
+    if cookies: h["Cookie"] = "; ".join(cookies)
     if headers: h.update(headers)
     req = urllib.request.Request(BASE + path, data=data, method=method, headers=h)
     try:

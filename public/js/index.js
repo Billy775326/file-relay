@@ -26,6 +26,7 @@ const MAX_SIZE_FALLBACK = 25 * 1024 * 1024;
 const MAX_BATCH = 10;
 let cfg = { fileBackend: 'kv', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config 加载后覆盖
 let MAX_SIZE = MAX_SIZE_FALLBACK;
+let policyReady = false;
 
 let files = []; // 待上传队列(File[])
 let queueUI = new Map(); // File → { row, bar, status }
@@ -37,19 +38,43 @@ let uploading = false;
 let lastResults = [];
 
 /* 服务端配置:决定走分片上传(R2 大存储)还是单请求直传(KV 小存储) */
+function canUploadFiles() {
+  return policyReady && cfg.fileBackend !== 'none' && cfg.fileUploadAvailable !== false && cfg.uploadsRemaining !== 0;
+}
 function updateHint() {
   els.dzHint.textContent = t('dz.hintMax', fmtBytes(MAX_SIZE));
   const feature = $('[data-i18n="feat.splitS"]');
   if (feature) feature.textContent = t('feat.splitS', fmtBytes(MAX_SIZE));
+  for (const [id, value, allowed, fallback] of [
+    ['seg-expiry', 'forever', cfg.allowPermanent === true, '7d'],
+    ['seg-pickups', 'null', cfg.allowUnlimited === true, '5'],
+  ]) {
+    const button = $(`#${id} [data-v="${value}"]`);
+    button.disabled = !allowed;
+    if (!allowed && button.classList.contains('active')) {
+      button.classList.remove('active');
+      $(`#${id} [data-v="${fallback}"]`).classList.add('active');
+    }
+  }
+  $('[data-i18n="feat.ttlS"]').textContent = t(cfg.allowPermanent ? 'feat.ttlS' : 'policy.expiry');
+  $('[data-i18n="feat.limitS"]').textContent = t(cfg.allowUnlimited ? 'feat.limitS' : 'policy.pickups');
+  $('#upload-policy-hint').textContent = !policyReady ? t('policy.unavailable')
+    : cfg.fileUploadAvailable === false ? t('policy.contact')
+    : cfg.weeklyFileLimit !== null && cfg.weeklyFileLimit !== undefined
+      ? t('policy.remaining', cfg.uploadsRemaining, cfg.weeklyFileLimit, fmtDate(cfg.uploadsResetAt)) : '';
 }
-updateHint();
-(async () => {
+async function refreshPolicy() {
   try {
     cfg = await api('/api/config');
-    MAX_SIZE = cfg.maxFileSize || MAX_SIZE_FALLBACK;
-    updateHint();
-  } catch { /* 保持默认 */ }
-})();
+    if (!Number.isSafeInteger(cfg.maxFileSize) || (cfg.maxFileSize < 0 || (cfg.maxFileSize === 0 && cfg.fileBackend !== 'none'))) throw new Error('Invalid upload policy');
+    MAX_SIZE = cfg.maxFileSize;
+    policyReady = true;
+  } catch { policyReady = false; }
+  updateHint();
+  setBusy(uploading);
+}
+updateHint();
+refreshPolicy();
 
 /* 寄件单抬头日期(装饰) */
 if (els.capDate) els.capDate.textContent = fmtDate(Date.now()).split(' ')[0];
@@ -79,7 +104,7 @@ $$('.tab').forEach((tb) =>
 for (const id of ['seg-expiry', 'seg-pickups']) {
   $(`#${id}`).addEventListener('click', (e) => {
     const b = e.target.closest('button');
-    if (!b) return;
+    if (!b || b.disabled) return;
     $$('button', $(`#${id}`)).forEach((x) => x.classList.toggle('active', x === b));
   });
 }
@@ -152,7 +177,7 @@ function setFiles(list) {
   files = ok; // 替换语义:再次选择即重置队列
   queueState = new Map(files.map((f) => [f, 'idle']));
   renderQueue();
-  els.btnUpload.disabled = files.length === 0;
+  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();
   hideResult();
 }
 
@@ -195,13 +220,13 @@ function removeFile(f) {
   files = files.filter((x) => x !== f);
   queueState.delete(f);
   renderQueue();
-  els.btnUpload.disabled = files.length === 0;
+  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();
 }
 
 /* ---------- 文本输入 ---------- */
 els.textInput.addEventListener('input', () => {
   els.textCounter.textContent = t('text.counter', els.textInput.value.length, 65536);
-  els.btnText.disabled = !els.textInput.value.trim();
+  els.btnText.disabled = !policyReady || !els.textInput.value.trim();
 });
 
 /* ---------- 上传:队列顺序逐个,聚合进度 + 每行迷你进度 ---------- */
@@ -220,7 +245,7 @@ function xhrPut(url, blob, onProgress) {
       let etag = null;
       try {
         const result = JSON.parse(xhr.responseText);
-        if (result.error === 'capacity_exceeded') {
+        if (result.error === 'capacity_exceeded' || (xhr.status >= 400 && xhr.status < 500) || result.error?.startsWith('upload_policy')) {
           const error = new Error(result.message);
           error.code = result.error;
           error.remainingBytes = result.remainingBytes;
@@ -250,13 +275,21 @@ async function putPartWithRetry(uploadId, n, blob, onProgress) {
 }
 
 function xhrJson(method, url, blob, onProgress) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     currentXhr = xhr;
     xhr.open(method, url);
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }
+      }
+      if (xhr.status >= 400 && xhr.status < 500) {
+        let data;
+        try { data = JSON.parse(xhr.responseText); } catch { /* Use status below. */ }
+        const error = new Error(data?.message || t('req.fail', xhr.status));
+        error.code = data?.error;
+        reject(error);
+        return;
       }
       resolve(null);
     };
@@ -294,7 +327,7 @@ function setPending(on) {
 }
 
 async function startUpload() {
-  if (!files.length || uploading) return;
+  if (!files.length || uploading || !canUploadFiles()) return;
   uploading = true;
   cancelled = false;
   speedState = { t: 0, loaded: 0, speed: 0 };
@@ -332,11 +365,11 @@ async function startUpload() {
       ui.row.classList.add('done');
       ui.status.textContent = `✓ ${res.code}`;
     } catch (e) {
+      await abortUpload();
       queueState.set(f, 'fail');
       ui.row.classList.add('fail');
       ui.status.textContent = '✗';
       if (e.code === 'capacity_exceeded') {
-        await abortUpload();
         window.alert(Number.isSafeInteger(e.remainingBytes) && e.remainingBytes >= 0
           ? t('err.capacityRemaining', (e.remainingBytes / 1e9).toFixed(3), e.remainingBytes.toLocaleString())
           : t('err.capacity'));
@@ -351,6 +384,7 @@ async function startUpload() {
   setBusy(false);
   if (cancelled) toast(t('toast.cancelled'));
   if (responses.length) showResults(responses);
+  await refreshPolicy();
 }
 
 /* ---------- 小存储模式(KV):单请求直传,失败整文件重发 ---------- */
@@ -414,7 +448,7 @@ async function multipartUpload(f, opts, onProgress) {
     session = null;
     return res;
   } catch (e) {
-    session = null;
+    await abortUpload();
     throw e;
   }
 }
@@ -433,8 +467,8 @@ async function abortUpload() {
 }
 
 function setBusy(busy) {
-  els.btnUpload.disabled = busy || files.length === 0;
-  els.btnText.disabled = busy || !els.textInput.value.trim();
+  els.btnUpload.disabled = busy || files.length === 0 || !canUploadFiles();
+  els.btnText.disabled = busy || !policyReady || !els.textInput.value.trim();
 }
 
 /* 刷新/关页时尽力通知服务端放弃(不是断点续传) */
@@ -445,7 +479,7 @@ window.addEventListener('pagehide', () => {
 /* ---------- 文本分享 ---------- */
 async function submitText() {
   const text = els.textInput.value;
-  if (!text.trim()) return;
+  if (!text.trim() || !policyReady) return;
   setBusy(true);
   try {
     const res = await api('/api/shares/text', { method: 'POST', body: { text, ...readOptions() } });

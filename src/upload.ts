@@ -6,9 +6,12 @@ import { getStore } from './store';
 import { fileMode, fileMaxSize } from './filestore';
 import { uploadPartSize, uploadMaxParts } from './limits';
 import { reserveCapacity, releaseCapacity, CapacityError, R2_CAPACITY_MAX } from './quota';
+import { uploadAccess, checkUploadOptions, admitFile, checkUploadSession, policyErrorResponse, UploadPolicyError } from './upload-policy';
 
 export const uploadRoutes = new Hono<{ Bindings: Env }>();
 uploadRoutes.onError((e, c) => {
+  const rejection = policyErrorResponse(c, e);
+  if (rejection) return rejection;
   if (e instanceof CapacityError) return c.json({ error: 'capacity_exceeded', message: e.message, remainingBytes: e.remainingBytes, capacityBytes: R2_CAPACITY_MAX }, 507);
   console.error('Upload failed', e);
   return c.json({ error: 'internal', message: '上传服务暂不可用,请稍后重试' }, 503);
@@ -50,7 +53,10 @@ uploadRoutes.post('/init', async (c) => {
   const id = crypto.randomUUID(); // 会话 token,客户端只拿这个
   const r2Key = crypto.randomUUID(); // 预生成的对象键
 
-  const source = await captureSource(c);
+  const access = await uploadAccess(c);
+  checkUploadOptions(access, size, expMs, mp);
+  await admitFile(c.env, access);
+  const source = { ...access.source, uploadTier: access.noted ? 'noted' as const : 'guest' as const };
   const capacity = await reserveCapacity(c.env, r2Key, size);
   let mpu: R2MultipartUpload | undefined;
   try {
@@ -87,6 +93,7 @@ uploadRoutes.put('/:id/parts/:n', async (c) => {
 
   const sess = await getStore(c.env).getSession(id);
   if (!sess) return err(c, 404, 'not_found', '上传会话不存在或已过期');
+  await checkUploadSession(c, sess);
   if (sess.size > fileMaxSize(c.env)) return err(c, 413, 'too_large', '文件超过当前单文件上限,请重新上传');
   if (!Number.isInteger(n) || n < 1 || n > sess.parts) return err(c, 400, 'bad_request', '分片序号非法');
 
@@ -126,6 +133,7 @@ uploadRoutes.post('/:id/complete', async (c) => {
   const store = getStore(c.env);
   const sess = await store.getSession(id);
   if (!sess) return err(c, 404, 'not_found', '上传会话不存在或已过期');
+  await checkUploadSession(c, sess);
   if (sess.size > fileMaxSize(c.env)) return err(c, 413, 'too_large', '文件超过当前单文件上限,请重新上传');
 
   const parts = body?.parts;
@@ -196,6 +204,8 @@ uploadRoutes.post('/:id/abort', async (c) => {
   const store = getStore(c.env);
   const sess = await store.getSession(c.req.param('id'));
   if (sess) {
+    const source = await captureSource(c);
+    if (!sess.source || source.visitorId !== sess.source.visitorId) throw new UploadPolicyError(403, 'upload_session_owner', '上传会话不属于当前访客');
     // Do not release capacity when removal could not be confirmed.
     await c.env.BUCKET!.resumeMultipartUpload(sess.r2Key, sess.uploadId).abort();
     // A completed object may remain if metadata creation failed.

@@ -69,19 +69,20 @@
           <button type="button" data-v="1d" data-i18n="seg.1d">1 天</button>
           <button type="button" data-v="7d" class="active" data-i18n="seg.7d">7 天</button>
           <button type="button" data-v="30d" data-i18n="seg.30d">30 天</button>
-          <button type="button" data-v="forever" data-i18n="seg.forever">永久</button>
+          <button type="button" data-v="forever" data-i18n="seg.forever" disabled>永久</button>
         </div>
       </div>
       <div class="opt-group">
         <label data-i18n="opt.pickups">可取次数</label>
         <div class="seg" id="seg-pickups">
           <button type="button" data-v="1" data-i18n="seg.p1">1 次</button>
-          <button type="button" data-v="5" data-i18n="seg.p5">5 次</button>
-          <button type="button" data-v="null" class="active" data-i18n="seg.punlimited">不限</button>
+          <button type="button" data-v="5" class="active" data-i18n="seg.p5">5 次</button>
+          <button type="button" data-v="null" data-i18n="seg.punlimited" disabled>不限</button>
         </div>
       </div>
     </div>
 
+    <small id="upload-policy-hint" class="muted" aria-live="polite"></small>
     <button id="btn-upload" class="btn primary block" disabled data-i18n="btn.upload">开始上传</button>
     <button id="btn-text" class="btn primary block" hidden disabled data-i18n="btn.genCode">生成口令</button>
 

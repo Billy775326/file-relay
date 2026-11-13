@@ -4,7 +4,7 @@
 
 基于 Cloudflare Workers / Pages 的文件与文本分享服务。发送方上传内容，获得 **6 位取件码**；接收方输入取件码，或扫描二维码取件。
 
-项目按 **Cloudflare 免费套餐**设计。默认只需一个 KV 命名空间；添加 R2 桶后支持大文件分片上传，并提供 **9.99 GB 桶容量保护**。
+项目按 **Cloudflare 免费套餐**设计。KV 可保存文本和已备注访客的小文件；面向未备注访客开放文件上传需要 R2 或 D1。添加 R2 桶后支持大文件分片上传，并提供 **9.99 GB 桶容量保护**。
 
 > 免费套餐的请求限制、单文件上限和免费存储额度是不同概念。R2 容量保护仅覆盖当前绑定桶，不保证整个账户零费用。
 
@@ -14,7 +14,8 @@
 
 - 文件与文本分享，支持取件码、取件链接和二维码。
 - 一次选择最多 10 个文件，顺序上传，分别生成取件码；提供进度、速度和失败重试。
-- 有效期支持 1 天、7 天、30 天或永久；页面可选取件 1 次、5 次或不限。
+- 有效期支持 1 天、7 天、30 天；已备注访客还可选择永久有效、不限次取件。
+- 未备注访客默认每周 5 次文件上传、单文件 100 MB，后台可调整，首页显示剩余额度。
 - KV 文件直传；绑定 R2 后自动改为分片上传，支持取消。
 - R2 容量不足时弹出“容量超出免费额度”，停止后续批量上传。
 - 管理后台支持令牌登录、统计、文件详情与下载、删除，可自定义入口。
@@ -35,7 +36,7 @@
 
 | 用途 | 绑定 | 说明 |
 |---|---|---|
-| 小文件与文本 | `fileKV` → KV 命名空间 | 默认方案，文件与元数据共用 KV |
+| 小文件与文本 | `fileKV` → KV 命名空间 | 文件与元数据共用 KV；文件上传仅对已备注访客开放 |
 | 大文件分享 | `fileKV` → KV；`BUCKET` → R2 桶 | R2 文件 + KV 元数据 |
 | 严格控制并发取件次数 | `DB` → D1；`BUCKET` → R2 桶 | 先初始化数据库，见指南 D1 步骤 |
 
@@ -43,7 +44,7 @@
 
 只在本地生成部署文件，使用 `npm run build:pages` 或 `npm run build:single`；这两个命令不会发布到 Cloudflare。
 
-后台的“上传来源”显示访客标识和 IP 属地；点击可查看完整 IP、编辑管理员备注。备注会替代该访客的列表标识，清空后恢复。历史上传显示“未记录”；城市信息不可用时仅显示已有地区。访客标识关联浏览器，不代表实名身份。详见 [上传来源与升级说明](docs/upload-sources.md)。
+后台的“上传来源”显示访客标识和 IP 属地；点击可查看完整 IP、编辑管理员备注。备注会替代该访客的列表标识，并解除访客上传限制；清空后恢复限制。历史上传显示“未记录”；城市信息不可用时仅显示已有地区。访客标识关联浏览器，不代表实名身份。详见 [上传来源与升级说明](docs/upload-sources.md)。
 
 ## 上传与容量限制
 
@@ -57,7 +58,7 @@
 | R2 分片数 | 默认最多 10,000 片 | 还受 `PART_SIZE` 与 `MAX_PARTS` 配置限制 |
 | R2 总容量保护 | 固定 9.99 GB，即 9,990,000,000 字节 | 当前桶的对象、上传预留和容量台账 |
 
-单文件默认最多 9.9 GB。上传前会检查桶剩余空间；不足时停止上传，并提示剩余可用额度。
+已备注访客单文件默认最多 9.9 GB；未备注访客默认 100 MB、每周 5 次，仍受存储模式上限约束。上传前会检查桶剩余空间。次数按北京时间周一重置，已接纳上传即计次，取消不退回。详见 [后台管理说明](docs/admin.md#未备注访客限制)。
 
 本项目采用“浏览器 → Worker → R2”路径。R2 原生接口的单次上传上限不能直接作为此路径的请求上限；本项目未实现 S3 预签名直传。
 
@@ -160,6 +161,7 @@ npm run test:quota-runtime
 npm run test:source
 npm run test:admin-download
 npm run test:retention
+npm run test:upload-policy
 ```
 
 `test:quota-runtime` 使用构建产物启动本地模拟环境，验证容量拦截、上传下载、取消删除及浏览器弹窗，不需要 Cloudflare 凭据。
@@ -167,6 +169,7 @@ npm run test:retention
 对已启动的本地服务进行 API / 页面测试：
 
 ```bash
+# 需通过 FILE_RELAY_VISITOR_COOKIE 提供已备注访客的 Cookie
 python test/e2e_test.py http://localhost:8787
 python test/ui_smoke.py http://localhost:8787
 ```
@@ -175,7 +178,7 @@ python test/ui_smoke.py http://localhost:8787
 
 ## API
 
-`expiry`：`1d` / `7d` / `30d` / `forever`。`maxPickups`：1–999 的整数，或 `null` 表示不限次。
+`expiry`：`1d` / `7d` / `30d` / `forever`。`maxPickups`：1–999 的整数，或 `null` 表示不限次。`forever` 与 `null` 仅供已备注访客使用；分片后续请求必须保留初始化时的访客 Cookie。
 
 | 方法 | 路径 | 用途 |
 |---|---|---|
@@ -191,6 +194,7 @@ python test/ui_smoke.py http://localhost:8787
 | POST | `/api/uploads/:id/abort` | 取消上传并释放可回收的预留 |
 | POST | `/api/admin/login`、`/api/admin/logout` | 管理会话登录、退出 |
 | GET | `/api/admin/stats`、`/api/admin/shares` | 分享统计与列表；R2 容量包含桶内对象与上传预留 |
+| GET / PUT | `/api/admin/upload-policy` | 读取或保存未备注访客的周次数和单文件大小 |
 | GET / PUT | `/api/admin/settings` | 读取或保存过期保留天数 |
 | GET | `/api/admin/shares/:code` | 完整文件详情及最早清理时间 |
 | GET | `/api/admin/shares/:code/download` | 管理员下载文件，不消耗取件次数；支持尚未清理的过期文件 |

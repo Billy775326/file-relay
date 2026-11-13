@@ -5,12 +5,18 @@ import { uploadRoutes } from './upload';
 import { shareRoutes } from './share';
 import { adminRoutes, adminPath } from './admin';
 import { runCleanup, cleanupIfDue } from './cleanup';
-import { fileMode, fileMaxSize } from './filestore';
+import { fileMode } from './filestore';
 import { uploadPartSize } from './limits';
-import { ensureVisitor } from './upload-source';
+import { publicUploadPolicy, policyErrorResponse } from './upload-policy';
 import { serveAsset } from './asset-resolver';
 
 const app = new Hono<{ Bindings: Env }>();
+app.onError((error, c) => {
+  const rejection = policyErrorResponse(c, error);
+  if (rejection) return rejection;
+  console.error('Request failed', error);
+  return c.json({ error: 'internal', message: '服务暂不可用，请稍后重试' }, 500);
+});
 
 /**
  * 管理后台入口:默认 /admin,可设 secret ADMIN_PATH 自定义(设置后 /admin 直接 404,防扫描)。
@@ -54,12 +60,12 @@ app.get('/', (c, next) => {
 
 /** 前端据此选择上传方式:fileBackend=r2 走分片,kv 走单请求直传 */
 app.get('/api/config', async (c) => {
-  await ensureVisitor(c);
   c.header('Cache-Control', 'no-store');
+  const policy = await publicUploadPolicy(c);
   return c.json({
     fileBackend: fileMode(c.env) ?? 'none',
     metadataBackend: c.env.fileKV ? 'kv' : 'd1',
-    maxFileSize: fileMaxSize(c.env),
+    ...policy,
     maxTextLength: num(c.env.MAX_TEXT_LENGTH, 65_536),
     partSize: uploadPartSize(c.env),
   });

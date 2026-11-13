@@ -8,6 +8,7 @@ import { deleteFile, readFileStream } from './filestore';
 import { runCleanup } from './cleanup';
 import { getCapacityUsage } from './quota';
 import { getRetentionDays, setRetentionDays, validRetentionDays, RETENTION_DAY_MS } from './settings';
+import { getGuestLimits, setGuestLimits, validGuestLimits } from './upload-policy';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
 
@@ -118,6 +119,19 @@ adminRoutes.put('/settings', async (c) => {
   if (!validRetentionDays(body?.expiredRetentionDays)) return err(c, 400, 'bad_request', '保留天数应为 0–3650 的整数');
   await setRetentionDays(c.env, body.expiredRetentionDays);
   return c.json({ expiredRetentionDays: body.expiredRetentionDays });
+});
+
+/** Admin-maintained limits for visitors without a note. */
+adminRoutes.get('/upload-policy', async c => c.json(await getGuestLimits(c.env)));
+adminRoutes.put('/upload-policy', async c => {
+  const origin = c.req.header('Origin');
+  if (origin && origin !== new URL(c.req.url).origin) return c.json({ error: 'forbidden', message: '请求来源不匹配' }, 403);
+  if (!c.req.header('Content-Type')?.startsWith('application/json')) return c.json({ error: 'bad_request', message: '请使用 JSON' }, 415);
+  const body: unknown = await c.req.json().catch(() => null);
+  if (!validGuestLimits(body)) return err(c, 400, 'bad_request', '周次数应为 0–1000，单文件大小应为 1–9900 MB 的整数');
+  const limits = { weeklyFileLimit: body.weeklyFileLimit, maxFileSizeMB: body.maxFileSizeMB };
+  await setGuestLimits(c.env, limits);
+  return c.json(limits);
 });
 
 /** 概览统计 */

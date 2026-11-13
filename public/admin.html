@@ -50,6 +50,17 @@
         <p id="retention-error" class="error-box" hidden role="alert"></p>
         <button id="retention-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">重试</button>
       </div>
+      <details class="guest-settings">
+        <summary data-i18n="ad.guestLimits">未备注访客限制</summary>
+        <form id="guest-policy-form">
+          <label><span data-i18n="ad.weeklyFiles">每周文件数</span><input id="guest-weekly" type="number" min="0" max="1000" step="1" required disabled></label>
+          <label><span data-i18n="ad.guestSize">单文件上限（MB）</span><input id="guest-size" type="number" min="1" max="9900" step="1" required disabled></label>
+          <button id="guest-save" class="btn small" type="submit" disabled data-i18n="ad.save">保存</button>
+        </form>
+        <small class="muted" data-i18n="ad.guestRules">北京时间周一重置；已接纳上传计次，取消不退回。未备注访客不能永久分享或不限次取件。</small>
+        <p id="guest-error" class="error-box" hidden role="alert"></p>
+        <button id="guest-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">重试</button>
+      </details>
       <div class="table-wrap">
         <table>
           <thead>
@@ -99,6 +110,7 @@
     <form id="source-form" hidden>
       <label for="source-note" data-i18n="ad.sourceNote">管理员备注</label>
       <input id="source-note" type="text" maxlength="64" autocomplete="off">
+      <small class="muted" data-i18n="ad.notePrivileges">备注后免除访客上传限制，并允许永久、不限次分享；清空备注恢复限制。</small>
       <p class="error-box" id="source-error" hidden role="alert"></p>
     </form>
   </div>

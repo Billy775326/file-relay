@@ -1,3 +1,4 @@
+import { notedVisitor } from './noted_visitor.mjs';
 // Isolated workerd regressions for both metadata backends and upload modes.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -43,7 +44,7 @@ for (const metadata of ['kv', 'd1']) {
     assert.match(cfg.headers.get('set-cookie'), /HttpOnly/i);
     assert.match(cfg.headers.get('cache-control'), /no-store/);
     assert.doesNotMatch(await cfg.text(), sourceFields);
-    const uploaded = await call('/api/shares/text', json({ text: 'source test', expiry: '1d', visitorId: 'forged', source: { ip: '1.1.1.1' } }, { cf: geo, headers: { Cookie: cookie, 'CF-Connecting-IP': ip, 'X-Forwarded-For': '1.1.1.1' } }));
+    const uploaded = await call('/api/shares/text', json({ text: 'source test', expiry: '1d', maxPickups: 5, visitorId: 'forged', source: { ip: '1.1.1.1' } }, { cf: geo, headers: { Cookie: cookie, 'CF-Connecting-IP': ip, 'X-Forwarded-For': '1.1.1.1' } }));
     assert.equal(uploaded.status, 201, await uploaded.clone().text());
     const publicText = await uploaded.text(); assert.doesNotMatch(publicText, sourceFields);
     const first = JSON.parse(publicText).code;
@@ -65,7 +66,7 @@ for (const metadata of ['kv', 'd1']) {
     const same = await getSource(second.code);
     assert.equal(same.visitorId, source.visitorId); assert.equal(same.note, note); assert.equal(same.ip, '2001:db8::1'); assert.equal(same.city, null);
     assert.equal((await getSource(first)).city, 'Shenzhen');
-    const third = await (await call('/api/shares/text', json({ text: 'forged cookie', expiry: '1d' }, { headers: { Cookie: cookie + 'tampered', 'X-Forwarded-For': ip } }))).json();
+    const third = await (await call('/api/shares/text', json({ text: 'forged cookie', expiry: '1d', maxPickups: 5 }, { headers: { Cookie: cookie + 'tampered', 'X-Forwarded-For': ip } }))).json();
     assert.notEqual((await getSource(third.code)).visitorId, source.visitorId);
     const listResponse = await adminGet('/api/admin/shares?limit=20');
     assert.match(listResponse.headers.get('cache-control'), /no-store/);
@@ -77,13 +78,14 @@ for (const metadata of ['kv', 'd1']) {
     assert.equal((await call(`/api/admin/shares/${oldCode}/source`, json({ note: 'legacy' }, { method: 'PUT', headers: { Cookie: admin } }))).status, 409);
     assert.equal((await edit('  ')).status, 200); assert.equal((await getSource(second.code)).note, '');
     assert.doesNotMatch(await (await call('/api/pickup', json({ code: first }))).text(), sourceFields);
+    await edit('file fixture'); // File transfer regressions cover the noted tier in every storage mode.
     let file;
     if (backend === 'r2') {
       const init = await call('/api/uploads/init', json({ filename: 'file.txt', size: 3, expiry: '1d' }, { cf: geo, headers: { Cookie: cookie, 'CF-Connecting-IP': ip } }));
       const upload = await init.json(); assert.equal(init.status, 200);
       assert.doesNotMatch(JSON.stringify(upload), sourceFields);
-      const part = await call(`/api/uploads/${upload.uploadId}/parts/1`, { method: 'PUT', body: 'abc' });
-      file = await (await call(`/api/uploads/${upload.uploadId}/complete`, json({ parts: [await part.json()], source: { visitorId: 'changed' } }, { cf: { country: 'US', city: 'New York' }, headers: { 'CF-Connecting-IP': '203.0.113.20' } }))).json();
+      const part = await call(`/api/uploads/${upload.uploadId}/parts/1`, { method: 'PUT', body: 'abc', headers: { Cookie: cookie } });
+      file = await (await call(`/api/uploads/${upload.uploadId}/complete`, json({ parts: [await part.json()], source: { visitorId: 'changed' } }, { cf: { country: 'US', city: 'New York' }, headers: { Cookie: cookie, 'CF-Connecting-IP': '203.0.113.20' } }))).json();
     } else {
       file = await (await call('/api/shares/file?filename=file.txt&expiry=1d', { method: 'POST', body: 'abc', cf: geo, headers: { Cookie: cookie, 'CF-Connecting-IP': ip } })).json();
     }
@@ -92,15 +94,17 @@ for (const metadata of ['kv', 'd1']) {
     assert.equal(await (await call(`/api/pickup/${file.code}/download`)).text(), 'abc');
     assert.equal((await getSource(file.code)).visitorId, source.visitorId); // Pickup counter writes preserve source.
     if (metadata === 'kv') {
-      const extreme = await (await call('/api/shares/text', json({ text: '😀'.repeat(100), expiry: '1d' }, { cf: { country: 'CN', region: 'R'.repeat(100), city: 'C'.repeat(100) } }))).json();
+      const extreme = await (await call('/api/shares/text', json({ text: '😀'.repeat(100), expiry: '1d', maxPickups: 5 }, { cf: { country: 'CN', region: 'R'.repeat(100), city: 'C'.repeat(100) } }))).json();
       const kv = await mf.getKVNamespace('fileKV');
       const page = await kv.list({ prefix: 's:' + extreme.code });
       assert.ok(Buffer.byteLength(JSON.stringify(page.keys[0].metadata)) < 1024);
     }
+    await edit('');
+    const regressionCookie = await notedVisitor(mf, metadata);
     // Existing broad end-to-end suite, including text, file hash, pickup limits and admin deletion.
     const url = String(await mf.ready);
     await new Promise((resolve, reject) => {
-      const child = spawn('python', ['test/e2e_test.py', url.replace(/\/$/, '')], { stdio: 'inherit', env: { ...process.env, FILE_RELAY_ADMIN_TOKEN: 'source-test-only' } });
+      const child = spawn('python', ['test/e2e_test.py', url.replace(/\/$/, '')], { stdio: 'inherit', env: { ...process.env, FILE_RELAY_ADMIN_TOKEN: 'source-test-only', FILE_RELAY_VISITOR_COOKIE: regressionCookie } });
       child.on('error', reject); child.on('exit', code => code === 0 ? resolve() : reject(new Error(`e2e ${code}`)));
     });
     if (metadata === 'kv' && backend === 'r2') {

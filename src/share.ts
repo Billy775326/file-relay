@@ -1,12 +1,18 @@
-import { captureSource } from './upload-source';
+import { uploadAccess, checkUploadOptions, admitFile, policyErrorResponse } from './upload-policy';
 import { Hono } from 'hono';
 import { num, type Env } from './types';
 import { err, parseExpiry, parseMaxPickups, contentDisposition } from './util';
 import { getStore, shareStatusOf } from './store';
-import { fileMode, fileMaxSize, KV_FILE_PREFIX, putFileBytes, deleteFile, readFileStream } from './filestore';
+import { fileMode, KV_FILE_PREFIX, putFileBytes, deleteFile, readFileStream } from './filestore';
 import type { Context } from 'hono';
 
 export const shareRoutes = new Hono<{ Bindings: Env }>();
+shareRoutes.onError((error, c) => {
+  const rejection = policyErrorResponse(c, error);
+  if (rejection) return rejection;
+  console.error('Share request failed', error);
+  return c.json({ error: 'internal', message: '分享服务暂不可用，请稍后重试' }, 503);
+});
 
 /** 创建文本分享 */
 shareRoutes.post('/shares/text', async (c) => {
@@ -23,11 +29,13 @@ shareRoutes.post('/shares/text', async (c) => {
   const mp = parseMaxPickups(body.maxPickups);
   if (mp === undefined) return err(c, 400, 'bad_request', '取件次数参数非法');
 
+  const access = await uploadAccess(c);
+  checkUploadOptions(access, null, expMs, mp);
   const now = Date.now();
   const expireAt = expMs === null ? null : now + expMs;
   const created = await getStore(c.env).createShare({
     kind: 'text',
-    source: await captureSource(c),
+    source: access.source,
     size: text.length,
     text,
     maxPickups: mp,
@@ -65,28 +73,46 @@ shareRoutes.post('/shares/file', async (c) => {
   const mp = parseMaxPickups(pkRaw === undefined || pkRaw === '' ? null : Number(pkRaw));
   if (mp === undefined) return err(c, 400, 'bad_request', '取件次数参数非法');
 
-  const maxSize = fileMaxSize(c.env);
+  const access = await uploadAccess(c);
+  const maxSize = access.maxFileSize;
+  checkUploadOptions(access, null, expMs, mp);
   const declared = Number(c.req.raw.headers.get('content-length') || 0);
   if (declared && declared > maxSize) {
-    return err(c, 413, 'too_large', `文件超过上限 ${Math.floor(maxSize / 1024 / 1024)} MB`);
+    return err(c, 413, 'too_large', `文件超过上限 ${maxSize} 字节`);
   }
 
-  const bytes = await c.req.arrayBuffer();
+  await admitFile(c.env, access);
+  // Bound actual bytes as well as Content-Length; do not buffer an unbounded request.
+  if (!c.req.raw.body) return err(c, 400, 'bad_request', '文件内容为空');
+  const reader = c.req.raw.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > maxSize) {
+        await reader.cancel();
+        return err(c, 413, 'too_large', `文件超过上限 ${maxSize} 字节`);
+      }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
   if (bytes.byteLength < 1) return err(c, 400, 'bad_request', '文件内容为空');
-  if (bytes.byteLength > maxSize) {
-    return err(c, 413, 'too_large', `文件超过上限 ${Math.floor(maxSize / 1024 / 1024)} MB`);
-  }
-
   const mime = c.req.query('mime')?.trim() || c.req.header('Content-Type')?.split(';')[0] || 'application/octet-stream';
   const storageKey = KV_FILE_PREFIX + crypto.randomUUID();
   const expireAt = expMs === null ? null : Date.now() + expMs;
 
   // 先落文件再落元数据;元数据失败时回收文件键(补偿,防孤儿字节)
-  await putFileBytes(c.env, storageKey, bytes);
+  await putFileBytes(c.env, storageKey, bytes.buffer);
   try {
     const created = await getStore(c.env).createShare({
       kind: 'file',
-      source: await captureSource(c),
+      source: access.source,
       filename: filename.slice(0, 255),
       size: bytes.byteLength,
       mime,

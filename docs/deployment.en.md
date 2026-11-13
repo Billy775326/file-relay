@@ -35,6 +35,8 @@ Start with KV or KV + R2. R2 has a 9.99 GB bucket guard; per-file limits and ava
 
 Generate a strong random string using a password manager. Save it later as the `ADMIN_TOKEN` Secret. It signs in to this application's admin page; **it is not a Cloudflare API Token**.
 
+Unnoted visitors default to five file-upload attempts per week and 100 MB per file. Concurrent quotas use R2 conditional writes, or D1 when R2 is absent. KV-only deployments accept file uploads only from noted visitors; visitors may submit a finite text share first so an administrator can add a note. Adding D1 for quota accounting preserves KV metadata priority and creates `app_settings` additively. See the [admin guide](admin.md).
+
 ## A: Pages with GitHub
 
 ### 1. Create and build

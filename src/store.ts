@@ -10,6 +10,8 @@ import { createD1Store } from './store-d1';
 import { createKVStore } from './store-kv';
 
 export interface UploadSource {
+  /** Upload admission snapshot; older records may not have it. */
+  uploadTier?: 'guest' | 'noted';
   visitorId: string;
   ip: string | null;
   country: string | null;

@@ -8,6 +8,17 @@
 
 const DICT = {
   zh: {
+    'ad.guestLimits': "未备注访客限制",
+    'ad.weeklyFiles': "每周文件数",
+    'ad.guestSize': "单文件上限（MB）",
+    'ad.guestRules': "北京时间周一重置；已接纳上传计次，取消不退回。未备注访客不能永久分享或不限次取件。",
+    'ad.notePrivileges': "备注后免除访客上传限制，并允许永久、不限次分享；清空备注恢复限制。",
+    'ad.guestSaved': "已保存，将用于后续上传",
+    'policy.expiry': "1 ~ 30 天",
+    'policy.pickups': "1 次 · 5 次",
+    'policy.remaining': "本周剩余 {0} / {1} 个文件 · {2} 重置",
+    'policy.unavailable': "正在读取上传权限；若长时间未恢复，请刷新页面",
+    'policy.contact': "暂不接受文件上传，请联系管理员",
     'ad.fileDetails': '文件详情',
     'ad.filename': '文件名',
     'ad.fileType': '文件类型',
@@ -199,6 +210,17 @@ const DICT = {
   },
 
   en: {
+    'ad.guestLimits': "Unnoted visitor limits",
+    'ad.weeklyFiles': "Files per week",
+    'ad.guestSize': "Max file size (MB)",
+    'ad.guestRules': "Resets Monday, Beijing time. Accepted uploads count even if cancelled. Unnoted visitors cannot create permanent or unlimited-pickup shares.",
+    'ad.notePrivileges': "A note grants unrestricted guest uploads and permanent/unlimited-pickup shares. Clear it to restore restrictions.",
+    'ad.guestSaved': "Saved for subsequent uploads",
+    'policy.expiry': "1 to 30 days",
+    'policy.pickups': "1 or 5 pickups",
+    'policy.remaining': "{0} / {1} files left this week · resets {2}",
+    'policy.unavailable': "Loading upload permissions. Refresh if this persists.",
+    'policy.contact': "File uploads are unavailable. Contact the administrator.",
     'ad.fileDetails': 'File details',
     'ad.filename': 'Filename',
     'ad.fileType': 'File type',

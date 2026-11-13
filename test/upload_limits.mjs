@@ -15,6 +15,8 @@ function environment(extra = {}) {
   return {
     fileKV: {
       async get(key, type) {
+        // Size-limit regressions use a noted visitor; guest policy has its own suite.
+        if (key.startsWith('v:')) return 'boundary fixture';
         const value = values.get(key);
         return value === undefined ? null : type === 'json' ? JSON.parse(value) : value;
       },
@@ -34,7 +36,14 @@ const bucket = {
   resumeMultipartUpload() { throw new Error('Oversized part must be rejected before R2'); },
 };
 const ctx = { waitUntil() {} };
-const request = (env, path, init) => worker.fetch(new Request('http://localhost' + path, init), env, ctx);
+const cookies = new WeakMap();
+const request = async (env, path, init = {}) => {
+  const response = await worker.fetch(new Request('http://localhost' + path, { ...init,
+    headers: { Cookie: cookies.get(env) || '', ...init.headers } }), env, ctx);
+  const cookie = response.headers.get('set-cookie');
+  if (cookie) cookies.set(env, cookie.split(';')[0]);
+  return response;
+};
 const config = async (env) => (await request(env, '/api/config')).json();
 const init = (env, size) => request(env, '/api/uploads/init', {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -94,6 +103,7 @@ for (const [overrides, partSize, maxSize] of [
 }
 // Lowering the limit must also block already-created multipart sessions.
 const lowered = { ...r2, MAX_FILE_SIZE: '1000' };
+cookies.set(lowered, cookies.get(r2));
 assert.equal((await request(lowered, `/api/uploads/${session.uploadId}/parts/1`, {
   method: 'PUT', body: 'x',
 })).status, 413);
