@@ -43,3 +43,8 @@ CREATE TABLE IF NOT EXISTS visitor_notes (
   visitor_id TEXT PRIMARY KEY,
   note TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);

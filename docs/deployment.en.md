@@ -175,6 +175,8 @@ Use the custom path if `ADMIN_PATH` is configured. R2 capacity protection is ena
 
 ## Configure cleanup
 
+Expired shares are retained for 30 days by default, configurable in the admin page. Eligible records are deleted on the next successful cleanup run. Permanent shares are unaffected, and retained files still use storage. See the [admin guide](admin.md).
+
 **Workers:** add Cron Trigger `0 */6 * * *`.
 
 **Pages:** homepage visits trigger cleanup. For low-traffic sites, schedule a POST every six hours:

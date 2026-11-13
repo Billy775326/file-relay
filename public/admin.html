@@ -40,6 +40,16 @@
   <section id="admin-panel" hidden>
     <div class="stats-row" id="stats-row"></div>
     <div class="card" style="padding:14px">
+      <div class="retention-settings">
+        <form id="retention-form">
+          <label for="retention-days" data-i18n="ad.retentionDays">过期后保留</label>
+          <input id="retention-days" type="number" min="0" max="3650" step="1" required disabled>
+          <span data-i18n="ad.days">天</span>
+          <button id="retention-save" class="btn small" type="submit" disabled data-i18n="ad.save">保存</button>
+        </form>
+        <p id="retention-error" class="error-box" hidden role="alert"></p>
+        <button id="retention-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">重试</button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -95,6 +105,19 @@
   <div class="source-footer">
     <button id="source-close" class="btn ghost" type="button" data-i18n="ad.sourceClose">关闭</button>
     <button id="source-save" class="btn primary" type="submit" form="source-form" hidden data-i18n="ad.sourceSave">保存备注</button>
+  </div>
+</dialog>
+<dialog id="file-dialog" class="source-dialog" aria-labelledby="file-title">
+  <div class="source-heading">
+    <h3 id="file-title" tabindex="-1" autofocus data-i18n="ad.fileDetails">文件详情</h3>
+    <small id="file-context" class="muted mono"></small>
+  </div>
+  <div class="source-body">
+    <div id="file-detail" class="file-detail-grid" aria-live="polite"></div>
+  </div>
+  <div class="source-footer">
+    <button id="file-close" class="btn ghost" type="button" data-i18n="ad.sourceClose">关闭</button>
+    <a id="file-download" class="btn primary" target="_blank" rel="noopener noreferrer" hidden data-i18n="ad.download">下载</a>
   </div>
 </dialog>
 <script type="module" src="/js/admin.js"></script>

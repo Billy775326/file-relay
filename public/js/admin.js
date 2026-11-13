@@ -22,6 +22,7 @@ let total = 0;
 /* 语言切换:面板可见时按新语言重拉文案 */
 onLangChange(() => {
   if ($('#source-dialog').open) closeSource();
+  if ($('#file-dialog').open) closeFileDetails();
   if (!panel.hidden) {
     loadStats();
     loadList();
@@ -59,6 +60,7 @@ function showPanel() {
   panel.hidden = false;
   loadStats();
   loadList();
+  loadSettings();
 }
 
 $('#btn-logout').addEventListener('click', async () => {
@@ -145,7 +147,9 @@ async function loadList() {
           el('td', { class: 'mono' }, r.code),
           el('td', { class: 'share-content-cell' },
             el('div', { class: 'share-filename-line' },
-              el('span', { class: 'share-filename', title: content }, content),
+              r.kind === 'file'
+                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)
+                : el('span', { class: 'share-filename', title: content }, content),
               el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),
           sourceCell(r),
           el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),
@@ -153,13 +157,7 @@ async function loadList() {
           el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),
           el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),
           el('td', {}, fmtDate(r.created_at)),
-          el('td', {}, el('div', { class: 'admin-row-actions' },
-            r.kind === 'file' ? el('a', {
-              class: 'btn small', href: `/api/admin/shares/${r.code}/download`,
-              download: r.filename || 'file', target: '_blank', rel: 'noopener noreferrer',
-              title: `${t('ad.download')} ${content}`,
-            }, t('ad.download')) : null,
-            el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete')))),
+          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),
         ),
       );
     }
@@ -324,5 +322,91 @@ sourceForm.addEventListener('submit', async (e) => {
     }
   } finally {
     if (request === sourceRequest) sourceSave.disabled = false;
+  }
+});
+
+/* File details use their own request generation so closed dialogs stay empty. */
+const fileDialog = $('#file-dialog');
+const fileDetail = $('#file-detail');
+const fileDownload = $('#file-download');
+let fileRequest = 0;
+async function openFileDetails(code) {
+  const request = ++fileRequest;
+  fileDownload.hidden = true;
+  fileDownload.removeAttribute('href');
+  fileDownload.removeAttribute('download');
+  $('#file-context').textContent = `${t('ad.th.code')} ${code}`;
+  fileDetail.textContent = t('ad.loading');
+  fileDialog.showModal();
+  try {
+    const detail = await api(`/api/admin/shares/${code}`);
+    if (request !== fileRequest || !fileDialog.open) return;
+    fileDetail.replaceChildren(...[
+      [t('ad.filename'), detail.filename || t('ad.unnamed')],
+      [t('ad.th.size'), fmtBytes(detail.size)],
+      [t('ad.fileType'), detail.mime || t('ad.sourceUnknown')],
+      [t('ad.th.status'), t(STATUS_KEY[detail.status])],
+      [t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '∞'}`],
+      [t('ad.th.created'), fmtDate(detail.createdAt)],
+      [t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)],
+      [t('ad.cleanupAfter'), detail.cleanupAfter === null ? t('ad.forever') : fmtDate(detail.cleanupAfter)],
+    ].map(([label, value]) => el('div', { class: 'source-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));
+    fileDownload.href = `/api/admin/shares/${code}/download`;
+    fileDownload.download = detail.filename || 'file';
+    fileDownload.hidden = false;
+  } catch (error) {
+    if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');
+  }
+}
+function closeFileDetails() {
+  fileRequest++;
+  fileDetail.replaceChildren();
+  $('#file-context').textContent = '';
+  fileDownload.hidden = true;
+  fileDownload.removeAttribute('href');
+  fileDownload.removeAttribute('download');
+  fileDialog.close();
+}
+$('#file-close').addEventListener('click', closeFileDetails);
+fileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });
+
+/* Keep unsaved input local; only a validated save changes retention. */
+const retentionInput = $('#retention-days');
+const retentionSave = $('#retention-save');
+const retentionError = $('#retention-error');
+async function loadSettings() {
+  retentionInput.disabled = true;
+  retentionSave.disabled = true;
+  retentionError.hidden = true;
+  $('#retention-retry').hidden = true;
+  try {
+    const settings = await api('/api/admin/settings');
+    if (!Number.isInteger(settings.expiredRetentionDays) || settings.expiredRetentionDays < 0 || settings.expiredRetentionDays > 3650) throw new Error(t('ad.loadFail'));
+    retentionInput.value = settings.expiredRetentionDays;
+    retentionInput.disabled = false;
+    retentionSave.disabled = false;
+  } catch (error) {
+    retentionError.textContent = error.message || t('ad.loadFail');
+    retentionError.hidden = false;
+    $('#retention-retry').hidden = false;
+  }
+}
+$('#retention-retry').addEventListener('click', loadSettings);
+$('#retention-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (retentionSave.disabled || !retentionInput.reportValidity()) return;
+  retentionSave.disabled = true;
+  retentionInput.disabled = true;
+  retentionError.hidden = true;
+  try {
+    const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });
+    retentionInput.value = settings.expiredRetentionDays;
+    toast(t('ad.settingsSaved'), 'ok');
+  } catch (error) {
+    retentionError.textContent = error.message || t('ad.loadFail');
+    retentionError.hidden = false;
+  } finally {
+    retentionInput.disabled = false;
+    retentionSave.disabled = false;
   }
 });

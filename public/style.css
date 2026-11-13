@@ -620,7 +620,6 @@ pre.text-body {
 .stat-card b { display: block; font-size: 24px; font-weight: 700; font-family: var(--serif); font-variant-numeric: tabular-nums; line-height: 1.3; }
 .stat-card small { color: var(--muted); font-size: 12px; letter-spacing: 0.08em; }
 .table-wrap { overflow-x: auto; }
-.admin-row-actions { display: flex; align-items: center; gap: 8px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { text-align: left; padding: 10px; border-bottom: 1px dashed var(--line); white-space: nowrap; }
 th { color: var(--muted); font-weight: 600; font-size: 11.5px; letter-spacing: 0.1em; }
@@ -945,4 +944,17 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 @media (max-width: 360px) {
   .topbar .brand .logo { display: none; }
   .feat { gap: 6px; padding: 8px; }
+}
+
+.file-detail-link { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.file-detail-link:hover { color: var(--stamp); }
+.file-detail-link:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
+.file-detail-grid { display: grid; gap: 8px; font-size: 13px; overflow-wrap: anywhere; }
+.retention-settings { padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px dashed var(--line); }
+#retention-form { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; }
+#retention-days { width: 80px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; }
+#retention-days:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
+#retention-error { margin: 8px 0; }
+@media (max-width: 640px) {
+  #retention-form .btn, #retention-days { min-height: 40px; }
 }

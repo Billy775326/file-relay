@@ -8,6 +8,15 @@
 
 const DICT = {
   zh: {
+    'ad.fileDetails': '文件详情',
+    'ad.filename': '文件名',
+    'ad.fileType': '文件类型',
+    'ad.cleanupAfter': '最早清理',
+    'ad.retentionDays': '过期后保留',
+    'ad.days': '天',
+    'ad.save': '保存',
+    'ad.retry': '重试',
+    'ad.settingsSaved': '已保存，将用于后续清理',
     'ad.source': '上传来源',
     'ad.visitor': '访客 {0}',
     'ad.visitorId': '访客标识',
@@ -190,6 +199,15 @@ const DICT = {
   },
 
   en: {
+    'ad.fileDetails': 'File details',
+    'ad.filename': 'Filename',
+    'ad.fileType': 'File type',
+    'ad.cleanupAfter': 'Cleanup after',
+    'ad.retentionDays': 'Keep after expiry',
+    'ad.days': 'days',
+    'ad.save': 'Save',
+    'ad.retry': 'Retry',
+    'ad.settingsSaved': 'Saved for subsequent cleanup runs',
     'ad.source': 'Upload source',
     'ad.visitor': 'Visitor {0}',
     'ad.visitorId': 'Visitor ID',

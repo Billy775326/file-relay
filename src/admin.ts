@@ -7,6 +7,7 @@ import { getStore, shareStatusOf } from './store';
 import { deleteFile, readFileStream } from './filestore';
 import { runCleanup } from './cleanup';
 import { getCapacityUsage } from './quota';
+import { getRetentionDays, setRetentionDays, validRetentionDays, RETENTION_DAY_MS } from './settings';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
 
@@ -107,6 +108,18 @@ adminRoutes.post('/logout', (c) => {
   return c.json({ ok: true });
 });
 
+/** Retention is applied on the next cleanup run; saving never deletes files. */
+adminRoutes.get('/settings', async (c) => c.json({ expiredRetentionDays: await getRetentionDays(c.env) }));
+adminRoutes.put('/settings', async (c) => {
+  const origin = c.req.header('Origin');
+  if (origin && origin !== new URL(c.req.url).origin) return c.json({ error: 'forbidden', message: '请求来源不匹配' }, 403);
+  if (!c.req.header('Content-Type')?.startsWith('application/json')) return c.json({ error: 'bad_request', message: '请使用 JSON' }, 415);
+  const body = await c.req.json().catch(() => null) as { expiredRetentionDays?: unknown } | null;
+  if (!validRetentionDays(body?.expiredRetentionDays)) return err(c, 400, 'bad_request', '保留天数应为 0–3650 的整数');
+  await setRetentionDays(c.env, body.expiredRetentionDays);
+  return c.json({ expiredRetentionDays: body.expiredRetentionDays });
+});
+
 /** 概览统计 */
 adminRoutes.get('/stats', async (c) => {
   const todayStart = new Date();
@@ -146,6 +159,23 @@ adminRoutes.get('/shares', async (c) => {
       text_preview: r.textPreview,
       source: r.source ? { ...r.source, note: notes.get(r.source.visitorId) ?? '' } : null,
     })),
+  });
+});
+
+/** Full filenames are loaded on demand; the KV list uses shortened metadata. */
+adminRoutes.get('/shares/:code', async (c) => {
+  const code = c.req.param('code');
+  if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
+  const record = await getStore(c.env).getByCode(code);
+  if (!record) return err(c, 404, 'not_found', '分享不存在');
+  if (record.kind !== 'file') return err(c, 400, 'bad_request', '此分享不是文件');
+  const days = await getRetentionDays(c.env);
+  return c.json({ code, filename: record.filename, size: record.size, mime: record.mime,
+    createdAt: record.createdAt, expireAt: record.expireAt,
+    cleanupAfter: record.expireAt === null ? null : record.expireAt + days * RETENTION_DAY_MS,
+    pickupCount: record.pickupCount, maxPickups: record.maxPickups,
+    status: shareStatusOf(record.expireAt, record.maxPickups, record.pickupCount, Date.now()),
+    downloadUrl: `/api/admin/shares/${code}/download`,
   });
 });
 

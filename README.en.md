@@ -17,7 +17,7 @@ Designed for the **Cloudflare Free plan**. The default deployment needs one KV n
 - Expiry options: 1, 7 or 30 days, or forever. The UI offers 1, 5 or unlimited pickups.
 - Direct KV uploads; multipart uploads with cancellation when R2 is bound.
 - A capacity alert stops the upload batch when R2 space is insufficient.
-- Token-protected admin page with statistics, direct file downloads, deletion and an optional custom entry path.
+- Token-protected admin page with statistics, file details and downloads, deletion and an optional custom entry path.
 - Expiry cleanup, Chinese and English UI, dark mode and mobile layouts.
 
 ## Deploy
@@ -104,7 +104,7 @@ The bucket threshold is **not an environment variable**. It is `R2_CAPACITY_MAX`
 
 ## Cleanup
 
-Expiry and pickup limits are checked during requests. Reclaiming stored bytes requires actual cleanup. Exhausting pickups does not immediately delete a file; permanent shares need manual deletion.
+Public pickup stops at expiry. Shares are then retained for **30 days** by default before becoming eligible for cleanup. Change the retention period above the admin list; permanent shares and exhausted pickup limits alone do not trigger cleanup. Click a filename to view details and download a retained file. See the [admin guide](docs/admin.md) for settings and API behavior.
 
 - **Standalone Workers:** configure Cron Trigger `0 */6 * * *` in the dashboard.
 - **Pages:** homepage visits trigger background cleanup, with an approximate six-hour KV throttle. This is not a strict distributed lock. D1 deployments without KV have no such throttle marker.
@@ -159,6 +159,7 @@ python -m playwright install chromium
 npm run test:quota-runtime
 npm run test:source
 npm run test:admin-download
+npm run test:retention
 ```
 
 The quota runtime test starts a local emulator using the build output. It covers admission, upload/download, cancellation, deletion and the browser alert without Cloudflare credentials.
@@ -190,6 +191,8 @@ These tests create shares and files. The R2 API test uses a file larger than one
 | POST | `/api/uploads/:id/abort` | Cancel and release reclaimable reservations |
 | POST | `/api/admin/login`, `/api/admin/logout` | Manage admin session |
 | GET | `/api/admin/stats`, `/api/admin/shares` | Share statistics and list; R2 capacity includes bucket objects and upload reservations |
+| GET / PUT | `/api/admin/settings` | Read or save retention days after expiry |
+| GET | `/api/admin/shares/:code` | Full file details and earliest cleanup time |
 | GET | `/api/admin/shares/:code/download` | Admin file download without counting pickups; retained expired files are allowed |
 | DELETE | `/api/admin/shares/:code` | Delete share and file |
 | POST | `/api/admin/cleanup` | Clean expired shares and stale upload sessions |

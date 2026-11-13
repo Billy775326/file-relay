@@ -2,22 +2,24 @@ import { num, type Env } from './types';
 import { getStore } from './store';
 import { deleteFile, isKvFileKey } from './filestore';
 import { releaseCapacity } from './quota';
+import { getRetentionDays, RETENTION_DAY_MS } from './settings';
 
 /**
  * 定时清理(scheduled / 本地 --test-scheduled 均调用),存储后端通用:
- * 1. 过期分享:分批删元数据 + 对应文件(R2 批量删 / KV 键逐删,按存储键前缀路由)
+ * 1. 超过过期保留期的分享:分批删元数据 + 对应文件(R2 批量删 / KV 键逐删,按存储键前缀路由)
  * 2. 孤儿 multipart 会话(超 SESSION_TTL_MS 未 complete):abort + 删台账(仅大存储模式产生)
  *
- * 正确性不依赖本函数——所有读路径都有惰性有效性检查;这里只负责回收存储。
+ * 公开取件仍检查有效期和次数;管理员可读取尚未清理的文件。本函数负责回收存储。
  */
 export async function runCleanup(env: Env): Promise<{ deletedShares: number; abortedSessions: number }> {
   const now = Date.now();
   const store = getStore(env);
+  const cutoff = now - (await getRetentionDays(env)) * RETENTION_DAY_MS;
   let deletedShares = 0;
   let abortedSessions = 0;
 
   for (let round = 0; round < 20; round++) {
-    const expired = await store.listExpiredShares(now, 100);
+    const expired = await store.listExpiredShares(cutoff, 100);
     if (expired.length === 0) break;
 
     const r2Keys = expired.filter((r) => r.r2Key && !isKvFileKey(r.r2Key)).map((r) => r.r2Key as string);

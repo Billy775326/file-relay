@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import * as miniflare from 'miniflare';
 
 const bytes = Buffer.from(Array.from({ length: 65536 }, (_, i) => i % 256));
-const filename = '测试报告.txt';
+const filename = '测试报告_完整文件名验证_'.repeat(4) + '.txt';
 const schema = (await readFile('schema/schema.sql', 'utf8')).replace(/--[^\n]*/g, '').split(';').map(s => s.trim()).filter(Boolean);
 for (const [metadata, backend] of [['kv', 'kv'], ['kv', 'r2'], ['d1', 'r2']]) {
   const options = { modules: true, scriptPath: 'dist/worker.js', compatibilityDate: '2025-06-01',
@@ -47,11 +47,22 @@ for (const [metadata, backend] of [['kv', 'kv'], ['kv', 'r2'], ['d1', 'r2']]) {
       const res = await call(url('100001'), opts);
       assert.equal(res.status, 401);
       assert.equal(res.headers.get('cache-control'), 'no-store');
+      assert.equal((await call('/api/admin/shares/100001', opts)).status, 401);
     }
     const auth = await call('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: 'download-test-only' }) });
     assert.equal(auth.status, 200);
     const cookie = auth.headers.get('set-cookie').split(';')[0];
     const download = code => call(url(code), { headers: { Cookie: cookie } });
+    const detail = await (await call('/api/admin/shares/100001', { headers: { Cookie: cookie } })).json();
+    assert.equal(detail.filename, filename);
+    assert.equal(detail.cleanupAfter, null);
+    assert.equal(detail.downloadUrl, url('100001'));
+    assert.ok(!('r2Key' in detail) && !('source' in detail));
+    const expiredDetail = await (await call('/api/admin/shares/100003', { headers: { Cookie: cookie } })).json();
+    assert.equal(expiredDetail.cleanupAfter, records[2].expireAt + 30 * 86400000);
+    for (const [code, status] of [['bad',400],['999999',404],['100005',400]]) {
+      assert.equal((await call(`/api/admin/shares/${code}`, { headers: { Cookie: cookie } })).status, status);
+    }
     for (const code of ['100001','100002','100003']) {
       const before = await record(code);
       for (let i = 0; i < 2; i++) {
@@ -85,7 +96,7 @@ for (const [metadata, backend] of [['kv', 'kv'], ['kv', 'r2'], ['d1', 'r2']]) {
     if (metadata === 'kv') {
       const origin = String(await mf.ready).replace(/\/$/, '');
       await new Promise((resolve, reject) => {
-        const child = spawn('python', ['test/admin_download_ui.py', origin, createHash('sha256').update(bytes).digest('hex')], { stdio: 'inherit' });
+        const child = spawn('python', ['test/admin_download_ui.py', origin, createHash('sha256').update(bytes).digest('hex'), filename], { stdio: 'inherit' });
         child.on('error', reject); child.on('exit', code => code === 0 ? resolve() : reject(new Error(`admin download UI ${code}`)));
       });
       assert.deepEqual(await record('100001'), afterPublic);
