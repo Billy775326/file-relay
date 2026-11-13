@@ -8,6 +8,14 @@
 
 const DICT = {
   zh: {
+    'ad.settings': '设置',
+    'ad.displaySettings': '列表显示',
+    'ad.filesPageSize': '文件每页条数',
+    'ad.auditPageSize': '日志每页条数',
+    'ad.browserSettings': '立即生效，仅保存在当前浏览器',
+    'ad.preferenceNotSaved': '本次已生效，浏览器未能保存此偏好',
+    'ad.filesPagination': '文件分页',
+    'ad.auditPagination': '日志分页',
     'context.add': '补充信息（选填）',
     'context.name': '怎么称呼你',
     'context.description': '文件说明（本批文件）',
@@ -330,6 +338,14 @@ const DICT = {
   },
 
   en: {
+    'ad.settings': 'Settings',
+    'ad.displaySettings': 'List display',
+    'ad.filesPageSize': 'Files per page',
+    'ad.auditPageSize': 'Logs per page',
+    'ad.browserSettings': 'Applied immediately, saved in this browser',
+    'ad.preferenceNotSaved': 'Applied for now; this browser could not save the preference',
+    'ad.filesPagination': 'File pagination',
+    'ad.auditPagination': 'Log pagination',
     'context.add': 'Additional information (optional)',
     'context.name': 'Your name',
     'context.description': 'Description (all files in this batch)',

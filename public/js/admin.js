@@ -1,10 +1,12 @@
 import { $, api, fmtBytes, fmtDate, fmtDuration, toast, copyText, initTheme, initDialogs, el } from './common.js';
 import { LANG, t, onLangChange, initI18n } from './i18n.js';
 import { initAudit } from './admin-audit.js';
+import { pageSize, initAdminPreferences } from './admin-preferences.js';
 
 initTheme();
 initI18n();
 initDialogs();
+initAdminPreferences();
 initAudit();
 
 const loginCard = $('#admin-login');
@@ -18,9 +20,11 @@ const btnNext = $('#btn-next');
 const btnRefresh = $('#btn-refresh');
 const pageInfo = $('#page-info');
 
-const LIMIT = 20; // 每页行数:后端列表会逐行验活(读 KV),页小一点省 subrequest
+let limit = pageSize('files'); // Bounded to 40 to leave room for KV reads on the free plan.
 let offset = 0;
 let total = 0;
+let listRequest = 0;
+let listBusy = false;
 
 /* 语言切换:面板可见时按新语言重拉文案 */
 onLangChange(() => {
@@ -142,10 +146,18 @@ const STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted
 const KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };
 
 async function loadList() {
+  const request = ++listRequest;
+  listBusy = true;
+  btnPrev.disabled = btnNext.disabled = btnRefresh.disabled = true;
+  pageInfo.textContent = t('ad.loading');
+  tbody.setAttribute('aria-busy', 'true');
   tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));
   try {
-    const data = await api(`/api/admin/shares?limit=${LIMIT}&offset=${offset}`);
+    const data = await api(`/api/admin/shares?limit=${limit}&offset=${offset}`);
+    if (request !== listRequest) return;
+    if (!Number.isSafeInteger(data.total) || data.total < 0 || !Array.isArray(data.rows)) throw new Error(t('ad.loadFail'));
     total = data.total;
+    if (offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return loadList(); }
     const rows = data.rows ?? [];
     tbody.replaceChildren();
     for (const r of rows) {
@@ -172,22 +184,36 @@ async function loadList() {
     if (rows.length === 0) {
       tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));
     }
+    listBusy = false;
     updatePager();
   } catch (e) {
+    if (request !== listRequest) return;
+    pageInfo.textContent = t('ad.loadFail');
     tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));
+  } finally {
+    if (request === listRequest) {
+      listBusy = false;
+      btnRefresh.disabled = false;
+      tbody.setAttribute('aria-busy', 'false');
+    }
   }
 }
 
 function updatePager() {
-  const page = Math.floor(offset / LIMIT) + 1;
-  const pages = Math.max(1, Math.ceil(total / LIMIT));
+  const page = Math.floor(offset / limit) + 1;
+  const pages = Math.max(1, Math.ceil(total / limit));
   pageInfo.textContent = t('ad.page', page, pages, total);
-  btnPrev.disabled = offset <= 0;
-  btnNext.disabled = offset + LIMIT >= total;
+  btnPrev.disabled = listBusy || offset <= 0;
+  btnNext.disabled = listBusy || offset + limit >= total;
 }
-btnPrev.addEventListener('click', () => { offset = Math.max(0, offset - LIMIT); loadList(); });
-btnNext.addEventListener('click', () => { offset += LIMIT; loadList(); });
+btnPrev.addEventListener('click', () => { offset = Math.max(0, offset - limit); $('#files-pager').scrollIntoView({ block: 'start' }); loadList(); });
+btnNext.addEventListener('click', () => { offset += limit; $('#files-pager').scrollIntoView({ block: 'start' }); loadList(); });
 btnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });
+window.addEventListener('admin-page-size', event => {
+  if (event.detail.name !== 'files') return;
+  limit = event.detail.value; offset = 0;
+  if (!panel.hidden) loadList();
+});
 
 /* ---------- 删除:票据风确认弹窗 + 本地同步(KV 最终一致,删除后立即重拉会看到残留索引) ---------- */
 const delMask = $('#del-mask');
@@ -229,7 +255,7 @@ async function remove(r, tr) {
     tr?.remove();
     // 当前页删空且不在第一页:退回上一页重拉,避免停在空页
     if (tbody.rows.length === 0 && offset > 0) {
-      offset = Math.max(0, offset - LIMIT);
+      offset = Math.max(0, offset - limit);
       loadList();
     } else {
       updatePager();
@@ -494,6 +520,7 @@ const retentionInput = $('#retention-days');
 const retentionSave = $('#retention-save');
 const retentionError = $('#retention-error');
 async function loadSettings() {
+  $('#retention-status').hidden = true;
   retentionInput.disabled = true;
   retentionSave.disabled = true;
   retentionError.hidden = true;
@@ -511,16 +538,19 @@ async function loadSettings() {
   }
 }
 $('#retention-retry').addEventListener('click', loadSettings);
+retentionInput.addEventListener('input', () => { $('#retention-status').hidden = true; });
 $('#retention-form').addEventListener('submit', async e => {
   e.preventDefault();
   if (retentionSave.disabled || !retentionInput.reportValidity()) return;
   retentionSave.disabled = true;
   retentionInput.disabled = true;
   retentionError.hidden = true;
+  $('#retention-status').hidden = true;
   try {
     const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });
     retentionInput.value = settings.expiredRetentionDays;
-    toast(t('ad.settingsSaved'), 'ok');
+    $('#retention-status').textContent = t('ad.settingsSaved');
+    $('#retention-status').hidden = false;
   } catch (error) {
     retentionError.textContent = error.message || t('ad.loadFail');
     retentionError.hidden = false;
@@ -537,6 +567,7 @@ function guestBusy(busy) {
   for (const control of [guestWeekly, guestSave]) control.disabled = busy;
 }
 async function loadGuestPolicy() {
+  $('#guest-status').hidden = true;
   guestBusy(true);
   guestError.hidden = true;
   $('#guest-retry').hidden = true;
@@ -552,15 +583,18 @@ async function loadGuestPolicy() {
   }
 }
 $('#guest-retry').addEventListener('click', loadGuestPolicy);
+guestWeekly.addEventListener('input', () => { $('#guest-status').hidden = true; });
 $('#guest-policy-form').addEventListener('submit', async e => {
   e.preventDefault();
   if (guestSave.disabled || !e.target.reportValidity()) return;
   const body = { weeklyFileLimit: Number(guestWeekly.value) };
   guestBusy(true);
   guestError.hidden = true;
+  $('#guest-status').hidden = true;
   try {
     await api('/api/admin/upload-policy', { method: 'PUT', body });
-    toast(t('ad.guestSaved'), 'ok');
+    $('#guest-status').textContent = t('ad.guestSaved');
+    $('#guest-status').hidden = false;
   } catch (error) {
     guestError.textContent = error.message || t('ad.loadFail');
     guestError.hidden = false;

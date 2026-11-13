@@ -15,13 +15,16 @@ with sync_playwright() as p:
     auth = context.request.post(base + '/api/admin/login', data={'token': 'guard-test-only'})
     assert auth.status == 200
     page.goto(base + '/admin')
+    page.click('#admin-settings-btn')
     page.locator('#login-protection summary').click()
     expect(page.locator('#login-guard-status')).to_contain_text('10 分钟内失败 5 次')
     expect(page.locator('.login-guard-row')).to_have_count(1)
     expect(page.locator('.login-guard-info b')).to_have_text('2001:db8::42')
     for lang in ['zh', 'en']:
         if lang == 'en':
+            page.click('#settings-close')
             page.click('#lang-btn')
+            page.click('#admin-settings-btn')
             expect(page.locator('#login-guard-status')).to_contain_text('block login for 30 minutes')
         for theme in ['light', 'dark']:
             page.evaluate('(v) => document.documentElement.dataset.theme = v', theme)

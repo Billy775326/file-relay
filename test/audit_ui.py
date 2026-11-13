@@ -83,8 +83,11 @@ with sync_playwright() as p:
     # A completed settings change with an audit failure displays a warning without asking to repeat the change.
     page.click('#admin-files-tab')
     page.route('**/api/admin/settings', lambda r: r.fulfill(headers={'X-Audit-Status': 'unavailable'}, json={'expiredRetentionDays': 7}))
+    page.click('#admin-settings-btn')
     page.fill('#retention-days', '7')
     page.click('#retention-save')
+    expect(page.locator('#settings-audit-warning')).to_be_visible()
+    page.click('#settings-close')
     expect(page.locator('#audit-write-warning')).to_be_visible()
     expect(page.locator('#retention-error')).to_be_hidden()
     assert not errors, errors

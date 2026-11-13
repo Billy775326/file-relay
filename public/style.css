@@ -841,30 +841,30 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 .source-cell small { display: block; font-size: 11px; overflow-wrap: anywhere; }
 .source-link { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
 .source-link:hover { color: var(--stamp); }
-.source-dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: hidden; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); background: var(--paper); box-shadow: 0 20px 64px var(--mask); }
+.source-dialog { width: min(500px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: hidden; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); background: var(--paper); box-shadow: 0 20px 64px var(--mask); }
 .source-dialog[open] { display: flex; flex-direction: column; }
 .source-dialog::backdrop { background: var(--mask); }
-.source-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
-.source-heading h3 { margin: 0; font-size: 18px; }
+.source-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.source-heading h3 { margin: 0; font-size: 16px; }
 .source-heading h3:focus { outline: none; }
-.source-body { padding: 12px 16px; overflow: auto; min-height: 0; }
-#source-detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; font-size: 13px; }
+.source-body { padding: 8px 12px; overflow: auto; min-height: 0; }
+#source-detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; font-size: 13px; }
 #source-detail:not(:has(.source-field)) { display: block; overflow-wrap: anywhere; }
 .source-field { min-width: 0; display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: baseline; gap: 10px; }
 .source-field-wide { grid-column: 1 / -1; }
 .source-field small { font-family: inherit; font-size: 12px; font-weight: 400; }
 .source-field span { overflow-wrap: anywhere; }
 .source-field.mono span { font-size: 12px; line-height: 1.6; }
-#source-form { display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: center; gap: 6px 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+#source-form { display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: center; gap: 4px 8px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
 #source-form label { font-size: 12px; color: var(--muted); }
 #source-note { width: 100%; min-width: 0; padding: 5px 8px; background: var(--bag); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-sm); font: inherit; font-size: 16px; }
 #source-note:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
 #source-error { grid-column: 1 / -1; margin: 4px 0 0; }
-.source-footer { flex-shrink: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 10px 16px; background: var(--paper); border-top: 1px solid var(--line); }
+.source-footer { flex-shrink: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 8px 12px; background: var(--paper); border-top: 1px solid var(--line); }
 .source-footer .btn { min-height: 36px; padding: 5px 12px; }
 @media (max-width: 420px) {
-  .source-heading { padding: 10px 12px; }
-  .source-body { padding: 10px 12px; }
+  .source-heading { padding: 8px 12px; }
+  .source-body { padding: 8px 12px; }
   .source-field, #source-form { grid-template-columns: 84px minmax(0, 1fr); column-gap: 8px; }
   .source-footer { padding: 8px 12px; }
   .source-footer .btn { flex: 1; min-height: 40px; }
@@ -964,11 +964,11 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 #upload-policy-hint { display: block; margin: 0 0 8px; font-size: 12px; }
 .seg button:disabled { opacity: .4; cursor: not-allowed; }
 .file-detail-link:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
-.file-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; font-size: 13px; overflow-wrap: anywhere; }
+.file-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
 .file-wide { grid-column: 1 / -1; }
-.file-identity { display: grid; gap: 4px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
+.file-identity { display: grid; gap: 2px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
 .file-identity strong { font-size: 14px; font-weight: 600; line-height: 1.5; }
-.file-field { display: grid; align-content: start; gap: 3px; min-width: 0; }
+.file-field { display: grid; align-content: start; gap: 1px; min-width: 0; }
 .file-field-value { min-width: 0; font-variant-numeric: tabular-nums; }
 .file-field .badge { white-space: normal; }
 .file-source-link { max-width: 100%; text-align: left; overflow-wrap: anywhere; }
@@ -976,7 +976,7 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 .file-technical summary { cursor: pointer; color: var(--muted); }
 .file-technical-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
 .file-technical-grid > :first-child { grid-column: 1 / -1; }
-#file-dialog .source-body { padding-top: 12px; padding-bottom: 12px; }
+#file-dialog .source-body { padding-top: 8px; padding-bottom: 8px; }
 .retention-settings { padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px dashed var(--line); }
 #retention-form { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; }
 #retention-days { width: 80px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; }
@@ -987,7 +987,8 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 }
 
 /* Admin audit keeps the existing theme while separating logs from file management. */
-.admin-nav { display: flex; gap: 8px; margin: 0 0 16px; }
+.admin-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+#admin-settings-btn { margin-left: auto; }
 .audit-card { padding: 20px; }
 .audit-heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; }
 .audit-heading h2 { margin: 0 0 4px; font-size: 19px; }
@@ -1061,8 +1062,8 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
 .context-fields textarea { min-height: 76px; resize: vertical; }
 #upload-description-field { display: grid; gap: 6px; }
 #description-count { text-align: right; }
-.admin-settings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 12px; margin-bottom: 16px; }
-.settings-section { min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--paper); font-size: 13px; }
+.admin-settings { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.settings-section { min-width: 0; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--paper); font-size: 13px; }
 .admin-settings .retention-settings, .admin-settings .guest-settings { margin: 0; }
 .settings-section > summary { font-weight: 600; }
 .settings-section form { margin-block: 8px; }
@@ -1074,16 +1075,16 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
 .source-ip .btn { min-height: 28px; padding: 2px 8px; font-size: 12px; }
 .source-agent { margin-top: 4px; }
 .source-agent p { margin: 4px 0; font-size: 12px; overflow-wrap: anywhere; }
-.source-history { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 6px; font-size: 13px; }
+.source-history { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 4px; font-size: 13px; }
 #source-history-list { display: grid; }
-.source-activity { display: grid; gap: 3px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.source-activity { display: grid; gap: 2px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
 .source-activity:last-child { border-bottom: 0; }
 .source-activity small { overflow-wrap: anywhere; }
 .activity-head { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .activity-head > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 .activity-head .badge { flex-shrink: 0; }
 #source-back { margin-right: auto; }
-.file-description { padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.file-description { padding-bottom: 6px; border-bottom: 1px solid var(--line); }
 .file-description p { margin: 4px 0 0; white-space: pre-wrap; }
 .delete-dialog { width: min(430px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 0; border: 0; border-radius: var(--radius); background: var(--paper); color: var(--ink); }
 .delete-dialog::backdrop { background: var(--mask); }
@@ -1097,9 +1098,30 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
   .actions .btn, .actions .icon-btn, #admin-panel td .btn, .admin-pager .btn,
   #login-protection .btn, #retention-form .btn, #retention-days, #admin-audit-view .btn, .admin-nav .btn { min-height: 44px; }
   .source-link, .file-detail-link { min-height: 32px; }
-  .source-heading h3 { font-size: 17px; }
-  #source-form { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .source-heading h3 { font-size: 16px; }
+  #source-form { grid-template-columns: 84px minmax(0, 1fr); gap: 4px 8px; }
   .source-footer { gap: 6px; }
   .source-footer .btn { padding-inline: 8px; font-size: 13px; }
   .upload-context summary, .settings-section summary, .source-history summary { min-height: 40px; padding-block: 8px; }
+}
+/* Pagination is a primary list control, outside the horizontally scrolling table. */
+.list-toolbar { position: sticky; top: 8px; z-index: 5; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 10px; padding: 10px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: 0 3px 8px var(--hard-soft); }
+.page-summary { color: var(--ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.list-toolbar .pager-btns { flex-wrap: wrap; gap: 6px; }
+.admin-list-card .table-wrap, .audit-table-wrap { scroll-margin-top: 84px; }
+.settings-dialog { width: min(520px, calc(100vw - 24px)); }
+.settings-dialog h4 { margin: 0 0 6px; font-size: 13px; }
+.settings-saved { display: block; color: var(--ok); margin-top: 4px; }
+.settings-dialog #btn-logout { margin-right: auto; }
+.preference-row { display: grid; grid-template-columns: minmax(0, 1fr) 84px; align-items: center; gap: 8px; margin-bottom: 6px; }
+.preference-row select { width: 100%; min-height: 36px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
+@media (max-width: 600px) {
+  .list-toolbar { top: 4px; padding: 8px; gap: 6px; }
+  .list-toolbar .page-summary { width: 100%; }
+  .list-toolbar .pager-btns { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .list-toolbar .btn { padding-inline: 5px; }
+  .admin-nav { gap: 6px; }
+  .admin-nav .btn { padding-inline: 8px; }
+  .preference-row select { min-height: 44px; font-size: 16px; }
+  .settings-dialog .source-body { padding: 8px; }
 }

@@ -1,5 +1,6 @@
 import { $, api, el, fmtDate } from './common.js';
 import { t, LANG, onLangChange } from './i18n.js';
+import { pageSize } from './admin-preferences.js';
 
 export function initAudit() {
   const view = $('#admin-audit-view');
@@ -7,7 +8,7 @@ export function initAudit() {
   const dialog = $('#audit-dialog');
   let category = 'all', offset = 0, total = 0, request = 0;
   let filters = {}, rows = [], available = false;
-  const limit = 20;
+  let limit = pageSize('audit');
   const action = row => t(`audit.action.${row.action}`);
   const actor = row => t(`audit.actor.${row.actor}`);
   const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;
@@ -103,9 +104,14 @@ export function initAudit() {
     for (const item of document.querySelectorAll('.audit-categories button')) item.setAttribute('aria-pressed', String(item === button));
     load();
   });
-  $('#audit-prev').addEventListener('click', () => { offset = Math.max(0, offset - limit); load(); });
-  $('#audit-next').addEventListener('click', () => { offset += limit; load(); });
+  $('#audit-prev').addEventListener('click', () => { offset = Math.max(0, offset - limit); $('#audit-pager').scrollIntoView({ block: 'start' }); load(); });
+  $('#audit-next').addEventListener('click', () => { offset += limit; $('#audit-pager').scrollIntoView({ block: 'start' }); load(); });
   $('#audit-refresh').addEventListener('click', load);
+  window.addEventListener('admin-page-size', event => {
+    if (event.detail.name !== 'audit') return;
+    limit = event.detail.value; offset = 0;
+    if (!view.hidden) load();
+  });
   $('#audit-export').addEventListener('click', async () => {
     $('#audit-export').disabled = true;
     $('#audit-error').hidden = true;

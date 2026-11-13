@@ -41,43 +41,20 @@
     <nav class="admin-nav" aria-label="管理页面" data-i18n-aria="audit.navigation">
       <button id="admin-files-tab" class="btn small" type="button" aria-pressed="true" data-i18n="audit.files">文件管理</button>
       <button id="admin-audit-tab" class="btn small ghost" type="button" aria-pressed="false" data-i18n="audit.title">日志审计</button>
+      <button id="admin-settings-btn" class="btn small ghost" type="button" aria-haspopup="dialog" data-i18n="ad.settings">设置</button>
     </nav>
     <p id="audit-write-warning" class="error-box" hidden role="alert" data-i18n="audit.writeFailed">操作已处理，但审计记录未保存，请检查日志存储。</p>
     <div id="admin-files-view">
     <div class="stats-row" id="stats-row"></div>
-    <div class="admin-settings">
-      <details class="settings-section retention-settings" open>
-        <summary data-i18n="ad.retentionTitle">自动清理</summary>
-        <form id="retention-form">
-          <label for="retention-days" data-i18n="ad.retentionDays">过期后保留</label>
-          <input id="retention-days" type="number" min="0" max="3650" step="1" required disabled>
-          <span data-i18n="ad.days">天</span>
-          <button id="retention-save" class="btn small" type="submit" disabled data-i18n="ad.save">保存</button>
-        </form>
-        <p id="retention-error" class="error-box" hidden role="alert"></p>
-        <button id="retention-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">重试</button>
-      </details>
-      <details class="settings-section guest-settings">
-        <summary data-i18n="ad.guestLimits">未备注访客限制</summary>
-        <form id="guest-policy-form">
-          <label><span data-i18n="ad.weeklyFiles">每周文件数</span><input id="guest-weekly" type="number" min="0" max="1000" step="1" required disabled></label>
-          <button id="guest-save" class="btn small" type="submit" disabled data-i18n="ad.save">保存</button>
-        </form>
-        <small class="muted" data-i18n="ad.guestRules">北京时间周一重置；已接纳上传计次，取消不退回。未备注访客不能永久分享或不限次取件。</small>
-        <p id="guest-error" class="error-box" hidden role="alert"></p>
-        <button id="guest-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">重试</button>
-      </details>
-      <details class="settings-section guest-settings" id="login-protection">
-        <summary data-i18n="ad.loginProtection">登录防护</summary>
-        <div class="login-guard-heading">
-          <small class="muted" id="login-guard-status" role="status"></small>
-          <button id="login-guard-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">↻ 刷新</button>
-        </div>
-        <p id="login-guard-error" class="error-box" hidden role="alert"></p>
-        <div id="login-guard-bans" class="login-guard-bans"></div>
-      </details>
-    </div>
     <div class="card admin-list-card">
+      <div id="files-pager" class="list-toolbar" role="group" aria-label="文件分页" data-i18n-aria="ad.filesPagination">
+        <small id="page-info" class="page-summary" role="status" aria-live="polite"></small>
+        <div class="pager-btns">
+          <button id="btn-prev" class="btn small" type="button" disabled data-i18n="ad.prev">上一页</button>
+          <button id="btn-next" class="btn small" type="button" disabled data-i18n="ad.next">下一页</button>
+          <button id="btn-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">↻ 刷新</button>
+        </div>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -89,23 +66,12 @@
           <tbody id="shares-body"></tbody>
         </table>
       </div>
-      <div class="row-between admin-pager">
-        <div class="pager-btns">
-          <button id="btn-prev" class="btn small" disabled data-i18n="ad.prev">上一页</button>
-          <button id="btn-next" class="btn small" disabled data-i18n="ad.next">下一页</button>
-        </div>
-        <small class="muted" id="page-info"></small>
-        <button id="btn-refresh" class="btn small ghost" data-i18n="ad.refresh">↻ 刷新</button>
-      </div>
-      <div class="admin-foot">
-        <button id="btn-logout" class="btn ghost small" data-i18n="ad.logout">退出登录</button>
-      </div>
     </div>
     </div>
     <section id="admin-audit-view" class="card audit-card" hidden aria-labelledby="audit-title">
       <div class="audit-heading">
         <div><h2 id="audit-title" data-i18n="audit.title">日志审计</h2><small class="muted" data-i18n="audit.retention">最近 30 天，最多 1,000 条；时间按本地时区显示</small></div>
-        <div class="audit-actions"><button id="audit-export" class="btn small ghost" type="button" data-i18n="audit.export">导出筛选结果</button><button id="audit-refresh" class="btn small" type="button" data-i18n="ad.refresh">↻ 刷新</button></div>
+        <div class="audit-actions"><button id="audit-export" class="btn small ghost" type="button" data-i18n="audit.export">导出筛选结果</button></div>
       </div>
       <div class="audit-categories" role="group" aria-label="日志分类" data-i18n-aria="audit.categories">
         <button type="button" data-category="all" aria-pressed="true" data-i18n="audit.all">全部日志</button>
@@ -120,13 +86,20 @@
         <label class="audit-search"><span data-i18n="audit.keyword">IP / 操作对象</span><input id="audit-q" type="search" maxlength="80" placeholder="搜索 IP 或取件码" data-i18n-ph="audit.search"></label>
         <div class="audit-actions"><button class="btn small primary" type="submit" data-i18n="audit.filter">筛选</button><button id="audit-reset" class="btn small ghost" type="button" data-i18n="audit.reset">重置</button></div>
       </form>
+      <div id="audit-pager" class="list-toolbar" role="group" aria-label="日志分页" data-i18n-aria="ad.auditPagination">
+        <small id="audit-page" class="page-summary" role="status" aria-live="polite"></small>
+        <div class="pager-btns">
+          <button id="audit-prev" class="btn small" type="button" disabled data-i18n="ad.prev">上一页</button>
+          <button id="audit-next" class="btn small" type="button" disabled data-i18n="ad.next">下一页</button>
+          <button id="audit-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">↻ 刷新</button>
+        </div>
+      </div>
       <p id="audit-error" class="error-box" role="alert" hidden></p>
       <p id="audit-state" class="muted" role="status"></p>
       <div class="table-wrap audit-table-wrap"><table class="audit-table">
         <thead><tr><th data-i18n="audit.time">时间</th><th data-i18n="audit.action">操作</th><th data-i18n="audit.result">结果</th><th data-i18n="audit.actor">操作身份</th><th data-i18n="audit.source">来源 IP / 属地</th><th data-i18n="audit.target">操作对象</th><th data-i18n="audit.details">详情</th></tr></thead>
         <tbody id="audit-body"></tbody>
       </table></div>
-      <div class="row-between audit-pager"><button id="audit-prev" class="btn small" type="button" disabled data-i18n="ad.prev">上一页</button><small id="audit-page" class="muted" role="status"></small><button id="audit-next" class="btn small" type="button" disabled data-i18n="ad.next">下一页</button></div>
     </section>
   </section>
 </main>
@@ -186,6 +159,58 @@
   <div class="source-heading"><h3 id="audit-detail-title" tabindex="-1" autofocus data-i18n="audit.details">日志详情</h3></div>
   <div class="source-body"><div id="audit-detail" class="file-detail-grid"></div></div>
   <div class="source-footer"><button id="audit-close" class="btn ghost" type="button" data-i18n="ad.sourceClose">关闭</button></div>
+</dialog>
+<dialog id="settings-dialog" class="source-dialog settings-dialog" aria-labelledby="settings-title">
+  <div class="source-heading"><h3 id="settings-title" tabindex="-1" autofocus data-i18n="ad.settings">设置</h3></div>
+  <div class="source-body">
+    <p id="settings-audit-warning" class="error-box" hidden role="alert" data-i18n="audit.writeFailed">操作已处理，但审计记录未保存，请检查日志存储。</p>
+<div class="admin-settings">
+      <section class="settings-section display-settings" aria-labelledby="display-title">
+        <h4 id="display-title" data-i18n="ad.displaySettings">列表显示</h4>
+        <div class="preference-row"><label for="files-page-size" data-i18n="ad.filesPageSize">文件每页条数</label><select id="files-page-size"><option value="10">10</option><option value="20">20</option><option value="40">40</option></select></div>
+        <div class="preference-row"><label for="audit-page-size" data-i18n="ad.auditPageSize">日志每页条数</label><select id="audit-page-size"><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></div>
+        <small class="muted" data-i18n="ad.browserSettings">立即生效，仅保存在当前浏览器</small>
+        <p id="preferences-error" class="error-box" role="alert" data-i18n="ad.preferenceNotSaved" hidden></p>
+      </section>
+
+      <details class="settings-section retention-settings" open>
+        <summary data-i18n="ad.retentionTitle">自动清理</summary>
+        <form id="retention-form">
+          <label for="retention-days" data-i18n="ad.retentionDays">过期后保留</label>
+          <input id="retention-days" type="number" min="0" max="3650" step="1" required disabled>
+          <span data-i18n="ad.days">天</span>
+          <button id="retention-save" class="btn small" type="submit" disabled data-i18n="ad.save">保存</button>
+        </form>
+        <p id="retention-error" class="error-box" hidden role="alert"></p>
+        <small id="retention-status" class="settings-saved" role="status" data-i18n="ad.settingsSaved" hidden></small>
+        <button id="retention-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">重试</button>
+      </details>
+      <details class="settings-section guest-settings">
+        <summary data-i18n="ad.guestLimits">未备注访客限制</summary>
+        <form id="guest-policy-form">
+          <label><span data-i18n="ad.weeklyFiles">每周文件数</span><input id="guest-weekly" type="number" min="0" max="1000" step="1" required disabled></label>
+          <button id="guest-save" class="btn small" type="submit" disabled data-i18n="ad.save">保存</button>
+        </form>
+        <small class="muted" data-i18n="ad.guestRules">北京时间周一重置；已接纳上传计次，取消不退回。未备注访客不能永久分享或不限次取件。</small>
+        <p id="guest-error" class="error-box" hidden role="alert"></p>
+        <small id="guest-status" class="settings-saved" role="status" data-i18n="ad.guestSaved" hidden></small>
+        <button id="guest-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">重试</button>
+      </details>
+      <details class="settings-section guest-settings" id="login-protection">
+        <summary data-i18n="ad.loginProtection">登录防护</summary>
+        <div class="login-guard-heading">
+          <small class="muted" id="login-guard-status" role="status"></small>
+          <button id="login-guard-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">↻ 刷新</button>
+        </div>
+        <p id="login-guard-error" class="error-box" hidden role="alert"></p>
+        <div id="login-guard-bans" class="login-guard-bans"></div>
+      </details>
+    </div>
+  </div>
+  <div class="source-footer">
+    <button id="btn-logout" class="btn ghost" type="button" data-i18n="ad.logout">退出登录</button>
+    <button id="settings-close" class="btn primary" type="button" data-i18n="ad.sourceClose">关闭</button>
+  </div>
 </dialog>
 <script type="module" src="/js/admin.js"></script>
 </body>
