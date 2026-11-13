@@ -242,6 +242,7 @@ adminRoutes.get('/shares/:code', async (c) => {
     : cleanupAfter > evaluatedAt ? 'retained' : 'pending';
   return c.json({ code, filename: record.filename, size: record.size, mime: record.mime,
     description: record.source?.submission?.description || null,
+    displayName: record.source?.submission?.displayName || null,
     createdAt: record.createdAt, expireAt: record.expireAt,
     cleanupAfter, cleanupStatus, retentionDays: days, evaluatedAt, storage,
     source: record.source ? { ...sourceSummary(record.source), note } : null,

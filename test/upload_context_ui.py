@@ -18,12 +18,26 @@ with sync_playwright() as p:
     page.locator('.upload-context summary').click()
     page.get_by_label('怎么称呼你', exact=True).fill('同事 <img src=x>')
     description = '本周图片素材 <img src=x onerror=alert(1)>\n请保留原文件名。'
-    page.get_by_label('文件说明（本批文件）', exact=True).fill(description)
+    page.get_by_label('文件说明', exact=True).fill(description)
     expect(page.locator('#description-count')).to_have_text(f'{len(description)} / 300')
-    for width in [320, 390, 1135]:
-        page.set_viewport_size({'width': width, 'height': 844})
-        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-        assert page.locator('#upload-description').evaluate('(e)=>e.scrollWidth<=e.clientWidth')
+    for lang in ['zh', 'en']:
+        if lang == 'en': page.click('#lang-btn')
+        for theme in ['light', 'dark']:
+            page.evaluate('(t)=>document.documentElement.dataset.theme=t', theme)
+            for width in [320, 390, 1135]:
+                page.set_viewport_size({'width': width, 'height': 844})
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                for control in ['upload-name', 'upload-description']:
+                    assert page.locator('#' + control).evaluate('(e)=>e.scrollWidth<=e.clientWidth')
+                if lang == 'zh' and theme == 'dark' and width in [390, 1135]:
+                    page.locator('.upload-context').screenshot(path=f'.wrangler/upload-context-{backend}-{width}.png')
+    page.click('#lang-btn')
+    # Text mode hides file-only description without losing it on returning to files.
+    page.click('[data-tab="text"]')
+    expect(page.locator('#upload-description-field')).to_be_hidden()
+    expect(page.locator('#upload-name')).to_have_value('同事 <img src=x>')
+    page.click('[data-tab="file"]')
+    expect(page.locator('#upload-description')).to_have_value(description)
     page.set_input_files('#file-input', [
         {'name': '设计素材_' + '长文件名' * 12 + '.txt', 'mimeType': 'text/plain', 'buffer': b'abc'},
         {'name': 'second.txt', 'mimeType': 'text/plain', 'buffer': b'def'},
@@ -52,6 +66,9 @@ with sync_playwright() as p:
                 page.set_viewport_size({'width': width, 'height': 844})
                 row.locator('.file-detail-link').click()
                 expect(page.locator('.file-description p')).to_have_text(description)
+                expect(page.locator('#file-detail')).to_contain_text('同事 <img src=x>')
+                expect(page.locator('#file-detail')).not_to_contain_text('最早清理')
+                expect(page.locator('#file-detail')).not_to_contain_text('Cleanup after')
                 expect(page.locator('#file-detail img')).to_have_count(0)
                 assert 'User-Agent' not in page.locator('#file-detail').inner_text()
                 assert page.locator('#file-dialog').evaluate('(e)=>e.scrollWidth<=e.clientWidth')
@@ -70,6 +87,7 @@ with sync_playwright() as p:
                     page.screenshot(path=f'.wrangler/context-source-{backend}-{width}.png', animations='disabled')
                 page.click('#source-back')
                 expect(page.locator('#file-dialog')).to_be_visible()
+                expect(page.locator('.file-description p')).to_have_text(description)
                 if lang == 'zh' and theme == 'dark' and width in [390, 1135]:
                     page.screenshot(path=f'.wrangler/context-file-{backend}-{width}.png', animations='disabled')
                 page.keyboard.press('Escape')

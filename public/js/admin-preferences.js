@@ -12,8 +12,9 @@ for (const name of Object.keys(values)) {
 export function pageSize(name) { return values[name]; }
 
 export function scrollToList(selector) {
-  const top = $(selector).getBoundingClientRect().top + window.scrollY
-    - $('.admin-topbar').getBoundingClientRect().height - 12;
+  const list = $(selector);
+  const top = list.querySelector('.table-wrap').getBoundingClientRect().top + window.scrollY
+    - list.querySelector('.list-toolbar').getBoundingClientRect().height - 20;
   window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
 }
 

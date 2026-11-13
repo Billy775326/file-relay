@@ -65,12 +65,13 @@
     <details class="upload-context">
       <summary data-i18n="context.add">补充信息（选填）</summary>
       <div class="context-fields">
-        <label for="upload-name" data-i18n="context.name">怎么称呼你</label>
-        <input id="upload-name" type="text" maxlength="40" autocomplete="nickname">
-        <div id="upload-description-field">
-          <label for="upload-description" data-i18n="context.description">文件说明（本批文件）</label>
-          <textarea id="upload-description" rows="2" maxlength="300" aria-describedby="description-count"></textarea>
-          <small id="description-count" class="muted">0 / 300</small>
+        <div class="context-row">
+          <label for="upload-name" data-i18n="context.name">怎么称呼你</label>
+          <input id="upload-name" type="text" maxlength="40" autocomplete="nickname" data-i18n-ph="context.namePh" placeholder="填写你常用的称呼">
+        </div>
+        <div id="upload-description-field" class="context-row">
+          <div class="context-label"><label for="upload-description" data-i18n="context.description">文件说明</label><small id="description-count" class="muted">0 / 300</small></div>
+          <textarea id="upload-description" rows="3" maxlength="300" aria-describedby="description-count" data-i18n-ph="context.descriptionPh" placeholder="简述文件内容，同批文件共用"></textarea>
         </div>
         <small class="muted" data-i18n="context.visibility">补充信息仅管理员可见</small>
       </div>

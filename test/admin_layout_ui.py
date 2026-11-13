@@ -123,6 +123,12 @@ with sync_playwright() as p:
             page.evaluate('(t)=>document.documentElement.dataset.theme=t', theme)
             for width in [320, 390, 1135]:
                 page.set_viewport_size({'width': width, 'height': 844})
+                page.evaluate('window.scrollTo(0, 0)')
+                nav = page.locator('#admin-navigation')
+                assert nav.evaluate('(e)=>e.closest("header")!==null')
+                if width == 1135:
+                    brand, navigation = page.locator('.brand').bounding_box(), nav.bounding_box()
+                    assert abs(brand['y'] + brand['height']/2 - navigation['y'] - navigation['height']/2) < 2
                 for tab, pager, table in [('admin-files-tab', 'files-pager', 'shares-body'), ('admin-audit-tab', 'audit-pager', 'audit-body')]:
                     page.click('#' + tab)
                     page.locator('#' + table + ' tr').first.wait_for()
@@ -131,16 +137,11 @@ with sync_playwright() as p:
                     assert bar.bounding_box()['y'] < page.locator('#' + table).bounding_box()['y']
                     # Scroll deep into a long list: the toolbar remains above rows and clickable.
                     bar.evaluate('(e)=>window.scrollTo(0, scrollY+e.getBoundingClientRect().top+400)')
-                    page.wait_for_function('()=>document.querySelector(".admin-topbar").getBoundingClientRect().top===0')
-                    header = page.locator('.admin-topbar').bounding_box()
+                    page.wait_for_function('(selector)=>{const y=document.querySelector(selector).getBoundingClientRect().top;return y>=0 && y<=10}', arg='#' + pager)
                     bounds = bar.bounding_box()
-                    assert 0 <= bounds['y'] < header['height'], bounds
+                    assert 0 <= bounds['y'] <= 10, bounds
                     other = 'audit-pager' if pager == 'files-pager' else 'files-pager'
                     expect(page.locator('#' + other)).to_be_hidden()
-                    if width == 1135:
-                        brand = page.locator('.brand').bounding_box()
-                        assert abs(brand['y'] + brand['height']/2 - bounds['y'] - bounds['height']/2) < 2
-                        assert bounds['x'] >= brand['x'] + brand['width']
                     assert bounds['x'] + bounds['width'] <= width
                     assert bar.evaluate('(e)=>{const b=e.getBoundingClientRect();return e.contains(document.elementFromPoint(b.x+b.width/2,b.y+4))}')
                     if lang == 'zh' and theme == 'dark' and width in [390, 1135]:
@@ -150,7 +151,7 @@ with sync_playwright() as p:
                     page.click('#' + next_id)
                     expect(page.locator('#' + prev_id)).to_be_enabled()
                     first = page.locator('#' + table + ' tr').first.bounding_box()
-                    assert first['y'] >= page.locator('.admin-topbar').bounding_box()['height']
+                    assert first['y'] >= bar.bounding_box()['y'] + bar.bounding_box()['height']
                     assert first['y'] < 220, first
                     page.click('#' + prev_id)
                 page.click('#admin-settings-btn')

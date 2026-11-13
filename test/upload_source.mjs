@@ -108,7 +108,10 @@ for (const metadata of ['kv', 'd1']) {
       file = await (await call('/api/shares/file?filename=file.txt&expiry=1d', { method: 'POST', body: 'abc', cf: geo, headers: { Cookie: cookie, 'CF-Connecting-IP': ip, 'X-Upload-Context': encodeURIComponent(JSON.stringify(submission)) } })).json();
     }
     assert.ok(file.code); assert.doesNotMatch(JSON.stringify(file), sourceFields);
-    assert.equal((await (await adminGet(`/api/admin/shares/${file.code}`)).json()).description, description);
+    const fileDetails = await (await adminGet(`/api/admin/shares/${file.code}`)).json();
+    assert.equal(fileDetails.description, description);
+    assert.equal(fileDetails.displayName, submission.displayName);
+    assert.equal((await call(`/api/admin/shares/${file.code}`)).status, 401);
     assert.equal((await getSource(file.code)).displayName, submission.displayName);
     assert.ok(!(await (await call('/api/pickup', json({ code: file.code }))).text()).includes('Private file description'));
     assert.deepEqual((({ visitorId, ip, city }) => ({ visitorId, ip, city }))(await getSource(file.code)), { visitorId: source.visitorId, ip, city: 'Shenzhen' });

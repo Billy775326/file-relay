@@ -21,24 +21,10 @@
     <span class="logo">📦</span>
     <div><b data-i18n="brand.name">文件中转站</b><small data-i18n="brand.admin">管理后台</small></div>
   </div>
-  <div id="admin-pagination" hidden>
-    <div id="files-pager" class="list-toolbar" role="group" aria-label="文件分页" data-i18n-aria="ad.filesPagination">
-        <small id="page-info" class="page-summary" role="status" aria-live="polite"></small>
-        <div class="pager-btns">
-          <button id="btn-prev" class="btn small" type="button" disabled data-i18n-aria="ad.prev" data-i18n-title="ad.prev"><span class="pager-icon" aria-hidden="true">‹</span><span class="pager-label" data-i18n="ad.prev">上一页</span></button>
-          <button id="btn-next" class="btn small" type="button" disabled data-i18n-aria="ad.next" data-i18n-title="ad.next"><span class="pager-icon" aria-hidden="true">›</span><span class="pager-label" data-i18n="ad.next">下一页</span></button>
-          <button id="btn-refresh" class="btn small ghost" type="button" data-i18n-aria="ad.refresh" data-i18n-title="ad.refresh"><span class="pager-icon" aria-hidden="true">↻</span><span class="pager-label" data-i18n="ad.refresh">↻ 刷新</span></button>
-        </div>
-      </div>
-    <div id="audit-pager" class="list-toolbar" hidden role="group" aria-label="日志分页" data-i18n-aria="ad.auditPagination">
-        <small id="audit-page" class="page-summary" role="status" aria-live="polite"></small>
-        <div class="pager-btns">
-          <button id="audit-prev" class="btn small" type="button" disabled data-i18n-aria="ad.prev" data-i18n-title="ad.prev"><span class="pager-icon" aria-hidden="true">‹</span><span class="pager-label" data-i18n="ad.prev">上一页</span></button>
-          <button id="audit-next" class="btn small" type="button" disabled data-i18n-aria="ad.next" data-i18n-title="ad.next"><span class="pager-icon" aria-hidden="true">›</span><span class="pager-label" data-i18n="ad.next">下一页</span></button>
-          <button id="audit-refresh" class="btn small ghost" type="button" data-i18n-aria="ad.refresh" data-i18n-title="ad.refresh"><span class="pager-icon" aria-hidden="true">↻</span><span class="pager-label" data-i18n="ad.refresh">↻ 刷新</span></button>
-        </div>
-      </div>
-  </div>
+    <nav id="admin-navigation" class="admin-nav" hidden aria-label="管理页面" data-i18n-aria="audit.navigation">
+      <button id="admin-files-tab" class="btn small" type="button" aria-pressed="true" data-i18n="audit.files">文件管理</button>
+      <button id="admin-audit-tab" class="btn small ghost" type="button" aria-pressed="false" data-i18n="audit.title">日志审计</button>
+    </nav>
   <div class="actions">
     <button id="admin-settings-btn" class="icon-btn" type="button" hidden aria-haspopup="dialog" aria-label="设置" data-i18n-aria="ad.settings" data-i18n-title="ad.settings">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m9 3-.6 2.4-2 .9L4 5.6 1.8 9.4l1.8 1.7v1.8l-1.8 1.7L4 18.4l2.4-.7 2 .9L9 21h6l.6-2.4 2-.9 2.4.7 2.2-3.8-1.8-1.7v-1.8l1.8-1.7L20 5.6l-2.4.7-2-.9L15 3Z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -59,14 +45,18 @@
   </section>
 
   <section id="admin-panel" hidden>
-    <nav class="admin-nav" aria-label="管理页面" data-i18n-aria="audit.navigation">
-      <button id="admin-files-tab" class="btn small" type="button" aria-pressed="true" data-i18n="audit.files">文件管理</button>
-      <button id="admin-audit-tab" class="btn small ghost" type="button" aria-pressed="false" data-i18n="audit.title">日志审计</button>
-    </nav>
     <p id="audit-write-warning" class="error-box" hidden role="alert" data-i18n="audit.writeFailed">操作已处理，但审计记录未保存，请检查日志存储。</p>
     <div id="admin-files-view">
     <div class="stats-row" id="stats-row"></div>
     <div class="card admin-list-card">
+      <div id="files-pager" class="list-toolbar" role="group" aria-label="文件分页" data-i18n-aria="ad.filesPagination">
+        <small id="page-info" class="page-summary" role="status" aria-live="polite"></small>
+        <div class="pager-btns">
+          <button id="btn-prev" class="btn small" type="button" disabled data-i18n="ad.prev">上一页</button>
+          <button id="btn-next" class="btn small" type="button" disabled data-i18n="ad.next">下一页</button>
+          <button id="btn-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">↻ 刷新</button>
+        </div>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -98,6 +88,14 @@
         <label class="audit-search"><span data-i18n="audit.keyword">IP / 操作对象</span><input id="audit-q" type="search" maxlength="80" placeholder="搜索 IP 或取件码" data-i18n-ph="audit.search"></label>
         <div class="audit-actions"><button class="btn small primary" type="submit" data-i18n="audit.filter">筛选</button><button id="audit-reset" class="btn small ghost" type="button" data-i18n="audit.reset">重置</button></div>
       </form>
+      <div id="audit-pager" class="list-toolbar" role="group" aria-label="日志分页" data-i18n-aria="ad.auditPagination">
+        <small id="audit-page" class="page-summary" role="status" aria-live="polite"></small>
+        <div class="pager-btns">
+          <button id="audit-prev" class="btn small" type="button" disabled data-i18n="ad.prev">上一页</button>
+          <button id="audit-next" class="btn small" type="button" disabled data-i18n="ad.next">下一页</button>
+          <button id="audit-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">↻ 刷新</button>
+        </div>
+      </div>
       <p id="audit-error" class="error-box" role="alert" hidden></p>
       <p id="audit-state" class="muted" role="status"></p>
       <div class="table-wrap audit-table-wrap"><table class="audit-table">

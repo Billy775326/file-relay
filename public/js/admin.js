@@ -68,7 +68,7 @@ tokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());
 function showPanel() {
   loginCard.hidden = true;
   panel.hidden = false;
-  $('#admin-pagination').hidden = false;
+  $('#admin-navigation').hidden = false;
   $('#admin-settings-btn').hidden = false;
   loadStats();
   loadList();
@@ -463,12 +463,12 @@ async function openFileDetails(code) {
           state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),
       ...(detail.description ? [el('div', { class: 'file-description file-wide' },
         el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),
+      ...(detail.displayName ? [fileField(t('ad.submittedName'), detail.displayName)] : []),
       fileField(t('ad.source'), sourceButton),
       fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '∞'}`),
       fileField(t('ad.th.created'), fmtDate(detail.createdAt)),
       fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)),
-      ...(detail.cleanupAfter != null ? [fileField(t('ad.cleanupAfter'), fmtDate(detail.cleanupAfter),
-        detail.cleanupStatus === 'pending' ? t('ad.cleanupPending') : null)] : []),
+
     );
     fileDownload.href = `/api/admin/shares/${code}/download`;
     fileDownload.download = detail.filename || 'file';

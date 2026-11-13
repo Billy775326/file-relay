@@ -2,10 +2,14 @@
 """file-relay 端到端测试:自动识别文件存储模式(R2 分片 / KV 直传),
 文本 UTF-8 回环 + 上传下载 sha256 校验 + 边界用例"""
 import hashlib, json, os, sys, urllib.request
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8787"
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+# Isolated loopback fixtures must not pass binary uploads through a system proxy.
+open_url = (urllib.request.build_opener(urllib.request.ProxyHandler({})).open
+            if urlsplit(BASE).hostname in ("localhost", "127.0.0.1", "::1")
+            else urllib.request.urlopen)
 
 ADMIN_COOKIE = None  # 登录成功后自动携带,管理接口用
 
@@ -18,7 +22,7 @@ def call(method, path, body=None, raw=None, headers=None):
     if headers: h.update(headers)
     req = urllib.request.Request(BASE + path, data=data, method=method, headers=h)
     try:
-        with urllib.request.urlopen(req, timeout=120) as r:
+        with open_url(req, timeout=120) as r:
             content = r.read()
             ct = r.headers.get("Content-Type", "")
             if "json" in ct:

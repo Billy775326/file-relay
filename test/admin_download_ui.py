@@ -76,9 +76,10 @@ with sync_playwright() as p:
     expect(page.locator('.file-source-link')).to_have_text(updated_note)
     expect(page.locator('#file-detail img')).to_have_count(0)
     page.click('#file-close')
-    for code, text, downloadable in [('100004', 'Awaiting cleanup', False), ('100003', 'Cleanup after', True), ('100002', 'Cleanup after', True)]:
+    for code, text, downloadable in [('100004', 'Expired', False), ('100003', 'Expired', True), ('100002', 'Exhausted', True)]:
         page.locator('#shares-body tr').filter(has=page.locator('td.mono', has_text=code)).locator('.file-detail-link').click()
         expect(page.locator('#file-detail')).to_contain_text(text)
+        expect(page.locator('#file-detail')).not_to_contain_text('Cleanup after')
         if downloadable: expect(link).to_be_visible()
         else:
             expect(link).not_to_be_visible()

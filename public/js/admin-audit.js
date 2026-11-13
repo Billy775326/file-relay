@@ -79,8 +79,6 @@ export function initAudit() {
   function selectView(audit) {
     view.hidden = !audit;
     $('#admin-files-view').hidden = audit;
-    $('#files-pager').hidden = audit;
-    $('#audit-pager').hidden = !audit;
     for (const [id, active] of [['admin-files-tab', !audit], ['admin-audit-tab', audit]]) {
       $('#' + id).setAttribute('aria-pressed', String(active));
       $('#' + id).classList.toggle('ghost', !active);
@@ -106,8 +104,8 @@ export function initAudit() {
     for (const item of document.querySelectorAll('.audit-categories button')) item.setAttribute('aria-pressed', String(item === button));
     load();
   });
-  $('#audit-prev').addEventListener('click', async () => { offset = Math.max(0, offset - limit); await load(); if (!view.hidden) scrollToList('.audit-table-wrap'); });
-  $('#audit-next').addEventListener('click', async () => { offset += limit; await load(); if (!view.hidden) scrollToList('.audit-table-wrap'); });
+  $('#audit-prev').addEventListener('click', async () => { offset = Math.max(0, offset - limit); await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });
+  $('#audit-next').addEventListener('click', async () => { offset += limit; await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });
   $('#audit-refresh').addEventListener('click', load);
   window.addEventListener('admin-page-size', event => {
     if (event.detail.name !== 'audit') return;

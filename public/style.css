@@ -1052,12 +1052,22 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
 [data-theme='dark'] .btn.danger { color: #241713; }
 .upload-context { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 8px; font-size: 13px; }
 .upload-context summary, .source-history summary, .source-agent summary { cursor: pointer; min-height: 32px; padding-block: 5px; }
-.context-fields { display: grid; gap: 6px; padding-top: 8px; }
+.context-fields { display: grid; gap: 10px; padding: 10px 0 2px; }
+.context-row { display: grid; grid-template-columns: 110px minmax(0, 1fr); align-items: start; gap: 10px; }
+.context-row > label, .context-label { padding-top: 8px; }
+.context-label { display: flex; flex-direction: column; gap: 4px; }
 .context-fields label { display: block; font-weight: 500; }
 .context-fields input, .context-fields textarea { display: block; width: 100%; min-width: 0; margin: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); font-size: 16px; }
 .context-fields textarea { min-height: 76px; resize: vertical; }
-#upload-description-field { display: grid; gap: 6px; }
-#description-count { text-align: right; }
+#upload-description-field { min-width: 0; }
+#description-count { font-size: 11px; font-variant-numeric: tabular-nums; }
+.context-fields > small { padding-left: 120px; }
+@media (max-width: 600px) {
+  .context-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .context-row > label, .context-label { padding-top: 0; }
+  .context-label { flex-direction: row; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .context-fields > small { padding-left: 0; }
+}
 .admin-settings { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
 .settings-section { min-width: 0; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
 .settings-section:last-child { border-bottom: 0; }
@@ -1099,18 +1109,16 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
   .source-footer .btn { padding-inline: 8px; font-size: 13px; }
   .upload-context summary, .source-history summary { min-height: 40px; padding-block: 8px; }
 }
-/* The active list pager shares the persistent admin header with the brand. */
-.admin-topbar { position: sticky; top: 0; z-index: 10; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; padding-block: 12px; margin-bottom: 12px; background: var(--paper); }
+/* Primary navigation belongs in the header; paging stays with its list. */
+.admin-topbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; padding-block: 12px; margin-bottom: 12px; background: var(--paper); }
 .admin-topbar .brand { min-width: 0; }
 .admin-topbar .brand b { white-space: nowrap; }
 .admin-topbar .actions { grid-column: 3; }
-#admin-pagination { min-width: 0; justify-self: center; }
-.list-toolbar { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 12px; }
-.page-summary { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-.list-toolbar .pager-btns { gap: 4px; }
-.list-toolbar .btn { padding-inline: 8px; }
-.pager-icon { display: none; }
-.admin-list-card .table-wrap, .audit-table-wrap { scroll-margin-top: 100px; }
+#admin-navigation { min-width: 0; justify-self: center; margin: 0; }
+.list-toolbar { position: sticky; top: 8px; z-index: 5; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 10px; padding: 10px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: 0 3px 8px var(--hard-soft); }
+.page-summary { color: var(--ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.list-toolbar .pager-btns { flex-wrap: wrap; gap: 6px; }
+.admin-list-card .table-wrap, .audit-table-wrap { scroll-margin-top: 84px; }
 .file-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); }
 .file-summary .badge { font-size: 12px; }
 #file-detail .file-field { grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 8px; }
@@ -1132,7 +1140,7 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
 @media (max-width: 900px) {
   .admin-topbar { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
   .admin-topbar .actions { grid-column: 2; }
-  #admin-pagination { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+  #admin-navigation { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
   .list-toolbar { justify-content: space-between; }
 }
 @media (max-width: 600px) {
@@ -1141,12 +1149,10 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
   .admin-topbar .actions .icon-btn { width: 36px; padding-inline: 4px; }
   .admin-topbar .actions .btn { padding-inline: 8px; }
   .admin-topbar .brand b { font-size: 16px; white-space: normal; }
-  .list-toolbar { flex-wrap: nowrap; gap: 6px; }
-  .list-toolbar .pager-btns { display: flex; flex-shrink: 0; }
-  .list-toolbar .page-summary { min-width: 0; }
-  .list-toolbar .btn { width: 44px; padding-inline: 0; }
-  .pager-label { display: none; }
-  .pager-icon { display: inline; font-size: 20px; line-height: 1; }
+  .list-toolbar { top: 4px; padding: 8px; gap: 6px; }
+  .list-toolbar .page-summary { width: 100%; }
+  .list-toolbar .pager-btns { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .list-toolbar .btn { padding-inline: 5px; }
   .admin-nav { gap: 6px; }
   .admin-nav .btn { padding-inline: 8px; }
   .preference-row select { min-height: 44px; font-size: 16px; }
