@@ -16,7 +16,6 @@ with sync_playwright() as p:
     assert auth.status == 200
     page.goto(base + '/admin')
     page.click('#admin-settings-btn')
-    page.locator('#login-protection summary').click()
     expect(page.locator('#login-guard-status')).to_contain_text('10 分钟内失败 5 次')
     expect(page.locator('.login-guard-row')).to_have_count(1)
     expect(page.locator('.login-guard-info b')).to_have_text('2001:db8::42')

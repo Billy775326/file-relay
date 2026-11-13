@@ -131,13 +131,37 @@ with sync_playwright() as p:
                     assert bar.bounding_box()['y'] < page.locator('#' + table).bounding_box()['y']
                     # Scroll deep into a long list: the toolbar remains above rows and clickable.
                     bar.evaluate('(e)=>window.scrollTo(0, scrollY+e.getBoundingClientRect().top+400)')
-                    page.wait_for_function('(selector)=>{const y=document.querySelector(selector).getBoundingClientRect().top;return y>=0 && y<=10}', arg='#' + pager)
-                    assert 0 <= bar.bounding_box()['y'] <= 10, bar.bounding_box()
+                    page.wait_for_function('()=>document.querySelector(".admin-topbar").getBoundingClientRect().top===0')
+                    header = page.locator('.admin-topbar').bounding_box()
+                    bounds = bar.bounding_box()
+                    assert 0 <= bounds['y'] < header['height'], bounds
+                    other = 'audit-pager' if pager == 'files-pager' else 'files-pager'
+                    expect(page.locator('#' + other)).to_be_hidden()
+                    if width == 1135:
+                        brand = page.locator('.brand').bounding_box()
+                        assert abs(brand['y'] + brand['height']/2 - bounds['y'] - bounds['height']/2) < 2
+                        assert bounds['x'] >= brand['x'] + brand['width']
+                    assert bounds['x'] + bounds['width'] <= width
                     assert bar.evaluate('(e)=>{const b=e.getBoundingClientRect();return e.contains(document.elementFromPoint(b.x+b.width/2,b.y+4))}')
                     if lang == 'zh' and theme == 'dark' and width in [390, 1135]:
                         page.screenshot(path=f'.wrangler/layout-{pager}-{width}.png', animations='disabled')
+                    # Paging from deep in the list returns to its first row below the header.
+                    next_id, prev_id = ('btn-next', 'btn-prev') if pager == 'files-pager' else ('audit-next', 'audit-prev')
+                    page.click('#' + next_id)
+                    expect(page.locator('#' + prev_id)).to_be_enabled()
+                    first = page.locator('#' + table + ' tr').first.bounding_box()
+                    assert first['y'] >= page.locator('.admin-topbar').bounding_box()['height']
+                    assert first['y'] < 220, first
+                    page.click('#' + prev_id)
                 page.click('#admin-settings-btn')
                 assert page.locator('#settings-dialog').evaluate('(e)=>e.scrollWidth<=e.clientWidth')
+                expect(page.locator('#settings-dialog details')).to_have_count(0)
+                for control in ['retention-days', 'guest-weekly', 'login-guard-refresh']:
+                    expect(page.locator('#' + control)).to_be_visible()
+                # The input and its save button share a row at all tested widths.
+                for field, save in [('retention-days', 'retention-save'), ('guest-weekly', 'guest-save')]:
+                    a, b = page.locator('#' + field).bounding_box(), page.locator('#' + save).bounding_box()
+                    assert abs(a['y'] + a['height']/2 - b['y'] - b['height']/2) <= 2
                 page.locator('#settings-close').focus()
                 page.keyboard.press('Tab')
                 assert page.evaluate("document.activeElement.closest('dialog')?.id==='settings-dialog'")

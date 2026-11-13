@@ -9,6 +9,8 @@
 const DICT = {
   zh: {
     'ad.settings': '设置',
+    'ad.shareSettings': '分享规则',
+    'ad.guestWeeklyFiles': '未备注访客每周文件数',
     'ad.displaySettings': '列表显示',
     'ad.filesPageSize': '文件每页条数',
     'ad.auditPageSize': '日志每页条数',
@@ -140,7 +142,6 @@ const DICT = {
     'ad.guestLimits': "未备注访客限制",
     'ad.weeklyFiles': "每周文件数",
     'ad.guestRules': "北京时间周一重置；已接纳上传计次，取消不退回。未备注访客不能永久分享或不限次取件。",
-    'ad.notePrivileges': "备注后不限周次数，允许永久／不限次分享；清空恢复限制。",
     'ad.guestSaved': "已保存，将用于后续上传",
     'policy.expiry': "1 ~ 30 天",
     'policy.pickups': "1 次 · 5 次",
@@ -339,6 +340,8 @@ const DICT = {
 
   en: {
     'ad.settings': 'Settings',
+    'ad.shareSettings': 'Sharing rules',
+    'ad.guestWeeklyFiles': 'Unnoted guest files / week',
     'ad.displaySettings': 'List display',
     'ad.filesPageSize': 'Files per page',
     'ad.auditPageSize': 'Logs per page',
@@ -470,7 +473,6 @@ const DICT = {
     'ad.guestLimits': "Unnoted visitor limits",
     'ad.weeklyFiles': "Files per week",
     'ad.guestRules': "Resets Monday, Beijing time. Accepted uploads count even if cancelled. Unnoted visitors cannot create permanent or unlimited-pickup shares.",
-    'ad.notePrivileges': "A note removes weekly limits and allows permanent/unlimited shares. Clear it to restore limits.",
     'ad.guestSaved': "Saved for subsequent uploads",
     'policy.expiry': "1 to 30 days",
     'policy.pickups': "1 or 5 pickups",

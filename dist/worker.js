@@ -128,12 +128,33 @@ setInlineAssets({ "404.html": `<!doctype html>
 <\/script>\r
 </head>\r
 <body>\r
-<header class="topbar wide">\r
+<header class="topbar wide admin-topbar">\r
   <div class="brand">\r
     <span class="logo">\u{1F4E6}</span>\r
     <div><b data-i18n="brand.name">\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b><small data-i18n="brand.admin">\u7BA1\u7406\u540E\u53F0</small></div>\r
   </div>\r
+  <div id="admin-pagination" hidden>\r
+    <div id="files-pager" class="list-toolbar" role="group" aria-label="\u6587\u4EF6\u5206\u9875" data-i18n-aria="ad.filesPagination">\r
+        <small id="page-info" class="page-summary" role="status" aria-live="polite"></small>\r
+        <div class="pager-btns">\r
+          <button id="btn-prev" class="btn small" type="button" disabled data-i18n-aria="ad.prev" data-i18n-title="ad.prev"><span class="pager-icon" aria-hidden="true">\u2039</span><span class="pager-label" data-i18n="ad.prev">\u4E0A\u4E00\u9875</span></button>\r
+          <button id="btn-next" class="btn small" type="button" disabled data-i18n-aria="ad.next" data-i18n-title="ad.next"><span class="pager-icon" aria-hidden="true">\u203A</span><span class="pager-label" data-i18n="ad.next">\u4E0B\u4E00\u9875</span></button>\r
+          <button id="btn-refresh" class="btn small ghost" type="button" data-i18n-aria="ad.refresh" data-i18n-title="ad.refresh"><span class="pager-icon" aria-hidden="true">\u21BB</span><span class="pager-label" data-i18n="ad.refresh">\u21BB \u5237\u65B0</span></button>\r
+        </div>\r
+      </div>\r
+    <div id="audit-pager" class="list-toolbar" hidden role="group" aria-label="\u65E5\u5FD7\u5206\u9875" data-i18n-aria="ad.auditPagination">\r
+        <small id="audit-page" class="page-summary" role="status" aria-live="polite"></small>\r
+        <div class="pager-btns">\r
+          <button id="audit-prev" class="btn small" type="button" disabled data-i18n-aria="ad.prev" data-i18n-title="ad.prev"><span class="pager-icon" aria-hidden="true">\u2039</span><span class="pager-label" data-i18n="ad.prev">\u4E0A\u4E00\u9875</span></button>\r
+          <button id="audit-next" class="btn small" type="button" disabled data-i18n-aria="ad.next" data-i18n-title="ad.next"><span class="pager-icon" aria-hidden="true">\u203A</span><span class="pager-label" data-i18n="ad.next">\u4E0B\u4E00\u9875</span></button>\r
+          <button id="audit-refresh" class="btn small ghost" type="button" data-i18n-aria="ad.refresh" data-i18n-title="ad.refresh"><span class="pager-icon" aria-hidden="true">\u21BB</span><span class="pager-label" data-i18n="ad.refresh">\u21BB \u5237\u65B0</span></button>\r
+        </div>\r
+      </div>\r
+  </div>\r
   <div class="actions">\r
+    <button id="admin-settings-btn" class="icon-btn" type="button" hidden aria-haspopup="dialog" aria-label="\u8BBE\u7F6E" data-i18n-aria="ad.settings" data-i18n-title="ad.settings">\r
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m9 3-.6 2.4-2 .9L4 5.6 1.8 9.4l1.8 1.7v1.8l-1.8 1.7L4 18.4l2.4-.7 2 .9L9 21h6l.6-2.4 2-.9 2.4.7 2.2-3.8-1.8-1.7v-1.8l1.8-1.7L20 5.6l-2.4.7-2-.9L15 3Z"/><circle cx="12" cy="12" r="3"/></svg>\r
+    </button>\r
     <button id="lang-btn" class="icon-btn lang-btn" data-i18n-title="nav.lang">EN</button>\r
     <button id="theme-btn" class="icon-btn" data-i18n-title="nav.theme">\u{1F317}</button>\r
     <a class="btn ghost small" href="/" target="_blank" rel="noopener noreferrer" data-i18n="nav.send">\u53D1\u9001</a>\r
@@ -153,20 +174,11 @@ setInlineAssets({ "404.html": `<!doctype html>
     <nav class="admin-nav" aria-label="\u7BA1\u7406\u9875\u9762" data-i18n-aria="audit.navigation">\r
       <button id="admin-files-tab" class="btn small" type="button" aria-pressed="true" data-i18n="audit.files">\u6587\u4EF6\u7BA1\u7406</button>\r
       <button id="admin-audit-tab" class="btn small ghost" type="button" aria-pressed="false" data-i18n="audit.title">\u65E5\u5FD7\u5BA1\u8BA1</button>\r
-      <button id="admin-settings-btn" class="btn small ghost" type="button" aria-haspopup="dialog" data-i18n="ad.settings">\u8BBE\u7F6E</button>\r
     </nav>\r
     <p id="audit-write-warning" class="error-box" hidden role="alert" data-i18n="audit.writeFailed">\u64CD\u4F5C\u5DF2\u5904\u7406\uFF0C\u4F46\u5BA1\u8BA1\u8BB0\u5F55\u672A\u4FDD\u5B58\uFF0C\u8BF7\u68C0\u67E5\u65E5\u5FD7\u5B58\u50A8\u3002</p>\r
     <div id="admin-files-view">\r
     <div class="stats-row" id="stats-row"></div>\r
     <div class="card admin-list-card">\r
-      <div id="files-pager" class="list-toolbar" role="group" aria-label="\u6587\u4EF6\u5206\u9875" data-i18n-aria="ad.filesPagination">\r
-        <small id="page-info" class="page-summary" role="status" aria-live="polite"></small>\r
-        <div class="pager-btns">\r
-          <button id="btn-prev" class="btn small" type="button" disabled data-i18n="ad.prev">\u4E0A\u4E00\u9875</button>\r
-          <button id="btn-next" class="btn small" type="button" disabled data-i18n="ad.next">\u4E0B\u4E00\u9875</button>\r
-          <button id="btn-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">\u21BB \u5237\u65B0</button>\r
-        </div>\r
-      </div>\r
       <div class="table-wrap">\r
         <table>\r
           <thead>\r
@@ -198,14 +210,6 @@ setInlineAssets({ "404.html": `<!doctype html>
         <label class="audit-search"><span data-i18n="audit.keyword">IP / \u64CD\u4F5C\u5BF9\u8C61</span><input id="audit-q" type="search" maxlength="80" placeholder="\u641C\u7D22 IP \u6216\u53D6\u4EF6\u7801" data-i18n-ph="audit.search"></label>\r
         <div class="audit-actions"><button class="btn small primary" type="submit" data-i18n="audit.filter">\u7B5B\u9009</button><button id="audit-reset" class="btn small ghost" type="button" data-i18n="audit.reset">\u91CD\u7F6E</button></div>\r
       </form>\r
-      <div id="audit-pager" class="list-toolbar" role="group" aria-label="\u65E5\u5FD7\u5206\u9875" data-i18n-aria="ad.auditPagination">\r
-        <small id="audit-page" class="page-summary" role="status" aria-live="polite"></small>\r
-        <div class="pager-btns">\r
-          <button id="audit-prev" class="btn small" type="button" disabled data-i18n="ad.prev">\u4E0A\u4E00\u9875</button>\r
-          <button id="audit-next" class="btn small" type="button" disabled data-i18n="ad.next">\u4E0B\u4E00\u9875</button>\r
-          <button id="audit-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">\u21BB \u5237\u65B0</button>\r
-        </div>\r
-      </div>\r
       <p id="audit-error" class="error-box" role="alert" hidden></p>\r
       <p id="audit-state" class="muted" role="status"></p>\r
       <div class="table-wrap audit-table-wrap"><table class="audit-table">\r
@@ -239,7 +243,6 @@ setInlineAssets({ "404.html": `<!doctype html>
     <form id="source-form" hidden>\r
       <label for="source-note" data-i18n="ad.sourceNote">\u7BA1\u7406\u5458\u5907\u6CE8</label>\r
       <input id="source-note" type="text" maxlength="64" autocomplete="off">\r
-      <small class="muted note-privileges" data-i18n="ad.notePrivileges">\u5907\u6CE8\u5C06\u6388\u4E88\u4E0A\u4F20\u8C41\u514D\uFF1B\u6E05\u7A7A\u6062\u590D\u9650\u5236\u3002</small>\r
       <p class="error-box" id="source-error" hidden role="alert"></p>\r
     </form>\r
     <details id="source-history" class="source-history" hidden>\r
@@ -279,44 +282,44 @@ setInlineAssets({ "404.html": `<!doctype html>
 <div class="admin-settings">\r
       <section class="settings-section display-settings" aria-labelledby="display-title">\r
         <h4 id="display-title" data-i18n="ad.displaySettings">\u5217\u8868\u663E\u793A</h4>\r
+        <div class="display-options">\r
         <div class="preference-row"><label for="files-page-size" data-i18n="ad.filesPageSize">\u6587\u4EF6\u6BCF\u9875\u6761\u6570</label><select id="files-page-size"><option value="10">10</option><option value="20">20</option><option value="40">40</option></select></div>\r
         <div class="preference-row"><label for="audit-page-size" data-i18n="ad.auditPageSize">\u65E5\u5FD7\u6BCF\u9875\u6761\u6570</label><select id="audit-page-size"><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></div>\r
+        </div>\r
         <small class="muted" data-i18n="ad.browserSettings">\u7ACB\u5373\u751F\u6548\uFF0C\u4EC5\u4FDD\u5B58\u5728\u5F53\u524D\u6D4F\u89C8\u5668</small>\r
         <p id="preferences-error" class="error-box" role="alert" data-i18n="ad.preferenceNotSaved" hidden></p>\r
       </section>\r
 \r
-      <details class="settings-section retention-settings" open>\r
-        <summary data-i18n="ad.retentionTitle">\u81EA\u52A8\u6E05\u7406</summary>\r
+      <section class="settings-section share-settings" aria-labelledby="share-settings-title">\r
+        <h4 id="share-settings-title" data-i18n="ad.shareSettings">\u5206\u4EAB\u89C4\u5219</h4>\r
         <form id="retention-form">\r
           <label for="retention-days" data-i18n="ad.retentionDays">\u8FC7\u671F\u540E\u4FDD\u7559</label>\r
-          <input id="retention-days" type="number" min="0" max="3650" step="1" required disabled>\r
-          <span data-i18n="ad.days">\u5929</span>\r
+          <div class="setting-value"><input id="retention-days" type="number" min="0" max="3650" step="1" required disabled>\r
+          <span data-i18n="ad.days">\u5929</span></div>\r
           <button id="retention-save" class="btn small" type="submit" disabled data-i18n="ad.save">\u4FDD\u5B58</button>\r
         </form>\r
         <p id="retention-error" class="error-box" hidden role="alert"></p>\r
         <small id="retention-status" class="settings-saved" role="status" data-i18n="ad.settingsSaved" hidden></small>\r
         <button id="retention-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">\u91CD\u8BD5</button>\r
-      </details>\r
-      <details class="settings-section guest-settings">\r
-        <summary data-i18n="ad.guestLimits">\u672A\u5907\u6CE8\u8BBF\u5BA2\u9650\u5236</summary>\r
+\r
         <form id="guest-policy-form">\r
-          <label><span data-i18n="ad.weeklyFiles">\u6BCF\u5468\u6587\u4EF6\u6570</span><input id="guest-weekly" type="number" min="0" max="1000" step="1" required disabled></label>\r
+          <label for="guest-weekly" data-i18n="ad.guestWeeklyFiles">\u672A\u5907\u6CE8\u8BBF\u5BA2\u6BCF\u5468\u6587\u4EF6\u6570</label><div class="setting-value"><input id="guest-weekly" type="number" min="0" max="1000" step="1" required disabled></div>\r
           <button id="guest-save" class="btn small" type="submit" disabled data-i18n="ad.save">\u4FDD\u5B58</button>\r
         </form>\r
         <small class="muted" data-i18n="ad.guestRules">\u5317\u4EAC\u65F6\u95F4\u5468\u4E00\u91CD\u7F6E\uFF1B\u5DF2\u63A5\u7EB3\u4E0A\u4F20\u8BA1\u6B21\uFF0C\u53D6\u6D88\u4E0D\u9000\u56DE\u3002\u672A\u5907\u6CE8\u8BBF\u5BA2\u4E0D\u80FD\u6C38\u4E45\u5206\u4EAB\u6216\u4E0D\u9650\u6B21\u53D6\u4EF6\u3002</small>\r
         <p id="guest-error" class="error-box" hidden role="alert"></p>\r
         <small id="guest-status" class="settings-saved" role="status" data-i18n="ad.guestSaved" hidden></small>\r
         <button id="guest-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">\u91CD\u8BD5</button>\r
-      </details>\r
-      <details class="settings-section guest-settings" id="login-protection">\r
-        <summary data-i18n="ad.loginProtection">\u767B\u5F55\u9632\u62A4</summary>\r
+      </section>\r
+      <section class="settings-section guest-settings" id="login-protection" aria-labelledby="guard-title">\r
         <div class="login-guard-heading">\r
-          <small class="muted" id="login-guard-status" role="status"></small>\r
+          <h4 id="guard-title" data-i18n="ad.loginProtection">\u767B\u5F55\u9632\u62A4</h4>\r
           <button id="login-guard-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">\u21BB \u5237\u65B0</button>\r
         </div>\r
+        <small class="muted" id="login-guard-status" role="status"></small>\r
         <p id="login-guard-error" class="error-box" hidden role="alert"></p>\r
         <div id="login-guard-bans" class="login-guard-bans"></div>\r
-      </details>\r
+      </section>\r
     </div>\r
   </div>\r
   <div class="source-footer">\r
@@ -472,711 +475,713 @@ setInlineAssets({ "404.html": `<!doctype html>
 <script type="module" src="/js/index.js"><\/script>
 </body>
 </html>
-`, "js/admin-audit.js": "import { $, api, el, fmtDate } from './common.js';\nimport { t, LANG, onLangChange } from './i18n.js';\nimport { pageSize } from './admin-preferences.js';\n\nexport function initAudit() {\n  const view = $('#admin-audit-view');\n  const body = $('#audit-body');\n  const dialog = $('#audit-dialog');\n  let category = 'all', offset = 0, total = 0, request = 0;\n  let filters = {}, rows = [], available = false;\n  let limit = pageSize('audit');\n  const action = row => t(`audit.action.${row.action}`);\n  const actor = row => t(`audit.actor.${row.actor}`);\n  const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;\n  function place(row) {\n    let country = row.country;\n    if (/^[A-Z]{2}$/.test(country)) country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n    return [...new Set([country, row.region, row.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n  }\n  function close() { dialog.close(); $('#audit-detail').replaceChildren(); }\n  function details(row) {\n    const fields = [\n      [t('audit.time'), fmtDate(row.at)], [t('audit.action'), action(row)],\n      [t('audit.result'), t(`audit.${row.result}`)], [t('audit.actor'), actor(row)],\n      ['IP', ip(row)], [t('ad.sourceLocation'), place(row)],\n      [t('audit.target'), row.target || '\u2014'], [t('audit.http'), `${row.method} \xB7 ${row.status}`],\n      [t('audit.duration'), `${row.durationMs} ms`], [t('audit.id'), row.id],\n      [t('audit.agent'), row.agent || '\u2014'],\n    ];\n    for (const [key, value] of Object.entries(row.detail)) {\n      fields.push([t(`audit.detail.${key}`), key === 'bannedUntil' ? fmtDate(value)\n        : typeof value === 'boolean' ? t(value ? 'audit.yes' : 'audit.no') : String(value)]);\n    }\n    if (row.action === 'download') fields.push([t('audit.description'), t('audit.downloadHint')]);\n    $('#audit-detail').replaceChildren(...fields.map(([label, value]) => el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));\n    dialog.showModal();\n  }\n  function render() {\n    body.replaceChildren(...rows.map(row => el('tr', {},\n      el('td', {}, fmtDate(row.at)),\n      el('td', {}, el('span', {}, action(row)), el('small', { class: 'muted' }, t(`audit.${row.category}`))),\n      el('td', {}, el('span', { class: `audit-result audit-${row.result}` }, t(`audit.${row.result}`))),\n      el('td', { class: 'audit-actor' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.actor')), actor(row)),\n      el('td', { class: 'audit-source' }, el('span', { class: 'mono' }, ip(row)),\n        row.country || row.region || row.city ? el('small', { class: 'muted' }, place(row)) : null),\n      el('td', { class: 'audit-target' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.target')), row.target || '\u2014'),\n      el('td', {}, el('button', { type: 'button', class: 'btn small ghost', onclick: () => details(row) }, t('audit.details'))),\n    )));\n    $('#audit-page').textContent = t('audit.page', Math.floor(offset / limit) + 1, Math.max(1, Math.ceil(total / limit)), total);\n    $('#audit-prev').disabled = offset === 0;\n    $('#audit-next').disabled = offset + limit >= total;\n  }\n  async function load() {\n    const ticket = ++request;\n    available = false;\n    $('#audit-error').hidden = true;\n    $('#audit-state').textContent = t('ad.loading');\n    $('#audit-page').textContent = '';\n    body.replaceChildren();\n    for (const id of ['audit-prev', 'audit-next', 'audit-export', 'audit-refresh']) $('#' + id).disabled = true;\n    try {\n      const params = new URLSearchParams({ ...filters, category, offset, limit });\n      const data = await api(`/api/admin/audit-logs?${params}`);\n      if (ticket !== request || view.hidden) return;\n      if (typeof data.enabled !== 'boolean' || !Array.isArray(data.rows) || !Number.isSafeInteger(data.total)) throw new Error(t('ad.loadFail'));\n      available = data.enabled;\n      rows = data.rows; total = data.total;\n      if (available && offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return load(); }\n      $('#audit-state').textContent = !available ? t('audit.disabled') : !total ? t('audit.empty') : '';\n      render();\n      $('#audit-export').disabled = !available || total === 0;\n    } catch (e) {\n      if (ticket !== request || view.hidden) return;\n      $('#audit-state').textContent = '';\n      $('#audit-error').textContent = e.message || t('ad.loadFail');\n      $('#audit-error').hidden = false;\n    } finally { if (ticket === request) $('#audit-refresh').disabled = false; }\n  }\n  function selectView(audit) {\n    view.hidden = !audit;\n    $('#admin-files-view').hidden = audit;\n    for (const [id, active] of [['admin-files-tab', !audit], ['admin-audit-tab', audit]]) {\n      $('#' + id).setAttribute('aria-pressed', String(active));\n      $('#' + id).classList.toggle('ghost', !active);\n    }\n    if (audit) load(); else { request++; close(); }\n  }\n  $('#admin-files-tab').addEventListener('click', () => selectView(false));\n  $('#admin-audit-tab').addEventListener('click', () => selectView(true));\n  $('#audit-filter').addEventListener('submit', e => {\n    e.preventDefault();\n    const from = $('#audit-from').value, to = $('#audit-to').value;\n    if (from && to && from > to) {\n      $('#audit-error').textContent = t('audit.dateError'); $('#audit-error').hidden = false; return;\n    }\n    filters = { result: $('#audit-result').value, q: $('#audit-q').value.trim() };\n    if (from) filters.from = new Date(`${from}T00:00:00`).getTime();\n    if (to) { const end = new Date(`${to}T00:00:00`); end.setDate(end.getDate() + 1); filters.to = end.getTime() - 1; }\n    offset = 0; load();\n  });\n  $('#audit-reset').addEventListener('click', () => { $('#audit-filter').reset(); filters = {}; offset = 0; load(); });\n  for (const button of document.querySelectorAll('.audit-categories button')) button.addEventListener('click', () => {\n    category = button.dataset.category; offset = 0;\n    for (const item of document.querySelectorAll('.audit-categories button')) item.setAttribute('aria-pressed', String(item === button));\n    load();\n  });\n  $('#audit-prev').addEventListener('click', () => { offset = Math.max(0, offset - limit); $('#audit-pager').scrollIntoView({ block: 'start' }); load(); });\n  $('#audit-next').addEventListener('click', () => { offset += limit; $('#audit-pager').scrollIntoView({ block: 'start' }); load(); });\n  $('#audit-refresh').addEventListener('click', load);\n  window.addEventListener('admin-page-size', event => {\n    if (event.detail.name !== 'audit') return;\n    limit = event.detail.value; offset = 0;\n    if (!view.hidden) load();\n  });\n  $('#audit-export').addEventListener('click', async () => {\n    $('#audit-export').disabled = true;\n    $('#audit-error').hidden = true;\n    const exportFilters = { ...filters, category };\n    try {\n      const params = new URLSearchParams({ ...exportFilters, offset: 0, limit: 1000 });\n      const data = await api(`/api/admin/audit-logs/export?${params}`);\n      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), filters: exportFilters, ...data }, null, 2)], { type: 'application/json' });\n      const url = URL.createObjectURL(blob);\n      const link = el('a', { href: url, download: `audit-${new Date().toISOString().slice(0, 10)}.json` });\n      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);\n    } catch (e) { $('#audit-error').textContent = e.message || t('ad.loadFail'); $('#audit-error').hidden = false; }\n    finally { $('#audit-export').disabled = !available || total === 0; }\n  });\n  $('#audit-close').addEventListener('click', close);\n  dialog.addEventListener('cancel', e => { e.preventDefault(); close(); });\n  window.addEventListener('audit-write-failed', () => { $('#audit-write-warning').hidden = false; });\n  onLangChange(() => { close(); if (!view.hidden) load(); });\n}\n", "js/admin-preferences.js": "import { $ } from './common.js';\nimport { t } from './i18n.js';\n\nconst options = { files: [10, 20, 40], audit: [20, 50, 100] };\nconst values = { files: 20, audit: 20 };\nfor (const name of Object.keys(values)) {\n  try {\n    const saved = Number(localStorage.getItem(`admin-page-size-${name}`));\n    if (options[name].includes(saved)) values[name] = saved;\n  } catch { /* Browser preferences are optional when persistent storage is blocked. */ }\n}\nexport function pageSize(name) { return values[name]; }\n\nexport function initAdminPreferences() {\n  const dialog = $('#settings-dialog');\n  $('#admin-settings-btn').addEventListener('click', () => dialog.showModal());\n  $('#settings-close').addEventListener('click', () => dialog.close());\n  for (const name of Object.keys(values)) {\n    const select = $(`#${name}-page-size`);\n    select.value = String(values[name]);\n    select.addEventListener('change', () => {\n      const value = Number(select.value);\n      if (!options[name].includes(value)) return;\n      values[name] = value;\n      $('#preferences-error').hidden = true;\n      try { localStorage.setItem(`admin-page-size-${name}`, String(value)); }\n      catch {\n        $('#preferences-error').textContent = t('ad.preferenceNotSaved');\n        $('#preferences-error').hidden = false;\n      }\n      window.dispatchEvent(new CustomEvent('admin-page-size', { detail: { name, value } }));\n    });\n  }\n  window.addEventListener('audit-write-failed', () => { $('#settings-audit-warning').hidden = false; });\n}\n", "js/admin.js": "import { $, api, fmtBytes, fmtDate, fmtDuration, toast, copyText, initTheme, initDialogs, el } from './common.js';\nimport { LANG, t, onLangChange, initI18n } from './i18n.js';\nimport { initAudit } from './admin-audit.js';\nimport { pageSize, initAdminPreferences } from './admin-preferences.js';\n\ninitTheme();\ninitI18n();\ninitDialogs();\ninitAdminPreferences();\ninitAudit();\n\nconst loginCard = $('#admin-login');\nconst panel = $('#admin-panel');\nconst loginError = $('#login-error');\nconst tokenInput = $('#admin-token');\nconst statsRow = $('#stats-row');\nconst tbody = $('#shares-body');\nconst btnPrev = $('#btn-prev');\nconst btnNext = $('#btn-next');\nconst btnRefresh = $('#btn-refresh');\nconst pageInfo = $('#page-info');\n\nlet limit = pageSize('files'); // Bounded to 40 to leave room for KV reads on the free plan.\nlet offset = 0;\nlet total = 0;\nlet listRequest = 0;\nlet listBusy = false;\n\n/* \u8BED\u8A00\u5207\u6362:\u9762\u677F\u53EF\u89C1\u65F6\u6309\u65B0\u8BED\u8A00\u91CD\u62C9\u6587\u6848 */\nonLangChange(() => {\n  if ($('#source-dialog').open) closeSource();\n  if ($('#file-dialog').open) closeFileDetails();\n  if (!panel.hidden) {\n    loadStats();\n    loadList();\n    loadLoginProtection();\n  }\n});\n\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\n(async () => {\n  try {\n    await api('/api/admin/stats');\n    showPanel();\n  } catch {\n    loginCard.hidden = false;\n    tokenInput.focus();\n  }\n})();\n\nasync function login() {\n  const token = tokenInput.value.trim();\n  if (!token || $('#btn-login').disabled) return;\n  $('#btn-login').disabled = true;\n  loginError.hidden = true;\n  try {\n    await api('/api/admin/login', { method: 'POST', body: { token } });\n    showPanel();\n  } catch (e) {\n    loginError.textContent = e.code === 'login_blocked' ? t('ad.loginBlocked')\n      : e.code === 'login_protection_unavailable' ? t('ad.guardUnavailable') : e.message || t('ad.badToken');\n    loginError.hidden = false;\n  } finally { $('#btn-login').disabled = false; }\n}\n$('#btn-login').addEventListener('click', login);\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\n\nfunction showPanel() {\n  loginCard.hidden = true;\n  panel.hidden = false;\n  loadStats();\n  loadList();\n  loadSettings();\n  loadGuestPolicy();\n  loadLoginProtection();\n}\n\n$('#btn-logout').addEventListener('click', async () => {\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\n  location.reload();\n});\n\n/* ---------- \u7EDF\u8BA1 ---------- */\nlet lastStats = null; // \u5220\u9664\u540E\u672C\u5730\u9012\u51CF\u7528,\u907F\u514D\u7ACB\u5373\u91CD\u62C9\u649E\u4E0A KV \u6700\u7EC8\u4E00\u81F4\u7A97\u53E3\n\nfunction renderStats(s) {\n  const counts = [\n    [s.total, 'ad.total'], [s.active, 'ad.active'], [s.files, 'ad.files'],\n    [s.texts, 'ad.texts'], [s.todayCreated, 'ad.today'],\n  ];\n  const capacity = s.fileBackend === 'r2' ? s.storage : null;\n  const storageCard = el('div', { class: 'stat-card storage-card' },\n    el('small', {}, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes')),\n    capacity\n      ? el('div', { class: 'storage-value' },\n          el('b', {}, fmtBytes(capacity.usedBytes)),\n          el('span', { class: 'storage-total' }, ` / ${fmtBytes(capacity.capacityBytes)}`))\n      : el('div', { class: 'storage-value' }, el('b', {}, s.fileBackend === 'r2'\n          ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),\n  );\n  if (capacity) {\n    const ratio = Math.min(1, Math.max(0, capacity.usedBytes / capacity.capacityBytes));\n    storageCard.append(\n      el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,\n        value: capacity.usedBytes, ariaLabel: t('ad.storage') }),\n      el('div', { class: 'storage-caption' },\n        el('small', {}, t('ad.storageReserved')), el('small', {}, `${Math.round(ratio * 100)}%`)),\n    );\n  }\n  statsRow.replaceChildren(\n    el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>\n      el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),\n    storageCard,\n  );\n}\n\nasync function loadStats() {\n  try {\n    lastStats = await api('/api/admin/stats');\n    renderStats(lastStats);\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\n}\n\n/** \u5220\u9664\u6210\u529F\u540E\u672C\u5730\u540C\u6B65\u7EDF\u8BA1(\u670D\u52A1\u7AEF KV \u7D22\u5F15\u6700\u957F 60s \u624D\u53CD\u6620\u5220\u9664,\u91CD\u62C9\u4F1A\u770B\u5230\u65E7\u6570) */\nasync function statsAfterDelete(r) {\n  if (!lastStats) return;\n  const s = { ...lastStats };\n  s.total = Math.max(0, s.total - 1);\n  if (r.kind === 'file') s.files = Math.max(0, s.files - 1);\n  else s.texts = Math.max(0, s.texts - 1);\n  s.totalBytes = Math.max(0, s.totalBytes - r.size);\n  if (r.status === 'active') s.active = Math.max(0, s.active - 1);\n  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);\n  if (r.created_at >= todayStart.getTime()) s.todayCreated = Math.max(0, s.todayCreated - 1);\n  lastStats = s;\n  renderStats(s);\n  if (s.fileBackend === 'r2') {\n    try { s.storage = (await api('/api/admin/stats')).storage; }\n    catch { s.storage = null; } // Do not present stale capacity as current after deletion.\n    if (lastStats === s) renderStats(s);\n  }\n}\n\n/* ---------- \u5217\u8868 ---------- */\nconst STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };\nconst KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };\n\nasync function loadList() {\n  const request = ++listRequest;\n  listBusy = true;\n  btnPrev.disabled = btnNext.disabled = btnRefresh.disabled = true;\n  pageInfo.textContent = t('ad.loading');\n  tbody.setAttribute('aria-busy', 'true');\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));\n  try {\n    const data = await api(`/api/admin/shares?limit=${limit}&offset=${offset}`);\n    if (request !== listRequest) return;\n    if (!Number.isSafeInteger(data.total) || data.total < 0 || !Array.isArray(data.rows)) throw new Error(t('ad.loadFail'));\n    total = data.total;\n    if (offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return loadList(); }\n    const rows = data.rows ?? [];\n    tbody.replaceChildren();\n    for (const r of rows) {\n      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n      tbody.append(\n        el('tr', {},\n          el('td', { class: 'mono' }, r.code),\n          el('td', { class: 'share-content-cell' },\n            el('div', { class: 'share-filename-line' },\n              r.kind === 'file'\n                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)\n                : el('span', { class: 'share-filename', title: content }, content),\n              el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),\n          sourceCell(r),\n          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),\n          el('td', {}, fmtDate(r.created_at)),\n          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),\n        ),\n      );\n    }\n    if (rows.length === 0) {\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));\n    }\n    listBusy = false;\n    updatePager();\n  } catch (e) {\n    if (request !== listRequest) return;\n    pageInfo.textContent = t('ad.loadFail');\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));\n  } finally {\n    if (request === listRequest) {\n      listBusy = false;\n      btnRefresh.disabled = false;\n      tbody.setAttribute('aria-busy', 'false');\n    }\n  }\n}\n\nfunction updatePager() {\n  const page = Math.floor(offset / limit) + 1;\n  const pages = Math.max(1, Math.ceil(total / limit));\n  pageInfo.textContent = t('ad.page', page, pages, total);\n  btnPrev.disabled = listBusy || offset <= 0;\n  btnNext.disabled = listBusy || offset + limit >= total;\n}\nbtnPrev.addEventListener('click', () => { offset = Math.max(0, offset - limit); $('#files-pager').scrollIntoView({ block: 'start' }); loadList(); });\nbtnNext.addEventListener('click', () => { offset += limit; $('#files-pager').scrollIntoView({ block: 'start' }); loadList(); });\nbtnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });\nwindow.addEventListener('admin-page-size', event => {\n  if (event.detail.name !== 'files') return;\n  limit = event.detail.value; offset = 0;\n  if (!panel.hidden) loadList();\n});\n\n/* ---------- \u5220\u9664:\u7968\u636E\u98CE\u786E\u8BA4\u5F39\u7A97 + \u672C\u5730\u540C\u6B65(KV \u6700\u7EC8\u4E00\u81F4,\u5220\u9664\u540E\u7ACB\u5373\u91CD\u62C9\u4F1A\u770B\u5230\u6B8B\u7559\u7D22\u5F15) ---------- */\nconst delMask = $('#del-mask');\nconst delTarget = $('#del-target');\nlet delResolve = null;\n\nfunction confirmDelete(r) {\n  const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n  delTarget.replaceChildren(\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.code')), el('b', { class: 'mono' }, r.code)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.content')), el('span', {}, content)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),\n      el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),\n  );\n  delMask.showModal();\n  $('#del-cancel').focus();\n  return new Promise((resolve) => { delResolve = resolve; });\n}\n\nfunction closeDelModal(v) {\n  if (!delResolve) return;\n  delMask.close();\n  const resolve = delResolve;\n  delResolve = null;\n  resolve(v);\n}\n$('#del-cancel').addEventListener('click', () => closeDelModal(false));\n$('#del-ok').addEventListener('click', () => closeDelModal(true));\ndelMask.addEventListener('click', (e) => e.target === delMask && closeDelModal(false));\ndelMask.addEventListener('cancel', e => { e.preventDefault(); closeDelModal(false); });\n\nasync function remove(r, tr) {\n  if (!(await confirmDelete(r))) return;\n  try {\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\n    toast(t('ad.deleted'), 'ok');\n    statsAfterDelete(r);\n    total = Math.max(0, total - 1);\n    tr?.remove();\n    // \u5F53\u524D\u9875\u5220\u7A7A\u4E14\u4E0D\u5728\u7B2C\u4E00\u9875:\u9000\u56DE\u4E0A\u4E00\u9875\u91CD\u62C9,\u907F\u514D\u505C\u5728\u7A7A\u9875\n    if (tbody.rows.length === 0 && offset > 0) {\n      offset = Math.max(0, offset - limit);\n      loadList();\n    } else {\n      updatePager();\n    }\n  } catch (e) {\n    toast(e.message || t('ad.deleteFail'), 'error');\n  }\n}\n\n/* Upload source details: source labels are text nodes, never interpolated HTML. */\nconst sourceDialog = $('#source-dialog');\nconst sourceForm = $('#source-form');\nconst sourceNote = $('#source-note');\nconst sourceSave = $('#source-save');\nconst sourceError = $('#source-error');\nconst noteOverrides = new Map(); // Read-your-write while KV propagation completes.\nlet sourceRequest = 0;\nlet activeSource = null;\nlet sourceReturnCode = null;\nlet sourceHistoryLoaded = false;\n\nfunction sourceField(label, value, className = '') {\n  return el('div', { class: `source-field ${className}` },\n    el('small', { class: 'muted' }, label), el('span', {}, value));\n}\nfunction browserLabel(ua) {\n  if (!ua) return t('ad.sourceUnrecorded');\n  const browser = /Edg\\//.test(ua) ? 'Edge' : /Firefox\\//.test(ua) ? 'Firefox'\n    : /Chrome\\//.test(ua) ? 'Chrome' : /Safari\\//.test(ua) ? 'Safari' : t('ad.sourceUnknown');\n  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS'\n    : /Windows/.test(ua) ? 'Windows' : /Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';\n  return [browser, os].filter(Boolean).join(' \xB7 ');\n}\n\nfunction visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }\nfunction sourceLabel(source) {\n  const override = noteOverrides.get(source.visitorId);\n  return (override !== undefined ? override : source.note) || visitorLabel(source.visitorId);\n}\nfunction locationLabel(source) {\n  let country = source.country;\n  if (country && /^[A-Z]{2}$/.test(country)) {\n    country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n  }\n  return [...new Set([country, source.region, source.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n}\nfunction sourceCell(row) {\n  if (!row.source) return el('td', { class: 'source-cell muted' }, t('ad.sourceUnrecorded'));\n  const button = el('button', { class: 'source-link', type: 'button', onclick: () => openSource(row) }, sourceLabel(row.source));\n  button.dataset.visitor = row.source.visitorId;\n  button.title = t('ad.source');\n  return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));\n}\nasync function openSource(row, returnCode = null) {\n  const request = ++sourceRequest;\n  activeSource = null;\n  sourceReturnCode = returnCode;\n  $('#source-back').hidden = !returnCode;\n  $('#source-history').hidden = true;\n  $('#source-history').open = false;\n  $('#source-history-list').replaceChildren();\n  sourceHistoryLoaded = false;\n  sourceForm.hidden = true;\n  sourceError.hidden = true;\n  sourceSave.disabled = false;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = `${t('ad.th.code')} ${row.code}`;\n  $('#source-detail').textContent = t('ad.loading');\n  sourceDialog.showModal();\n  try {\n    const { source } = await api(`/api/admin/shares/${row.code}/source`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }\n    activeSource = { code: row.code, visitorId: source.visitorId };\n    const ip = el('span', { class: 'source-ip' }, source.ip || t('ad.sourceUnknown'));\n    if (source.ip) ip.append(el('button', { class: 'btn small ghost', type: 'button',\n      onclick: async () => toast(t(await copyText(source.ip) ? 'ad.ipCopied' : 'ad.copyFailed')) }, t('ad.copyIP')));\n    $('#source-detail').replaceChildren(\n      sourceField(t('ad.visitorId'), source.visitorId, 'mono'),\n      ...(source.displayName ? [sourceField(t('ad.submittedName'), source.displayName)] : []),\n      sourceField(t('ad.requestIP'), ip),\n      sourceField(t('ad.sourceLocation'), locationLabel(source)),\n      ...(source.asn || source.organization ? [sourceField(t('ad.network'),\n        [source.organization, source.asn ? `AS${source.asn}` : null].filter(Boolean).join(' \xB7 '))] : []),\n      sourceField(t('ad.browserReported'), browserLabel(source.userAgent)),\n      sourceField(t('ad.sourceTime'), fmtDate(source.capturedAt)),\n      ...(source.userAgent ? [el('details', { class: 'source-agent' }, el('summary', {}, 'User-Agent'),\n        el('p', { class: 'mono' }, source.userAgent))] : []),\n    );\n    $('#source-history').hidden = false;\n    sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';\n    sourceForm.hidden = false;\n    sourceSave.hidden = false;\n  } catch (e) {\n    if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');\n  }\n}\nfunction closeSource() {\n  sourceRequest++;\n  activeSource = null;\n  sourceReturnCode = null;\n  $('#source-history').open = false;\n  $('#source-history').hidden = true;\n  $('#source-history-list').replaceChildren();\n  $('#source-back').hidden = true;\n  sourceNote.value = '';\n  sourceForm.hidden = true;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = '';\n  $('#source-detail').replaceChildren();\n  sourceDialog.close();\n}\nsourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });\n$('#source-close').addEventListener('click', closeSource);\n$('#source-back').addEventListener('click', () => {\n  const code = sourceReturnCode;\n  closeSource();\n  if (code) openFileDetails(code);\n});\n$('#source-history').addEventListener('toggle', async () => {\n  if (!$('#source-history').open || !activeSource || sourceHistoryLoaded) return;\n  sourceHistoryLoaded = true;\n  const request = sourceRequest;\n  const list = $('#source-history-list');\n  list.textContent = t('ad.loading');\n  try {\n    const { rows } = await api(`/api/admin/shares/${activeSource.code}/source/activity`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },\n      el('div', { class: 'activity-head' }, el('span', { title: row.filename || t('ad.textFallback') }, row.filename || t('ad.textFallback')),\n        el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),\n      el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} \xB7 ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} \xB7 ${row.code}`),\n      row.ip || row.country || row.region || row.city\n        ? el('small', { class: 'muted' }, [row.ip, row.country || row.region || row.city ? locationLabel(row) : null].filter(Boolean).join(' \xB7 ')) : null,\n    )));\n    if (!rows.length) list.textContent = t('ad.empty');\n  } catch (error) {\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    sourceHistoryLoaded = false;\n    list.replaceChildren(el('p', { class: 'error-box', role: 'alert' }, error.message || t('ad.loadFail')),\n      el('button', { type: 'button', class: 'btn small ghost', onclick: () => $('#source-history').dispatchEvent(new Event('toggle')) }, t('ad.retry')));\n  }\n});\nsourceForm.addEventListener('submit', async (e) => {\n  e.preventDefault();\n  if (!activeSource || sourceSave.disabled) return;\n  const { code } = activeSource;\n  const request = sourceRequest;\n  sourceSave.disabled = true;\n  sourceError.hidden = true;\n  try {\n    const result = await api(`/api/admin/shares/${code}/source`, { method: 'PUT', body: { note: sourceNote.value } });\n    noteOverrides.set(result.visitorId, result.note);\n    document.querySelectorAll('[data-visitor]').forEach((button) => {\n      if (button.dataset.visitor === result.visitorId) button.textContent = result.note || visitorLabel(result.visitorId);\n    });\n    if (request === sourceRequest) closeSource();\n    toast(t('ad.sourceSaved'));\n  } catch (error) {\n    if (request === sourceRequest) {\n      sourceError.textContent = error.message || t('ad.loadFail');\n      sourceError.hidden = false;\n    }\n  } finally {\n    if (request === sourceRequest) sourceSave.disabled = false;\n  }\n});\n\n/* File details use their own request generation so closed dialogs stay empty. */\nconst fileDialog = $('#file-dialog');\nconst fileDetail = $('#file-detail');\nconst fileDownload = $('#file-download');\nlet fileRequest = 0;\nfunction fileFormat(filename) {\n  const ext = filename?.match(/\\.([a-z0-9]{1,12})$/i)?.[1]?.toLowerCase();\n  const groups = {\n    archive: ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'],\n    program: ['exe', 'msi', 'apk', 'dmg', 'deb', 'rpm'],\n    document: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'epub'],\n    image: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'bmp', 'ico', 'heic', 'avif'],\n    video: ['mp4', 'mkv', 'mov', 'avi', 'webm', 'm4v'],\n    audio: ['mp3', 'wav', 'flac', 'ogg', 'm4a', 'aac'],\n    text: ['txt', 'md', 'csv', 'json', 'xml', 'html', 'js', 'ts', 'py', 'log'],\n  };\n  if (!ext) return t('ad.formatUnknown');\n  const group = Object.entries(groups).find(([, extensions]) => extensions.includes(ext))?.[0] || 'file';\n  const keys = { archive: 'ad.format.archive', program: 'ad.format.program', document: 'ad.format.document', image: 'ad.format.image', video: 'ad.format.video', audio: 'ad.format.audio', text: 'ad.format.text', file: 'ad.format.file' };\n  return `${ext.toUpperCase()} \xB7 ${t(keys[group])}`;\n}\nfunction fileField(label, value, secondary) {\n  return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),\n    el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);\n}\n\nasync function openFileDetails(code) {\n  const request = ++fileRequest;\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  $('#file-context').textContent = `${t('ad.th.code')} ${code}`;\n  fileDetail.textContent = t('ad.loading');\n  fileDialog.showModal();\n  try {\n    const detail = await api(`/api/admin/shares/${code}`);\n    if (request !== fileRequest || !fileDialog.open) return;\n    const now = detail.evaluatedAt ?? Date.now();\n    const state = detail.storage?.state || 'unknown';\n    const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };\n    const source = detail.source;\n    const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',\n      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }, code); },\n    }, sourceLabel(source)) : t('ad.sourceUnrecorded');\n    if (source) sourceButton.dataset.visitor = source.visitorId;\n    const lifetime = detail.expireAt === null ? null\n      : t(detail.expireAt > now ? 'ad.timeLeft' : 'ad.timeExpired', fmtDuration(Math.abs(detail.expireAt - now) / 1000));\n    const cleanupLabels = { permanent: 'ad.cleanupPermanent', active: 'ad.cleanupActive', retained: 'ad.cleanupRetained', pending: 'ad.cleanupPending' };\n    const cleanupLabel = t(cleanupLabels[detail.cleanupStatus] || 'ad.sourceUnknown', detail.retentionDays);\n    const technical = el('details', { class: 'file-technical file-wide' },\n      el('summary', {}, t('ad.technical')),\n      el('div', { class: 'file-technical-grid' },\n        fileField('MIME', detail.mime || t('ad.sourceUnknown')),\n        Number.isSafeInteger(detail.storage?.size) ? fileField(t('ad.storedSize'), t('ad.exactBytes', detail.storage.size.toLocaleString())) : null,\n        detail.storage?.uploadedAt != null ? fileField(t('ad.storedAt'), fmtDate(detail.storage.uploadedAt)) : null,\n      ));\n    fileDetail.replaceChildren(\n      el('div', { class: 'file-identity file-wide' },\n        el('strong', {}, detail.filename || t('ad.unnamed')), el('small', { class: 'muted' }, fileFormat(detail.filename))),\n      ...(detail.description ? [el('div', { class: 'file-description file-wide' },\n        el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),\n      fileField(t('ad.th.size'), fmtBytes(detail.size), detail.size >= 1000 ? t('ad.exactBytes', detail.size.toLocaleString()) : null),\n      fileField(t('ad.fileAvailability'), el('span', { class: `badge ${state === 'available' ? 'active' : state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state]))),\n      fileField(t('ad.source'), sourceButton),\n      fileField(t('ad.shareState'), el('span', { class: `badge ${detail.status}` }, t(STATUS_KEY[detail.status]))),\n      fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '\u221E'}`),\n      fileField(t('ad.th.created'), fmtDate(detail.createdAt)),\n      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt), lifetime),\n      fileField(t('ad.cleanupAfter'), detail.cleanupAfter === null ? t('ad.forever') : fmtDate(detail.cleanupAfter), cleanupLabel),\n      technical,\n    );\n    fileDownload.href = `/api/admin/shares/${code}/download`;\n    fileDownload.download = detail.filename || 'file';\n    fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');\n    fileDownload.hidden = state === 'missing';\n  } catch (error) {\n    if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');\n  }\n}\nfunction closeFileDetails() {\n  fileRequest++;\n  fileDetail.replaceChildren();\n  $('#file-context').textContent = '';\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  fileDialog.close();\n}\n$('#file-close').addEventListener('click', closeFileDetails);\nfileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });\n\n/* Keep unsaved input local; only a validated save changes retention. */\nconst retentionInput = $('#retention-days');\nconst retentionSave = $('#retention-save');\nconst retentionError = $('#retention-error');\nasync function loadSettings() {\n  $('#retention-status').hidden = true;\n  retentionInput.disabled = true;\n  retentionSave.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-retry').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings');\n    if (!Number.isInteger(settings.expiredRetentionDays) || settings.expiredRetentionDays < 0 || settings.expiredRetentionDays > 3650) throw new Error(t('ad.loadFail'));\n    retentionInput.value = settings.expiredRetentionDays;\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n    $('#retention-retry').hidden = false;\n  }\n}\n$('#retention-retry').addEventListener('click', loadSettings);\nretentionInput.addEventListener('input', () => { $('#retention-status').hidden = true; });\n$('#retention-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (retentionSave.disabled || !retentionInput.reportValidity()) return;\n  retentionSave.disabled = true;\n  retentionInput.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-status').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });\n    retentionInput.value = settings.expiredRetentionDays;\n    $('#retention-status').textContent = t('ad.settingsSaved');\n    $('#retention-status').hidden = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n  } finally {\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  }\n});\n\nconst guestWeekly = $('#guest-weekly');\nconst guestSave = $('#guest-save');\nconst guestError = $('#guest-error');\nfunction guestBusy(busy) {\n  for (const control of [guestWeekly, guestSave]) control.disabled = busy;\n}\nasync function loadGuestPolicy() {\n  $('#guest-status').hidden = true;\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-retry').hidden = true;\n  try {\n    const policy = await api('/api/admin/upload-policy');\n    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000) throw new Error(t('ad.loadFail'));\n    guestWeekly.value = policy.weeklyFileLimit;\n    guestBusy(false);\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n    $('#guest-retry').hidden = false;\n  }\n}\n$('#guest-retry').addEventListener('click', loadGuestPolicy);\nguestWeekly.addEventListener('input', () => { $('#guest-status').hidden = true; });\n$('#guest-policy-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (guestSave.disabled || !e.target.reportValidity()) return;\n  const body = { weeklyFileLimit: Number(guestWeekly.value) };\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-status').hidden = true;\n  try {\n    await api('/api/admin/upload-policy', { method: 'PUT', body });\n    $('#guest-status').textContent = t('ad.guestSaved');\n    $('#guest-status').hidden = false;\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n  } finally { guestBusy(false); }\n});\n\nlet guardRequest = 0;\nasync function loadLoginProtection() {\n  const request = ++guardRequest;\n  const refresh = $('#login-guard-refresh');\n  const error = $('#login-guard-error');\n  refresh.disabled = true;\n  error.hidden = true;\n  $('#login-guard-bans').replaceChildren();\n  $('#login-guard-status').textContent = '';\n  try {\n    const data = await api('/api/admin/login-protection');\n    if (request !== guardRequest) return;\n    if (typeof data.enabled !== 'boolean' || !Array.isArray(data.bans) ||\n        ![data.maxFailures, data.windowSeconds, data.banSeconds].every(n => Number.isInteger(n) && n > 0)) throw new Error(t('ad.loadFail'));\n    $('#login-guard-status').textContent = data.enabled\n      ? t('ad.guardRule', data.windowSeconds / 60, data.maxFailures, data.banSeconds / 60) : t('ad.guardDisabled');\n    if (!data.enabled) return;\n    if (!data.bans.length) $('#login-guard-bans').append(el('small', { class: 'muted' }, t('ad.guardEmpty')));\n    for (const ban of data.bans) {\n      const button = el('button', { class: 'btn small ghost', type: 'button' }, t('ad.guardUnblock'));\n      button.addEventListener('click', async () => {\n        button.disabled = true;\n        error.hidden = true;\n        try {\n          await api('/api/admin/login-protection/unblock', { method: 'POST', body: { ip: ban.ip } });\n          toast(t('ad.guardUnblocked'), 'ok');\n          await loadLoginProtection();\n        } catch (e) {\n          error.textContent = e.message || t('ad.loadFail');\n          error.hidden = false;\n          button.disabled = false;\n        }\n      });\n      $('#login-guard-bans').append(el('div', { class: 'login-guard-row' },\n        el('div', { class: 'login-guard-info' },\n          el('b', {}, ban.ip === 'unknown' ? t('ad.guardUnknown') : ban.ip),\n          el('small', { class: 'muted' }, t('ad.guardFailures', ban.failures) + ' \xB7 ' + t('ad.guardUntil', fmtDate(ban.bannedUntil))),\n          el('small', { class: 'muted' }, t('ad.guardLast', fmtDate(ban.lastFailedAt)))), button));\n    }\n  } catch (e) {\n    if (request !== guardRequest) return;\n    error.textContent = e.message || t('ad.loadFail');\n    error.hidden = false;\n  } finally { if (request === guardRequest) refresh.disabled = false; }\n}\n$('#login-guard-refresh').addEventListener('click', loadLoginProtection);\n", "js/common.js": "import { t } from './i18n.js';\n\nexport const $ = (sel, el = document) => el.querySelector(sel);\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\n\n/** Keep Tab within modal content, including the wrap past the final button. */\nexport function initDialogs() {\n  for (const dialog of $$('dialog')) {\n    dialog.addEventListener('keydown', event => {\n      if (event.key !== 'Tab') return;\n      const controls = $$('button, a[href], input, select, textarea, summary, [tabindex]', dialog)\n        .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);\n      const first = controls[0];\n      const last = controls.at(-1);\n      if (!first) { event.preventDefault(); return; }\n      if (!controls.includes(document.activeElement) || (event.shiftKey && document.activeElement === first)) {\n        event.preventDefault(); (event.shiftKey ? last : first).focus();\n      } else if (!event.shiftKey && document.activeElement === last) {\n        event.preventDefault(); first.focus();\n      }\n    });\n  }\n}\n\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\nexport async function api(path, opts = {}) {\n  const res = await fetch(path, {\n    method: opts.method || 'GET',\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\n  });\n  if (res.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n  let data = null;\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\n  if (!res.ok) {\n    const e = new Error(data?.message || t('req.fail', res.status));\n    e.code = data?.error || 'unknown';\n    e.status = res.status;\n    e.remainingBytes = data?.remainingBytes;\n    throw e;\n  }\n  return data;\n}\n\nexport function fmtBytes(n) {\n  if (!Number.isFinite(n) || n < 0) return '-';\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\n  let i = 0;\n  while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 100) / 100;\n  return `${v} ${units[i]}`;\n}\n\n/** \u6C38\u4E45\u5206\u4EAB\u8FD4\u56DE null,\u7531\u8C03\u7528\u65B9\u6309\u8BED\u8A00\u6E32\u67D3\u300C\u6C38\u4E45 / Forever\u300D */\nexport function fmtDate(ms) {\n  if (ms === null || ms === undefined) return null;\n  const d = new Date(ms);\n  const p = (x) => String(x).padStart(2, '0');\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\n}\n\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6,\u5355\u4F4D\u8BCD\u968F\u8BED\u8A00 */\nexport function fmtDuration(sec) {\n  if (!Number.isFinite(sec) || sec < 0) return '-';\n  if (sec < 1) return t('dur.ms');\n  if (sec < 60) return t('dur.s', Math.round(sec));\n  if (sec < 3600) {\n    const m = Math.floor(sec / 60);\n    const s = Math.round(sec % 60);\n    return s ? t('dur.hm', m, s) : t('dur.h', m);\n  }\n  if (sec < 86400) {\n    const h = Math.floor(sec / 3600);\n    const m = Math.round((sec % 3600) / 60);\n    return m ? t('dur.hH', h, m) : t('dur.hH2', h);\n  }\n  return t('dur.d', Math.round(sec / 86400));\n}\n\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\nexport function iconFor(name = '', mime = '') {\n  const ext = (name.split('.').pop() || '').toLowerCase();\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\n  return '\u{1F4E6}';\n}\n\nexport async function copyText(text) {\n  try {\n    await navigator.clipboard.writeText(text);\n    return true;\n  } catch { /* \u8D70\u964D\u7EA7 */ }\n  try {\n    const ta = document.createElement('textarea');\n    ta.value = text;\n    ta.style.cssText = 'position:fixed;opacity:0';\n    document.body.appendChild(ta);\n    ta.select();\n    const ok = document.execCommand('copy');\n    ta.remove();\n    return ok;\n  } catch {\n    return false;\n  }\n}\n\nexport function toast(msg, type = 'info') {\n  let host = $('#toast-host');\n  if (!host) {\n    host = document.createElement('div');\n    host.id = 'toast-host';\n    document.body.appendChild(host);\n  }\n  const t = document.createElement('div');\n  t.className = `toast ${type}`;\n  t.textContent = msg;\n  host.appendChild(t);\n  requestAnimationFrame(() => t.classList.add('show'));\n  setTimeout(() => {\n    t.classList.remove('show');\n    setTimeout(() => t.remove(), 300);\n  }, 2400);\n}\n\nexport function initTheme() {\n  const btn = $('#theme-btn');\n  const meta = $('meta[name=\"theme-color\"]');\n  const sync = () => {\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\n  };\n  sync();\n  btn?.addEventListener('click', () => {\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\n    localStorage.setItem('theme', next);\n    document.documentElement.dataset.theme = next;\n    sync();\n  });\n}\n\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\nexport function el(tag, attrs = {}, ...children) {\n  const n = document.createElement(tag);\n  for (const [k, v] of Object.entries(attrs)) {\n    if (k === 'class') n.className = v;\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\n    else n[k] = v;\n  }\n  for (const c of children.flat(Infinity)) {\n    if (c == null || c === false) continue;\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\n  }\n  return n;\n}\n", "js/i18n.js": `/**
- * \u8F7B\u91CF i18n:HTML \u9759\u6001\u6587\u6848\u7528 data-i18n / data-i18n-ph / data-i18n-title \u6807\u8BB0,
- * JS \u52A8\u6001\u5B57\u7B26\u4E32\u7528 t('key', \u2026args);{n} \u5360\u4F4D\u3002
- * \u8BED\u8A00\u4F18\u5148\u7EA7:localStorage('lang') > \u6D4F\u89C8\u5668\u8BED\u8A00(en \u5F00\u5934\u2192\u82F1\u6587)> \u4E2D\u6587\u3002
- * \u5207\u6362\u540E\u8C03\u7528\u5DF2\u6CE8\u518C\u7684\u91CD\u6E32\u67D3\u94A9\u5B50(\u5404\u9875\u9762 setLang \u65F6\u767B\u8BB0)\u3002
- * \u8BCD\u5178\u503C\u4E3A\u6570\u7EC4\u65F6\u968F\u673A\u53D6\u4E00\u6761(\u9875\u811A\u5F69\u86CB,\u6BCF\u6B21\u52A0\u8F7D/\u5207\u8BED\u8A00\u91CD\u6447)\u3002
- */
-
-const DICT = {
-  zh: {
-    'ad.settings': '\u8BBE\u7F6E',
-    'ad.displaySettings': '\u5217\u8868\u663E\u793A',
-    'ad.filesPageSize': '\u6587\u4EF6\u6BCF\u9875\u6761\u6570',
-    'ad.auditPageSize': '\u65E5\u5FD7\u6BCF\u9875\u6761\u6570',
-    'ad.browserSettings': '\u7ACB\u5373\u751F\u6548\uFF0C\u4EC5\u4FDD\u5B58\u5728\u5F53\u524D\u6D4F\u89C8\u5668',
-    'ad.preferenceNotSaved': '\u672C\u6B21\u5DF2\u751F\u6548\uFF0C\u6D4F\u89C8\u5668\u672A\u80FD\u4FDD\u5B58\u6B64\u504F\u597D',
-    'ad.filesPagination': '\u6587\u4EF6\u5206\u9875',
-    'ad.auditPagination': '\u65E5\u5FD7\u5206\u9875',
-    'context.add': '\u8865\u5145\u4FE1\u606F\uFF08\u9009\u586B\uFF09',
-    'context.name': '\u600E\u4E48\u79F0\u547C\u4F60',
-    'context.description': '\u6587\u4EF6\u8BF4\u660E\uFF08\u672C\u6279\u6587\u4EF6\uFF09',
-    'context.visibility': '\u8865\u5145\u4FE1\u606F\u4EC5\u7BA1\u7406\u5458\u53EF\u89C1',
-    'ad.retentionTitle': '\u81EA\u52A8\u6E05\u7406',
-    'ad.recentUploads': '\u8FD1\u671F\u4E0A\u4F20',
-    'ad.historyScope': '\u6700\u8FD1 10 \u6761\u73B0\u5B58\u5206\u4EAB',
-    'ad.backFile': '\u8FD4\u56DE\u6587\u4EF6',
-    'ad.submittedName': '\u81EA\u586B\u79F0\u547C',
-    'ad.requestIP': '\u8BF7\u6C42 IP',
-    'ad.network': '\u7F51\u7EDC\u7EC4\u7EC7',
-    'ad.browserReported': '\u6D4F\u89C8\u5668\uFF08\u81EA\u62A5\uFF09',
-    'ad.copyIP': '\u590D\u5236',
-    'ad.ipCopied': 'IP \u5DF2\u590D\u5236',
-    'ad.copyFailed': '\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u9009\u62E9',
-    'ad.fileDescription': '\u6587\u4EF6\u8BF4\u660E',
-    'audit.detail.filename': '\u6587\u4EF6\u540D',
-    'audit.detail.sizeBytes': '\u5927\u5C0F\uFF08\u5B57\u8282\uFF09',
-    'audit.navigation': "\u7BA1\u7406\u9875\u9762",
-    'audit.files': "\u6587\u4EF6\u7BA1\u7406",
-    'audit.title': "\u65E5\u5FD7\u5BA1\u8BA1",
-    'audit.retention': "\u6700\u8FD1 30 \u5929\uFF0C\u6700\u591A 1,000 \u6761\uFF1B\u65F6\u95F4\u6309\u672C\u5730\u65F6\u533A\u663E\u793A",
-    'audit.export': "\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C",
-    'audit.categories': "\u65E5\u5FD7\u5206\u7C7B",
-    'audit.all': "\u5168\u90E8\u65E5\u5FD7",
-    'audit.login': "\u767B\u5F55\u65E5\u5FD7",
-    'audit.operation': "\u64CD\u4F5C\u65E5\u5FD7",
-    'audit.security': "\u5B89\u5168\u4E8B\u4EF6",
-    'audit.result': "\u7ED3\u679C",
-    'audit.anyResult': "\u5168\u90E8\u7ED3\u679C",
-    'audit.success': "\u6210\u529F",
-    'audit.failed': "\u5931\u8D25",
-    'audit.blocked': "\u5DF2\u62E6\u622A",
-    'audit.from': "\u5F00\u59CB\u65E5\u671F",
-    'audit.to': "\u7ED3\u675F\u65E5\u671F",
-    'audit.keyword': "IP / \u64CD\u4F5C\u5BF9\u8C61",
-    'audit.search': "\u641C\u7D22 IP \u6216\u53D6\u4EF6\u7801",
-    'audit.filter': "\u7B5B\u9009",
-    'audit.reset': "\u91CD\u7F6E",
-    'audit.time': "\u65F6\u95F4",
-    'audit.action': "\u64CD\u4F5C",
-    'audit.actor': "\u64CD\u4F5C\u8EAB\u4EFD",
-    'audit.source': "\u6765\u6E90 IP / \u5C5E\u5730",
-    'audit.target': "\u64CD\u4F5C\u5BF9\u8C61",
-    'audit.details': "\u8BE6\u60C5",
-    'audit.empty': "\u6682\u65E0\u5339\u914D\u65E5\u5FD7\u3002\u65E5\u5FD7\u4ECE\u529F\u80FD\u4E0A\u7EBF\u540E\u5F00\u59CB\u8BB0\u5F55\u3002",
-    'audit.disabled': "\u672A\u542F\u7528\u65E5\u5FD7\u5BA1\u8BA1\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1\u3002",
-    'audit.page': "\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761",
-    'audit.dateError': "\u5F00\u59CB\u65E5\u671F\u4E0D\u80FD\u665A\u4E8E\u7ED3\u675F\u65E5\u671F",
-    'audit.http': "\u8BF7\u6C42 / \u72B6\u6001\u7801",
-    'audit.duration': "\u5904\u7406\u8017\u65F6",
-    'audit.id': "\u65E5\u5FD7\u7F16\u53F7",
-    'audit.agent': "\u6D4F\u89C8\u5668\u6807\u8BC6\uFF08\u5BA2\u6237\u7AEF\u63D0\u4F9B\uFF09",
-    'audit.yes': "\u662F",
-    'audit.no': "\u5426",
-    'audit.description': "\u8BF4\u660E",
-    'audit.downloadHint': "\u5DF2\u5F00\u59CB\u8FD4\u56DE\u6587\u4EF6\u6D41\uFF0C\u4E0D\u4EE3\u8868\u6D4F\u89C8\u5668\u5DF2\u5B8C\u6210\u4E0B\u8F7D\u3002",
-    'audit.writeFailed': "\u64CD\u4F5C\u5DF2\u5904\u7406\uFF0C\u4F46\u5BA1\u8BA1\u8BB0\u5F55\u672A\u4FDD\u5B58\uFF0C\u8BF7\u68C0\u67E5\u65E5\u5FD7\u5B58\u50A8\u3002",
-    'audit.action.login': "\u7BA1\u7406\u5458\u767B\u5F55",
-    'audit.action.logout': "\u9000\u51FA\u767B\u5F55",
-    'audit.action.retention': "\u4FEE\u6539\u8FC7\u671F\u4FDD\u7559\u5929\u6570",
-    'audit.action.uploadPolicy': "\u4FEE\u6539\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",
-    'audit.action.unblock': "\u624B\u52A8\u89E3\u5C01 IP",
-    'audit.action.cleanup': "\u6267\u884C\u8FC7\u671F\u6E05\u7406",
-    'audit.action.export': "\u5BFC\u51FA\u5BA1\u8BA1\u65E5\u5FD7",
-    'audit.action.ban': "\u89E6\u53D1\u767B\u5F55\u5C01\u7981",
-    'audit.action.delete': "\u5220\u9664\u5206\u4EAB",
-    'audit.action.note': "\u4FEE\u6539\u8BBF\u5BA2\u5907\u6CE8",
-    'audit.action.viewSource': "\u67E5\u770B\u6765\u6E90\u8BE6\u60C5",
-    'audit.action.download': "\u4E0B\u8F7D\u6587\u4EF6",
-    'audit.actor.admin': "\u7BA1\u7406\u5458",
-    'audit.actor.token': "\u5B9A\u65F6\u5668 / \u4EE4\u724C",
-    'audit.actor.anonymous': "\u672A\u8BA4\u8BC1",
-    'audit.detail.bannedUntil': "\u5C01\u7981\u622A\u6B62",
-    'audit.detail.expiredRetentionDays': "\u8FC7\u671F\u4FDD\u7559\u5929\u6570",
-    'audit.detail.weeklyFileLimit': "\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",
-    'audit.detail.notePresent': "\u8BBE\u7F6E\u5907\u6CE8",
-    'audit.detail.alreadyDeleted': "\u5206\u4EAB\u5DF2\u4E0D\u5B58\u5728",
-    'audit.detail.deletedShares': "\u5DF2\u6E05\u7406\u5206\u4EAB",
-    'audit.detail.abortedSessions': "\u5DF2\u53D6\u6D88\u4E0A\u4F20\u4F1A\u8BDD",
-
-    'ad.loginProtection': "\u767B\u5F55\u9632\u62A4",
-    'ad.guardRule': "{0} \u5206\u949F\u5185\u5931\u8D25 {1} \u6B21\uFF0C\u5C01\u7981\u767B\u5F55 {2} \u5206\u949F",
-    'ad.guardDisabled': "\u672A\u542F\u7528\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1",
-    'ad.guardEmpty': "\u5F53\u524D\u6CA1\u6709\u5C01\u7981 IP",
-    'ad.guardUnknown': "\u672A\u77E5\u6765\u6E90\uFF08\u5171\u7528\u9650\u5236\uFF09",
-    'ad.guardFailures': "\u5931\u8D25 {0} \u6B21",
-    'ad.guardUntil': "\u89E3\u5C01\u4E8E {0}",
-    'ad.guardLast': "\u6700\u8FD1\u5931\u8D25 {0}",
-    'ad.guardUnblock': "\u89E3\u5C01",
-    'ad.guardUnblocked': "\u5DF2\u89E3\u5C01",
-    'ad.loginBlocked': "\u767B\u5F55\u5931\u8D25\u6B21\u6570\u8FC7\u591A\uFF0C\u8BF7\u7B49\u5F85\u5C01\u7981\u5230\u671F\u540E\u91CD\u8BD5",
-    'ad.guardUnavailable': "\u767B\u5F55\u9632\u62A4\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5",
-
-    'ad.formatUnknown': "\u683C\u5F0F\u672A\u77E5",
-    'ad.format.archive': "\u538B\u7F29\u5305",
-    'ad.format.program': "\u5E94\u7528\u7A0B\u5E8F",
-    'ad.format.document': "\u6587\u6863",
-    'ad.format.image': "\u56FE\u7247",
-    'ad.format.video': "\u89C6\u9891",
-    'ad.format.audio': "\u97F3\u9891",
-    'ad.format.text': "\u6587\u672C / \u4EE3\u7801",
-    'ad.format.file': "\u6587\u4EF6",
-    'ad.uploader': "\u4E0A\u4F20\u8005",
-    'ad.shareState': "\u5206\u4EAB\u72B6\u6001",
-    'ad.fileAvailability': "\u6587\u4EF6\u72B6\u6001",
-    'ad.fileState.available': "\u53EF\u4E0B\u8F7D",
-    'ad.fileState.missing': "\u6587\u4EF6\u4E0D\u5B58\u5728",
-    'ad.fileState.unknown': "\u6682\u65F6\u65E0\u6CD5\u786E\u8BA4",
-    'ad.timeLeft': "\u5269\u4F59 {0}",
-    'ad.timeExpired': "\u5DF2\u8FC7\u671F {0}",
-    'ad.cleanupPermanent': "\u4E0D\u81EA\u52A8\u6E05\u7406",
-    'ad.cleanupActive': "\u8FC7\u671F\u540E\u4FDD\u7559 {0} \u5929",
-    'ad.cleanupRetained': "\u8FC7\u671F\u4FDD\u7559\u4E2D",
-    'ad.cleanupPending': "\u7B49\u5F85\u6E05\u7406\u4EFB\u52A1",
-    'ad.technical': "\u6280\u672F\u4FE1\u606F",
-    'ad.storedSize': "\u5B58\u50A8\u5927\u5C0F",
-    'ad.storedAt': "\u5165\u5E93\u65F6\u95F4",
-    'ad.exactBytes': "{0} \u5B57\u8282",
-    'ad.formatHint': "\u683C\u5F0F\u6309\u6587\u4EF6\u540D\u8BC6\u522B\uFF0C\u4E0D\u4EE3\u8868\u5185\u5BB9\u6821\u9A8C\u3002",
-    'ad.tryDownload': "\u5C1D\u8BD5\u4E0B\u8F7D",
-    'ad.guestLimits': "\u672A\u5907\u6CE8\u8BBF\u5BA2\u9650\u5236",
-    'ad.weeklyFiles': "\u6BCF\u5468\u6587\u4EF6\u6570",
-    'ad.guestRules': "\u5317\u4EAC\u65F6\u95F4\u5468\u4E00\u91CD\u7F6E\uFF1B\u5DF2\u63A5\u7EB3\u4E0A\u4F20\u8BA1\u6B21\uFF0C\u53D6\u6D88\u4E0D\u9000\u56DE\u3002\u672A\u5907\u6CE8\u8BBF\u5BA2\u4E0D\u80FD\u6C38\u4E45\u5206\u4EAB\u6216\u4E0D\u9650\u6B21\u53D6\u4EF6\u3002",
-    'ad.notePrivileges': "\u5907\u6CE8\u540E\u4E0D\u9650\u5468\u6B21\u6570\uFF0C\u5141\u8BB8\u6C38\u4E45\uFF0F\u4E0D\u9650\u6B21\u5206\u4EAB\uFF1B\u6E05\u7A7A\u6062\u590D\u9650\u5236\u3002",
-    'ad.guestSaved': "\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u4E0A\u4F20",
-    'policy.expiry': "1 ~ 30 \u5929",
-    'policy.pickups': "1 \u6B21 \xB7 5 \u6B21",
-    'policy.remaining': "\u672C\u5468\u5269\u4F59 {0} / {1} \u4E2A\u6587\u4EF6 \xB7 {2} \u91CD\u7F6E",
-    'policy.unavailable': "\u6B63\u5728\u8BFB\u53D6\u4E0A\u4F20\u6743\u9650\uFF1B\u82E5\u957F\u65F6\u95F4\u672A\u6062\u590D\uFF0C\u8BF7\u5237\u65B0\u9875\u9762",
-    'policy.contact': "\u6682\u4E0D\u63A5\u53D7\u6587\u4EF6\u4E0A\u4F20\uFF0C\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458",
-    'ad.fileDetails': '\u6587\u4EF6\u8BE6\u60C5',
-    'ad.filename': '\u6587\u4EF6\u540D',
-    'ad.fileType': '\u6587\u4EF6\u7C7B\u578B',
-    'ad.cleanupAfter': '\u6700\u65E9\u6E05\u7406',
-    'ad.retentionDays': '\u8FC7\u671F\u540E\u4FDD\u7559',
-    'ad.days': '\u5929',
-    'ad.save': '\u4FDD\u5B58',
-    'ad.retry': '\u91CD\u8BD5',
-    'ad.settingsSaved': '\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u6E05\u7406',
-    'ad.source': '\u4E0A\u4F20\u6765\u6E90',
-    'ad.visitor': '\u8BBF\u5BA2 {0}',
-    'ad.visitorId': '\u8BBF\u5BA2\u6807\u8BC6',
-    'ad.sourceUnknown': '\u672A\u77E5',
-    'ad.sourceUnrecorded': '\u672A\u8BB0\u5F55',
-    'ad.sourceLocation': '\u51FA\u53E3\u5C5E\u5730',
-    'ad.sourceTime': '\u8BB0\u5F55\u65F6\u95F4',
-    'ad.sourceNote': '\u7BA1\u7406\u5458\u5907\u6CE8',
-    'ad.sourceSave': '\u4FDD\u5B58\u5907\u6CE8',
-    'ad.sourceClose': '\u5173\u95ED',
-    'ad.sourceSaved': '\u5907\u6CE8\u5DF2\u4FDD\u5B58',
-    'err.capacity': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6',
-    'err.capacityRemaining': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6\uFF0C\u5269\u4F59\u53EF\u7528\u7A7A\u95F4\u7EA6 {0} GB\uFF08{1} \u5B57\u8282\uFF09\u3002',
-    'doc.send': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001',
-    'doc.pickup': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D6\u4EF6',
-    'doc.admin': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u7BA1\u7406',
-    'doc.404': '404 - \u6587\u4EF6\u4E2D\u8F6C\u7AD9',
-
-    'brand.name': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9',
-    'brand.tagline': '\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u6587\u4EF6',
-    'brand.pickup': '\u53D6\u4EF6',
-    'brand.admin': '\u7BA1\u7406\u540E\u53F0',
-    'nav.pickup': '\u53D6\u4EF6',
-    'nav.send': '\u53D1\u9001',
-    'nav.theme': '\u5207\u6362\u4E3B\u9898',
-    'nav.lang': '\u5207\u6362\u8BED\u8A00',
-    'foot': [
-      '\u89C1\u5B57\u5982\u9762',
-      '\u7EB8\u77ED\u60C5\u957F',
-      '\u5C71\u9AD8\u6C34\u957F,\u540E\u4F1A\u6709\u671F',
-      '\u6B64\u4EF6\u5DF2\u7B7E\u6536,\u671B\u73CD\u91CD',
-      '\u98CE\u91CC\u96E8\u91CC,\u4E2D\u8F6C\u7AD9\u7B49\u4F60',
-      '\u6162\u4E00\u70B9,\u4E5F\u6CA1\u5173\u7CFB',
-    ],
-
-    'tab.file': '\u53D1\u6587\u4EF6',
-    'tab.text': '\u53D1\u6587\u672C',
-    'dz.click': '\u70B9\u51FB\u9009\u62E9\u6587\u4EF6',
-    'dz.drop': ',\u6216\u62D6\u62FD / \u7C98\u8D34\u5230\u6B64\u5904',
-    'dz.aria': '\u9009\u62E9\u6587\u4EF6',
-    'dz.hint': '\u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',
-    'dz.hintMax': '\u5355\u4E2A\u6587\u4EF6\u6700\u5927 {0} \xB7 \u652F\u6301\u591A\u9009,\u4E0A\u4F20\u540E\u751F\u6210\u53D6\u4EF6\u53E3\u4EE4',
-    'remove': '\u79FB\u9664',
-    'text.placeholder': '\u7C98\u8D34\u6216\u8F93\u5165\u8981\u5206\u4EAB\u7684\u6587\u672C\u2026',
-    'opt.expiry': '\u6709\u6548\u671F',
-    'opt.pickups': '\u53EF\u53D6\u6B21\u6570',
-    'seg.1d': '1 \u5929', 'seg.7d': '7 \u5929', 'seg.30d': '30 \u5929', 'seg.forever': '\u6C38\u4E45',
-    'seg.p1': '1 \u6B21', 'seg.p5': '5 \u6B21', 'seg.punlimited': '\u4E0D\u9650',
-    'btn.upload': '\u5F00\u59CB\u4E0A\u4F20',
-    'btn.genCode': '\u751F\u6210\u53E3\u4EE4',
-    'btn.cancel': '\u53D6\u6D88',
-    'btn.copyCode': '\u590D\u5236\u53E3\u4EE4',
-    'btn.copyLink': '\u590D\u5236\u94FE\u63A5',
-    'btn.copyAll': '\u590D\u5236\u5168\u90E8\u53E3\u4EE4',
-    'btn.again': '\u518D\u6765\u4E00\u4E2A',
-
-    'prog.preparing': '\u51C6\u5907\u4E2D\u2026',
-    'prog.uploading': '\u4E0A\u4F20\u4E2D\u2026',
-    'prog.init': '\u6B63\u5728\u68C0\u67E5\u53EF\u7528\u7A7A\u95F4\u2026',
-    'prog.merging': '\u6B63\u5728\u5B8C\u6210\u4E0A\u4F20\u2026',
-    'prog.file': '\u7B2C {0}/{1} \u4E2A',
-    'prog.part': '\u7B2C {0}/{1} \u7247',
-    'prog.eta': '\u5269\u4F59 {0}',
-    'prog.retry': '\u4E0A\u4F20\u5931\u8D25,\u91CD\u8BD5 {0}/3\u2026',
-
-    'result.ok': '\u2705 \u5206\u4EAB\u6210\u529F,\u628A\u53E3\u4EE4\u53D1\u7ED9\u5BF9\u65B9',
-    'result.okBatch': '\u2705 {0} \u4E2A\u6587\u4EF6\u5206\u4EAB\u6210\u529F',
-    'ticket.title': '\u53D6\u4EF6\u51ED\u8BC1',
-    'ticket.no': '\u2116 {0}',
-    'send.cap': '\u5206\u4EAB\u5185\u5BB9',
-    'receipt.cap': '\u5206\u4EAB\u7ED3\u679C',
-    'ph.title': '\u7B49\u5F85\u5206\u4EAB',
-    'ph.sub': '\u5206\u4EAB\u6210\u529F\u540E\uFF0C\u5728\u8FD9\u91CC\u590D\u5236\u53E3\u4EE4\u6216\u94FE\u63A5',
-
-    'flow.dropT': '\u5BC4\u4EF6',
-    'flow.dropS': '\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C',
-    'flow.tickT': '\u5206\u4EAB\u53E3\u4EE4',
-    'flow.tickS': '\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',
-    'flow.pickT': '\u53D6\u4EF6',
-    'flow.pickS': '\u8F93\u5165\u53E3\u4EE4\u5373\u53EF\u4E0B\u8F7D\u6216\u67E5\u770B',
-
-    'route.senderT': '\u5BC4\u4EF6\u4EBA \xB7 \u4F60',
-    'route.senderS': '\u9009\u62E9\u5185\u5BB9\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u548C\u53EF\u53D6\u6B21\u6570',
-    'route.relayT': '\u751F\u6210\u5206\u4EAB',
-    'route.relayS': '\u628A\u53D6\u4EF6\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9',
-    'route.takerT': '\u53D6\u4EF6\u4EBA \xB7 \u5BF9\u65B9',
-    'route.takerS': '\u8F93\u5165\u53E3\u4EE4\u6216\u6253\u5F00\u94FE\u63A5\uFF0C\u5373\u53EF\u53D6\u4EF6',
-    'route.fine': '\u53E3\u4EE4\u8BF7\u59A5\u5584\u4FDD\u7BA1\uFF0C\u4EC5\u5206\u4EAB\u7ED9\u9700\u8981\u7684\u4EBA',
-
-    'feat.splitT': '\u6587\u4EF6\u5206\u4EAB', 'feat.splitS': '\u5355\u6587\u4EF6\u6700\u5927 {0}',
-    'feat.ttlT': '\u81EA\u9009\u6709\u6548\u671F', 'feat.ttlS': '1 ~ 30 \u5929\u6216\u6C38\u4E45',
-    'feat.limitT': '\u9650\u6B21\u53D6\u4EF6', 'feat.limitS': '1 \u6B21 \xB7 5 \u6B21 \xB7 \u4E0D\u9650',
-    'feat.selfT': '\u4FBF\u6377\u53D6\u4EF6', 'feat.selfS': '\u652F\u6301\u53E3\u4EE4\u3001\u94FE\u63A5\u548C\u626B\u7801\u53D6\u4EF6',
-    'qr.hint': '\u626B\u7801\u76F4\u63A5\u53D6\u4EF6',
-    'label.code': '\u53E3\u4EE4',
-    'label.link': '\u94FE\u63A5',
-    'copied': '{0}\u5DF2\u590D\u5236',
-    'copy.fail': '\u590D\u5236\u5931\u8D25,\u8BF7\u624B\u52A8\u590D\u5236',
-    'copied.btn': '\u2713 \u5DF2\u590D\u5236',
-
-    'meta.after': '{0}\u540E\u8FC7\u671F({1})',
-    'meta.forever': '\u6C38\u4E45\u6709\u6548',
-    'meta.pickups': '\u53EF\u53D6 {0} \u6B21',
-    'meta.unlimited': '\u53D6\u4EF6\u6B21\u6570\u4E0D\u9650',
-    'files.count': '{0} \u4E2A\u6587\u4EF6 \xB7 \u5171 {1}',
-    'unknown.type': '\u672A\u77E5\u7C7B\u578B',
-    'text.counter': '{0} / {1}',
-
-    'err.oversize': '\u6587\u4EF6\u8D85\u8FC7 {0} \u4E0A\u9650({1})',
-    'err.empty': '\u7A7A\u6587\u4EF6\u4E0D\u80FD\u5206\u4EAB',
-    'err.tooMany': '\u4E00\u6B21\u6700\u591A\u5206\u4EAB {0} \u4E2A\u6587\u4EF6',
-    'err.upload': '\u4E0A\u4F20\u5931\u8D25,\u8BF7\u91CD\u8BD5',
-    'err.submit': '\u63D0\u4EA4\u5931\u8D25',
-    'req.fail': '\u8BF7\u6C42\u5931\u8D25 ({0})',
-    'toast.cancelled': '\u5DF2\u53D6\u6D88\u4E0A\u4F20',
-
-    'dur.s': '{0} \u79D2',
-    'dur.ms': '<1 \u79D2',
-    'dur.hm': '{0} \u5206 {1} \u79D2',
-    'dur.h': '{0} \u5206',
-    'dur.hH': '{0} \u65F6 {1} \u5206',
-    'dur.hH2': '{0} \u65F6',
-    'dur.d': '{0} \u5929',
-
-    'pk.title': '\u8F93\u5165\u53D6\u4EF6\u53E3\u4EE4',
-    'pk.sub': '\u8F93\u5165 6 \u4F4D\u6570\u5B57\u53E3\u4EE4,\u53D6\u51FA\u5206\u4EAB\u7684\u6587\u4EF6\u6216\u6587\u672C',
-    'pk.aria': '6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',
-    'pk.fail': '\u53D6\u4EF6\u5931\u8D25',
-    'pk.textChars': '\u6587\u672C \xB7 {0} \u5B57\u7B26',
-    'pk.copyAllText': '\u4E00\u952E\u590D\u5236\u5168\u6587',
-    'pk.download': '\u2B07 \u4E0B\u8F7D\u6587\u4EF6',
-    'pk.again': '\u91CD\u65B0\u8F93\u5165',
-    'pk.expireAt': '{0} \u8FC7\u671F',
-    'pk.left': '\u5269\u4F59\u53EF\u53D6 {0} \u6B21',
-    'pk.unnamed': '\u672A\u547D\u540D\u6587\u4EF6',
-    'copied.text': '\u5DF2\u590D\u5236\u5168\u6587',
-
-    'ad.loginTitle': '\u7BA1\u7406\u767B\u5F55',
-    'ad.loginSub': '\u4F7F\u7528\u7BA1\u7406\u4EE4\u724C\u767B\u5F55',
-    'ad.tokenPh': '\u7BA1\u7406\u4EE4\u724C',
-    'ad.login': '\u767B\u5F55',
-    'ad.badToken': '\u4EE4\u724C\u65E0\u6548',
-    'ad.total': '\u5206\u4EAB\u603B\u6570',
-    'ad.active': '\u5F53\u524D\u6709\u6548',
-    'ad.files': '\u6587\u4EF6',
-    'ad.texts': '\u6587\u672C',
-    'ad.storage': '\u5B58\u50A8\u7A7A\u95F4 \xB7 \u5DF2\u7528 / \u603B\u5BB9\u91CF',
-    'ad.storageReserved': '\u542B\u4E0A\u4F20\u9884\u7559\u7A7A\u95F4',
-    'ad.storageUnavailable': '\u6682\u4E0D\u53EF\u7528',
-    'ad.shareBytes': '\u5206\u4EAB\u5185\u5BB9\u5927\u5C0F',
-    'ad.today': '\u4ECA\u65E5\u65B0\u589E',
-    'ad.th.code': '\u53E3\u4EE4', 'ad.th.kind': '\u7C7B\u578B', 'ad.th.content': '\u5185\u5BB9',
-    'ad.th.size': '\u5927\u5C0F', 'ad.th.pickups': '\u5DF2\u53D6/\u4E0A\u9650', 'ad.th.expire': '\u8FC7\u671F\u65F6\u95F4',
-    'ad.th.status': '\u72B6\u6001', 'ad.th.created': '\u521B\u5EFA\u65F6\u95F4',
-    'ad.kind.file': '\u6587\u4EF6', 'ad.kind.text': '\u6587\u672C',
-    'ad.st.active': '\u6709\u6548', 'ad.st.expired': '\u5DF2\u8FC7\u671F', 'ad.st.exhausted': '\u5DF2\u53D6\u5B8C',
-    'ad.loading': '\u52A0\u8F7D\u4E2D\u2026',
-    'ad.empty': '\u6682\u65E0\u5206\u4EAB',
-    'ad.loadFail': '\u52A0\u8F7D\u5931\u8D25',
-    'ad.page': '\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761',
-    'ad.prev': '\u4E0A\u4E00\u9875', 'ad.next': '\u4E0B\u4E00\u9875',
-    'ad.refresh': '\u21BB \u5237\u65B0',
-    'ad.logout': '\u9000\u51FA\u767B\u5F55',
-    'ad.download': '\u4E0B\u8F7D',
-    'ad.delete': '\u5220\u9664',
-    'ad.deleted': '\u5DF2\u5220\u9664',
-    'ad.deleteFail': '\u5220\u9664\u5931\u8D25',
-    'ad.delTitle': '\u4F5C\u5E9F\u8FD9\u5F20\u53D6\u4EF6\u51ED\u8BC1?',
-    'ad.delWarn': '\u4F5C\u5E9F\u540E\u53E3\u4EE4\u7ACB\u5373\u5931\u6548,\u5BF9\u65B9\u5C06\u65E0\u6CD5\u53D6\u4EF6,\u4E14\u4E0D\u53EF\u6062\u590D\u3002',
-    'ad.delOk': '\u786E\u8BA4\u4F5C\u5E9F',
-    'ad.textFallback': '(\u6587\u672C)',
-    'ad.unnamed': '(\u672A\u547D\u540D)',
-    'ad.chars': '{0} \u5B57',
-    'ad.forever': '\u6C38\u4E45',
-
-    'nf.title': '\u9875\u9762\u4E0D\u5B58\u5728',
-    'nf.body': '\u4F60\u8981\u627E\u7684\u9875\u9762\u4E0D\u5728\u4E2D\u8F6C\u7AD9\u91CC',
-    'nf.send': '\u53BB\u53D1\u9001',
-    'nf.pickup': '\u53BB\u53D6\u4EF6',
-  },
-
-  en: {
-    'ad.settings': 'Settings',
-    'ad.displaySettings': 'List display',
-    'ad.filesPageSize': 'Files per page',
-    'ad.auditPageSize': 'Logs per page',
-    'ad.browserSettings': 'Applied immediately, saved in this browser',
-    'ad.preferenceNotSaved': 'Applied for now; this browser could not save the preference',
-    'ad.filesPagination': 'File pagination',
-    'ad.auditPagination': 'Log pagination',
-    'context.add': 'Additional information (optional)',
-    'context.name': 'Your name',
-    'context.description': 'Description (all files in this batch)',
-    'context.visibility': 'Only visible to the administrator',
-    'ad.retentionTitle': 'Automatic cleanup',
-    'ad.recentUploads': 'Recent uploads',
-    'ad.historyScope': 'Latest 10 retained shares',
-    'ad.backFile': 'Back to file',
-    'ad.submittedName': 'Submitted name',
-    'ad.requestIP': 'Request IP',
-    'ad.network': 'Network',
-    'ad.browserReported': 'Browser (reported)',
-    'ad.copyIP': 'Copy',
-    'ad.ipCopied': 'IP copied',
-    'ad.copyFailed': 'Copy failed; select the IP manually',
-    'ad.fileDescription': 'Description',
-    'audit.detail.filename': 'Filename',
-    'audit.detail.sizeBytes': 'Size (bytes)',
-    'audit.navigation': "Admin pages",
-    'audit.files': "Files",
-    'audit.title': "Audit logs",
-    'audit.retention': "Last 30 days, up to 1,000 entries; times shown in your local timezone",
-    'audit.export': "Export results",
-    'audit.categories': "Log categories",
-    'audit.all': "All logs",
-    'audit.login': "Login logs",
-    'audit.operation': "Operations",
-    'audit.security': "Security",
-    'audit.result': "Result",
-    'audit.anyResult': "All results",
-    'audit.success': "Success",
-    'audit.failed': "Failed",
-    'audit.blocked': "Blocked",
-    'audit.from': "Start date",
-    'audit.to': "End date",
-    'audit.keyword': "IP / Target",
-    'audit.search': "Search IP or pickup code",
-    'audit.filter': "Filter",
-    'audit.reset': "Reset",
-    'audit.time': "Time",
-    'audit.action': "Action",
-    'audit.actor': "Actor",
-    'audit.source': "Source IP / Location",
-    'audit.target': "Target",
-    'audit.details': "Details",
-    'audit.empty': "No matching logs. Recording starts when this feature is deployed.",
-    'audit.disabled': "Audit logging is not enabled: bind R2 or D1.",
-    'audit.page': "Page {0} / {1} \xB7 {2} entries",
-    'audit.dateError': "Start date must not be after end date",
-    'audit.http': "Request / Status",
-    'audit.duration': "Processing time",
-    'audit.id': "Log ID",
-    'audit.agent': "Browser identifier (client supplied)",
-    'audit.yes': "Yes",
-    'audit.no': "No",
-    'audit.description': "Description",
-    'audit.downloadHint': "The file stream was opened; this does not confirm the browser finished downloading.",
-    'audit.writeFailed': "The operation was processed, but its audit record could not be saved. Check log storage.",
-    'audit.action.login': "Admin login",
-    'audit.action.logout': "Log out",
-    'audit.action.retention': "Change expired retention",
-    'audit.action.uploadPolicy': "Change weekly upload quota",
-    'audit.action.unblock': "Unblock IP",
-    'audit.action.cleanup': "Run expired cleanup",
-    'audit.action.export': "Export audit logs",
-    'audit.action.ban': "Trigger login ban",
-    'audit.action.delete': "Delete share",
-    'audit.action.note': "Change visitor note",
-    'audit.action.viewSource': "View source details",
-    'audit.action.download': "Download file",
-    'audit.actor.admin': "Administrator",
-    'audit.actor.token': "Scheduler / Token",
-    'audit.actor.anonymous': "Unauthenticated",
-    'audit.detail.bannedUntil': "Blocked until",
-    'audit.detail.expiredRetentionDays': "Expired retention days",
-    'audit.detail.weeklyFileLimit': "Weekly upload limit",
-    'audit.detail.notePresent': "Note set",
-    'audit.detail.alreadyDeleted': "Share already absent",
-    'audit.detail.deletedShares': "Shares deleted",
-    'audit.detail.abortedSessions': "Upload sessions aborted",
-
-    'ad.loginProtection': "Login protection",
-    'ad.guardRule': "{1} failures in {0} minutes block login for {2} minutes",
-    'ad.guardDisabled': "Not enabled: bind R2 or D1",
-    'ad.guardEmpty': "No blocked IPs",
-    'ad.guardUnknown': "Unknown source (shared limit)",
-    'ad.guardFailures': "{0} failures",
-    'ad.guardUntil': "Unblocks at {0}",
-    'ad.guardLast': "Last failure {0}",
-    'ad.guardUnblock': "Unblock",
-    'ad.guardUnblocked': "IP unblocked",
-    'ad.loginBlocked': "Too many failed logins. Wait until the block expires.",
-    'ad.guardUnavailable': "Login protection unavailable. Please try again later.",
-
-    'ad.formatUnknown': "Unknown format",
-    'ad.format.archive': "Archive",
-    'ad.format.program': "Application",
-    'ad.format.document': "Document",
-    'ad.format.image': "Image",
-    'ad.format.video': "Video",
-    'ad.format.audio': "Audio",
-    'ad.format.text': "Text / code",
-    'ad.format.file': "File",
-    'ad.uploader': "Uploaded by",
-    'ad.shareState': "Share status",
-    'ad.fileAvailability': "File status",
-    'ad.fileState.available': "Available",
-    'ad.fileState.missing': "File missing",
-    'ad.fileState.unknown': "Unable to verify",
-    'ad.timeLeft': "{0} left",
-    'ad.timeExpired': "Expired {0} ago",
-    'ad.cleanupPermanent': "No automatic cleanup",
-    'ad.cleanupActive': "Kept for {0} days after expiry",
-    'ad.cleanupRetained': "Retained after expiry",
-    'ad.cleanupPending': "Awaiting cleanup",
-    'ad.technical': "Technical details",
-    'ad.storedSize': "Stored size",
-    'ad.storedAt': "Stored at",
-    'ad.exactBytes': "{0} bytes",
-    'ad.formatHint': "Format is inferred from the filename; content has not been verified.",
-    'ad.tryDownload': "Try download",
-    'ad.guestLimits': "Unnoted visitor limits",
-    'ad.weeklyFiles': "Files per week",
-    'ad.guestRules': "Resets Monday, Beijing time. Accepted uploads count even if cancelled. Unnoted visitors cannot create permanent or unlimited-pickup shares.",
-    'ad.notePrivileges': "A note removes weekly limits and allows permanent/unlimited shares. Clear it to restore limits.",
-    'ad.guestSaved': "Saved for subsequent uploads",
-    'policy.expiry': "1 to 30 days",
-    'policy.pickups': "1 or 5 pickups",
-    'policy.remaining': "{0} / {1} files left this week \xB7 resets {2}",
-    'policy.unavailable': "Loading upload permissions. Refresh if this persists.",
-    'policy.contact': "File uploads are unavailable. Contact the administrator.",
-    'ad.fileDetails': 'File details',
-    'ad.filename': 'Filename',
-    'ad.fileType': 'File type',
-    'ad.cleanupAfter': 'Cleanup after',
-    'ad.retentionDays': 'Keep after expiry',
-    'ad.days': 'days',
-    'ad.save': 'Save',
-    'ad.retry': 'Retry',
-    'ad.settingsSaved': 'Saved for subsequent cleanup runs',
-    'ad.source': 'Upload source',
-    'ad.visitor': 'Visitor {0}',
-    'ad.visitorId': 'Visitor ID',
-    'ad.sourceUnknown': 'Unknown',
-    'ad.sourceUnrecorded': 'Not recorded',
-    'ad.sourceLocation': 'Exit location',
-    'ad.sourceTime': 'Recorded at',
-    'ad.sourceNote': 'Admin note',
-    'ad.sourceSave': 'Save note',
-    'ad.sourceClose': 'Close',
-    'ad.sourceSaved': 'Note saved',
-    'err.capacity': 'Storage capacity exceeds the free quota.',
-    'err.capacityRemaining': 'Storage capacity exceeds the free quota. Available space: approximately {0} GB ({1} bytes).',
-    'doc.send': 'file-relay - Send',
-    'doc.pickup': 'file-relay - Pickup',
-    'doc.admin': 'file-relay - Admin',
-    'doc.404': '404 - file-relay',
-
-    'brand.name': 'file-relay',
-    'brand.tagline': 'Files, picked up like parcels',
-    'brand.pickup': 'Pickup',
-    'brand.admin': 'Admin',
-    'nav.pickup': 'Pick up',
-    'nav.send': 'Send',
-    'nav.theme': 'Toggle theme',
-    'nav.lang': 'Switch language',
-    'foot': [
-      'Yours, from afar',
-      'Words run short, feelings run long',
-      'See you down the road',
-      'Signed, sealed, delivered',
-      'Through wind and rain, the relay waits',
-      'Take care, until next time',
-    ],
-
-    'tab.file': 'Send file',
-    'tab.text': 'Send text',
-    'dz.click': 'Click to choose files',
-    'dz.drop': ', or drag & drop / paste here',
-    'dz.aria': 'Choose files',
-    'dz.hint': 'A 6-digit pickup code is generated after upload',
-    'dz.hintMax': 'Up to {0} per file \xB7 multiple selection supported',
-    'remove': 'Remove',
-    'text.placeholder': 'Paste or type the text to share\u2026',
-    'opt.expiry': 'Expires',
-    'opt.pickups': 'Pickup limit',
-    'seg.1d': '1 day', 'seg.7d': '7 days', 'seg.30d': '30 days', 'seg.forever': 'Forever',
-    'seg.p1': '1\xD7', 'seg.p5': '5\xD7', 'seg.punlimited': 'Unlimited',
-    'btn.upload': 'Start upload',
-    'btn.genCode': 'Generate code',
-    'btn.cancel': 'Cancel',
-    'btn.copyCode': 'Copy code',
-    'btn.copyLink': 'Copy link',
-    'btn.copyAll': 'Copy all codes',
-    'btn.again': 'New share',
-
-    'prog.preparing': 'Preparing\u2026',
-    'prog.uploading': 'Uploading\u2026',
-    'prog.init': 'Checking available space\u2026',
-    'prog.merging': 'Finishing upload\u2026',
-    'prog.file': 'file {0}/{1}',
-    'prog.part': 'part {0}/{1}',
-    'prog.eta': 'ETA {0}',
-    'prog.retry': 'Upload failed, retrying {0}/3\u2026',
-
-    'result.ok': '\u2705 Shared! Send the code to the recipient',
-    'result.okBatch': '\u2705 {0} files shared successfully',
-    'ticket.title': 'PICKUP TICKET',
-    'ticket.no': '\u2116 {0}',
-    'send.cap': 'SHARE CONTENT',
-    'receipt.cap': 'SHARE RESULTS',
-    'ph.title': 'READY TO SHARE',
-    'ph.sub': 'Copy your pickup code or link here after sharing',
-
-    'flow.dropT': 'Send',
-    'flow.dropS': 'Choose files or enter text',
-    'flow.tickT': 'Ticket',
-    'flow.tickS': 'A 6-digit pickup code is issued',
-    'flow.pickT': 'Pick up',
-    'flow.pickS': 'The recipient claims it with the code',
-
-    'route.senderT': 'Sender \xB7 you',
-    'route.senderS': 'Choose content, expiry and pickup limit',
-    'route.relayT': 'Create a share',
-    'route.relayS': 'Send the pickup code or link to the recipient',
-    'route.takerT': 'Recipient',
-    'route.takerS': 'Enter the code or open the link to pick up',
-    'route.fine': 'Keep the code private; share only with your recipients',
-
-    'feat.splitT': 'File sharing', 'feat.splitS': 'Up to {0} per file',
-    'feat.ttlT': 'You set the clock', 'feat.ttlS': '1-30 days, or forever',
-    'feat.limitT': 'Limited pickups', 'feat.limitS': '1\xD7 \xB7 5\xD7 \xB7 unlimited',
-    'feat.selfT': 'Easy pickup', 'feat.selfS': 'Use a code, link or QR code',
-    'qr.hint': 'Scan to pick up',
-    'label.code': 'code',
-    'label.link': 'link',
-    'copied': '{0} copied',
-    'copy.fail': 'Copy failed, please copy manually',
-    'copied.btn': '\u2713 Copied',
-
-    'meta.after': 'Expires in {0} ({1})',
-    'meta.forever': 'Never expires',
-    'meta.pickups': '{0} pickups allowed',
-    'meta.unlimited': 'Unlimited pickups',
-    'files.count': '{0} files \xB7 {1} total',
-    'unknown.type': 'unknown type',
-    'text.counter': '{0} / {1}',
-
-    'err.oversize': 'File exceeds the {0} limit ({1})',
-    'err.empty': 'Empty files cannot be shared',
-    'err.tooMany': 'Up to {0} files per batch',
-    'err.upload': 'Upload failed, please retry',
-    'err.submit': 'Submission failed',
-    'req.fail': 'Request failed ({0})',
-    'toast.cancelled': 'Upload cancelled',
-
-    'dur.s': '{0}s',
-    'dur.ms': '<1s',
-    'dur.hm': '{0}m {1}s',
-    'dur.h': '{0}m',
-    'dur.hH': '{0}h {1}m',
-    'dur.hH2': '{0}h',
-    'dur.d': '{0}d',
-
-    'pk.title': 'Enter pickup code',
-    'pk.sub': 'Enter the 6-digit code to retrieve the shared file or text',
-    'pk.aria': '6-digit pickup code',
-    'pk.fail': 'Pickup failed',
-    'pk.textChars': 'Text \xB7 {0} chars',
-    'pk.copyAllText': 'Copy all text',
-    'pk.download': '\u2B07 Download file',
-    'pk.again': 'Try another code',
-    'pk.expireAt': 'Expires {0}',
-    'pk.left': '{0} pickups left',
-    'pk.unnamed': 'Untitled file',
-    'copied.text': 'Full text copied',
-
-    'ad.loginTitle': 'Admin login',
-    'ad.loginSub': 'Sign in with your admin token',
-    'ad.tokenPh': 'Admin token',
-    'ad.login': 'Log in',
-    'ad.badToken': 'Invalid token',
-    'ad.total': 'Total shares',
-    'ad.active': 'Active',
-    'ad.files': 'Files',
-    'ad.texts': 'Texts',
-    'ad.storage': 'Storage \xB7 used / capacity',
-    'ad.storageReserved': 'Includes upload reservations',
-    'ad.storageUnavailable': 'Unavailable',
-    'ad.shareBytes': 'Shared content size',
-    'ad.today': 'New today',
-    'ad.th.code': 'Code', 'ad.th.kind': 'Type', 'ad.th.content': 'Content',
-    'ad.th.size': 'Size', 'ad.th.pickups': 'Picked/Limit', 'ad.th.expire': 'Expires',
-    'ad.th.status': 'Status', 'ad.th.created': 'Created',
-    'ad.kind.file': 'File', 'ad.kind.text': 'Text',
-    'ad.st.active': 'Active', 'ad.st.expired': 'Expired', 'ad.st.exhausted': 'Exhausted',
-    'ad.loading': 'Loading\u2026',
-    'ad.empty': 'No shares yet',
-    'ad.loadFail': 'Failed to load',
-    'ad.page': 'Page {0} / {1} \xB7 {2} total',
-    'ad.prev': 'Prev', 'ad.next': 'Next',
-    'ad.refresh': '\u21BB Refresh',
-    'ad.logout': 'Log out',
-    'ad.download': 'Download',
-    'ad.delete': 'Delete',
-    'ad.deleted': 'Deleted',
-    'ad.deleteFail': 'Delete failed',
-    'ad.delTitle': 'Void this ticket?',
-    'ad.delWarn': 'The code stops working immediately, the recipient can no longer pick it up, and this cannot be undone.',
-    'ad.delOk': 'Void it',
-    'ad.textFallback': '(text)',
-    'ad.unnamed': '(unnamed)',
-    'ad.chars': '{0} chars',
-    'ad.forever': 'Forever',
-
-    'nf.title': 'Page not found',
-    'nf.body': "The page you're looking for isn't in this relay",
-    'nf.send': 'Send files',
-    'nf.pickup': 'Pick up',
-  },
-};
-
-export let LANG =
-  localStorage.getItem('lang') ||
-  ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
-
-/** \u53D6\u8BCD:\u5F53\u524D\u8BED\u8A00 \u2192 \u4E2D\u6587\u515C\u5E95 \u2192 key \u672C\u8EAB;\u6570\u7EC4\u503C\u968F\u673A\u53D6\u4E00\u6761;{0}{1}\u2026 \u4F9D\u6B21\u66FF\u6362 */
-export function t(key, ...args) {
-  let s = (DICT[LANG] && DICT[LANG][key]) ?? DICT.zh[key] ?? key;
-  if (Array.isArray(s)) s = s[Math.floor(Math.random() * s.length)];
-  args.forEach((v, i) => { s = s.replaceAll(\`{\${i}}\`, String(v)); });
-  return s;
-}
-
-const rerenders = [];
-/** \u5404\u9875\u9762\u767B\u8BB0:\u8BED\u8A00\u5207\u6362\u540E\u91CD\u7B97\u52A8\u6001\u6587\u6848 */
-export function onLangChange(fn) { rerenders.push(fn); }
-
-function applyLang() {
-  document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';
-  document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = t(n.dataset.i18n); });
-  document.querySelectorAll('[data-i18n-ph]').forEach((n) => { n.placeholder = t(n.dataset.i18nPh); });
-  document.querySelectorAll('[data-i18n-title]').forEach((n) => { n.title = t(n.dataset.i18nTitle); });
-  document.querySelectorAll('[data-i18n-aria]').forEach((n) => { n.setAttribute('aria-label', t(n.dataset.i18nAria)); });
-  const btn = document.getElementById('lang-btn');
-  if (btn) btn.textContent = LANG === 'en' ? '\u4E2D' : 'EN';
-}
-
-export function initI18n() {
-  applyLang();
-  document.getElementById('lang-btn')?.addEventListener('click', () => {
-    LANG = LANG === 'en' ? 'zh' : 'en';
-    localStorage.setItem('lang', LANG);
-    applyLang();
-    rerenders.forEach((fn) => fn());
-  });
-}
+`, "js/admin-audit.js": "import { $, api, el, fmtDate } from './common.js';\r\nimport { t, LANG, onLangChange } from './i18n.js';\r\nimport { pageSize, scrollToList } from './admin-preferences.js';\r\n\r\nexport function initAudit() {\r\n  const view = $('#admin-audit-view');\r\n  const body = $('#audit-body');\r\n  const dialog = $('#audit-dialog');\r\n  let category = 'all', offset = 0, total = 0, request = 0;\r\n  let filters = {}, rows = [], available = false;\r\n  let limit = pageSize('audit');\r\n  const action = row => t(`audit.action.${row.action}`);\r\n  const actor = row => t(`audit.actor.${row.actor}`);\r\n  const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;\r\n  function place(row) {\r\n    let country = row.country;\r\n    if (/^[A-Z]{2}$/.test(country)) country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\r\n    return [...new Set([country, row.region, row.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\r\n  }\r\n  function close() { dialog.close(); $('#audit-detail').replaceChildren(); }\r\n  function details(row) {\r\n    const fields = [\r\n      [t('audit.time'), fmtDate(row.at)], [t('audit.action'), action(row)],\r\n      [t('audit.result'), t(`audit.${row.result}`)], [t('audit.actor'), actor(row)],\r\n      ['IP', ip(row)], [t('ad.sourceLocation'), place(row)],\r\n      [t('audit.target'), row.target || '\u2014'], [t('audit.http'), `${row.method} \xB7 ${row.status}`],\r\n      [t('audit.duration'), `${row.durationMs} ms`], [t('audit.id'), row.id],\r\n      [t('audit.agent'), row.agent || '\u2014'],\r\n    ];\r\n    for (const [key, value] of Object.entries(row.detail)) {\r\n      fields.push([t(`audit.detail.${key}`), key === 'bannedUntil' ? fmtDate(value)\r\n        : typeof value === 'boolean' ? t(value ? 'audit.yes' : 'audit.no') : String(value)]);\r\n    }\r\n    if (row.action === 'download') fields.push([t('audit.description'), t('audit.downloadHint')]);\r\n    $('#audit-detail').replaceChildren(...fields.map(([label, value]) => el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));\r\n    dialog.showModal();\r\n  }\r\n  function render() {\r\n    body.replaceChildren(...rows.map(row => el('tr', {},\r\n      el('td', {}, fmtDate(row.at)),\r\n      el('td', {}, el('span', {}, action(row)), el('small', { class: 'muted' }, t(`audit.${row.category}`))),\r\n      el('td', {}, el('span', { class: `audit-result audit-${row.result}` }, t(`audit.${row.result}`))),\r\n      el('td', { class: 'audit-actor' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.actor')), actor(row)),\r\n      el('td', { class: 'audit-source' }, el('span', { class: 'mono' }, ip(row)),\r\n        row.country || row.region || row.city ? el('small', { class: 'muted' }, place(row)) : null),\r\n      el('td', { class: 'audit-target' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.target')), row.target || '\u2014'),\r\n      el('td', {}, el('button', { type: 'button', class: 'btn small ghost', onclick: () => details(row) }, t('audit.details'))),\r\n    )));\r\n    $('#audit-page').textContent = t('audit.page', Math.floor(offset / limit) + 1, Math.max(1, Math.ceil(total / limit)), total);\r\n    $('#audit-prev').disabled = offset === 0;\r\n    $('#audit-next').disabled = offset + limit >= total;\r\n  }\r\n  async function load() {\r\n    const ticket = ++request;\r\n    available = false;\r\n    $('#audit-error').hidden = true;\r\n    $('#audit-state').textContent = t('ad.loading');\r\n    $('#audit-page').textContent = '';\r\n    body.replaceChildren();\r\n    for (const id of ['audit-prev', 'audit-next', 'audit-export', 'audit-refresh']) $('#' + id).disabled = true;\r\n    try {\r\n      const params = new URLSearchParams({ ...filters, category, offset, limit });\r\n      const data = await api(`/api/admin/audit-logs?${params}`);\r\n      if (ticket !== request || view.hidden) return;\r\n      if (typeof data.enabled !== 'boolean' || !Array.isArray(data.rows) || !Number.isSafeInteger(data.total)) throw new Error(t('ad.loadFail'));\r\n      available = data.enabled;\r\n      rows = data.rows; total = data.total;\r\n      if (available && offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return load(); }\r\n      $('#audit-state').textContent = !available ? t('audit.disabled') : !total ? t('audit.empty') : '';\r\n      render();\r\n      $('#audit-export').disabled = !available || total === 0;\r\n    } catch (e) {\r\n      if (ticket !== request || view.hidden) return;\r\n      $('#audit-state').textContent = '';\r\n      $('#audit-error').textContent = e.message || t('ad.loadFail');\r\n      $('#audit-error').hidden = false;\r\n    } finally { if (ticket === request) $('#audit-refresh').disabled = false; }\r\n  }\r\n  function selectView(audit) {\r\n    view.hidden = !audit;\r\n    $('#admin-files-view').hidden = audit;\r\n    $('#files-pager').hidden = audit;\r\n    $('#audit-pager').hidden = !audit;\r\n    for (const [id, active] of [['admin-files-tab', !audit], ['admin-audit-tab', audit]]) {\r\n      $('#' + id).setAttribute('aria-pressed', String(active));\r\n      $('#' + id).classList.toggle('ghost', !active);\r\n    }\r\n    if (audit) load(); else { request++; close(); }\r\n  }\r\n  $('#admin-files-tab').addEventListener('click', () => selectView(false));\r\n  $('#admin-audit-tab').addEventListener('click', () => selectView(true));\r\n  $('#audit-filter').addEventListener('submit', e => {\r\n    e.preventDefault();\r\n    const from = $('#audit-from').value, to = $('#audit-to').value;\r\n    if (from && to && from > to) {\r\n      $('#audit-error').textContent = t('audit.dateError'); $('#audit-error').hidden = false; return;\r\n    }\r\n    filters = { result: $('#audit-result').value, q: $('#audit-q').value.trim() };\r\n    if (from) filters.from = new Date(`${from}T00:00:00`).getTime();\r\n    if (to) { const end = new Date(`${to}T00:00:00`); end.setDate(end.getDate() + 1); filters.to = end.getTime() - 1; }\r\n    offset = 0; load();\r\n  });\r\n  $('#audit-reset').addEventListener('click', () => { $('#audit-filter').reset(); filters = {}; offset = 0; load(); });\r\n  for (const button of document.querySelectorAll('.audit-categories button')) button.addEventListener('click', () => {\r\n    category = button.dataset.category; offset = 0;\r\n    for (const item of document.querySelectorAll('.audit-categories button')) item.setAttribute('aria-pressed', String(item === button));\r\n    load();\r\n  });\r\n  $('#audit-prev').addEventListener('click', async () => { offset = Math.max(0, offset - limit); await load(); if (!view.hidden) scrollToList('.audit-table-wrap'); });\r\n  $('#audit-next').addEventListener('click', async () => { offset += limit; await load(); if (!view.hidden) scrollToList('.audit-table-wrap'); });\r\n  $('#audit-refresh').addEventListener('click', load);\r\n  window.addEventListener('admin-page-size', event => {\r\n    if (event.detail.name !== 'audit') return;\r\n    limit = event.detail.value; offset = 0;\r\n    if (!view.hidden) load();\r\n  });\r\n  $('#audit-export').addEventListener('click', async () => {\r\n    $('#audit-export').disabled = true;\r\n    $('#audit-error').hidden = true;\r\n    const exportFilters = { ...filters, category };\r\n    try {\r\n      const params = new URLSearchParams({ ...exportFilters, offset: 0, limit: 1000 });\r\n      const data = await api(`/api/admin/audit-logs/export?${params}`);\r\n      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), filters: exportFilters, ...data }, null, 2)], { type: 'application/json' });\r\n      const url = URL.createObjectURL(blob);\r\n      const link = el('a', { href: url, download: `audit-${new Date().toISOString().slice(0, 10)}.json` });\r\n      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);\r\n    } catch (e) { $('#audit-error').textContent = e.message || t('ad.loadFail'); $('#audit-error').hidden = false; }\r\n    finally { $('#audit-export').disabled = !available || total === 0; }\r\n  });\r\n  $('#audit-close').addEventListener('click', close);\r\n  dialog.addEventListener('cancel', e => { e.preventDefault(); close(); });\r\n  window.addEventListener('audit-write-failed', () => { $('#audit-write-warning').hidden = false; });\r\n  onLangChange(() => { close(); if (!view.hidden) load(); });\r\n}\r\n", "js/admin-preferences.js": "import { $ } from './common.js';\nimport { t } from './i18n.js';\n\nconst options = { files: [10, 20, 40], audit: [20, 50, 100] };\nconst values = { files: 20, audit: 20 };\nfor (const name of Object.keys(values)) {\n  try {\n    const saved = Number(localStorage.getItem(`admin-page-size-${name}`));\n    if (options[name].includes(saved)) values[name] = saved;\n  } catch { /* Browser preferences are optional when persistent storage is blocked. */ }\n}\nexport function pageSize(name) { return values[name]; }\n\nexport function scrollToList(selector) {\n  const top = $(selector).getBoundingClientRect().top + window.scrollY\n    - $('.admin-topbar').getBoundingClientRect().height - 12;\n  window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });\n}\n\nexport function initAdminPreferences() {\n  const dialog = $('#settings-dialog');\n  $('#admin-settings-btn').addEventListener('click', () => dialog.showModal());\n  $('#settings-close').addEventListener('click', () => dialog.close());\n  for (const name of Object.keys(values)) {\n    const select = $(`#${name}-page-size`);\n    select.value = String(values[name]);\n    select.addEventListener('change', () => {\n      const value = Number(select.value);\n      if (!options[name].includes(value)) return;\n      values[name] = value;\n      $('#preferences-error').hidden = true;\n      try { localStorage.setItem(`admin-page-size-${name}`, String(value)); }\n      catch {\n        $('#preferences-error').textContent = t('ad.preferenceNotSaved');\n        $('#preferences-error').hidden = false;\n      }\n      window.dispatchEvent(new CustomEvent('admin-page-size', { detail: { name, value } }));\n    });\n  }\n  window.addEventListener('audit-write-failed', () => { $('#settings-audit-warning').hidden = false; });\n}\n", "js/admin.js": "import { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el } from './common.js';\r\nimport { LANG, t, onLangChange, initI18n } from './i18n.js';\r\nimport { initAudit } from './admin-audit.js';\r\nimport { pageSize, scrollToList, initAdminPreferences } from './admin-preferences.js';\r\n\r\ninitTheme();\r\ninitI18n();\r\ninitDialogs();\r\ninitAdminPreferences();\r\ninitAudit();\r\n\r\nconst loginCard = $('#admin-login');\r\nconst panel = $('#admin-panel');\r\nconst loginError = $('#login-error');\r\nconst tokenInput = $('#admin-token');\r\nconst statsRow = $('#stats-row');\r\nconst tbody = $('#shares-body');\r\nconst btnPrev = $('#btn-prev');\r\nconst btnNext = $('#btn-next');\r\nconst btnRefresh = $('#btn-refresh');\r\nconst pageInfo = $('#page-info');\r\n\r\nlet limit = pageSize('files'); // Bounded to 40 to leave room for KV reads on the free plan.\r\nlet offset = 0;\r\nlet total = 0;\r\nlet listRequest = 0;\r\nlet listBusy = false;\r\n\r\n/* \u8BED\u8A00\u5207\u6362:\u9762\u677F\u53EF\u89C1\u65F6\u6309\u65B0\u8BED\u8A00\u91CD\u62C9\u6587\u6848 */\r\nonLangChange(() => {\r\n  if ($('#source-dialog').open) closeSource();\r\n  if ($('#file-dialog').open) closeFileDetails();\r\n  if (!panel.hidden) {\r\n    loadStats();\r\n    loadList();\r\n    loadLoginProtection();\r\n  }\r\n});\r\n\r\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\r\n(async () => {\r\n  try {\r\n    await api('/api/admin/stats');\r\n    showPanel();\r\n  } catch {\r\n    loginCard.hidden = false;\r\n    tokenInput.focus();\r\n  }\r\n})();\r\n\r\nasync function login() {\r\n  const token = tokenInput.value.trim();\r\n  if (!token || $('#btn-login').disabled) return;\r\n  $('#btn-login').disabled = true;\r\n  loginError.hidden = true;\r\n  try {\r\n    await api('/api/admin/login', { method: 'POST', body: { token } });\r\n    showPanel();\r\n  } catch (e) {\r\n    loginError.textContent = e.code === 'login_blocked' ? t('ad.loginBlocked')\r\n      : e.code === 'login_protection_unavailable' ? t('ad.guardUnavailable') : e.message || t('ad.badToken');\r\n    loginError.hidden = false;\r\n  } finally { $('#btn-login').disabled = false; }\r\n}\r\n$('#btn-login').addEventListener('click', login);\r\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\r\n\r\nfunction showPanel() {\r\n  loginCard.hidden = true;\r\n  panel.hidden = false;\r\n  $('#admin-pagination').hidden = false;\r\n  $('#admin-settings-btn').hidden = false;\r\n  loadStats();\r\n  loadList();\r\n  loadSettings();\r\n  loadGuestPolicy();\r\n  loadLoginProtection();\r\n}\r\n\r\n$('#btn-logout').addEventListener('click', async () => {\r\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\r\n  location.reload();\r\n});\r\n\r\n/* ---------- \u7EDF\u8BA1 ---------- */\r\nlet lastStats = null; // \u5220\u9664\u540E\u672C\u5730\u9012\u51CF\u7528,\u907F\u514D\u7ACB\u5373\u91CD\u62C9\u649E\u4E0A KV \u6700\u7EC8\u4E00\u81F4\u7A97\u53E3\r\n\r\nfunction renderStats(s) {\r\n  const counts = [\r\n    [s.total, 'ad.total'], [s.active, 'ad.active'], [s.files, 'ad.files'],\r\n    [s.texts, 'ad.texts'], [s.todayCreated, 'ad.today'],\r\n  ];\r\n  const capacity = s.fileBackend === 'r2' ? s.storage : null;\r\n  const storageCard = el('div', { class: 'stat-card storage-card' },\r\n    el('small', {}, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes')),\r\n    capacity\r\n      ? el('div', { class: 'storage-value' },\r\n          el('b', {}, fmtBytes(capacity.usedBytes)),\r\n          el('span', { class: 'storage-total' }, ` / ${fmtBytes(capacity.capacityBytes)}`))\r\n      : el('div', { class: 'storage-value' }, el('b', {}, s.fileBackend === 'r2'\r\n          ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),\r\n  );\r\n  if (capacity) {\r\n    const ratio = Math.min(1, Math.max(0, capacity.usedBytes / capacity.capacityBytes));\r\n    storageCard.append(\r\n      el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,\r\n        value: capacity.usedBytes, ariaLabel: t('ad.storage') }),\r\n      el('div', { class: 'storage-caption' },\r\n        el('small', {}, t('ad.storageReserved')), el('small', {}, `${Math.round(ratio * 100)}%`)),\r\n    );\r\n  }\r\n  statsRow.replaceChildren(\r\n    el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>\r\n      el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),\r\n    storageCard,\r\n  );\r\n}\r\n\r\nasync function loadStats() {\r\n  try {\r\n    lastStats = await api('/api/admin/stats');\r\n    renderStats(lastStats);\r\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\r\n}\r\n\r\n/** \u5220\u9664\u6210\u529F\u540E\u672C\u5730\u540C\u6B65\u7EDF\u8BA1(\u670D\u52A1\u7AEF KV \u7D22\u5F15\u6700\u957F 60s \u624D\u53CD\u6620\u5220\u9664,\u91CD\u62C9\u4F1A\u770B\u5230\u65E7\u6570) */\r\nasync function statsAfterDelete(r) {\r\n  if (!lastStats) return;\r\n  const s = { ...lastStats };\r\n  s.total = Math.max(0, s.total - 1);\r\n  if (r.kind === 'file') s.files = Math.max(0, s.files - 1);\r\n  else s.texts = Math.max(0, s.texts - 1);\r\n  s.totalBytes = Math.max(0, s.totalBytes - r.size);\r\n  if (r.status === 'active') s.active = Math.max(0, s.active - 1);\r\n  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);\r\n  if (r.created_at >= todayStart.getTime()) s.todayCreated = Math.max(0, s.todayCreated - 1);\r\n  lastStats = s;\r\n  renderStats(s);\r\n  if (s.fileBackend === 'r2') {\r\n    try { s.storage = (await api('/api/admin/stats')).storage; }\r\n    catch { s.storage = null; } // Do not present stale capacity as current after deletion.\r\n    if (lastStats === s) renderStats(s);\r\n  }\r\n}\r\n\r\n/* ---------- \u5217\u8868 ---------- */\r\nconst STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };\r\nconst KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };\r\n\r\nasync function loadList() {\r\n  const request = ++listRequest;\r\n  listBusy = true;\r\n  btnPrev.disabled = btnNext.disabled = btnRefresh.disabled = true;\r\n  pageInfo.textContent = t('ad.loading');\r\n  tbody.setAttribute('aria-busy', 'true');\r\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));\r\n  try {\r\n    const data = await api(`/api/admin/shares?limit=${limit}&offset=${offset}`);\r\n    if (request !== listRequest) return;\r\n    if (!Number.isSafeInteger(data.total) || data.total < 0 || !Array.isArray(data.rows)) throw new Error(t('ad.loadFail'));\r\n    total = data.total;\r\n    if (offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return loadList(); }\r\n    const rows = data.rows ?? [];\r\n    tbody.replaceChildren();\r\n    for (const r of rows) {\r\n      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\r\n      tbody.append(\r\n        el('tr', {},\r\n          el('td', { class: 'mono' }, r.code),\r\n          el('td', { class: 'share-content-cell' },\r\n            el('div', { class: 'share-filename-line' },\r\n              r.kind === 'file'\r\n                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)\r\n                : el('span', { class: 'share-filename', title: content }, content),\r\n              el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),\r\n          sourceCell(r),\r\n          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),\r\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\r\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),\r\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),\r\n          el('td', {}, fmtDate(r.created_at)),\r\n          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),\r\n        ),\r\n      );\r\n    }\r\n    if (rows.length === 0) {\r\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));\r\n    }\r\n    listBusy = false;\r\n    updatePager();\r\n  } catch (e) {\r\n    if (request !== listRequest) return;\r\n    pageInfo.textContent = t('ad.loadFail');\r\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));\r\n  } finally {\r\n    if (request === listRequest) {\r\n      listBusy = false;\r\n      btnRefresh.disabled = false;\r\n      tbody.setAttribute('aria-busy', 'false');\r\n    }\r\n  }\r\n}\r\n\r\nfunction updatePager() {\r\n  const page = Math.floor(offset / limit) + 1;\r\n  const pages = Math.max(1, Math.ceil(total / limit));\r\n  pageInfo.textContent = t('ad.page', page, pages, total);\r\n  btnPrev.disabled = listBusy || offset <= 0;\r\n  btnNext.disabled = listBusy || offset + limit >= total;\r\n}\r\nbtnPrev.addEventListener('click', async () => { offset = Math.max(0, offset - limit); await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\r\nbtnNext.addEventListener('click', async () => { offset += limit; await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\r\nbtnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });\r\nwindow.addEventListener('admin-page-size', event => {\r\n  if (event.detail.name !== 'files') return;\r\n  limit = event.detail.value; offset = 0;\r\n  if (!panel.hidden) loadList();\r\n});\r\n\r\n/* ---------- \u5220\u9664:\u7968\u636E\u98CE\u786E\u8BA4\u5F39\u7A97 + \u672C\u5730\u540C\u6B65(KV \u6700\u7EC8\u4E00\u81F4,\u5220\u9664\u540E\u7ACB\u5373\u91CD\u62C9\u4F1A\u770B\u5230\u6B8B\u7559\u7D22\u5F15) ---------- */\r\nconst delMask = $('#del-mask');\r\nconst delTarget = $('#del-target');\r\nlet delResolve = null;\r\n\r\nfunction confirmDelete(r) {\r\n  const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\r\n  delTarget.replaceChildren(\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.code')), el('b', { class: 'mono' }, r.code)),\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.content')), el('span', {}, content)),\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),\r\n      el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),\r\n  );\r\n  delMask.showModal();\r\n  $('#del-cancel').focus();\r\n  return new Promise((resolve) => { delResolve = resolve; });\r\n}\r\n\r\nfunction closeDelModal(v) {\r\n  if (!delResolve) return;\r\n  delMask.close();\r\n  const resolve = delResolve;\r\n  delResolve = null;\r\n  resolve(v);\r\n}\r\n$('#del-cancel').addEventListener('click', () => closeDelModal(false));\r\n$('#del-ok').addEventListener('click', () => closeDelModal(true));\r\ndelMask.addEventListener('click', (e) => e.target === delMask && closeDelModal(false));\r\ndelMask.addEventListener('cancel', e => { e.preventDefault(); closeDelModal(false); });\r\n\r\nasync function remove(r, tr) {\r\n  if (!(await confirmDelete(r))) return;\r\n  try {\r\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\r\n    toast(t('ad.deleted'), 'ok');\r\n    statsAfterDelete(r);\r\n    total = Math.max(0, total - 1);\r\n    tr?.remove();\r\n    // \u5F53\u524D\u9875\u5220\u7A7A\u4E14\u4E0D\u5728\u7B2C\u4E00\u9875:\u9000\u56DE\u4E0A\u4E00\u9875\u91CD\u62C9,\u907F\u514D\u505C\u5728\u7A7A\u9875\r\n    if (tbody.rows.length === 0 && offset > 0) {\r\n      offset = Math.max(0, offset - limit);\r\n      loadList();\r\n    } else {\r\n      updatePager();\r\n    }\r\n  } catch (e) {\r\n    toast(e.message || t('ad.deleteFail'), 'error');\r\n  }\r\n}\r\n\r\n/* Upload source details: source labels are text nodes, never interpolated HTML. */\r\nconst sourceDialog = $('#source-dialog');\r\nconst sourceForm = $('#source-form');\r\nconst sourceNote = $('#source-note');\r\nconst sourceSave = $('#source-save');\r\nconst sourceError = $('#source-error');\r\nconst noteOverrides = new Map(); // Read-your-write while KV propagation completes.\r\nlet sourceRequest = 0;\r\nlet activeSource = null;\r\nlet sourceReturnCode = null;\r\nlet sourceHistoryLoaded = false;\r\n\r\nfunction sourceField(label, value, className = '') {\r\n  return el('div', { class: `source-field ${className}` },\r\n    el('small', { class: 'muted' }, label), el('span', {}, value));\r\n}\r\nfunction browserLabel(ua) {\r\n  if (!ua) return t('ad.sourceUnrecorded');\r\n  const browser = /Edg\\//.test(ua) ? 'Edge' : /Firefox\\//.test(ua) ? 'Firefox'\r\n    : /Chrome\\//.test(ua) ? 'Chrome' : /Safari\\//.test(ua) ? 'Safari' : t('ad.sourceUnknown');\r\n  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS'\r\n    : /Windows/.test(ua) ? 'Windows' : /Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';\r\n  return [browser, os].filter(Boolean).join(' \xB7 ');\r\n}\r\n\r\nfunction visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }\r\nfunction sourceLabel(source) {\r\n  const override = noteOverrides.get(source.visitorId);\r\n  return (override !== undefined ? override : source.note) || visitorLabel(source.visitorId);\r\n}\r\nfunction locationLabel(source) {\r\n  let country = source.country;\r\n  if (country && /^[A-Z]{2}$/.test(country)) {\r\n    country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\r\n  }\r\n  return [...new Set([country, source.region, source.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\r\n}\r\nfunction sourceCell(row) {\r\n  if (!row.source) return el('td', { class: 'source-cell muted' }, t('ad.sourceUnrecorded'));\r\n  const button = el('button', { class: 'source-link', type: 'button', onclick: () => openSource(row) }, sourceLabel(row.source));\r\n  button.dataset.visitor = row.source.visitorId;\r\n  button.title = t('ad.source');\r\n  return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));\r\n}\r\nasync function openSource(row, returnCode = null) {\r\n  const request = ++sourceRequest;\r\n  activeSource = null;\r\n  sourceReturnCode = returnCode;\r\n  $('#source-back').hidden = !returnCode;\r\n  $('#source-history').hidden = true;\r\n  $('#source-history').open = false;\r\n  $('#source-history-list').replaceChildren();\r\n  sourceHistoryLoaded = false;\r\n  sourceForm.hidden = true;\r\n  sourceError.hidden = true;\r\n  sourceSave.disabled = false;\r\n  sourceSave.hidden = true;\r\n  $('#source-context').textContent = `${t('ad.th.code')} ${row.code}`;\r\n  $('#source-detail').textContent = t('ad.loading');\r\n  sourceDialog.showModal();\r\n  try {\r\n    const { source } = await api(`/api/admin/shares/${row.code}/source`);\r\n    if (request !== sourceRequest || !sourceDialog.open) return;\r\n    if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }\r\n    activeSource = { code: row.code, visitorId: source.visitorId };\r\n    const ip = el('span', { class: 'source-ip' }, source.ip || t('ad.sourceUnknown'));\r\n    if (source.ip) ip.append(el('button', { class: 'btn small ghost', type: 'button',\r\n      onclick: async () => toast(t(await copyText(source.ip) ? 'ad.ipCopied' : 'ad.copyFailed')) }, t('ad.copyIP')));\r\n    $('#source-detail').replaceChildren(\r\n      sourceField(t('ad.visitorId'), source.visitorId, 'mono'),\r\n      ...(source.displayName ? [sourceField(t('ad.submittedName'), source.displayName)] : []),\r\n      sourceField(t('ad.requestIP'), ip),\r\n      sourceField(t('ad.sourceLocation'), locationLabel(source)),\r\n      ...(source.asn || source.organization ? [sourceField(t('ad.network'),\r\n        [source.organization, source.asn ? `AS${source.asn}` : null].filter(Boolean).join(' \xB7 '))] : []),\r\n      sourceField(t('ad.browserReported'), browserLabel(source.userAgent)),\r\n      sourceField(t('ad.sourceTime'), fmtDate(source.capturedAt)),\r\n      ...(source.userAgent ? [el('details', { class: 'source-agent' }, el('summary', {}, 'User-Agent'),\r\n        el('p', { class: 'mono' }, source.userAgent))] : []),\r\n    );\r\n    $('#source-history').hidden = false;\r\n    sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';\r\n    sourceForm.hidden = false;\r\n    sourceSave.hidden = false;\r\n  } catch (e) {\r\n    if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');\r\n  }\r\n}\r\nfunction closeSource() {\r\n  sourceRequest++;\r\n  activeSource = null;\r\n  sourceReturnCode = null;\r\n  $('#source-history').open = false;\r\n  $('#source-history').hidden = true;\r\n  $('#source-history-list').replaceChildren();\r\n  $('#source-back').hidden = true;\r\n  sourceNote.value = '';\r\n  sourceForm.hidden = true;\r\n  sourceSave.hidden = true;\r\n  $('#source-context').textContent = '';\r\n  $('#source-detail').replaceChildren();\r\n  sourceDialog.close();\r\n}\r\nsourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });\r\n$('#source-close').addEventListener('click', closeSource);\r\n$('#source-back').addEventListener('click', () => {\r\n  const code = sourceReturnCode;\r\n  closeSource();\r\n  if (code) openFileDetails(code);\r\n});\r\n$('#source-history').addEventListener('toggle', async () => {\r\n  if (!$('#source-history').open || !activeSource || sourceHistoryLoaded) return;\r\n  sourceHistoryLoaded = true;\r\n  const request = sourceRequest;\r\n  const list = $('#source-history-list');\r\n  list.textContent = t('ad.loading');\r\n  try {\r\n    const { rows } = await api(`/api/admin/shares/${activeSource.code}/source/activity`);\r\n    if (request !== sourceRequest || !sourceDialog.open) return;\r\n    list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },\r\n      el('div', { class: 'activity-head' }, el('span', { title: row.filename || t('ad.textFallback') }, row.filename || t('ad.textFallback')),\r\n        el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),\r\n      el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} \xB7 ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} \xB7 ${row.code}`),\r\n      row.ip || row.country || row.region || row.city\r\n        ? el('small', { class: 'muted' }, [row.ip, row.country || row.region || row.city ? locationLabel(row) : null].filter(Boolean).join(' \xB7 ')) : null,\r\n    )));\r\n    if (!rows.length) list.textContent = t('ad.empty');\r\n  } catch (error) {\r\n    if (request !== sourceRequest || !sourceDialog.open) return;\r\n    sourceHistoryLoaded = false;\r\n    list.replaceChildren(el('p', { class: 'error-box', role: 'alert' }, error.message || t('ad.loadFail')),\r\n      el('button', { type: 'button', class: 'btn small ghost', onclick: () => $('#source-history').dispatchEvent(new Event('toggle')) }, t('ad.retry')));\r\n  }\r\n});\r\nsourceForm.addEventListener('submit', async (e) => {\r\n  e.preventDefault();\r\n  if (!activeSource || sourceSave.disabled) return;\r\n  const { code } = activeSource;\r\n  const request = sourceRequest;\r\n  sourceSave.disabled = true;\r\n  sourceError.hidden = true;\r\n  try {\r\n    const result = await api(`/api/admin/shares/${code}/source`, { method: 'PUT', body: { note: sourceNote.value } });\r\n    noteOverrides.set(result.visitorId, result.note);\r\n    document.querySelectorAll('[data-visitor]').forEach((button) => {\r\n      if (button.dataset.visitor === result.visitorId) button.textContent = result.note || visitorLabel(result.visitorId);\r\n    });\r\n    if (request === sourceRequest) closeSource();\r\n    toast(t('ad.sourceSaved'));\r\n  } catch (error) {\r\n    if (request === sourceRequest) {\r\n      sourceError.textContent = error.message || t('ad.loadFail');\r\n      sourceError.hidden = false;\r\n    }\r\n  } finally {\r\n    if (request === sourceRequest) sourceSave.disabled = false;\r\n  }\r\n});\r\n\r\n/* File details use their own request generation so closed dialogs stay empty. */\r\nconst fileDialog = $('#file-dialog');\r\nconst fileDetail = $('#file-detail');\r\nconst fileDownload = $('#file-download');\r\nlet fileRequest = 0;\r\nfunction fileField(label, value, secondary) {\r\n  return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),\r\n    el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);\r\n}\r\n\r\nasync function openFileDetails(code) {\r\n  const request = ++fileRequest;\r\n  fileDownload.hidden = true;\r\n  fileDownload.removeAttribute('href');\r\n  fileDownload.removeAttribute('download');\r\n  $('#file-context').textContent = `${t('ad.th.code')} ${code}`;\r\n  fileDetail.textContent = t('ad.loading');\r\n  fileDialog.showModal();\r\n  try {\r\n    const detail = await api(`/api/admin/shares/${code}`);\r\n    if (request !== fileRequest || !fileDialog.open) return;\r\n    const state = detail.storage?.state || 'unknown';\r\n    const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };\r\n    const source = detail.source;\r\n    const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',\r\n      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }, code); },\r\n    }, sourceLabel(source)) : t('ad.sourceUnrecorded');\r\n    if (source) sourceButton.dataset.visitor = source.visitorId;\r\n    fileDetail.replaceChildren(\r\n      el('div', { class: 'file-identity file-wide' },\r\n        el('strong', {}, detail.filename || t('ad.unnamed')),\r\n        el('div', { class: 'file-summary' },\r\n          el('span', { title: t('ad.exactBytes', detail.size.toLocaleString()) }, fmtBytes(detail.size)),\r\n          el('span', { class: `badge ${detail.status}`, title: t('ad.shareState') }, t(STATUS_KEY[detail.status])),\r\n          state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),\r\n      ...(detail.description ? [el('div', { class: 'file-description file-wide' },\r\n        el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),\r\n      fileField(t('ad.source'), sourceButton),\r\n      fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '\u221E'}`),\r\n      fileField(t('ad.th.created'), fmtDate(detail.createdAt)),\r\n      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)),\r\n      ...(detail.cleanupAfter != null ? [fileField(t('ad.cleanupAfter'), fmtDate(detail.cleanupAfter),\r\n        detail.cleanupStatus === 'pending' ? t('ad.cleanupPending') : null)] : []),\r\n    );\r\n    fileDownload.href = `/api/admin/shares/${code}/download`;\r\n    fileDownload.download = detail.filename || 'file';\r\n    fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');\r\n    fileDownload.hidden = state === 'missing';\r\n  } catch (error) {\r\n    if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');\r\n  }\r\n}\r\nfunction closeFileDetails() {\r\n  fileRequest++;\r\n  fileDetail.replaceChildren();\r\n  $('#file-context').textContent = '';\r\n  fileDownload.hidden = true;\r\n  fileDownload.removeAttribute('href');\r\n  fileDownload.removeAttribute('download');\r\n  fileDialog.close();\r\n}\r\n$('#file-close').addEventListener('click', closeFileDetails);\r\nfileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });\r\n\r\n/* Keep unsaved input local; only a validated save changes retention. */\r\nconst retentionInput = $('#retention-days');\r\nconst retentionSave = $('#retention-save');\r\nconst retentionError = $('#retention-error');\r\nasync function loadSettings() {\r\n  $('#retention-status').hidden = true;\r\n  retentionInput.disabled = true;\r\n  retentionSave.disabled = true;\r\n  retentionError.hidden = true;\r\n  $('#retention-retry').hidden = true;\r\n  try {\r\n    const settings = await api('/api/admin/settings');\r\n    if (!Number.isInteger(settings.expiredRetentionDays) || settings.expiredRetentionDays < 0 || settings.expiredRetentionDays > 3650) throw new Error(t('ad.loadFail'));\r\n    retentionInput.value = settings.expiredRetentionDays;\r\n    retentionInput.disabled = false;\r\n    retentionSave.disabled = false;\r\n  } catch (error) {\r\n    retentionError.textContent = error.message || t('ad.loadFail');\r\n    retentionError.hidden = false;\r\n    $('#retention-retry').hidden = false;\r\n  }\r\n}\r\n$('#retention-retry').addEventListener('click', loadSettings);\r\nretentionInput.addEventListener('input', () => { $('#retention-status').hidden = true; });\r\n$('#retention-form').addEventListener('submit', async e => {\r\n  e.preventDefault();\r\n  if (retentionSave.disabled || !retentionInput.reportValidity()) return;\r\n  retentionSave.disabled = true;\r\n  retentionInput.disabled = true;\r\n  retentionError.hidden = true;\r\n  $('#retention-status').hidden = true;\r\n  try {\r\n    const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });\r\n    retentionInput.value = settings.expiredRetentionDays;\r\n    $('#retention-status').textContent = t('ad.settingsSaved');\r\n    $('#retention-status').hidden = false;\r\n  } catch (error) {\r\n    retentionError.textContent = error.message || t('ad.loadFail');\r\n    retentionError.hidden = false;\r\n  } finally {\r\n    retentionInput.disabled = false;\r\n    retentionSave.disabled = false;\r\n  }\r\n});\r\n\r\nconst guestWeekly = $('#guest-weekly');\r\nconst guestSave = $('#guest-save');\r\nconst guestError = $('#guest-error');\r\nfunction guestBusy(busy) {\r\n  for (const control of [guestWeekly, guestSave]) control.disabled = busy;\r\n}\r\nasync function loadGuestPolicy() {\r\n  $('#guest-status').hidden = true;\r\n  guestBusy(true);\r\n  guestError.hidden = true;\r\n  $('#guest-retry').hidden = true;\r\n  try {\r\n    const policy = await api('/api/admin/upload-policy');\r\n    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000) throw new Error(t('ad.loadFail'));\r\n    guestWeekly.value = policy.weeklyFileLimit;\r\n    guestBusy(false);\r\n  } catch (error) {\r\n    guestError.textContent = error.message || t('ad.loadFail');\r\n    guestError.hidden = false;\r\n    $('#guest-retry').hidden = false;\r\n  }\r\n}\r\n$('#guest-retry').addEventListener('click', loadGuestPolicy);\r\nguestWeekly.addEventListener('input', () => { $('#guest-status').hidden = true; });\r\n$('#guest-policy-form').addEventListener('submit', async e => {\r\n  e.preventDefault();\r\n  if (guestSave.disabled || !e.target.reportValidity()) return;\r\n  const body = { weeklyFileLimit: Number(guestWeekly.value) };\r\n  guestBusy(true);\r\n  guestError.hidden = true;\r\n  $('#guest-status').hidden = true;\r\n  try {\r\n    await api('/api/admin/upload-policy', { method: 'PUT', body });\r\n    $('#guest-status').textContent = t('ad.guestSaved');\r\n    $('#guest-status').hidden = false;\r\n  } catch (error) {\r\n    guestError.textContent = error.message || t('ad.loadFail');\r\n    guestError.hidden = false;\r\n  } finally { guestBusy(false); }\r\n});\r\n\r\nlet guardRequest = 0;\r\nasync function loadLoginProtection() {\r\n  const request = ++guardRequest;\r\n  const refresh = $('#login-guard-refresh');\r\n  const error = $('#login-guard-error');\r\n  refresh.disabled = true;\r\n  error.hidden = true;\r\n  $('#login-guard-bans').replaceChildren();\r\n  $('#login-guard-status').textContent = '';\r\n  try {\r\n    const data = await api('/api/admin/login-protection');\r\n    if (request !== guardRequest) return;\r\n    if (typeof data.enabled !== 'boolean' || !Array.isArray(data.bans) ||\r\n        ![data.maxFailures, data.windowSeconds, data.banSeconds].every(n => Number.isInteger(n) && n > 0)) throw new Error(t('ad.loadFail'));\r\n    $('#login-guard-status').textContent = data.enabled\r\n      ? t('ad.guardRule', data.windowSeconds / 60, data.maxFailures, data.banSeconds / 60) : t('ad.guardDisabled');\r\n    if (!data.enabled) return;\r\n    if (!data.bans.length) $('#login-guard-bans').append(el('small', { class: 'muted' }, t('ad.guardEmpty')));\r\n    for (const ban of data.bans) {\r\n      const button = el('button', { class: 'btn small ghost', type: 'button' }, t('ad.guardUnblock'));\r\n      button.addEventListener('click', async () => {\r\n        button.disabled = true;\r\n        error.hidden = true;\r\n        try {\r\n          await api('/api/admin/login-protection/unblock', { method: 'POST', body: { ip: ban.ip } });\r\n          toast(t('ad.guardUnblocked'), 'ok');\r\n          await loadLoginProtection();\r\n        } catch (e) {\r\n          error.textContent = e.message || t('ad.loadFail');\r\n          error.hidden = false;\r\n          button.disabled = false;\r\n        }\r\n      });\r\n      $('#login-guard-bans').append(el('div', { class: 'login-guard-row' },\r\n        el('div', { class: 'login-guard-info' },\r\n          el('b', {}, ban.ip === 'unknown' ? t('ad.guardUnknown') : ban.ip),\r\n          el('small', { class: 'muted' }, t('ad.guardFailures', ban.failures) + ' \xB7 ' + t('ad.guardUntil', fmtDate(ban.bannedUntil))),\r\n          el('small', { class: 'muted' }, t('ad.guardLast', fmtDate(ban.lastFailedAt)))), button));\r\n    }\r\n  } catch (e) {\r\n    if (request !== guardRequest) return;\r\n    error.textContent = e.message || t('ad.loadFail');\r\n    error.hidden = false;\r\n  } finally { if (request === guardRequest) refresh.disabled = false; }\r\n}\r\n$('#login-guard-refresh').addEventListener('click', loadLoginProtection);\r\n", "js/common.js": "import { t } from './i18n.js';\n\nexport const $ = (sel, el = document) => el.querySelector(sel);\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\n\n/** Keep Tab within modal content, including the wrap past the final button. */\nexport function initDialogs() {\n  for (const dialog of $$('dialog')) {\n    dialog.addEventListener('keydown', event => {\n      if (event.key !== 'Tab') return;\n      const controls = $$('button, a[href], input, select, textarea, summary, [tabindex]', dialog)\n        .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);\n      const first = controls[0];\n      const last = controls.at(-1);\n      if (!first) { event.preventDefault(); return; }\n      if (!controls.includes(document.activeElement) || (event.shiftKey && document.activeElement === first)) {\n        event.preventDefault(); (event.shiftKey ? last : first).focus();\n      } else if (!event.shiftKey && document.activeElement === last) {\n        event.preventDefault(); first.focus();\n      }\n    });\n  }\n}\n\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\nexport async function api(path, opts = {}) {\n  const res = await fetch(path, {\n    method: opts.method || 'GET',\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\n  });\n  if (res.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n  let data = null;\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\n  if (!res.ok) {\n    const e = new Error(data?.message || t('req.fail', res.status));\n    e.code = data?.error || 'unknown';\n    e.status = res.status;\n    e.remainingBytes = data?.remainingBytes;\n    throw e;\n  }\n  return data;\n}\n\nexport function fmtBytes(n) {\n  if (!Number.isFinite(n) || n < 0) return '-';\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\n  let i = 0;\n  while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 100) / 100;\n  return `${v} ${units[i]}`;\n}\n\n/** \u6C38\u4E45\u5206\u4EAB\u8FD4\u56DE null,\u7531\u8C03\u7528\u65B9\u6309\u8BED\u8A00\u6E32\u67D3\u300C\u6C38\u4E45 / Forever\u300D */\nexport function fmtDate(ms) {\n  if (ms === null || ms === undefined) return null;\n  const d = new Date(ms);\n  const p = (x) => String(x).padStart(2, '0');\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\n}\n\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6,\u5355\u4F4D\u8BCD\u968F\u8BED\u8A00 */\nexport function fmtDuration(sec) {\n  if (!Number.isFinite(sec) || sec < 0) return '-';\n  if (sec < 1) return t('dur.ms');\n  if (sec < 60) return t('dur.s', Math.round(sec));\n  if (sec < 3600) {\n    const m = Math.floor(sec / 60);\n    const s = Math.round(sec % 60);\n    return s ? t('dur.hm', m, s) : t('dur.h', m);\n  }\n  if (sec < 86400) {\n    const h = Math.floor(sec / 3600);\n    const m = Math.round((sec % 3600) / 60);\n    return m ? t('dur.hH', h, m) : t('dur.hH2', h);\n  }\n  return t('dur.d', Math.round(sec / 86400));\n}\n\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\nexport function iconFor(name = '', mime = '') {\n  const ext = (name.split('.').pop() || '').toLowerCase();\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\n  return '\u{1F4E6}';\n}\n\nexport async function copyText(text) {\n  try {\n    await navigator.clipboard.writeText(text);\n    return true;\n  } catch { /* \u8D70\u964D\u7EA7 */ }\n  try {\n    const ta = document.createElement('textarea');\n    ta.value = text;\n    ta.style.cssText = 'position:fixed;opacity:0';\n    document.body.appendChild(ta);\n    ta.select();\n    const ok = document.execCommand('copy');\n    ta.remove();\n    return ok;\n  } catch {\n    return false;\n  }\n}\n\nexport function toast(msg, type = 'info') {\n  let host = $('#toast-host');\n  if (!host) {\n    host = document.createElement('div');\n    host.id = 'toast-host';\n    document.body.appendChild(host);\n  }\n  const t = document.createElement('div');\n  t.className = `toast ${type}`;\n  t.textContent = msg;\n  host.appendChild(t);\n  requestAnimationFrame(() => t.classList.add('show'));\n  setTimeout(() => {\n    t.classList.remove('show');\n    setTimeout(() => t.remove(), 300);\n  }, 2400);\n}\n\nexport function initTheme() {\n  const btn = $('#theme-btn');\n  const meta = $('meta[name=\"theme-color\"]');\n  const sync = () => {\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\n  };\n  sync();\n  btn?.addEventListener('click', () => {\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\n    localStorage.setItem('theme', next);\n    document.documentElement.dataset.theme = next;\n    sync();\n  });\n}\n\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\nexport function el(tag, attrs = {}, ...children) {\n  const n = document.createElement(tag);\n  for (const [k, v] of Object.entries(attrs)) {\n    if (k === 'class') n.className = v;\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\n    else n[k] = v;\n  }\n  for (const c of children.flat(Infinity)) {\n    if (c == null || c === false) continue;\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\n  }\n  return n;\n}\n", "js/i18n.js": `/**\r
+ * \u8F7B\u91CF i18n:HTML \u9759\u6001\u6587\u6848\u7528 data-i18n / data-i18n-ph / data-i18n-title \u6807\u8BB0,\r
+ * JS \u52A8\u6001\u5B57\u7B26\u4E32\u7528 t('key', \u2026args);{n} \u5360\u4F4D\u3002\r
+ * \u8BED\u8A00\u4F18\u5148\u7EA7:localStorage('lang') > \u6D4F\u89C8\u5668\u8BED\u8A00(en \u5F00\u5934\u2192\u82F1\u6587)> \u4E2D\u6587\u3002\r
+ * \u5207\u6362\u540E\u8C03\u7528\u5DF2\u6CE8\u518C\u7684\u91CD\u6E32\u67D3\u94A9\u5B50(\u5404\u9875\u9762 setLang \u65F6\u767B\u8BB0)\u3002\r
+ * \u8BCD\u5178\u503C\u4E3A\u6570\u7EC4\u65F6\u968F\u673A\u53D6\u4E00\u6761(\u9875\u811A\u5F69\u86CB,\u6BCF\u6B21\u52A0\u8F7D/\u5207\u8BED\u8A00\u91CD\u6447)\u3002\r
+ */\r
+\r
+const DICT = {\r
+  zh: {\r
+    'ad.settings': '\u8BBE\u7F6E',\r
+    'ad.shareSettings': '\u5206\u4EAB\u89C4\u5219',\r
+    'ad.guestWeeklyFiles': '\u672A\u5907\u6CE8\u8BBF\u5BA2\u6BCF\u5468\u6587\u4EF6\u6570',\r
+    'ad.displaySettings': '\u5217\u8868\u663E\u793A',\r
+    'ad.filesPageSize': '\u6587\u4EF6\u6BCF\u9875\u6761\u6570',\r
+    'ad.auditPageSize': '\u65E5\u5FD7\u6BCF\u9875\u6761\u6570',\r
+    'ad.browserSettings': '\u7ACB\u5373\u751F\u6548\uFF0C\u4EC5\u4FDD\u5B58\u5728\u5F53\u524D\u6D4F\u89C8\u5668',\r
+    'ad.preferenceNotSaved': '\u672C\u6B21\u5DF2\u751F\u6548\uFF0C\u6D4F\u89C8\u5668\u672A\u80FD\u4FDD\u5B58\u6B64\u504F\u597D',\r
+    'ad.filesPagination': '\u6587\u4EF6\u5206\u9875',\r
+    'ad.auditPagination': '\u65E5\u5FD7\u5206\u9875',\r
+    'context.add': '\u8865\u5145\u4FE1\u606F\uFF08\u9009\u586B\uFF09',\r
+    'context.name': '\u600E\u4E48\u79F0\u547C\u4F60',\r
+    'context.description': '\u6587\u4EF6\u8BF4\u660E\uFF08\u672C\u6279\u6587\u4EF6\uFF09',\r
+    'context.visibility': '\u8865\u5145\u4FE1\u606F\u4EC5\u7BA1\u7406\u5458\u53EF\u89C1',\r
+    'ad.retentionTitle': '\u81EA\u52A8\u6E05\u7406',\r
+    'ad.recentUploads': '\u8FD1\u671F\u4E0A\u4F20',\r
+    'ad.historyScope': '\u6700\u8FD1 10 \u6761\u73B0\u5B58\u5206\u4EAB',\r
+    'ad.backFile': '\u8FD4\u56DE\u6587\u4EF6',\r
+    'ad.submittedName': '\u81EA\u586B\u79F0\u547C',\r
+    'ad.requestIP': '\u8BF7\u6C42 IP',\r
+    'ad.network': '\u7F51\u7EDC\u7EC4\u7EC7',\r
+    'ad.browserReported': '\u6D4F\u89C8\u5668\uFF08\u81EA\u62A5\uFF09',\r
+    'ad.copyIP': '\u590D\u5236',\r
+    'ad.ipCopied': 'IP \u5DF2\u590D\u5236',\r
+    'ad.copyFailed': '\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u9009\u62E9',\r
+    'ad.fileDescription': '\u6587\u4EF6\u8BF4\u660E',\r
+    'audit.detail.filename': '\u6587\u4EF6\u540D',\r
+    'audit.detail.sizeBytes': '\u5927\u5C0F\uFF08\u5B57\u8282\uFF09',\r
+    'audit.navigation': "\u7BA1\u7406\u9875\u9762",\r
+    'audit.files': "\u6587\u4EF6\u7BA1\u7406",\r
+    'audit.title': "\u65E5\u5FD7\u5BA1\u8BA1",\r
+    'audit.retention': "\u6700\u8FD1 30 \u5929\uFF0C\u6700\u591A 1,000 \u6761\uFF1B\u65F6\u95F4\u6309\u672C\u5730\u65F6\u533A\u663E\u793A",\r
+    'audit.export': "\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C",\r
+    'audit.categories': "\u65E5\u5FD7\u5206\u7C7B",\r
+    'audit.all': "\u5168\u90E8\u65E5\u5FD7",\r
+    'audit.login': "\u767B\u5F55\u65E5\u5FD7",\r
+    'audit.operation': "\u64CD\u4F5C\u65E5\u5FD7",\r
+    'audit.security': "\u5B89\u5168\u4E8B\u4EF6",\r
+    'audit.result': "\u7ED3\u679C",\r
+    'audit.anyResult': "\u5168\u90E8\u7ED3\u679C",\r
+    'audit.success': "\u6210\u529F",\r
+    'audit.failed': "\u5931\u8D25",\r
+    'audit.blocked': "\u5DF2\u62E6\u622A",\r
+    'audit.from': "\u5F00\u59CB\u65E5\u671F",\r
+    'audit.to': "\u7ED3\u675F\u65E5\u671F",\r
+    'audit.keyword': "IP / \u64CD\u4F5C\u5BF9\u8C61",\r
+    'audit.search': "\u641C\u7D22 IP \u6216\u53D6\u4EF6\u7801",\r
+    'audit.filter': "\u7B5B\u9009",\r
+    'audit.reset': "\u91CD\u7F6E",\r
+    'audit.time': "\u65F6\u95F4",\r
+    'audit.action': "\u64CD\u4F5C",\r
+    'audit.actor': "\u64CD\u4F5C\u8EAB\u4EFD",\r
+    'audit.source': "\u6765\u6E90 IP / \u5C5E\u5730",\r
+    'audit.target': "\u64CD\u4F5C\u5BF9\u8C61",\r
+    'audit.details': "\u8BE6\u60C5",\r
+    'audit.empty': "\u6682\u65E0\u5339\u914D\u65E5\u5FD7\u3002\u65E5\u5FD7\u4ECE\u529F\u80FD\u4E0A\u7EBF\u540E\u5F00\u59CB\u8BB0\u5F55\u3002",\r
+    'audit.disabled': "\u672A\u542F\u7528\u65E5\u5FD7\u5BA1\u8BA1\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1\u3002",\r
+    'audit.page': "\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761",\r
+    'audit.dateError': "\u5F00\u59CB\u65E5\u671F\u4E0D\u80FD\u665A\u4E8E\u7ED3\u675F\u65E5\u671F",\r
+    'audit.http': "\u8BF7\u6C42 / \u72B6\u6001\u7801",\r
+    'audit.duration': "\u5904\u7406\u8017\u65F6",\r
+    'audit.id': "\u65E5\u5FD7\u7F16\u53F7",\r
+    'audit.agent': "\u6D4F\u89C8\u5668\u6807\u8BC6\uFF08\u5BA2\u6237\u7AEF\u63D0\u4F9B\uFF09",\r
+    'audit.yes': "\u662F",\r
+    'audit.no': "\u5426",\r
+    'audit.description': "\u8BF4\u660E",\r
+    'audit.downloadHint': "\u5DF2\u5F00\u59CB\u8FD4\u56DE\u6587\u4EF6\u6D41\uFF0C\u4E0D\u4EE3\u8868\u6D4F\u89C8\u5668\u5DF2\u5B8C\u6210\u4E0B\u8F7D\u3002",\r
+    'audit.writeFailed': "\u64CD\u4F5C\u5DF2\u5904\u7406\uFF0C\u4F46\u5BA1\u8BA1\u8BB0\u5F55\u672A\u4FDD\u5B58\uFF0C\u8BF7\u68C0\u67E5\u65E5\u5FD7\u5B58\u50A8\u3002",\r
+    'audit.action.login': "\u7BA1\u7406\u5458\u767B\u5F55",\r
+    'audit.action.logout': "\u9000\u51FA\u767B\u5F55",\r
+    'audit.action.retention': "\u4FEE\u6539\u8FC7\u671F\u4FDD\u7559\u5929\u6570",\r
+    'audit.action.uploadPolicy': "\u4FEE\u6539\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",\r
+    'audit.action.unblock': "\u624B\u52A8\u89E3\u5C01 IP",\r
+    'audit.action.cleanup': "\u6267\u884C\u8FC7\u671F\u6E05\u7406",\r
+    'audit.action.export': "\u5BFC\u51FA\u5BA1\u8BA1\u65E5\u5FD7",\r
+    'audit.action.ban': "\u89E6\u53D1\u767B\u5F55\u5C01\u7981",\r
+    'audit.action.delete': "\u5220\u9664\u5206\u4EAB",\r
+    'audit.action.note': "\u4FEE\u6539\u8BBF\u5BA2\u5907\u6CE8",\r
+    'audit.action.viewSource': "\u67E5\u770B\u6765\u6E90\u8BE6\u60C5",\r
+    'audit.action.download': "\u4E0B\u8F7D\u6587\u4EF6",\r
+    'audit.actor.admin': "\u7BA1\u7406\u5458",\r
+    'audit.actor.token': "\u5B9A\u65F6\u5668 / \u4EE4\u724C",\r
+    'audit.actor.anonymous': "\u672A\u8BA4\u8BC1",\r
+    'audit.detail.bannedUntil': "\u5C01\u7981\u622A\u6B62",\r
+    'audit.detail.expiredRetentionDays': "\u8FC7\u671F\u4FDD\u7559\u5929\u6570",\r
+    'audit.detail.weeklyFileLimit': "\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",\r
+    'audit.detail.notePresent': "\u8BBE\u7F6E\u5907\u6CE8",\r
+    'audit.detail.alreadyDeleted': "\u5206\u4EAB\u5DF2\u4E0D\u5B58\u5728",\r
+    'audit.detail.deletedShares': "\u5DF2\u6E05\u7406\u5206\u4EAB",\r
+    'audit.detail.abortedSessions': "\u5DF2\u53D6\u6D88\u4E0A\u4F20\u4F1A\u8BDD",\r
+\r
+    'ad.loginProtection': "\u767B\u5F55\u9632\u62A4",\r
+    'ad.guardRule': "{0} \u5206\u949F\u5185\u5931\u8D25 {1} \u6B21\uFF0C\u5C01\u7981\u767B\u5F55 {2} \u5206\u949F",\r
+    'ad.guardDisabled': "\u672A\u542F\u7528\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1",\r
+    'ad.guardEmpty': "\u5F53\u524D\u6CA1\u6709\u5C01\u7981 IP",\r
+    'ad.guardUnknown': "\u672A\u77E5\u6765\u6E90\uFF08\u5171\u7528\u9650\u5236\uFF09",\r
+    'ad.guardFailures': "\u5931\u8D25 {0} \u6B21",\r
+    'ad.guardUntil': "\u89E3\u5C01\u4E8E {0}",\r
+    'ad.guardLast': "\u6700\u8FD1\u5931\u8D25 {0}",\r
+    'ad.guardUnblock': "\u89E3\u5C01",\r
+    'ad.guardUnblocked': "\u5DF2\u89E3\u5C01",\r
+    'ad.loginBlocked': "\u767B\u5F55\u5931\u8D25\u6B21\u6570\u8FC7\u591A\uFF0C\u8BF7\u7B49\u5F85\u5C01\u7981\u5230\u671F\u540E\u91CD\u8BD5",\r
+    'ad.guardUnavailable': "\u767B\u5F55\u9632\u62A4\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5",\r
+\r
+    'ad.formatUnknown': "\u683C\u5F0F\u672A\u77E5",\r
+    'ad.format.archive': "\u538B\u7F29\u5305",\r
+    'ad.format.program': "\u5E94\u7528\u7A0B\u5E8F",\r
+    'ad.format.document': "\u6587\u6863",\r
+    'ad.format.image': "\u56FE\u7247",\r
+    'ad.format.video': "\u89C6\u9891",\r
+    'ad.format.audio': "\u97F3\u9891",\r
+    'ad.format.text': "\u6587\u672C / \u4EE3\u7801",\r
+    'ad.format.file': "\u6587\u4EF6",\r
+    'ad.uploader': "\u4E0A\u4F20\u8005",\r
+    'ad.shareState': "\u5206\u4EAB\u72B6\u6001",\r
+    'ad.fileAvailability': "\u6587\u4EF6\u72B6\u6001",\r
+    'ad.fileState.available': "\u53EF\u4E0B\u8F7D",\r
+    'ad.fileState.missing': "\u6587\u4EF6\u4E0D\u5B58\u5728",\r
+    'ad.fileState.unknown': "\u6682\u65F6\u65E0\u6CD5\u786E\u8BA4",\r
+    'ad.timeLeft': "\u5269\u4F59 {0}",\r
+    'ad.timeExpired': "\u5DF2\u8FC7\u671F {0}",\r
+    'ad.cleanupPermanent': "\u4E0D\u81EA\u52A8\u6E05\u7406",\r
+    'ad.cleanupActive': "\u8FC7\u671F\u540E\u4FDD\u7559 {0} \u5929",\r
+    'ad.cleanupRetained': "\u8FC7\u671F\u4FDD\u7559\u4E2D",\r
+    'ad.cleanupPending': "\u7B49\u5F85\u6E05\u7406\u4EFB\u52A1",\r
+    'ad.technical': "\u6280\u672F\u4FE1\u606F",\r
+    'ad.storedSize': "\u5B58\u50A8\u5927\u5C0F",\r
+    'ad.storedAt': "\u5165\u5E93\u65F6\u95F4",\r
+    'ad.exactBytes': "{0} \u5B57\u8282",\r
+    'ad.formatHint': "\u683C\u5F0F\u6309\u6587\u4EF6\u540D\u8BC6\u522B\uFF0C\u4E0D\u4EE3\u8868\u5185\u5BB9\u6821\u9A8C\u3002",\r
+    'ad.tryDownload': "\u5C1D\u8BD5\u4E0B\u8F7D",\r
+    'ad.guestLimits': "\u672A\u5907\u6CE8\u8BBF\u5BA2\u9650\u5236",\r
+    'ad.weeklyFiles': "\u6BCF\u5468\u6587\u4EF6\u6570",\r
+    'ad.guestRules': "\u5317\u4EAC\u65F6\u95F4\u5468\u4E00\u91CD\u7F6E\uFF1B\u5DF2\u63A5\u7EB3\u4E0A\u4F20\u8BA1\u6B21\uFF0C\u53D6\u6D88\u4E0D\u9000\u56DE\u3002\u672A\u5907\u6CE8\u8BBF\u5BA2\u4E0D\u80FD\u6C38\u4E45\u5206\u4EAB\u6216\u4E0D\u9650\u6B21\u53D6\u4EF6\u3002",\r
+    'ad.guestSaved': "\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u4E0A\u4F20",\r
+    'policy.expiry': "1 ~ 30 \u5929",\r
+    'policy.pickups': "1 \u6B21 \xB7 5 \u6B21",\r
+    'policy.remaining': "\u672C\u5468\u5269\u4F59 {0} / {1} \u4E2A\u6587\u4EF6 \xB7 {2} \u91CD\u7F6E",\r
+    'policy.unavailable': "\u6B63\u5728\u8BFB\u53D6\u4E0A\u4F20\u6743\u9650\uFF1B\u82E5\u957F\u65F6\u95F4\u672A\u6062\u590D\uFF0C\u8BF7\u5237\u65B0\u9875\u9762",\r
+    'policy.contact': "\u6682\u4E0D\u63A5\u53D7\u6587\u4EF6\u4E0A\u4F20\uFF0C\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458",\r
+    'ad.fileDetails': '\u6587\u4EF6\u8BE6\u60C5',\r
+    'ad.filename': '\u6587\u4EF6\u540D',\r
+    'ad.fileType': '\u6587\u4EF6\u7C7B\u578B',\r
+    'ad.cleanupAfter': '\u6700\u65E9\u6E05\u7406',\r
+    'ad.retentionDays': '\u8FC7\u671F\u540E\u4FDD\u7559',\r
+    'ad.days': '\u5929',\r
+    'ad.save': '\u4FDD\u5B58',\r
+    'ad.retry': '\u91CD\u8BD5',\r
+    'ad.settingsSaved': '\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u6E05\u7406',\r
+    'ad.source': '\u4E0A\u4F20\u6765\u6E90',\r
+    'ad.visitor': '\u8BBF\u5BA2 {0}',\r
+    'ad.visitorId': '\u8BBF\u5BA2\u6807\u8BC6',\r
+    'ad.sourceUnknown': '\u672A\u77E5',\r
+    'ad.sourceUnrecorded': '\u672A\u8BB0\u5F55',\r
+    'ad.sourceLocation': '\u51FA\u53E3\u5C5E\u5730',\r
+    'ad.sourceTime': '\u8BB0\u5F55\u65F6\u95F4',\r
+    'ad.sourceNote': '\u7BA1\u7406\u5458\u5907\u6CE8',\r
+    'ad.sourceSave': '\u4FDD\u5B58\u5907\u6CE8',\r
+    'ad.sourceClose': '\u5173\u95ED',\r
+    'ad.sourceSaved': '\u5907\u6CE8\u5DF2\u4FDD\u5B58',\r
+    'err.capacity': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6',\r
+    'err.capacityRemaining': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6\uFF0C\u5269\u4F59\u53EF\u7528\u7A7A\u95F4\u7EA6 {0} GB\uFF08{1} \u5B57\u8282\uFF09\u3002',\r
+    'doc.send': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001',\r
+    'doc.pickup': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D6\u4EF6',\r
+    'doc.admin': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u7BA1\u7406',\r
+    'doc.404': '404 - \u6587\u4EF6\u4E2D\u8F6C\u7AD9',\r
+\r
+    'brand.name': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9',\r
+    'brand.tagline': '\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u6587\u4EF6',\r
+    'brand.pickup': '\u53D6\u4EF6',\r
+    'brand.admin': '\u7BA1\u7406\u540E\u53F0',\r
+    'nav.pickup': '\u53D6\u4EF6',\r
+    'nav.send': '\u53D1\u9001',\r
+    'nav.theme': '\u5207\u6362\u4E3B\u9898',\r
+    'nav.lang': '\u5207\u6362\u8BED\u8A00',\r
+    'foot': [\r
+      '\u89C1\u5B57\u5982\u9762',\r
+      '\u7EB8\u77ED\u60C5\u957F',\r
+      '\u5C71\u9AD8\u6C34\u957F,\u540E\u4F1A\u6709\u671F',\r
+      '\u6B64\u4EF6\u5DF2\u7B7E\u6536,\u671B\u73CD\u91CD',\r
+      '\u98CE\u91CC\u96E8\u91CC,\u4E2D\u8F6C\u7AD9\u7B49\u4F60',\r
+      '\u6162\u4E00\u70B9,\u4E5F\u6CA1\u5173\u7CFB',\r
+    ],\r
+\r
+    'tab.file': '\u53D1\u6587\u4EF6',\r
+    'tab.text': '\u53D1\u6587\u672C',\r
+    'dz.click': '\u70B9\u51FB\u9009\u62E9\u6587\u4EF6',\r
+    'dz.drop': ',\u6216\u62D6\u62FD / \u7C98\u8D34\u5230\u6B64\u5904',\r
+    'dz.aria': '\u9009\u62E9\u6587\u4EF6',\r
+    'dz.hint': '\u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',\r
+    'dz.hintMax': '\u5355\u4E2A\u6587\u4EF6\u6700\u5927 {0} \xB7 \u652F\u6301\u591A\u9009,\u4E0A\u4F20\u540E\u751F\u6210\u53D6\u4EF6\u53E3\u4EE4',\r
+    'remove': '\u79FB\u9664',\r
+    'text.placeholder': '\u7C98\u8D34\u6216\u8F93\u5165\u8981\u5206\u4EAB\u7684\u6587\u672C\u2026',\r
+    'opt.expiry': '\u6709\u6548\u671F',\r
+    'opt.pickups': '\u53EF\u53D6\u6B21\u6570',\r
+    'seg.1d': '1 \u5929', 'seg.7d': '7 \u5929', 'seg.30d': '30 \u5929', 'seg.forever': '\u6C38\u4E45',\r
+    'seg.p1': '1 \u6B21', 'seg.p5': '5 \u6B21', 'seg.punlimited': '\u4E0D\u9650',\r
+    'btn.upload': '\u5F00\u59CB\u4E0A\u4F20',\r
+    'btn.genCode': '\u751F\u6210\u53E3\u4EE4',\r
+    'btn.cancel': '\u53D6\u6D88',\r
+    'btn.copyCode': '\u590D\u5236\u53E3\u4EE4',\r
+    'btn.copyLink': '\u590D\u5236\u94FE\u63A5',\r
+    'btn.copyAll': '\u590D\u5236\u5168\u90E8\u53E3\u4EE4',\r
+    'btn.again': '\u518D\u6765\u4E00\u4E2A',\r
+\r
+    'prog.preparing': '\u51C6\u5907\u4E2D\u2026',\r
+    'prog.uploading': '\u4E0A\u4F20\u4E2D\u2026',\r
+    'prog.init': '\u6B63\u5728\u68C0\u67E5\u53EF\u7528\u7A7A\u95F4\u2026',\r
+    'prog.merging': '\u6B63\u5728\u5B8C\u6210\u4E0A\u4F20\u2026',\r
+    'prog.file': '\u7B2C {0}/{1} \u4E2A',\r
+    'prog.part': '\u7B2C {0}/{1} \u7247',\r
+    'prog.eta': '\u5269\u4F59 {0}',\r
+    'prog.retry': '\u4E0A\u4F20\u5931\u8D25,\u91CD\u8BD5 {0}/3\u2026',\r
+\r
+    'result.ok': '\u2705 \u5206\u4EAB\u6210\u529F,\u628A\u53E3\u4EE4\u53D1\u7ED9\u5BF9\u65B9',\r
+    'result.okBatch': '\u2705 {0} \u4E2A\u6587\u4EF6\u5206\u4EAB\u6210\u529F',\r
+    'ticket.title': '\u53D6\u4EF6\u51ED\u8BC1',\r
+    'ticket.no': '\u2116 {0}',\r
+    'send.cap': '\u5206\u4EAB\u5185\u5BB9',\r
+    'receipt.cap': '\u5206\u4EAB\u7ED3\u679C',\r
+    'ph.title': '\u7B49\u5F85\u5206\u4EAB',\r
+    'ph.sub': '\u5206\u4EAB\u6210\u529F\u540E\uFF0C\u5728\u8FD9\u91CC\u590D\u5236\u53E3\u4EE4\u6216\u94FE\u63A5',\r
+\r
+    'flow.dropT': '\u5BC4\u4EF6',\r
+    'flow.dropS': '\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C',\r
+    'flow.tickT': '\u5206\u4EAB\u53E3\u4EE4',\r
+    'flow.tickS': '\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',\r
+    'flow.pickT': '\u53D6\u4EF6',\r
+    'flow.pickS': '\u8F93\u5165\u53E3\u4EE4\u5373\u53EF\u4E0B\u8F7D\u6216\u67E5\u770B',\r
+\r
+    'route.senderT': '\u5BC4\u4EF6\u4EBA \xB7 \u4F60',\r
+    'route.senderS': '\u9009\u62E9\u5185\u5BB9\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u548C\u53EF\u53D6\u6B21\u6570',\r
+    'route.relayT': '\u751F\u6210\u5206\u4EAB',\r
+    'route.relayS': '\u628A\u53D6\u4EF6\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9',\r
+    'route.takerT': '\u53D6\u4EF6\u4EBA \xB7 \u5BF9\u65B9',\r
+    'route.takerS': '\u8F93\u5165\u53E3\u4EE4\u6216\u6253\u5F00\u94FE\u63A5\uFF0C\u5373\u53EF\u53D6\u4EF6',\r
+    'route.fine': '\u53E3\u4EE4\u8BF7\u59A5\u5584\u4FDD\u7BA1\uFF0C\u4EC5\u5206\u4EAB\u7ED9\u9700\u8981\u7684\u4EBA',\r
+\r
+    'feat.splitT': '\u6587\u4EF6\u5206\u4EAB', 'feat.splitS': '\u5355\u6587\u4EF6\u6700\u5927 {0}',\r
+    'feat.ttlT': '\u81EA\u9009\u6709\u6548\u671F', 'feat.ttlS': '1 ~ 30 \u5929\u6216\u6C38\u4E45',\r
+    'feat.limitT': '\u9650\u6B21\u53D6\u4EF6', 'feat.limitS': '1 \u6B21 \xB7 5 \u6B21 \xB7 \u4E0D\u9650',\r
+    'feat.selfT': '\u4FBF\u6377\u53D6\u4EF6', 'feat.selfS': '\u652F\u6301\u53E3\u4EE4\u3001\u94FE\u63A5\u548C\u626B\u7801\u53D6\u4EF6',\r
+    'qr.hint': '\u626B\u7801\u76F4\u63A5\u53D6\u4EF6',\r
+    'label.code': '\u53E3\u4EE4',\r
+    'label.link': '\u94FE\u63A5',\r
+    'copied': '{0}\u5DF2\u590D\u5236',\r
+    'copy.fail': '\u590D\u5236\u5931\u8D25,\u8BF7\u624B\u52A8\u590D\u5236',\r
+    'copied.btn': '\u2713 \u5DF2\u590D\u5236',\r
+\r
+    'meta.after': '{0}\u540E\u8FC7\u671F({1})',\r
+    'meta.forever': '\u6C38\u4E45\u6709\u6548',\r
+    'meta.pickups': '\u53EF\u53D6 {0} \u6B21',\r
+    'meta.unlimited': '\u53D6\u4EF6\u6B21\u6570\u4E0D\u9650',\r
+    'files.count': '{0} \u4E2A\u6587\u4EF6 \xB7 \u5171 {1}',\r
+    'unknown.type': '\u672A\u77E5\u7C7B\u578B',\r
+    'text.counter': '{0} / {1}',\r
+\r
+    'err.oversize': '\u6587\u4EF6\u8D85\u8FC7 {0} \u4E0A\u9650({1})',\r
+    'err.empty': '\u7A7A\u6587\u4EF6\u4E0D\u80FD\u5206\u4EAB',\r
+    'err.tooMany': '\u4E00\u6B21\u6700\u591A\u5206\u4EAB {0} \u4E2A\u6587\u4EF6',\r
+    'err.upload': '\u4E0A\u4F20\u5931\u8D25,\u8BF7\u91CD\u8BD5',\r
+    'err.submit': '\u63D0\u4EA4\u5931\u8D25',\r
+    'req.fail': '\u8BF7\u6C42\u5931\u8D25 ({0})',\r
+    'toast.cancelled': '\u5DF2\u53D6\u6D88\u4E0A\u4F20',\r
+\r
+    'dur.s': '{0} \u79D2',\r
+    'dur.ms': '<1 \u79D2',\r
+    'dur.hm': '{0} \u5206 {1} \u79D2',\r
+    'dur.h': '{0} \u5206',\r
+    'dur.hH': '{0} \u65F6 {1} \u5206',\r
+    'dur.hH2': '{0} \u65F6',\r
+    'dur.d': '{0} \u5929',\r
+\r
+    'pk.title': '\u8F93\u5165\u53D6\u4EF6\u53E3\u4EE4',\r
+    'pk.sub': '\u8F93\u5165 6 \u4F4D\u6570\u5B57\u53E3\u4EE4,\u53D6\u51FA\u5206\u4EAB\u7684\u6587\u4EF6\u6216\u6587\u672C',\r
+    'pk.aria': '6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',\r
+    'pk.fail': '\u53D6\u4EF6\u5931\u8D25',\r
+    'pk.textChars': '\u6587\u672C \xB7 {0} \u5B57\u7B26',\r
+    'pk.copyAllText': '\u4E00\u952E\u590D\u5236\u5168\u6587',\r
+    'pk.download': '\u2B07 \u4E0B\u8F7D\u6587\u4EF6',\r
+    'pk.again': '\u91CD\u65B0\u8F93\u5165',\r
+    'pk.expireAt': '{0} \u8FC7\u671F',\r
+    'pk.left': '\u5269\u4F59\u53EF\u53D6 {0} \u6B21',\r
+    'pk.unnamed': '\u672A\u547D\u540D\u6587\u4EF6',\r
+    'copied.text': '\u5DF2\u590D\u5236\u5168\u6587',\r
+\r
+    'ad.loginTitle': '\u7BA1\u7406\u767B\u5F55',\r
+    'ad.loginSub': '\u4F7F\u7528\u7BA1\u7406\u4EE4\u724C\u767B\u5F55',\r
+    'ad.tokenPh': '\u7BA1\u7406\u4EE4\u724C',\r
+    'ad.login': '\u767B\u5F55',\r
+    'ad.badToken': '\u4EE4\u724C\u65E0\u6548',\r
+    'ad.total': '\u5206\u4EAB\u603B\u6570',\r
+    'ad.active': '\u5F53\u524D\u6709\u6548',\r
+    'ad.files': '\u6587\u4EF6',\r
+    'ad.texts': '\u6587\u672C',\r
+    'ad.storage': '\u5B58\u50A8\u7A7A\u95F4 \xB7 \u5DF2\u7528 / \u603B\u5BB9\u91CF',\r
+    'ad.storageReserved': '\u542B\u4E0A\u4F20\u9884\u7559\u7A7A\u95F4',\r
+    'ad.storageUnavailable': '\u6682\u4E0D\u53EF\u7528',\r
+    'ad.shareBytes': '\u5206\u4EAB\u5185\u5BB9\u5927\u5C0F',\r
+    'ad.today': '\u4ECA\u65E5\u65B0\u589E',\r
+    'ad.th.code': '\u53E3\u4EE4', 'ad.th.kind': '\u7C7B\u578B', 'ad.th.content': '\u5185\u5BB9',\r
+    'ad.th.size': '\u5927\u5C0F', 'ad.th.pickups': '\u5DF2\u53D6/\u4E0A\u9650', 'ad.th.expire': '\u8FC7\u671F\u65F6\u95F4',\r
+    'ad.th.status': '\u72B6\u6001', 'ad.th.created': '\u521B\u5EFA\u65F6\u95F4',\r
+    'ad.kind.file': '\u6587\u4EF6', 'ad.kind.text': '\u6587\u672C',\r
+    'ad.st.active': '\u6709\u6548', 'ad.st.expired': '\u5DF2\u8FC7\u671F', 'ad.st.exhausted': '\u5DF2\u53D6\u5B8C',\r
+    'ad.loading': '\u52A0\u8F7D\u4E2D\u2026',\r
+    'ad.empty': '\u6682\u65E0\u5206\u4EAB',\r
+    'ad.loadFail': '\u52A0\u8F7D\u5931\u8D25',\r
+    'ad.page': '\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761',\r
+    'ad.prev': '\u4E0A\u4E00\u9875', 'ad.next': '\u4E0B\u4E00\u9875',\r
+    'ad.refresh': '\u21BB \u5237\u65B0',\r
+    'ad.logout': '\u9000\u51FA\u767B\u5F55',\r
+    'ad.download': '\u4E0B\u8F7D',\r
+    'ad.delete': '\u5220\u9664',\r
+    'ad.deleted': '\u5DF2\u5220\u9664',\r
+    'ad.deleteFail': '\u5220\u9664\u5931\u8D25',\r
+    'ad.delTitle': '\u4F5C\u5E9F\u8FD9\u5F20\u53D6\u4EF6\u51ED\u8BC1?',\r
+    'ad.delWarn': '\u4F5C\u5E9F\u540E\u53E3\u4EE4\u7ACB\u5373\u5931\u6548,\u5BF9\u65B9\u5C06\u65E0\u6CD5\u53D6\u4EF6,\u4E14\u4E0D\u53EF\u6062\u590D\u3002',\r
+    'ad.delOk': '\u786E\u8BA4\u4F5C\u5E9F',\r
+    'ad.textFallback': '(\u6587\u672C)',\r
+    'ad.unnamed': '(\u672A\u547D\u540D)',\r
+    'ad.chars': '{0} \u5B57',\r
+    'ad.forever': '\u6C38\u4E45',\r
+\r
+    'nf.title': '\u9875\u9762\u4E0D\u5B58\u5728',\r
+    'nf.body': '\u4F60\u8981\u627E\u7684\u9875\u9762\u4E0D\u5728\u4E2D\u8F6C\u7AD9\u91CC',\r
+    'nf.send': '\u53BB\u53D1\u9001',\r
+    'nf.pickup': '\u53BB\u53D6\u4EF6',\r
+  },\r
+\r
+  en: {\r
+    'ad.settings': 'Settings',\r
+    'ad.shareSettings': 'Sharing rules',\r
+    'ad.guestWeeklyFiles': 'Unnoted guest files / week',\r
+    'ad.displaySettings': 'List display',\r
+    'ad.filesPageSize': 'Files per page',\r
+    'ad.auditPageSize': 'Logs per page',\r
+    'ad.browserSettings': 'Applied immediately, saved in this browser',\r
+    'ad.preferenceNotSaved': 'Applied for now; this browser could not save the preference',\r
+    'ad.filesPagination': 'File pagination',\r
+    'ad.auditPagination': 'Log pagination',\r
+    'context.add': 'Additional information (optional)',\r
+    'context.name': 'Your name',\r
+    'context.description': 'Description (all files in this batch)',\r
+    'context.visibility': 'Only visible to the administrator',\r
+    'ad.retentionTitle': 'Automatic cleanup',\r
+    'ad.recentUploads': 'Recent uploads',\r
+    'ad.historyScope': 'Latest 10 retained shares',\r
+    'ad.backFile': 'Back to file',\r
+    'ad.submittedName': 'Submitted name',\r
+    'ad.requestIP': 'Request IP',\r
+    'ad.network': 'Network',\r
+    'ad.browserReported': 'Browser (reported)',\r
+    'ad.copyIP': 'Copy',\r
+    'ad.ipCopied': 'IP copied',\r
+    'ad.copyFailed': 'Copy failed; select the IP manually',\r
+    'ad.fileDescription': 'Description',\r
+    'audit.detail.filename': 'Filename',\r
+    'audit.detail.sizeBytes': 'Size (bytes)',\r
+    'audit.navigation': "Admin pages",\r
+    'audit.files': "Files",\r
+    'audit.title': "Audit logs",\r
+    'audit.retention': "Last 30 days, up to 1,000 entries; times shown in your local timezone",\r
+    'audit.export': "Export results",\r
+    'audit.categories': "Log categories",\r
+    'audit.all': "All logs",\r
+    'audit.login': "Login logs",\r
+    'audit.operation': "Operations",\r
+    'audit.security': "Security",\r
+    'audit.result': "Result",\r
+    'audit.anyResult': "All results",\r
+    'audit.success': "Success",\r
+    'audit.failed': "Failed",\r
+    'audit.blocked': "Blocked",\r
+    'audit.from': "Start date",\r
+    'audit.to': "End date",\r
+    'audit.keyword': "IP / Target",\r
+    'audit.search': "Search IP or pickup code",\r
+    'audit.filter': "Filter",\r
+    'audit.reset': "Reset",\r
+    'audit.time': "Time",\r
+    'audit.action': "Action",\r
+    'audit.actor': "Actor",\r
+    'audit.source': "Source IP / Location",\r
+    'audit.target': "Target",\r
+    'audit.details': "Details",\r
+    'audit.empty': "No matching logs. Recording starts when this feature is deployed.",\r
+    'audit.disabled': "Audit logging is not enabled: bind R2 or D1.",\r
+    'audit.page': "Page {0} / {1} \xB7 {2} entries",\r
+    'audit.dateError': "Start date must not be after end date",\r
+    'audit.http': "Request / Status",\r
+    'audit.duration': "Processing time",\r
+    'audit.id': "Log ID",\r
+    'audit.agent': "Browser identifier (client supplied)",\r
+    'audit.yes': "Yes",\r
+    'audit.no': "No",\r
+    'audit.description': "Description",\r
+    'audit.downloadHint': "The file stream was opened; this does not confirm the browser finished downloading.",\r
+    'audit.writeFailed': "The operation was processed, but its audit record could not be saved. Check log storage.",\r
+    'audit.action.login': "Admin login",\r
+    'audit.action.logout': "Log out",\r
+    'audit.action.retention': "Change expired retention",\r
+    'audit.action.uploadPolicy': "Change weekly upload quota",\r
+    'audit.action.unblock': "Unblock IP",\r
+    'audit.action.cleanup': "Run expired cleanup",\r
+    'audit.action.export': "Export audit logs",\r
+    'audit.action.ban': "Trigger login ban",\r
+    'audit.action.delete': "Delete share",\r
+    'audit.action.note': "Change visitor note",\r
+    'audit.action.viewSource': "View source details",\r
+    'audit.action.download': "Download file",\r
+    'audit.actor.admin': "Administrator",\r
+    'audit.actor.token': "Scheduler / Token",\r
+    'audit.actor.anonymous': "Unauthenticated",\r
+    'audit.detail.bannedUntil': "Blocked until",\r
+    'audit.detail.expiredRetentionDays': "Expired retention days",\r
+    'audit.detail.weeklyFileLimit': "Weekly upload limit",\r
+    'audit.detail.notePresent': "Note set",\r
+    'audit.detail.alreadyDeleted': "Share already absent",\r
+    'audit.detail.deletedShares': "Shares deleted",\r
+    'audit.detail.abortedSessions': "Upload sessions aborted",\r
+\r
+    'ad.loginProtection': "Login protection",\r
+    'ad.guardRule': "{1} failures in {0} minutes block login for {2} minutes",\r
+    'ad.guardDisabled': "Not enabled: bind R2 or D1",\r
+    'ad.guardEmpty': "No blocked IPs",\r
+    'ad.guardUnknown': "Unknown source (shared limit)",\r
+    'ad.guardFailures': "{0} failures",\r
+    'ad.guardUntil': "Unblocks at {0}",\r
+    'ad.guardLast': "Last failure {0}",\r
+    'ad.guardUnblock': "Unblock",\r
+    'ad.guardUnblocked': "IP unblocked",\r
+    'ad.loginBlocked': "Too many failed logins. Wait until the block expires.",\r
+    'ad.guardUnavailable': "Login protection unavailable. Please try again later.",\r
+\r
+    'ad.formatUnknown': "Unknown format",\r
+    'ad.format.archive': "Archive",\r
+    'ad.format.program': "Application",\r
+    'ad.format.document': "Document",\r
+    'ad.format.image': "Image",\r
+    'ad.format.video': "Video",\r
+    'ad.format.audio': "Audio",\r
+    'ad.format.text': "Text / code",\r
+    'ad.format.file': "File",\r
+    'ad.uploader': "Uploaded by",\r
+    'ad.shareState': "Share status",\r
+    'ad.fileAvailability': "File status",\r
+    'ad.fileState.available': "Available",\r
+    'ad.fileState.missing': "File missing",\r
+    'ad.fileState.unknown': "Unable to verify",\r
+    'ad.timeLeft': "{0} left",\r
+    'ad.timeExpired': "Expired {0} ago",\r
+    'ad.cleanupPermanent': "No automatic cleanup",\r
+    'ad.cleanupActive': "Kept for {0} days after expiry",\r
+    'ad.cleanupRetained': "Retained after expiry",\r
+    'ad.cleanupPending': "Awaiting cleanup",\r
+    'ad.technical': "Technical details",\r
+    'ad.storedSize': "Stored size",\r
+    'ad.storedAt': "Stored at",\r
+    'ad.exactBytes': "{0} bytes",\r
+    'ad.formatHint': "Format is inferred from the filename; content has not been verified.",\r
+    'ad.tryDownload': "Try download",\r
+    'ad.guestLimits': "Unnoted visitor limits",\r
+    'ad.weeklyFiles': "Files per week",\r
+    'ad.guestRules': "Resets Monday, Beijing time. Accepted uploads count even if cancelled. Unnoted visitors cannot create permanent or unlimited-pickup shares.",\r
+    'ad.guestSaved': "Saved for subsequent uploads",\r
+    'policy.expiry': "1 to 30 days",\r
+    'policy.pickups': "1 or 5 pickups",\r
+    'policy.remaining': "{0} / {1} files left this week \xB7 resets {2}",\r
+    'policy.unavailable': "Loading upload permissions. Refresh if this persists.",\r
+    'policy.contact': "File uploads are unavailable. Contact the administrator.",\r
+    'ad.fileDetails': 'File details',\r
+    'ad.filename': 'Filename',\r
+    'ad.fileType': 'File type',\r
+    'ad.cleanupAfter': 'Cleanup after',\r
+    'ad.retentionDays': 'Keep after expiry',\r
+    'ad.days': 'days',\r
+    'ad.save': 'Save',\r
+    'ad.retry': 'Retry',\r
+    'ad.settingsSaved': 'Saved for subsequent cleanup runs',\r
+    'ad.source': 'Upload source',\r
+    'ad.visitor': 'Visitor {0}',\r
+    'ad.visitorId': 'Visitor ID',\r
+    'ad.sourceUnknown': 'Unknown',\r
+    'ad.sourceUnrecorded': 'Not recorded',\r
+    'ad.sourceLocation': 'Exit location',\r
+    'ad.sourceTime': 'Recorded at',\r
+    'ad.sourceNote': 'Admin note',\r
+    'ad.sourceSave': 'Save note',\r
+    'ad.sourceClose': 'Close',\r
+    'ad.sourceSaved': 'Note saved',\r
+    'err.capacity': 'Storage capacity exceeds the free quota.',\r
+    'err.capacityRemaining': 'Storage capacity exceeds the free quota. Available space: approximately {0} GB ({1} bytes).',\r
+    'doc.send': 'file-relay - Send',\r
+    'doc.pickup': 'file-relay - Pickup',\r
+    'doc.admin': 'file-relay - Admin',\r
+    'doc.404': '404 - file-relay',\r
+\r
+    'brand.name': 'file-relay',\r
+    'brand.tagline': 'Files, picked up like parcels',\r
+    'brand.pickup': 'Pickup',\r
+    'brand.admin': 'Admin',\r
+    'nav.pickup': 'Pick up',\r
+    'nav.send': 'Send',\r
+    'nav.theme': 'Toggle theme',\r
+    'nav.lang': 'Switch language',\r
+    'foot': [\r
+      'Yours, from afar',\r
+      'Words run short, feelings run long',\r
+      'See you down the road',\r
+      'Signed, sealed, delivered',\r
+      'Through wind and rain, the relay waits',\r
+      'Take care, until next time',\r
+    ],\r
+\r
+    'tab.file': 'Send file',\r
+    'tab.text': 'Send text',\r
+    'dz.click': 'Click to choose files',\r
+    'dz.drop': ', or drag & drop / paste here',\r
+    'dz.aria': 'Choose files',\r
+    'dz.hint': 'A 6-digit pickup code is generated after upload',\r
+    'dz.hintMax': 'Up to {0} per file \xB7 multiple selection supported',\r
+    'remove': 'Remove',\r
+    'text.placeholder': 'Paste or type the text to share\u2026',\r
+    'opt.expiry': 'Expires',\r
+    'opt.pickups': 'Pickup limit',\r
+    'seg.1d': '1 day', 'seg.7d': '7 days', 'seg.30d': '30 days', 'seg.forever': 'Forever',\r
+    'seg.p1': '1\xD7', 'seg.p5': '5\xD7', 'seg.punlimited': 'Unlimited',\r
+    'btn.upload': 'Start upload',\r
+    'btn.genCode': 'Generate code',\r
+    'btn.cancel': 'Cancel',\r
+    'btn.copyCode': 'Copy code',\r
+    'btn.copyLink': 'Copy link',\r
+    'btn.copyAll': 'Copy all codes',\r
+    'btn.again': 'New share',\r
+\r
+    'prog.preparing': 'Preparing\u2026',\r
+    'prog.uploading': 'Uploading\u2026',\r
+    'prog.init': 'Checking available space\u2026',\r
+    'prog.merging': 'Finishing upload\u2026',\r
+    'prog.file': 'file {0}/{1}',\r
+    'prog.part': 'part {0}/{1}',\r
+    'prog.eta': 'ETA {0}',\r
+    'prog.retry': 'Upload failed, retrying {0}/3\u2026',\r
+\r
+    'result.ok': '\u2705 Shared! Send the code to the recipient',\r
+    'result.okBatch': '\u2705 {0} files shared successfully',\r
+    'ticket.title': 'PICKUP TICKET',\r
+    'ticket.no': '\u2116 {0}',\r
+    'send.cap': 'SHARE CONTENT',\r
+    'receipt.cap': 'SHARE RESULTS',\r
+    'ph.title': 'READY TO SHARE',\r
+    'ph.sub': 'Copy your pickup code or link here after sharing',\r
+\r
+    'flow.dropT': 'Send',\r
+    'flow.dropS': 'Choose files or enter text',\r
+    'flow.tickT': 'Ticket',\r
+    'flow.tickS': 'A 6-digit pickup code is issued',\r
+    'flow.pickT': 'Pick up',\r
+    'flow.pickS': 'The recipient claims it with the code',\r
+\r
+    'route.senderT': 'Sender \xB7 you',\r
+    'route.senderS': 'Choose content, expiry and pickup limit',\r
+    'route.relayT': 'Create a share',\r
+    'route.relayS': 'Send the pickup code or link to the recipient',\r
+    'route.takerT': 'Recipient',\r
+    'route.takerS': 'Enter the code or open the link to pick up',\r
+    'route.fine': 'Keep the code private; share only with your recipients',\r
+\r
+    'feat.splitT': 'File sharing', 'feat.splitS': 'Up to {0} per file',\r
+    'feat.ttlT': 'You set the clock', 'feat.ttlS': '1-30 days, or forever',\r
+    'feat.limitT': 'Limited pickups', 'feat.limitS': '1\xD7 \xB7 5\xD7 \xB7 unlimited',\r
+    'feat.selfT': 'Easy pickup', 'feat.selfS': 'Use a code, link or QR code',\r
+    'qr.hint': 'Scan to pick up',\r
+    'label.code': 'code',\r
+    'label.link': 'link',\r
+    'copied': '{0} copied',\r
+    'copy.fail': 'Copy failed, please copy manually',\r
+    'copied.btn': '\u2713 Copied',\r
+\r
+    'meta.after': 'Expires in {0} ({1})',\r
+    'meta.forever': 'Never expires',\r
+    'meta.pickups': '{0} pickups allowed',\r
+    'meta.unlimited': 'Unlimited pickups',\r
+    'files.count': '{0} files \xB7 {1} total',\r
+    'unknown.type': 'unknown type',\r
+    'text.counter': '{0} / {1}',\r
+\r
+    'err.oversize': 'File exceeds the {0} limit ({1})',\r
+    'err.empty': 'Empty files cannot be shared',\r
+    'err.tooMany': 'Up to {0} files per batch',\r
+    'err.upload': 'Upload failed, please retry',\r
+    'err.submit': 'Submission failed',\r
+    'req.fail': 'Request failed ({0})',\r
+    'toast.cancelled': 'Upload cancelled',\r
+\r
+    'dur.s': '{0}s',\r
+    'dur.ms': '<1s',\r
+    'dur.hm': '{0}m {1}s',\r
+    'dur.h': '{0}m',\r
+    'dur.hH': '{0}h {1}m',\r
+    'dur.hH2': '{0}h',\r
+    'dur.d': '{0}d',\r
+\r
+    'pk.title': 'Enter pickup code',\r
+    'pk.sub': 'Enter the 6-digit code to retrieve the shared file or text',\r
+    'pk.aria': '6-digit pickup code',\r
+    'pk.fail': 'Pickup failed',\r
+    'pk.textChars': 'Text \xB7 {0} chars',\r
+    'pk.copyAllText': 'Copy all text',\r
+    'pk.download': '\u2B07 Download file',\r
+    'pk.again': 'Try another code',\r
+    'pk.expireAt': 'Expires {0}',\r
+    'pk.left': '{0} pickups left',\r
+    'pk.unnamed': 'Untitled file',\r
+    'copied.text': 'Full text copied',\r
+\r
+    'ad.loginTitle': 'Admin login',\r
+    'ad.loginSub': 'Sign in with your admin token',\r
+    'ad.tokenPh': 'Admin token',\r
+    'ad.login': 'Log in',\r
+    'ad.badToken': 'Invalid token',\r
+    'ad.total': 'Total shares',\r
+    'ad.active': 'Active',\r
+    'ad.files': 'Files',\r
+    'ad.texts': 'Texts',\r
+    'ad.storage': 'Storage \xB7 used / capacity',\r
+    'ad.storageReserved': 'Includes upload reservations',\r
+    'ad.storageUnavailable': 'Unavailable',\r
+    'ad.shareBytes': 'Shared content size',\r
+    'ad.today': 'New today',\r
+    'ad.th.code': 'Code', 'ad.th.kind': 'Type', 'ad.th.content': 'Content',\r
+    'ad.th.size': 'Size', 'ad.th.pickups': 'Picked/Limit', 'ad.th.expire': 'Expires',\r
+    'ad.th.status': 'Status', 'ad.th.created': 'Created',\r
+    'ad.kind.file': 'File', 'ad.kind.text': 'Text',\r
+    'ad.st.active': 'Active', 'ad.st.expired': 'Expired', 'ad.st.exhausted': 'Exhausted',\r
+    'ad.loading': 'Loading\u2026',\r
+    'ad.empty': 'No shares yet',\r
+    'ad.loadFail': 'Failed to load',\r
+    'ad.page': 'Page {0} / {1} \xB7 {2} total',\r
+    'ad.prev': 'Prev', 'ad.next': 'Next',\r
+    'ad.refresh': '\u21BB Refresh',\r
+    'ad.logout': 'Log out',\r
+    'ad.download': 'Download',\r
+    'ad.delete': 'Delete',\r
+    'ad.deleted': 'Deleted',\r
+    'ad.deleteFail': 'Delete failed',\r
+    'ad.delTitle': 'Void this ticket?',\r
+    'ad.delWarn': 'The code stops working immediately, the recipient can no longer pick it up, and this cannot be undone.',\r
+    'ad.delOk': 'Void it',\r
+    'ad.textFallback': '(text)',\r
+    'ad.unnamed': '(unnamed)',\r
+    'ad.chars': '{0} chars',\r
+    'ad.forever': 'Forever',\r
+\r
+    'nf.title': 'Page not found',\r
+    'nf.body': "The page you're looking for isn't in this relay",\r
+    'nf.send': 'Send files',\r
+    'nf.pickup': 'Pick up',\r
+  },\r
+};\r
+\r
+export let LANG =\r
+  localStorage.getItem('lang') ||\r
+  ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');\r
+\r
+/** \u53D6\u8BCD:\u5F53\u524D\u8BED\u8A00 \u2192 \u4E2D\u6587\u515C\u5E95 \u2192 key \u672C\u8EAB;\u6570\u7EC4\u503C\u968F\u673A\u53D6\u4E00\u6761;{0}{1}\u2026 \u4F9D\u6B21\u66FF\u6362 */\r
+export function t(key, ...args) {\r
+  let s = (DICT[LANG] && DICT[LANG][key]) ?? DICT.zh[key] ?? key;\r
+  if (Array.isArray(s)) s = s[Math.floor(Math.random() * s.length)];\r
+  args.forEach((v, i) => { s = s.replaceAll(\`{\${i}}\`, String(v)); });\r
+  return s;\r
+}\r
+\r
+const rerenders = [];\r
+/** \u5404\u9875\u9762\u767B\u8BB0:\u8BED\u8A00\u5207\u6362\u540E\u91CD\u7B97\u52A8\u6001\u6587\u6848 */\r
+export function onLangChange(fn) { rerenders.push(fn); }\r
+\r
+function applyLang() {\r
+  document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';\r
+  document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = t(n.dataset.i18n); });\r
+  document.querySelectorAll('[data-i18n-ph]').forEach((n) => { n.placeholder = t(n.dataset.i18nPh); });\r
+  document.querySelectorAll('[data-i18n-title]').forEach((n) => { n.title = t(n.dataset.i18nTitle); });\r
+  document.querySelectorAll('[data-i18n-aria]').forEach((n) => { n.setAttribute('aria-label', t(n.dataset.i18nAria)); });\r
+  const btn = document.getElementById('lang-btn');\r
+  if (btn) btn.textContent = LANG === 'en' ? '\u4E2D' : 'EN';\r
+}\r
+\r
+export function initI18n() {\r
+  applyLang();\r
+  document.getElementById('lang-btn')?.addEventListener('click', () => {\r
+    LANG = LANG === 'en' ? 'zh' : 'en';\r
+    localStorage.setItem('lang', LANG);\r
+    applyLang();\r
+    rerenders.forEach((fn) => fn());\r
+  });\r
+}\r
 `, "js/index.js": "import { $, $$, api, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme, el } from './common.js';\nimport { t, onLangChange, initI18n } from './i18n.js';\n\ninitTheme();\ninitI18n();\n\nconst els = {\n  dropzone: $('#dropzone'),\n  dzHint: $('#dz-hint'),\n  fileInput: $('#file-input'),\n  fileList: $('#file-list'),\n  textInput: $('#text-input'),\n  textCounter: $('#text-counter'),\n  btnUpload: $('#btn-upload'),\n  btnText: $('#btn-text'),\n  progress: $('#progress'),\n  progressFill: $('#progress-fill'),\n  progressText: $('#progress-text'),\n  btnCancel: $('#btn-cancel'),\n  results: $('#results'),\n  placeholder: $('#result-placeholder'),\n  capDate: $('#cap-date'),\n};\n\nconst MAX_SIZE_FALLBACK = 25 * 1024 * 1024;\nconst MAX_BATCH = 10;\nlet cfg = { fileBackend: 'kv', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config \u52A0\u8F7D\u540E\u8986\u76D6\nlet MAX_SIZE = MAX_SIZE_FALLBACK;\nlet policyReady = false;\n\nlet files = []; // \u5F85\u4E0A\u4F20\u961F\u5217(File[])\nlet queueUI = new Map(); // File \u2192 { row, bar, status }\nlet queueState = new Map(); // File \u2192 'idle' | { done: code } | 'fail'(\u8BED\u8A00\u5207\u6362\u540E\u91CD\u6E32\u67D3\u7528)\nlet session = null; // \u8FDB\u884C\u4E2D\u7684 R2 \u5206\u7247\u4F1A\u8BDD { uploadId, partSize, parts }\nlet currentXhr = null;\nlet cancelled = false;\nlet uploading = false;\nlet lastResults = [];\n\n/* \u670D\u52A1\u7AEF\u914D\u7F6E:\u51B3\u5B9A\u8D70\u5206\u7247\u4E0A\u4F20(R2 \u5927\u5B58\u50A8)\u8FD8\u662F\u5355\u8BF7\u6C42\u76F4\u4F20(KV \u5C0F\u5B58\u50A8) */\nfunction canUploadFiles() {\n  return policyReady && cfg.fileBackend !== 'none' && cfg.fileUploadAvailable !== false && cfg.uploadsRemaining !== 0;\n}\nfunction updateHint() {\n  els.dzHint.textContent = t('dz.hintMax', fmtBytes(MAX_SIZE));\n  const feature = $('[data-i18n=\"feat.splitS\"]');\n  if (feature) feature.textContent = t('feat.splitS', fmtBytes(MAX_SIZE));\n  for (const [id, value, allowed, fallback] of [\n    ['seg-expiry', 'forever', cfg.allowPermanent === true, '7d'],\n    ['seg-pickups', 'null', cfg.allowUnlimited === true, '5'],\n  ]) {\n    const button = $(`#${id} [data-v=\"${value}\"]`);\n    button.disabled = !allowed;\n    if (!allowed && button.classList.contains('active')) {\n      button.classList.remove('active');\n      $(`#${id} [data-v=\"${fallback}\"]`).classList.add('active');\n    }\n  }\n  $('[data-i18n=\"feat.ttlS\"]').textContent = t(cfg.allowPermanent ? 'feat.ttlS' : 'policy.expiry');\n  $('[data-i18n=\"feat.limitS\"]').textContent = t(cfg.allowUnlimited ? 'feat.limitS' : 'policy.pickups');\n  $('#upload-policy-hint').textContent = !policyReady ? t('policy.unavailable')\n    : cfg.fileUploadAvailable === false ? t('policy.contact')\n    : cfg.weeklyFileLimit !== null && cfg.weeklyFileLimit !== undefined\n      ? t('policy.remaining', cfg.uploadsRemaining, cfg.weeklyFileLimit, fmtDate(cfg.uploadsResetAt)) : '';\n  $$('.seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n}\nasync function refreshPolicy() {\n  try {\n    cfg = await api('/api/config');\n    if (!Number.isSafeInteger(cfg.maxFileSize) || (cfg.maxFileSize < 0 || (cfg.maxFileSize === 0 && cfg.fileBackend !== 'none'))) throw new Error('Invalid upload policy');\n    MAX_SIZE = cfg.maxFileSize;\n    policyReady = true;\n  } catch { policyReady = false; }\n  updateHint();\n  setBusy(uploading);\n}\nupdateHint();\nrefreshPolicy();\n\n/* \u5BC4\u4EF6\u5355\u62AC\u5934\u65E5\u671F(\u88C5\u9970) */\nif (els.capDate) els.capDate.textContent = fmtDate(Date.now()).split(' ')[0];\n\n/* \u8BED\u8A00\u5207\u6362:\u91CD\u7B97\u52A8\u6001\u6587\u6848\u4E0E\u7ED3\u679C\u5361\u7247 */\nonLangChange(() => {\n  if (cfg.maxFileSize) updateHint();\n  renderQueue();\n  if (lastResults.length) showResults(lastResults);\n});\n\n/* ---------- tabs ---------- */\n$$('.tab').forEach((tb) =>\n  tb.addEventListener('click', () => {\n    if (uploading) return; // \u4E0A\u4F20\u4E2D\u7981\u6B62\u5207\u6362\n    $$('.tab').forEach((x) => x.classList.toggle('active', x === tb));\n    const tab = tb.dataset.tab;\n    $('#panel-file').hidden = tab !== 'file';\n    $('#panel-text').hidden = tab !== 'text';\n    $('#upload-description-field').hidden = tab !== 'file';\n    $$('.tab').forEach(x => x.setAttribute('aria-pressed', String(x === tb)));\n    els.btnUpload.hidden = tab !== 'file';\n    els.btnText.hidden = tab !== 'text';\n    hideResult();\n  }),\n);\n\n/* ---------- segmented \u9009\u9879 ---------- */\nfor (const id of ['seg-expiry', 'seg-pickups']) {\n  $(`#${id}`).addEventListener('click', (e) => {\n    const b = e.target.closest('button');\n    if (!b || b.disabled) return;\n    $$('button', $(`#${id}`)).forEach((x) => {\n      x.classList.toggle('active', x === b);\n      x.setAttribute('aria-pressed', String(x === b));\n    });\n  });\n}\nfunction readOptions() {\n  const exp = $('#seg-expiry .active').dataset.v;\n  const pk = $('#seg-pickups .active').dataset.v;\n  return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk),\n    displayName: $('#upload-name').value.trim(),\n    description: $('#panel-file').hidden ? '' : $('#upload-description').value.trim() };\n}\n$$('.tab, .seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n$('#upload-description').addEventListener('input', e => {\n  $('#description-count').textContent = `${e.target.value.length} / 300`;\n});\n\n/* ---------- \u6587\u4EF6\u961F\u5217:\u70B9\u51FB / \u5168\u7A97\u53E3\u62D6\u62FD / \u667A\u80FD\u7C98\u8D34,\u518D\u9009\u5373\u6574\u4F53\u66FF\u6362 ---------- */\nels.dropzone.addEventListener('click', () => els.fileInput.click());\nels.dropzone.addEventListener('keydown', (e) => {\n  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); els.fileInput.click(); }\n});\nels.fileInput.addEventListener('change', () => {\n  setFiles([...els.fileInput.files]);\n  els.fileInput.value = '';\n});\n\nfunction showTab(name) {\n  const tb = $(`.tab[data-tab=\"${name}\"]`);\n  if (tb && !tb.classList.contains('active')) tb.click(); // \u4E0A\u4F20\u4E2D\u65F6 tab \u5904\u7406\u5668\u81EA\u5DF1\u4F1A\u62D2\u7EDD\n}\n\n/* \u62D6\u5230\u9875\u9762\u4EFB\u610F\u4F4D\u7F6E\u90FD\u9AD8\u4EAE\u5E76\u53EF\u653E\u4E0B(\u4E0D\u518D\u8981\u6C42\u7CBE\u786E\u547D\u4E2D\u62D6\u62FD\u533A) */\nlet dragDepth = 0;\nwindow.addEventListener('dragenter', (e) => {\n  if (![...(e.dataTransfer?.types || [])].includes('Files')) return;\n  dragDepth++;\n  if (!uploading) els.dropzone.classList.add('dragover');\n});\nwindow.addEventListener('dragleave', () => {\n  if (--dragDepth <= 0) { dragDepth = 0; els.dropzone.classList.remove('dragover'); }\n});\nwindow.addEventListener('dragover', (e) => e.preventDefault());\nwindow.addEventListener('drop', (e) => {\n  e.preventDefault();\n  dragDepth = 0;\n  els.dropzone.classList.remove('dragover');\n  if (e.dataTransfer?.files?.length) setFiles([...e.dataTransfer.files]);\n});\n\n/* \u7C98\u8D34\u667A\u80FD\u8DEF\u7531:\u7C98\u8D34\u6587\u4EF6\u2192\u6587\u4EF6\u9875;\u6587\u4EF6\u9875\u7C98\u8D34\u7EAF\u6587\u672C\u2192\u81EA\u52A8\u5207\u5230\u6587\u672C\u9875 */\ndocument.addEventListener('paste', (e) => {\n  if (e.target?.closest?.('textarea, input')) return; // \u8F93\u5165\u6846\u5185\u7C98\u8D34\u8D70\u9ED8\u8BA4\u884C\u4E3A\n  if (e.clipboardData?.files?.length) {\n    setFiles([...e.clipboardData.files]);\n    return;\n  }\n  const text = e.clipboardData?.getData('text/plain');\n  if (text && $('#panel-text').hidden) {\n    showTab('text');\n    els.textInput.value = text;\n    els.textInput.dispatchEvent(new Event('input'));\n  }\n});\n\nfunction setFiles(list) {\n  if (uploading) return;\n  const ok = [];\n  for (const f of list) {\n    if (f.size > MAX_SIZE) { toast(t('err.oversize', fmtBytes(MAX_SIZE), fmtBytes(f.size)), 'error'); continue; }\n    if (f.size < 1) { toast(t('err.empty'), 'error'); continue; }\n    ok.push(f);\n  }\n  if (ok.length > MAX_BATCH) {\n    toast(t('err.tooMany', MAX_BATCH), 'error');\n    ok.length = MAX_BATCH;\n  }\n  files = ok; // \u66FF\u6362\u8BED\u4E49:\u518D\u6B21\u9009\u62E9\u5373\u91CD\u7F6E\u961F\u5217\n  queueState = new Map(files.map((f) => [f, 'idle']));\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n  hideResult();\n}\n\nfunction statusText(f, st) {\n  if (st === 'fail') return '\u2717';\n  if (st && st.done) return `\u2713 ${st.done}`;\n  return fmtBytes(f.size);\n}\n\nfunction renderQueue() {\n  els.fileList.replaceChildren();\n  queueUI = new Map();\n  files.forEach((f) => {\n    const st = queueState.get(f) || 'idle';\n    const bar = el('div', { class: 'fr-bar' });\n    const status = el('small', { class: 'fr-status' }, statusText(f, st));\n    const row = el('div', {\n      class: `file-row${st === 'fail' ? ' fail' : ''}${st && st.done ? ' done' : ''}`,\n    });\n    row.replaceChildren(\n      el('span', { class: 'fr-icon' }, iconFor(f.name, f.type)),\n      el('div', { class: 'fr-meta' },\n        el('b', { title: f.name }, f.name),\n        el('small', {}, `${fmtBytes(f.size)} \xB7 ${f.type || t('unknown.type')}`),\n      ),\n      status,\n      el('button', { class: 'icon-btn fr-remove', title: t('remove'), type: 'button', onclick: () => removeFile(f) }, '\u2715'),\n      bar,\n    );\n    if (st && st.done) bar.style.width = '100%';\n    queueUI.set(f, { row, bar, status });\n    els.fileList.append(row);\n  });\n  els.fileList.hidden = files.length === 0;\n  els.dropzone.hidden = files.length > 0;\n}\n\nfunction removeFile(f) {\n  if (uploading) return;\n  files = files.filter((x) => x !== f);\n  queueState.delete(f);\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n}\n\n/* ---------- \u6587\u672C\u8F93\u5165 ---------- */\nels.textInput.addEventListener('input', () => {\n  els.textCounter.textContent = t('text.counter', els.textInput.value.length, 65536);\n  els.btnText.disabled = !policyReady || !els.textInput.value.trim();\n});\n\n/* ---------- \u4E0A\u4F20:\u961F\u5217\u987A\u5E8F\u9010\u4E2A,\u805A\u5408\u8FDB\u5EA6 + \u6BCF\u884C\u8FF7\u4F60\u8FDB\u5EA6 ---------- */\nels.btnUpload.addEventListener('click', startUpload);\nels.btnCancel.addEventListener('click', cancelUpload);\nels.btnText.addEventListener('click', submitText);\n\nfunction sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }\n\nfunction xhrPut(url, blob, onProgress) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open('PUT', url);\n    xhr.onload = () => {\n      let etag = null;\n      try {\n        const result = JSON.parse(xhr.responseText);\n        if (result.error === 'capacity_exceeded' || (xhr.status >= 400 && xhr.status < 500) || result.error?.startsWith('upload_policy')) {\n          const error = new Error(result.message);\n          error.code = result.error;\n          error.remainingBytes = result.remainingBytes;\n          reject(error);\n          return;\n        }\n        etag = result.etag;\n      } catch { /* ignore */ }\n      resolve(xhr.status >= 200 && xhr.status < 300 && etag ? etag : null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\n/** \u5355\u7247\u6700\u591A\u91CD\u8BD5 3 \u6B21,\u9000\u907F 1s/2s/4s */\nasync function putPartWithRetry(uploadId, n, blob, onProgress) {\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) return null;\n    const etag = await xhrPut(`/api/uploads/${uploadId}/parts/${n}`, blob, onProgress);\n    if (etag) return etag;\n    await sleep([1000, 2000, 4000][attempt] || 4000);\n  }\n  return null;\n}\n\nfunction xhrJson(method, url, blob, onProgress, context) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open(method, url);\n    if (context) xhr.setRequestHeader('X-Upload-Context', encodeURIComponent(JSON.stringify(context)));\n    xhr.onload = () => {\n      if (xhr.status >= 200 && xhr.status < 300) {\n        try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }\n      }\n      if (xhr.status >= 400 && xhr.status < 500) {\n        let data;\n        try { data = JSON.parse(xhr.responseText); } catch { /* Use status below. */ }\n        const error = new Error(data?.message || t('req.fail', xhr.status));\n        error.code = data?.error;\n        reject(error);\n        return;\n      }\n      resolve(null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\nlet speedState = { t: 0, loaded: 0, speed: 0 };\nlet curFileIdx = 0;\nlet curFileTotal = 1;\nfunction updateAggregate(loaded, total) {\n  const pct = Math.min(100, Math.floor((loaded / total) * 100));\n  els.progressFill.style.width = pct + '%';\n  const now = performance.now();\n  if (speedState.t && loaded > speedState.loaded) {\n    const inst = (loaded - speedState.loaded) / ((now - speedState.t) / 1000);\n    speedState.speed = speedState.speed ? speedState.speed * 0.7 + inst * 0.3 : inst;\n  }\n  speedState.t = now;\n  speedState.loaded = loaded;\n  let text = `${pct}% \xB7 ${fmtBytes(loaded)} / ${fmtBytes(total)} \xB7 ${fmtBytes(speedState.speed)}/s`;\n  if (speedState.speed > 1024 && loaded > 0 && loaded < total) {\n    text += ` \xB7 ${t('prog.eta', fmtDuration((total - loaded) / speedState.speed))}`;\n  }\n  if (curFileTotal > 1) text += ` \xB7 ${t('prog.file', curFileIdx, curFileTotal)}`;\n  els.progressText.textContent = text;\n}\n\n/** \u7B49\u5F85\u6001(\u521D\u59CB\u5316/\u91CD\u8BD5\u95F4\u9694/\u5408\u5E76\u5206\u7247):\u8FDB\u5EA6\u6761\u53E0\u52A0\u6D41\u5149\u52A8\u753B */\nfunction setPending(on) {\n  els.progressFill.classList.toggle('pending', on);\n}\n\nasync function startUpload() {\n  if (!files.length || uploading || !canUploadFiles()) return;\n  uploading = true;\n  cancelled = false;\n  speedState = { t: 0, loaded: 0, speed: 0 };\n  curFileIdx = 0;\n  curFileTotal = files.length;\n  const opts = readOptions();\n  const responses = [];\n  const totalBytes = files.reduce((s, f) => s + f.size, 0);\n  let baseBytes = 0;\n  setBusy(true);\n  els.progress.hidden = false;\n  els.progressFill.style.width = '0%';\n  setPending(false);\n  els.progressText.textContent = t('prog.preparing');\n\n  for (let i = 0; i < files.length; i++) {\n    if (cancelled) break;\n    const f = files[i];\n    const ui = queueUI.get(f);\n    curFileIdx = i + 1;\n    ui.row.classList.add('uploading');\n    els.progressText.textContent = t('prog.uploading');\n    const onProgress = (loaded) => {\n      ui.bar.style.width = Math.min(100, (loaded / f.size) * 100) + '%';\n      updateAggregate(baseBytes + loaded, totalBytes);\n    };\n    try {\n      const res = cfg.fileBackend === 'kv'\n        ? await directUpload(f, opts, onProgress)\n        : await multipartUpload(f, opts, onProgress);\n      responses.push(res);\n      baseBytes += f.size;\n      queueState.set(f, { done: res.code });\n      ui.bar.style.width = '100%';\n      ui.row.classList.add('done');\n      ui.status.textContent = `\u2713 ${res.code}`;\n    } catch (e) {\n      await abortUpload();\n      queueState.set(f, 'fail');\n      ui.row.classList.add('fail');\n      ui.status.textContent = '\u2717';\n      if (e.code === 'capacity_exceeded') {\n        window.alert(Number.isSafeInteger(e.remainingBytes) && e.remainingBytes >= 0\n          ? t('err.capacityRemaining', (e.remainingBytes / 1e9).toFixed(3), e.remainingBytes.toLocaleString())\n          : t('err.capacity'));\n      } else if (!cancelled) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');\n      break; // \u4E00\u4E2A\u5931\u8D25\u5373\u505C,\u4FDD\u7559\u961F\u5217\u4FBF\u4E8E\u5904\u7406\n    }\n  }\n\n  uploading = false;\n  els.progress.hidden = true;\n  setPending(false);\n  setBusy(false);\n  if (cancelled) toast(t('toast.cancelled'));\n  if (responses.length) showResults(responses);\n  await refreshPolicy();\n}\n\n/* ---------- \u5C0F\u5B58\u50A8\u6A21\u5F0F(KV):\u5355\u8BF7\u6C42\u76F4\u4F20,\u5931\u8D25\u6574\u6587\u4EF6\u91CD\u53D1 ---------- */\nasync function directUpload(f, opts, onProgress) {\n  const qs = new URLSearchParams({\n    filename: f.name,\n    mime: f.type || 'application/octet-stream',\n    expiry: opts.expiry,\n  });\n  if (opts.maxPickups !== null) qs.set('maxPickups', String(opts.maxPickups));\n\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) throw new Error('cancelled');\n    setPending(false);\n    const res = await xhrJson('POST', `/api/shares/file?${qs}`, f, onProgress,\n      { displayName: opts.displayName, description: opts.description });\n    if (res) return res;\n    if (cancelled) throw new Error('cancelled');\n    setPending(true);\n    els.progressText.textContent = t('prog.retry', attempt + 1);\n    await sleep([1000, 2000][attempt] || 4000);\n  }\n  throw new Error(t('err.upload'));\n}\n\n/* ---------- \u5927\u5B58\u50A8\u6A21\u5F0F(R2):\u5206\u7247\u4E0A\u4F20 ---------- */\nasync function multipartUpload(f, opts, onProgress) {\n  setPending(true);\n  els.progressText.textContent = t('prog.init');\n  const init = await api('/api/uploads/init', {\n    method: 'POST',\n    body: { filename: f.name, size: f.size, mime: f.type || 'application/octet-stream', ...opts },\n  });\n  session = init;\n  setPending(false);\n\n  const etags = [];\n  let doneBytes = 0;\n  for (let i = 1; i <= init.parts; i++) {\n    const blob = f.slice((i - 1) * init.partSize, Math.min(i * init.partSize, f.size));\n    const etag = await putPartWithRetry(init.uploadId, i, blob, (loaded) =>\n      onProgress(doneBytes + loaded),\n    );\n    if (!etag) {\n      const wasCancelled = cancelled;\n      await abortUpload();\n      throw new Error(wasCancelled ? 'cancelled' : t('err.upload'));\n    }\n    etags.push({ partNumber: i, etag });\n    doneBytes += blob.size;\n  }\n  if (cancelled) throw new Error('cancelled');\n\n  els.progressFill.style.width = '100%';\n  setPending(true);\n  els.progressText.textContent = t('prog.merging');\n  try {\n    const res = await api(`/api/uploads/${init.uploadId}/complete`, {\n      method: 'POST',\n      body: { parts: etags },\n    });\n    session = null;\n    return res;\n  } catch (e) {\n    await abortUpload();\n    throw e;\n  }\n}\n\nasync function cancelUpload() {\n  cancelled = true;\n  currentXhr?.abort();\n  await abortUpload();\n}\n\nasync function abortUpload() {\n  if (!session) return;\n  const id = session.uploadId;\n  session = null;\n  try { await api(`/api/uploads/${id}/abort`, { method: 'POST', body: {} }); } catch { /* ignore */ }\n}\n\nfunction setBusy(busy) {\n  for (const field of [$('#upload-name'), $('#upload-description')]) field.disabled = busy;\n  els.btnUpload.disabled = busy || files.length === 0 || !canUploadFiles();\n  els.btnText.disabled = busy || !policyReady || !els.textInput.value.trim();\n}\n\n/* \u5237\u65B0/\u5173\u9875\u65F6\u5C3D\u529B\u901A\u77E5\u670D\u52A1\u7AEF\u653E\u5F03(\u4E0D\u662F\u65AD\u70B9\u7EED\u4F20) */\nwindow.addEventListener('pagehide', () => {\n  if (session) navigator.sendBeacon(`/api/uploads/${session.uploadId}/abort`);\n});\n\n/* ---------- \u6587\u672C\u5206\u4EAB ---------- */\nasync function submitText() {\n  const text = els.textInput.value;\n  if (!text.trim() || !policyReady) return;\n  setBusy(true);\n  try {\n    const res = await api('/api/shares/text', { method: 'POST', body: { text, ...readOptions() } });\n    showResults([res]);\n  } catch (e) {\n    toast(e.message || t('err.submit'), 'error');\n  } finally {\n    setBusy(false);\n  }\n}\n\n/* ---------- \u7ED3\u679C\u5361\u7247(\u591A\u6587\u4EF6\u65F6\u9010\u5F20\u5806\u53E0 + \u6279\u91CF\u5934\u90E8) ---------- */\nfunction qrSvgFor(url) {\n  /* vendored qrcode-generator:\u5168\u5C40 window.qrcode(classic script \u5148\u4E8E\u672C\u6A21\u5757\u52A0\u8F7D) */\n  try {\n    const qr = window.qrcode(0, 'M');\n    qr.addData(url);\n    qr.make();\n    const holder = document.createElement('div');\n    holder.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true, alt: t('qr.hint') });\n    return holder.firstElementChild;\n  } catch { return null; }\n}\n\nfunction metaText(r) {\n  const parts = [];\n  parts.push(r.expireAt\n    ? t('meta.after', fmtDuration((r.expireAt - Date.now()) / 1000), fmtDate(r.expireAt))\n    : t('meta.forever'));\n  parts.push(r.maxPickups === null || r.maxPickups === undefined ? t('meta.unlimited') : t('meta.pickups', r.maxPickups));\n  if (r.kind === 'file' && r.size) parts.push(fmtBytes(r.size));\n  return parts.join(' \xB7 ');\n}\n\n/* \u7ED3\u679C\u5361\u7247 = \u53D6\u4EF6\u51ED\u8BC1\u7968\u636E:\u7968\u5934(\u6807\u9898+\u2116) \u2192 \u7968\u8EAB(\u53E3\u4EE4+\u4E8C\u7EF4\u7801) \u2192 \u6495\u7968\u7EBF \u2192 \u7968\u811A(\u64CD\u4F5C) */\nfunction buildResultCard(r, compact) {\n  const link = `${location.origin}/pickup?code=${r.code}`;\n  const qr = qrSvgFor(link);\n  const col = el('div', { class: 'result-col' },\n    compact && r.kind === 'file' && r.filename ? el('div', { class: 'result-file-name' }, r.filename) : null,\n    el('div', { class: 'code' }, ...r.code.split('').map((d) => el('span', {}, d))),\n    el('div', { class: 'result-link' }, link),\n    el('div', { class: 'result-meta' }, metaText(r)),\n  );\n  const main = el('div', { class: 'result-main' },\n    qr ? el('div', { class: 'qr-wrap', title: t('qr.hint') }, qr, el('div', { class: 'qr-hint' }, t('qr.hint'))) : null,\n    col,\n  );\n  return el('div', { class: 'result' },\n    el('div', { class: 'tk-head' },\n      el('span', {}, t('ticket.title')),\n      el('span', { class: 'tk-no' }, t('ticket.no', r.code)),\n    ),\n    el('div', { class: 'tk-body' },\n      compact ? null : el('p', { class: 'result-title' }, t('result.ok')),\n      main,\n    ),\n    el('div', { class: 'tk-tear' }),\n    el('div', { class: 'tk-foot' },\n      el('button', { class: 'btn primary', type: 'button', onclick: (e) => copyBtn(e.currentTarget, r.code, t('label.code')) }, t('btn.copyCode')),\n      el('button', { class: 'btn', type: 'button', onclick: (e) => copyBtn(e.currentTarget, link, t('label.link')) }, t('btn.copyLink')),\n      compact ? null : el('button', { class: 'btn ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n    ),\n  );\n}\n\nfunction showResults(list) {\n  lastResults = list;\n  if (els.placeholder) els.placeholder.hidden = true;\n  els.results.replaceChildren();\n  if (list.length > 1) {\n    els.results.append(\n      el('div', { class: 'result-batch-head' },\n        el('p', { class: 'result-title batch' }, t('result.okBatch', list.length)),\n        el('div', { class: 'btn-row' },\n          el('button', {\n            class: 'btn small', type: 'button',\n            onclick: async (e) => {\n              const ok = await copyText(list.map((r) => r.code).join('\\n'));\n              toast(ok ? t('copied', t('label.code')) : t('copy.fail'), ok ? 'ok' : 'error');\n            },\n          }, t('btn.copyAll')),\n          el('button', { class: 'btn small ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n        ),\n      ),\n    );\n  }\n  for (const r of list) els.results.append(buildResultCard(r, list.length > 1));\n  els.results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });\n}\n\nfunction resetAll() {\n  files = [];\n  queueState = new Map();\n  renderQueue();\n  els.btnUpload.disabled = true;\n  els.textInput.value = '';\n  els.textCounter.textContent = t('text.counter', 0, 65536);\n  els.btnText.disabled = true;\n  hideResult();\n}\n\n/** \u590D\u5236\u6210\u529F\u540E\u6309\u94AE\u77ED\u6682\u53D8\u6210\"\u2713 \u5DF2\u590D\u5236\" */\nasync function copyBtn(btn, text, label) {\n  const ok = await copyText(text);\n  toast(ok ? t('copied', label) : t('copy.fail'), ok ? 'ok' : 'error');\n  if (!ok) return;\n  btn.textContent = t('copied.btn');\n  btn.disabled = true;\n  setTimeout(() => { btn.textContent = label === t('label.code') ? t('btn.copyCode') : t('btn.copyLink'); btn.disabled = false; }, 1500);\n}\n\nfunction hideResult() {\n  lastResults = [];\n  if (els.placeholder) els.placeholder.hidden = false;\n  els.results.replaceChildren();\n}\n", "js/pickup.js": "import { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js';\nimport { t, onLangChange, initI18n } from './i18n.js';\n\ninitTheme();\ninitI18n();\n\nconst boxes = $$('.otp-box');\nconst row = $('#otp-row');\nconst errorBox = $('#pickup-error');\nconst resultCard = $('#pickup-result');\nlet querying = false;\nlet last = null; // { res, code } \u8BED\u8A00\u5207\u6362\u65F6\u91CD\u6E32\u67D3\n\nonLangChange(() => {\n  if (last && !resultCard.hidden) render(last.res, last.code);\n});\n\nfunction value() {\n  return boxes.map((b) => b.value).join('');\n}\n\n/* \u586B\u5165 1-6 \u4F4D\u6570\u5B57:\u591F 6 \u4F4D\u81EA\u52A8\u63D0\u4EA4,\u5426\u5219\u805A\u7126\u5230\u4E0B\u4E00\u4E2A\u7A7A\u683C */\nfunction fill(digits) {\n  boxes.forEach((b, i) => { b.value = digits[i] || ''; });\n  hideError();\n  if (digits.length === 6) {\n    boxes[5].focus();\n    if (!querying) submit();\n  } else {\n    boxes[Math.min(digits.length, 5)].focus();\n  }\n}\n\nboxes.forEach((box, i) => {\n  box.addEventListener('input', () => {\n    box.value = box.value.replace(/\\D/g, '').slice(0, 1);\n    hideError();\n    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();\n    if (value().length === 6 && !querying) submit();\n  });\n  box.addEventListener('keydown', (e) => {\n    if (e.key === 'Backspace' && !box.value && i > 0) {\n      e.preventDefault();\n      boxes[i - 1].value = '';\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowLeft' && i > 0) {\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {\n      boxes[i + 1].focus();\n    } else if (e.key === 'Enter' && value().length === 6 && !querying) {\n      submit();\n    }\n  });\n  box.addEventListener('paste', (e) => {\n    e.preventDefault();\n    const digits = (e.clipboardData.getData('text') || '').replace(/\\D/g, '').slice(0, 6);\n    if (digits) fill(digits);\n  });\n  box.addEventListener('focus', () => box.select());\n});\n\nfunction showError(msg) {\n  errorBox.textContent = msg;\n  errorBox.hidden = false;\n  row.classList.remove('shake');\n  void row.offsetWidth; /* \u5F3A\u5236 reflow,\u91CD\u542F\u52A8\u753B */\n  row.classList.add('shake');\n}\nfunction hideError() {\n  errorBox.hidden = true;\n}\n\nasync function submit() {\n  const code = value();\n  querying = true;\n  hideError();\n  resultCard.hidden = true;\n  try {\n    const res = await api('/api/pickup', { method: 'POST', body: { code } });\n    render(res, code);\n  } catch (e) {\n    showError(e.message || t('pk.fail'));\n  } finally {\n    querying = false;\n  }\n}\n\nfunction metaLine(res) {\n  const parts = [];\n  parts.push(res.expireAt ? t('pk.expireAt', fmtDate(res.expireAt)) : t('meta.forever'));\n  parts.push(res.pickupsLeft === null || res.pickupsLeft === undefined ? t('meta.unlimited') : t('pk.left', res.pickupsLeft));\n  return parts.join(' \xB7 ');\n}\n\nfunction render(res, code) {\n  last = { res, code };\n  resultCard.replaceChildren();\n\n  if (res.kind === 'text') {\n    const pre = el('pre', { class: 'text-body' });\n    pre.textContent = res.text ?? '';\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, '\u{1F4DD}'),\n        el('div', { class: 'sc-meta' }, el('b', {}, t('pk.textChars', res.size))),\n      ),\n      pre,\n      el('div', { class: 'btn-row' },\n        el('button', { class: 'btn primary', onclick: async () => {\n          (await copyText(res.text)) ? toast(t('copied.text'), 'ok') : toast(t('copy.fail'), 'error');\n        } }, t('pk.copyAllText')),\n      ),\n    );\n  } else {\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, iconFor(res.filename, res.mime)),\n        el('div', { class: 'sc-meta' },\n          el('b', {}, res.filename || t('pk.unnamed')),\n          el('small', {}, `${fmtBytes(res.size)} \xB7 ${res.mime || t('unknown.type')}`),\n        ),\n      ),\n      el('a', {\n        class: 'btn primary block',\n        href: `/api/pickup/${code}/download`,\n        download: res.filename || 'file',\n      }, t('pk.download')),\n    );\n  }\n\n  resultCard.append(\n    el('div', { class: 'meta-line' }, metaLine(res)),\n    el('div', { class: 'btn-row' },\n      el('button', { class: 'btn ghost', onclick: reset }, t('pk.again')),\n    ),\n  );\n  resultCard.hidden = false;\n}\n\nfunction reset() {\n  last = null;\n  resultCard.hidden = true;\n  boxes.forEach((b) => { b.value = ''; });\n  hideError();\n  boxes[0].focus();\n}\n\n/* \u652F\u6301 /pickup?code=xxxxxx \u5E26\u53C2\u8FDB\u5165 */\nconst fromUrl = new URLSearchParams(location.search).get('code');\nif (fromUrl && /^\\d{1,6}$/.test(fromUrl)) {\n  fill(fromUrl.slice(0, 6));\n} else {\n  boxes[0].focus();\n}\n", "js/vendor/qrcode.js": `//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -3526,1132 +3531,1164 @@ var qrcode = function() {
 <script type="module" src="/js/pickup.js"><\/script>
 </body>
 </html>
-`, "style.css": `/* ============================================================
-   \u90AE\u653F\u7968\u636E\u4E3B\u9898:\u725B\u76AE\u7EB8\u5E95 \xB7 \u58A8\u7EFF\u6CB9\u58A8 \xB7 \u6A59\u8272\u90AE\u6233 \xB7 \u786C\u6295\u5F71\u63CF\u8FB9
-   \u7ED3\u679C\u5361\u7247 = \u53D6\u4EF6\u51ED\u8BC1(\u7968\u5934 + \u90AE\u6233\u53E3\u4EE4\u74E6\u7247 + \u6495\u7968\u7EBF + \u7968\u811A)
-   ============================================================ */
-:root {
-  --bag: #efe8d8;            /* \u725B\u76AE\u7EB8\u5E95 */
-  --paper: #fffdf6;          /* \u7968\u636E\u7EB8\u9762 */
-  --ink: #26382c;            /* \u6CB9\u58A8(\u6B63\u6587/\u4E3B\u8272) */
-  --line: #26382c;           /* \u63CF\u8FB9 */
-  --muted: #6b7563;          /* \u892A\u8272\u58A8 */
-  --stamp: #d96f32;          /* \u90AE\u6233\u6A59 */
-  --stamp-dark: #b85a24;
-  --ok: #3c7a52;
-  --ok-soft: #eef3ec;
-  --danger: #b3403a;
-  --danger-soft: #f7e9e4;
-  --warn: #a2661c;
-  --warn-soft: #f8efdd;
-  --rowbg: #f7f2e4;          /* \u6587\u4EF6\u884C\u5E95 */
-  --track: #e6dfca;          /* \u8FDB\u5EA6\u69FD */
-  --tkhead-bg: #26382c;      /* \u7968\u5934\u5E95 */
-  --tkhead-fg: #f4efdd;      /* \u7968\u5934\u5B57 */
-  --hard: rgba(38, 56, 44, 0.9);   /* \u786C\u6295\u5F71 */
-  --mask: rgba(24, 20, 12, 0.55);  /* \u5F39\u7A97\u906E\u7F69 */
-  --hard-soft: rgba(38, 56, 44, 0.35);
-  --dots: rgba(38, 56, 44, 0.05);  /* \u7EB8\u9762\u7F51\u70B9\u7EB9\u7406 */
-  --radius: 14px;
-  --radius-sm: 9px;
-  --serif: Georgia, 'Times New Roman', 'Songti SC', 'SimSun', serif;
-  /* \u52A8\u6548\u8282\u594F */
-  --t-fast: 0.15s;
-  --t-med: 0.25s;
-  --t-slow: 0.35s;
-  --ease: cubic-bezier(0.2, 0, 0, 1);
-}
-[data-theme='dark'] {
-  /* \u58A8\u84DD\u591C\u822A:\u85CF\u84DD\u7EB8\u9762,\u84DD\u6A59\u4E92\u8865,\u90AE\u6233\u6A59\u591C\u91CC\u6700\u8DF3 */
-  --bag: #12161f;
-  --paper: #1a2130;
-  --ink: #e8e5d6;
-  --line: #46516b;
-  --muted: #a9b2c9;
-  --stamp: #e68d4f;
-  --stamp-dark: #c9702f;
-  --ok: #7fc79c;
-  --ok-soft: #254432;
-  --danger: #e08a7c;
-  --danger-soft: #462822;
-  --warn: #d9ab63;
-  --warn-soft: #413120;
-  --rowbg: #222b44;
-  --track: #151b28;
-  --tkhead-bg: #33415c;
-  --tkhead-fg: #f0eee0;
-  --hard: rgba(0, 0, 0, 0.5);
-  --hard-soft: rgba(0, 0, 0, 0.32);
-  /* \u6DF1\u8272\u4E0B\u540C\u900F\u660E\u5EA6\u7684\u906E\u7F69\u51E0\u4E4E\u770B\u4E0D\u51FA\u6765,\u52A0\u6DF1\u4E00\u6863\u4FDD\u4F4F\u5F39\u7A97\u4E0E\u80CC\u666F\u7684\u5206\u79BB\u611F */
-  --mask: rgba(4, 7, 14, 0.72);
-  --dots: rgba(232, 229, 214, 0.05);
-}
-
-* { box-sizing: border-box; }
-/* [hidden] \u515C\u5E95:\u7C7B\u4E0A\u7684 display:flex/inline-flex \u4F1A\u76D6\u8FC7 UA \u6837\u5F0F\u8868\u7684 [hidden]{display:none},
-   \u5BFC\u81F4 .result-placeholder/.file-list \u7B49\u8BBE\u4E86 hidden \u4ECD\u53EF\u89C1 */
-[hidden] { display: none !important; }
-html { -webkit-text-size-adjust: 100%; }
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto,
-    'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei', sans-serif;
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--ink);
-  min-height: 100vh;
-  /* \u7EB5\u5411 flex \u9AA8\u67B6:main \u5403\u6389\u5269\u4F59\u9AD8\u5EA6,\u9875\u811A\u8D34\u89C6\u53E3\u5E95 */
-  display: flex;
-  flex-direction: column;
-  background:
-    radial-gradient(var(--dots) 1px, transparent 1px) 0 0 / 22px 22px,
-    var(--bag);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-
-::selection { background: var(--stamp); color: #fff; }
-
-/* \u7EC6\u6EDA\u52A8\u6761 */
-* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
-::-webkit-scrollbar-track { background: transparent; }
-
-/* ============ \u9876\u680F ============ */
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 22px 20px 14px;
-  width: 100%; /* body \u6539\u7EB5\u5411 flex \u540E,auto margin \u6761\u76EE\u4F1A\u6536\u7F29\u5230\u5185\u5BB9\u5BBD,\u663E\u5F0F\u62C9\u6EE1\u518D\u7531 max-width \u6536\u53E3 */
-  max-width: 720px;
-  margin: 0 auto 26px;
-  border-bottom: 3px double var(--line);
-}
-.topbar.wide { max-width: 1080px; }
-.brand { display: flex; align-items: center; gap: 12px; }
-.brand .logo {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  font-size: 21px;
-  border-radius: 10px;
-  background: var(--paper);
-  border: 1.5px solid var(--line);
-  box-shadow: 3px 3px 0 var(--hard);
-}
-.brand b {
-  font-family: var(--serif);
-  font-size: 18px;
-  font-weight: 700;
-  display: block;
-  line-height: 1.25;
-  letter-spacing: 0.05em;
-}
-.brand small { color: var(--muted); font-size: 12px; }
-.actions { display: flex; align-items: center; gap: 8px; }
-
-/* ============ \u5E03\u5C40 ============ */
-.container { width: 100%; max-width: 720px; margin: 0 auto; padding: 8px 16px 48px; }
-.container.wide { max-width: 1080px; }
-.container.narrow { max-width: 460px; }
-.card {
-  background: var(--paper);
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: 6px 6px 0 var(--hard);
-  padding: 24px;
-  margin-bottom: 18px;
-}
-.card.center { text-align: center; }
-.muted { color: var(--muted); }
-.row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
-
-main { flex: 1 0 auto; } /* \u6491\u6EE1\u89C6\u53E3\u5269\u4F59\u9AD8\u5EA6,\u628A\u9875\u811A\u63A8\u5230\u5E95 */
-/* \u515C\u5E95:\u5373\u4F7F main \u6CA1\u6491\u5F00(\u5F02\u5E38\u9875\u9762)\u4E5F\u628A\u9875\u811A\u63A8\u5230\u5E95 */
-.foot {
-  margin-top: auto;
-  text-align: center;
-  color: var(--muted);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  padding: 32px 16px 10px;
-}
-
-/* ============ \u90AE\u8DEF\u4E09\u6B65\u6761(\u67DC\u53F0\u4E0A\u65B9:\u5BC4\u4EF6\u2192\u51FA\u7968\u2192\u53D6\u4EF6) ============ */
-.flow-strip {
-  display: flex;
-  align-items: center;
-  background: var(--paper);
-  border: 1.5px solid var(--line);
-  border-radius: 13px;
-  box-shadow: 6px 6px 0 var(--hard);
-  padding: 18px 26px;
-  margin-bottom: 24px;
-  animation: fade-up var(--t-slow) var(--ease) both;
-}
-.flow-step { flex: 1; display: flex; align-items: center; gap: 13px; min-width: 0; }
-.flow-dot {
-  width: 46px; height: 46px; flex: none;
-  border: 2.5px double var(--stamp); border-radius: 50%;
-  display: grid; place-items: center;
-  font-size: 20px; color: var(--stamp); font-family: var(--serif);
-}
-.flow-step:nth-child(1) .flow-dot { transform: rotate(-7deg); }
-.flow-step:nth-child(3) .flow-dot { transform: rotate(5deg); }
-.flow-step:nth-child(5) .flow-dot { transform: rotate(-4deg); }
-.flow-tt b { display: block; font-size: 14px; font-family: var(--serif); letter-spacing: 0.06em; }
-.flow-tt small { color: var(--muted); font-size: 12px; }
-.flow-link { flex: 0 0 58px; border-top: 2px dashed var(--line); margin: 0 12px; position: relative; }
-.flow-link::after {
-  content: '\u2708'; position: absolute; right: -4px; top: -11px;
-  font-size: 12px; color: var(--stamp);
-}
-
-/* ============ \u53D1\u9001\u9875:\u67DC\u53F0\u53CC\u680F(\u5DE6\u5BC4\u4EF6\u5355 / \u53F3\u56DE\u6267\u5E38\u9A7B) ============ */
-/* \u5185\u5BB9\u4E0D\u8DB3\u4E00\u5C4F\u65F6\u67DC\u53F0\u4E0A/\u4E0B\u7559\u767D\u5747\u8861;\u8D85\u51FA\u4E00\u5C4F\u65F6 main \u9AD8\u5EA6=\u5185\u5BB9\u9AD8,\u81EA\u52A8\u9000\u5316\u4E3A\u9876\u5BF9\u9F50 */
-main:has(> .send-grid) { display: flex; flex-direction: column; justify-content: center; }
-.send-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: 26px;
-  align-items: stretch; /* \u4E24\u680F\u540C\u9AD8:\u7A7A\u6001\u65F6\u53F3\u680F\u5360\u4F4D\u6491\u5230\u4E0E\u8868\u5355\u5361\u9F50\u5E95 */
-}
-.form-card { min-width: 0; margin-bottom: 0; align-self: stretch; display: flex; flex-direction: column; } /* \u4E24\u680F\u9F50\u5E95:\u8868\u5355\u5361\u540C\u6837\u62C9\u4F38(\u56DE\u6267\u680F\u5185\u5BB9\u66F4\u9AD8\u65F6\u4E0D\u518D\u53C2\u5DEE) */
-/* \u62C9\u4F38\u540E\u7684\u591A\u4F59\u9AD8\u5EA6\u4EA4\u7ED9\u8F93\u5165\u533A\u5438\u6536:\u62D6\u62FD\u533A/\u6587\u672C\u6846/\u6587\u4EF6\u961F\u5217\u957F\u9AD8,\u9009\u9879\u548C\u6309\u94AE\u4E0D\u88AB\u9876\u5F97\u60AC\u7A7A */
-.form-card .panel { display: flex; flex-direction: column; flex: 1; }
-.form-card .dropzone, .form-card textarea, .form-card .file-list { flex: 1; }
-.form-card .dropzone { display: flex; flex-direction: column; justify-content: center; }
-.card-cap, .side-cap {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin: -4px 0 16px;
-  font-size: 11.5px;
-  letter-spacing: 0.3em;
-  color: var(--muted);
-  font-weight: 600;
-}
-.card-cap .cap-date {
-  font-family: var(--serif);
-  color: var(--stamp);
-  letter-spacing: 0.08em;
-  font-size: 12.5px;
-}
-/* \u53F3\u680F\u968F\u884C\u9AD8\u62C9\u4F38:sticky \u5728 stretch \u4E0B\u4E0D\u518D\u751F\u6548(\u4E24\u680F\u6C38\u8FDC\u540C\u9AD8,\u65E0\u53EF\u7C98\u6EDE\u4F59\u91CF),\u6539\u4E3A flex \u7EB5\u5411\u680F */
-.send-side { display: flex; flex-direction: column; min-width: 0; }
-.send-side .results { margin-top: 0; }
-/* \u56DE\u6267\u7A7A\u6001:\u5F85\u51FA\u7968\u90AE\u6233 */
-.result-placeholder {
-  border: 1.5px dashed var(--line);
-  border-radius: 13px;
-  padding: 38px 20px;
-  min-height: 340px; /* \u4E0E\u5DE6\u680F\u8868\u5355\u5361\u89C6\u89C9\u5E73\u8861 */
-  flex: 1; /* \u53F3\u680F\u88AB\u62C9\u4F38\u65F6\u5360\u4F4D\u968F\u4E4B\u957F\u9AD8,\u5E95\u8FB9\u4E0E\u8868\u5355\u5361\u5BF9\u9F50 */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  animation: fade-up var(--t-slow) var(--ease) both;
-}
-.ph-postmark {
-  width: 76px;
-  height: 76px;
-  margin: 0 auto 14px;
-  border: 2.5px double var(--stamp);
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  color: var(--stamp);
-  font-family: var(--serif);
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  text-indent: 0.22em; /* \u8865\u507F\u5B57\u8DDD,\u8BA9\u5706\u5F62\u90AE\u6233\u89C6\u89C9\u5C45\u4E2D */
-  transform: rotate(-8deg);
-  opacity: 0.8;
-}
-.result-placeholder p { margin: 0 0 4px; font-weight: 700; font-family: var(--serif); letter-spacing: 0.08em; }
-.result-placeholder small { color: var(--muted); font-size: 12.5px; }
-/* \u7A7A\u6001\u5185\u5D4C\u300C\u5728\u9014\u90AE\u8DEF\u300D\u7AD6\u5411\u65F6\u95F4\u7EBF:\u53F3\u680F\u4E0D\u7A7A */
-.ph-route { margin-top: 24px; width: 100%; max-width: 300px; text-align: left; }
-.ph-leg { display: flex; gap: 13px; align-items: flex-start; }
-.ph-ic {
-  width: 40px; height: 40px; flex: none;
-  border: 1.5px solid var(--line); border-radius: 50%;
-  background: var(--rowbg);
-  display: grid; place-items: center; font-size: 17px;
-}
-.ph-leg:nth-child(1) .ph-ic { transform: rotate(-6deg); }
-.ph-leg b { display: block; font-size: 13px; font-family: var(--serif); letter-spacing: 0.04em; }
-.ph-leg small { color: var(--muted); font-size: 11.5px; line-height: 1.5; }
-.ph-dash { width: 0; height: 22px; border-left: 2px dashed var(--line); margin: 3px 0 3px 19px; }
-.ph-fine {
-  margin-top: 22px; padding-top: 13px; width: 100%; max-width: 300px;
-  border-top: 1.5px dashed var(--line);
-  color: var(--muted); font-size: 11px; letter-spacing: 0.12em; text-align: center;
-}
-
-/* ============ \u6309\u94AE:\u90AE\u6233\u7AE0 ============ */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 9px 18px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--line);
-  background: var(--paper);
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  box-shadow: 2px 2px 0 var(--hard-soft);
-  transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast), color var(--t-fast), opacity var(--t-fast);
-}
-.btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--hard-soft); }
-.btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--hard-soft); }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: 2px 2px 0 var(--hard-soft); }
-.btn.primary {
-  background: var(--tkhead-bg);
-  border-color: var(--line);
-  color: var(--tkhead-fg);
-  box-shadow: 3px 3px 0 var(--stamp);
-}
-.btn.primary:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--stamp); }
-.btn.primary:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--stamp); }
-.btn.primary:disabled { box-shadow: 2px 2px 0 var(--hard-soft); } /* \u7981\u7528\u65F6\u4E0D\u4EAE\u6A59\u5F71,\u907F\u514D\u8BEF\u8BFB\u4E3A\u53EF\u70B9 */
-.btn.ghost { background: transparent; box-shadow: none; border-color: var(--line); }
-.btn.ghost:hover { background: var(--rowbg); transform: none; }
-.btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 2px 2px 0 var(--hard-soft); }
-.btn.small { padding: 5px 12px; font-size: 13px; border-radius: 8px; }
-.btn.block { width: 100%; margin-top: 16px; }
-.btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
-.icon-btn {
-  background: transparent;
-  border: none;
-  font-size: 17px;
-  cursor: pointer;
-  color: var(--muted);
-  padding: 7px 9px;
-  border-radius: 8px;
-  transition: background var(--t-fast), color var(--t-fast);
-}
-.icon-btn:hover { background: var(--rowbg); color: var(--ink); }
-/* \u8BED\u8A00\u5207\u6362:\u663E\u793A\u76EE\u6807\u8BED\u8A00(\u7528\u5168\u58A8\u8272,\u907F\u514D\u6DF1\u8272\u6A21\u5F0F\u4E0B\u8FC7\u6DE1) */
-.lang-btn { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; padding: 7px 10px; color: var(--ink); }
-.lang-float { position: fixed; top: 14px; right: 14px; z-index: 10; background: var(--paper); border: 1.5px solid var(--line); box-shadow: 3px 3px 0 var(--hard); }
-
-/* ============ Tabs:\u7968\u6839 ============ */
-.tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-.tab {
-  flex: 1;
-  padding: 9px;
-  border: 1.5px dashed var(--line);
-  background: transparent;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
-  transition: color var(--t-fast), background var(--t-fast), border-color var(--t-fast);
-}
-.tab:hover { color: var(--ink); background: var(--rowbg); }
-.tab.active { border-style: solid; background: var(--tkhead-bg); border-color: var(--line); color: var(--tkhead-fg); }
-
-/* ============ \u62D6\u62FD\u533A:\u5305\u88F9\u5355 ============ */
-.dropzone {
-  border: 2px dashed var(--line);
-  border-radius: 12px;
-  padding: 36px 16px;
-  text-align: center;
-  cursor: pointer;
-  transition: background var(--t-fast);
-  outline: none;
-}
-.dropzone:hover, .dropzone:focus-visible, .dropzone.dragover { background: var(--rowbg); }
-.dz-icon { font-size: 34px; margin-bottom: 8px; transition: transform var(--t-med) ease; }
-.dropzone:hover .dz-icon, .dropzone.dragover .dz-icon { transform: scale(1.1) translateY(-2px); }
-.dropzone p { margin: 0 0 6px; font-size: 14px; }
-.dropzone p b { font-weight: 700; }
-.dropzone small { color: var(--muted); font-size: 13px; }
-
-/* ============ \u6587\u4EF6\u961F\u5217(\u591A\u9009\u6279\u91CF) ============ */
-.file-list { display: flex; flex-direction: column; gap: 8px; }
-.file-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--rowbg);
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
-  padding: 10px 12px;
-  overflow: hidden;
-  animation: fade-up var(--t-slow) var(--ease) both;
-}
-.file-row.uploading { background: var(--warn-soft); }
-.file-row.done { background: var(--ok-soft); }
-.file-row.fail { background: var(--danger-soft); }
-.fr-icon { font-size: 20px; flex: none; }
-.fr-meta { flex: 1; min-width: 0; }
-.fr-meta b { display: block; font-size: 13.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fr-meta small { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fr-status { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--serif); }
-.file-row.done .fr-status { color: var(--ok); font-weight: 700; }
-.file-row.fail .fr-status { color: var(--danger); font-weight: 700; }
-.fr-remove { padding: 5px 7px; font-size: 13px; flex: none; }
-/* \u8FF7\u4F60\u8FDB\u5EA6\u6761:\u8D34\u884C\u5E95\u7F18(\u8721\u5C01\u6761) */
-.fr-bar {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 3px;
-  width: 0;
-  border-radius: 999px;
-  background: var(--stamp);
-  transition: width var(--t-med) ease;
-}
-.file-row.done .fr-bar { width: 100%; background: var(--ok); }
-.file-row.fail .fr-bar { width: 100%; background: var(--danger); }
-
-/* ============ \u6587\u672C\u8F93\u5165 ============ */
-textarea {
-  width: 100%;
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
-  background: var(--paper);
-  color: var(--ink);
-  padding: 12px 14px;
-  font-size: 14px;
-  font-family: inherit;
-  line-height: 1.65;
-  resize: vertical;
-  transition: box-shadow var(--t-fast);
-}
-textarea:focus { outline: none; box-shadow: 3px 3px 0 var(--hard-soft); }
-
-/* ============ \u9009\u9879 segmented:\u90AE\u8D44\u6807\u7B7E ============ */
-.options { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; margin: 22px 0 6px; }
-.opt-group label {
-  display: block;
-  font-size: 11.5px;
-  color: var(--muted);
-  letter-spacing: 0.18em;
-  margin-bottom: 7px;
-}
-.seg { display: flex; gap: 6px; flex-wrap: wrap; }
-.seg button {
-  padding: 6px 13px;
-  border: 1.5px solid var(--line);
-  background: transparent;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
-  transition: color var(--t-fast), background var(--t-fast);
-}
-.seg button:hover { color: var(--ink); background: var(--rowbg); }
-.seg button.active { background: var(--stamp); border-color: var(--stamp); color: #fff; }
-
-/* ============ \u8FDB\u5EA6\u6761 ============ */
-.progress { margin-top: 18px; }
-.bar {
-  height: 12px;
-  background: var(--track);
-  border: 1.5px solid var(--line);
-  border-radius: 999px;
-  overflow: hidden;
-}
-.bar > div {
-  height: 100%;
-  width: 0;
-  background: linear-gradient(90deg, var(--stamp-dark), var(--stamp));
-  border-radius: 999px;
-  transition: width var(--t-med) ease;
-}
-.progress small { color: var(--muted); font-variant-numeric: tabular-nums; }
-
-/* ============ \u7ED3\u679C:\u53D6\u4EF6\u51ED\u8BC1(\u7968\u636E) ============ */
-.results { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
-.result {
-  background: var(--paper);
-  border: 1.5px solid var(--line);
-  border-radius: 13px;
-  box-shadow: 6px 6px 0 var(--hard);
-  overflow: hidden;
-}
-/* \u6279\u91CF\u5934\u90E8 */
-.result-batch-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 13px 16px;
-  border-radius: 13px;
-  background: var(--ok-soft);
-  border: 1.5px solid var(--line);
-  box-shadow: 4px 4px 0 var(--hard);
-}
-.result-batch-head .result-title { margin: 0; }
-.result-batch-head .btn-row { margin: 0; flex-wrap: nowrap; }
-.result-title { margin: 0; font-weight: 700; font-size: 14.5px; }
-.result-title.batch { font-family: var(--serif); letter-spacing: 0.04em; }
-/* \u7968\u5934 */
-.tk-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--tkhead-bg);
-  color: var(--tkhead-fg);
-  padding: 9px 16px;
-  font-size: 12px;
-  letter-spacing: 0.3em;
-  font-weight: 600;
-}
-.tk-head .tk-no { letter-spacing: 0.08em; color: var(--stamp); font-family: var(--serif); }
-/* \u7968\u8EAB */
-.tk-body { padding: 18px 16px 14px; text-align: center; }
-.result-main { display: flex; align-items: center; justify-content: center; gap: 22px; flex-wrap: wrap; }
-.result-col { display: flex; flex-direction: column; align-items: center; min-width: 0; }
-.result-file-name { font-size: 13px; color: var(--muted); word-break: break-all; margin-bottom: 2px; }
-/* \u53E3\u4EE4\u74E6\u7247:\u90AE\u6233 */
-.code { display: flex; justify-content: center; gap: 8px; margin: 8px 0 10px; }
-.code span {
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 58px;
-  font-family: var(--serif);
-  font-size: 30px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink);
-  background: var(--paper);
-  border: 1.5px solid var(--line);
-  border-radius: 7px;
-  box-shadow: 2px 2px 0 var(--hard-soft);
-  user-select: all;
-}
-.code span:nth-child(odd) { transform: rotate(-1.6deg); }
-.code span:nth-child(even) { transform: rotate(1.4deg); }
-.result-link { color: var(--muted); font-size: 12px; word-break: break-all; }
-.result-meta { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
-/* \u4E8C\u7EF4\u7801:\u767D\u5E95\u4FDD\u8BC1\u6DF1\u8272\u6A21\u5F0F\u53EF\u626B\u63CF */
-.qr-wrap {
-  flex: none;
-  background: #fff;
-  padding: 8px;
-  border-radius: 9px;
-  border: 1.5px solid var(--line);
-  box-shadow: 2px 2px 0 var(--hard-soft);
-}
-.qr-wrap svg { display: block; width: 110px; height: 110px; }
-.qr-hint { text-align: center; font-size: 10.5px; color: #6b7280; margin-top: 5px; letter-spacing: 0.18em; }
-/* \u6495\u7968\u7EBF(\u5E26\u7F3A\u53E3) */
-.tk-tear { border-top: 2px dashed var(--line); position: relative; margin: 0 14px; }
-.tk-tear::before, .tk-tear::after {
-  content: '';
-  position: absolute;
-  top: -9px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--bag);
-  border: 1.5px solid var(--line);
-}
-.tk-tear::before { left: -24px; }
-.tk-tear::after { right: -24px; }
-/* \u7968\u811A */
-.tk-foot { display: flex; gap: 10px; justify-content: center; padding: 14px; flex-wrap: wrap; }
-.result .btn-row { justify-content: center; }
-
-/* ============ \u7279\u6027\u5E26(\u67DC\u53F0\u4E0B\u65B9:\u4E00\u6392\u4E1A\u52A1\u516C\u544A\u7AE0) ============ */
-.feat-band { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 28px; }
-.feat {
-  background: var(--paper);
-  border: 1.5px dashed var(--line);
-  border-radius: 11px;
-  box-shadow: 3px 3px 0 var(--hard-soft);
-  padding: 14px 16px;
-  display: flex; gap: 12px; align-items: center;
-  animation: fade-up var(--t-slow) var(--ease) both;
-}
-.feat:nth-child(2) { transform: rotate(0.4deg); }
-.feat:nth-child(3) { transform: rotate(-0.3deg); }
-.feat-ic {
-  width: 40px; height: 40px; flex: none;
-  border: 2px double var(--stamp); border-radius: 50%;
-  display: grid; place-items: center; font-size: 17px;
-}
-.feat b { display: block; font-size: 13.5px; font-family: var(--serif); letter-spacing: 0.04em; }
-.feat small { color: var(--muted); font-size: 12px; }
-
-/* ============ \u53D6\u4EF6\u9875 ============ */
-h2.title { margin: 8px 0 6px; font-size: 22px; font-weight: 700; line-height: 1.3; font-family: var(--serif); letter-spacing: 0.04em; }
-.pk-sub { margin: 0 0 16px; font-size: 13.5px; }
-.error-box {
-  margin-top: 14px;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  background: var(--danger-soft);
-  border: 1.5px solid var(--danger);
-  color: var(--danger);
-  font-size: 14px;
-}
-.share-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--rowbg);
-  border: 1.5px dashed var(--line);
-  border-radius: 10px;
-  padding: 16px;
-}
-.sc-icon { font-size: 32px; }
-.sc-meta { flex: 1; min-width: 0; text-align: left; }
-.sc-meta b { display: block; font-size: 15px; font-weight: 700; word-break: break-all; }
-.sc-meta small { color: var(--muted); }
-.meta-line { color: var(--muted); font-size: 13px; margin: 12px 2px 0; text-align: left; }
-pre.text-body {
-  background: var(--rowbg);
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
-  padding: 14px 16px;
-  white-space: pre-wrap;
-  word-break: break-all;
-  font-size: 13px;
-  line-height: 1.7;
-  max-height: 340px;
-  overflow: auto;
-  margin: 0 0 4px;
-  text-align: left;
-}
-
-/* ============ \u7BA1\u7406\u9875 ============ */
-.stats-row { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; margin-bottom: 20px; }
-.stats-counts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
-.stats-counts .stat-card { display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0; }
-.stat-card {
-  background: var(--paper);
-  border: 1.5px solid var(--line);
-  border-radius: 11px;
-  padding: 16px 12px;
-  text-align: center;
-  box-shadow: 3px 3px 0 var(--hard-soft);
-}
-.stat-card b { display: block; font-size: 24px; font-weight: 700; font-family: var(--serif); font-variant-numeric: tabular-nums; line-height: 1.3; }
-.stat-card small { color: var(--muted); font-size: 12px; letter-spacing: 0.08em; }
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th, td { text-align: left; padding: 10px; border-bottom: 1px dashed var(--line); white-space: nowrap; }
-th { color: var(--muted); font-weight: 600; font-size: 11.5px; letter-spacing: 0.1em; }
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: var(--rowbg); }
-td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
-.badge {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  border: 1.5px solid transparent;
-  font-size: 12px;
-  font-weight: 600;
-}
-.badge.active { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
-.badge.expired { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
-.badge.exhausted { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
-.badge.kind-file { background: transparent; color: var(--stamp); border-color: var(--stamp); }
-.badge.kind-text { background: transparent; color: var(--muted); border-color: var(--line); }
-.token-input {
-  width: 100%;
-  padding: 11px 13px;
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--paper);
-  color: var(--ink);
-  font-size: 14px;
-  margin: 12px 0 4px;
-  transition: box-shadow var(--t-fast);
-}
-.token-input:focus { outline: none; box-shadow: 3px 3px 0 var(--hard-soft); }
-.admin-foot { margin-top: 18px; display: flex; justify-content: flex-end; }
-.pager-btns { display: flex; gap: 8px; }
-
-/* ============ \u4F5C\u5E9F\u786E\u8BA4\u5F39\u7A97(\u7BA1\u7406\u9875):\u7968\u636E\u5361 + \u786C\u504F\u79FB\u6295\u5F71 ============ */
-.modal-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: var(--mask);
-}
-.modal-mask[hidden] { display: none; }
-.modal-card {
-  background: var(--paper);
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: 8px 8px 0 var(--hard);
-  padding: 22px 22px 18px;
-  width: min(430px, 100%);
-  animation: pop-in 0.18s ease-out;
-}
-.modal-title { margin: 0 0 14px; font-family: var(--serif); font-size: 19px; letter-spacing: 0.04em; }
-.del-target {
-  border: 1.5px dashed var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--rowbg);
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  display: grid;
-  gap: 6px;
-}
-.del-line { display: flex; gap: 10px; align-items: baseline; min-width: 0; }
-.del-line > :first-child { flex: 0 0 4em; font-size: 12px; letter-spacing: 0.08em; }
-.del-line > :last-child { min-width: 0; overflow-wrap: anywhere; }
-.del-warn { margin: 0 0 16px; color: var(--danger); font-size: 13px; line-height: 1.5; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
-@keyframes pop-in { from { transform: translateY(8px); opacity: 0; } }
-
-/* ============ toast:\u58A8\u6761 ============ */
-#toast-host {
-  position: fixed;
-  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 99;
-  pointer-events: none;
-}
-.toast {
-  background: var(--tkhead-bg);
-  color: var(--tkhead-fg);
-  padding: 10px 18px;
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
-  font-size: 14px;
-  box-shadow: 3px 3px 0 var(--hard);
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity var(--t-med), transform var(--t-med);
-}
-.toast.show { opacity: 1; transform: translateY(0); }
-.toast.ok { background: var(--ok); border-color: var(--ok); color: #fff; }
-.toast.error { background: var(--danger); border-color: var(--danger); color: #fff; }
-
-/* ============ \u79FB\u52A8\u7AEF ============ */
-/* \u53CC\u680F\u5E76\u56DE\u5355\u680F:\u53F3\u680F\u56DE\u5230\u8868\u5355\u4E0B\u65B9,\u7A7A\u6001\u5360\u4F4D\u9690\u85CF */
-@media (max-width: 880px) {
-  .send-grid { grid-template-columns: 1fr; gap: 18px; }
-  .send-side .side-cap, .result-placeholder { display: none; }
-  /* \u90AE\u8DEF\u6761\u7AD6\u6392,\u8FDE\u7EBF\u8F6C\u4E3A\u5411\u4E0B\u865A\u7EBF;\u7279\u6027\u5E26\u4E24\u5217 */
-  .flow-strip { flex-direction: column; align-items: stretch; gap: 14px; padding: 16px 18px; }
-  .flow-link { flex: 0 0 0; width: 0; height: 26px; border-top: none; border-left: 2px dashed var(--line); margin: 0 0 0 22px; }
-  .flow-link::after { right: -6px; top: 12px; }
-  .feat-band { grid-template-columns: repeat(2, 1fr); margin-top: 20px; gap: 12px; }
-}
-@media (max-width: 640px) {
-  .options { grid-template-columns: 1fr; }
-  .card { padding: 18px; }
-  .topbar { padding: 14px 16px 8px; }
-  .code { gap: 6px; }
-  .code span { width: 42px; height: 52px; font-size: 27px; }
-  .otp-row { gap: 6px; }
-  .otp-box { width: 42px; height: 54px; font-size: 24px; }
-  .btn-row .btn { flex: 1; }
-  th, td { padding: 8px 6px; }
-  .row-between { flex-wrap: wrap; }
-  .stat-card b { font-size: 21px; }
-  .result-main { gap: 14px; }
-  .qr-wrap svg { width: 92px; height: 92px; }
-  .tk-tear::before, .tk-tear::after { width: 13px; height: 13px; top: -7.5px; }
-  .tk-tear::before { left: -20px; }
-  .tk-tear::after { right: -20px; }
-}
-
-/* ============ \u52A8\u6548 ============ */
-@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-@keyframes pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
-.card { animation: fade-up var(--t-slow) var(--ease) both; }
-.result:not([hidden]) { animation: pop var(--t-slow) var(--ease) both; }
-
-@keyframes shake {
-  10%, 90% { transform: translateX(-2px); }
-  20%, 80% { transform: translateX(3px); }
-  30%, 50%, 70% { transform: translateX(-5px); }
-  40%, 60% { transform: translateX(5px); }
-}
-.shake { animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
-
-/* \u952E\u76D8\u7126\u70B9\u53EF\u89C1\u6027 */
-.btn:focus-visible, .icon-btn:focus-visible, .tab:focus-visible,
-.seg button:focus-visible, a:focus-visible, .otp-box:focus-visible {
-  outline: 2px solid var(--stamp);
-  outline-offset: 2px;
-}
-
-/* \u53D6\u4EF6\u9875:6 \u683C\u53E3\u4EE4\u8F93\u5165(\u90AE\u6233\u683C) */
-.otp-row { display: flex; gap: 8px; justify-content: center; margin: 4px 0 8px; }
-.otp-box {
-  width: 46px;
-  height: 58px;
-  padding: 0;
-  text-align: center;
-  font-family: var(--serif);
-  font-size: 26px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  border: 1.5px solid var(--line);
-  border-radius: 9px;
-  background: var(--paper);
-  color: var(--ink);
-  caret-color: var(--stamp);
-  box-shadow: 2px 2px 0 var(--hard-soft);
-  transition: box-shadow var(--t-fast), border-color var(--t-fast);
-}
-.otp-box:focus { outline: none; border-color: var(--stamp); box-shadow: 3px 3px 0 var(--stamp); }
-
-/* \u8FDB\u5EA6\u6761:\u7B49\u5F85\u6001\u6D41\u5149 */
-@keyframes pending-slide { from { background-position: 0 0; } to { background-position: 34px 0; } }
-.bar > div.pending {
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(255, 255, 255, 0) 0,
-    rgba(255, 255, 255, 0) 12px,
-    rgba(255, 255, 255, 0.3) 12px,
-    rgba(255, 255, 255, 0.3) 24px
-  );
-  background-size: 34px 34px;
-  animation: pending-slide 0.8s linear infinite;
-}
-
-.mono { font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace; font-variant-numeric: tabular-nums; }
-
-/* \u52A8\u753B\u654F\u611F\u7528\u6237 */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-.storage-card { padding: 14px 18px; text-align: left; min-width: 0; }
-.storage-card small { letter-spacing: 0; }
-.storage-value { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }
-.storage-value b { font-size: 24px; white-space: nowrap; }
-.storage-total { font-size: 14px; color: var(--muted); white-space: nowrap; }
-.storage-meter { display: block; width: 100%; height: 6px; border: 0; background: var(--track); border-radius: 4px; overflow: hidden; }
-.storage-meter::-webkit-meter-bar { background: var(--track); border: 0; border-radius: 4px; height: 6px; }
-.storage-meter::-webkit-meter-optimum-value { background: var(--stamp); border-radius: 4px; }
-.storage-meter::-moz-meter-bar { background: var(--stamp); border-radius: 4px; }
-.storage-caption { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; }
-@media (max-width: 1000px) {
-  .stats-row { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .stats-counts .stat-card { min-height: 90px; }
-}
-@media (max-width: 540px) {
-  .stats-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .stats-counts .stat-card:last-child { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; min-height: 60px; }
-}
-
-/* Upload source labels and private admin details. */
-.source-cell { min-width: 150px; max-width: 210px; white-space: normal; }
-.source-cell small { display: block; font-size: 11px; overflow-wrap: anywhere; }
-.source-link { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
-.source-link:hover { color: var(--stamp); }
-.source-dialog { width: min(500px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: hidden; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); background: var(--paper); box-shadow: 0 20px 64px var(--mask); }
-.source-dialog[open] { display: flex; flex-direction: column; }
-.source-dialog::backdrop { background: var(--mask); }
-.source-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
-.source-heading h3 { margin: 0; font-size: 16px; }
-.source-heading h3:focus { outline: none; }
-.source-body { padding: 8px 12px; overflow: auto; min-height: 0; }
-#source-detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; font-size: 13px; }
-#source-detail:not(:has(.source-field)) { display: block; overflow-wrap: anywhere; }
-.source-field { min-width: 0; display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: baseline; gap: 10px; }
-.source-field-wide { grid-column: 1 / -1; }
-.source-field small { font-family: inherit; font-size: 12px; font-weight: 400; }
-.source-field span { overflow-wrap: anywhere; }
-.source-field.mono span { font-size: 12px; line-height: 1.6; }
-#source-form { display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: center; gap: 4px 8px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
-#source-form label { font-size: 12px; color: var(--muted); }
-#source-note { width: 100%; min-width: 0; padding: 5px 8px; background: var(--bag); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-sm); font: inherit; font-size: 16px; }
-#source-note:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
-#source-error { grid-column: 1 / -1; margin: 4px 0 0; }
-.source-footer { flex-shrink: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 8px 12px; background: var(--paper); border-top: 1px solid var(--line); }
-.source-footer .btn { min-height: 36px; padding: 5px 12px; }
-@media (max-width: 420px) {
-  .source-heading { padding: 8px 12px; }
-  .source-body { padding: 8px 12px; }
-  .source-field, #source-form { grid-template-columns: 84px minmax(0, 1fr); column-gap: 8px; }
-  .source-footer { padding: 8px 12px; }
-  .source-footer .btn { flex: 1; min-height: 40px; }
-}
-
-/* Keep the type visible above the filename baseline, outside its ellipsis. */
-.share-filename-line { display: flex; align-items: baseline; gap: 5px; width: clamp(150px, 18vw, 220px); }
-.share-filename { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.share-kind.badge { flex: none; position: relative; top: -0.45em; padding: 0 4px; font-size: 10px; line-height: 1.4; }
-
-/* Phone layouts keep the primary action close to the input. */
-@media (max-width: 640px) {
-  .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; margin-bottom: 12px; }
-  .brand { min-width: 0; gap: 8px; }
-  .brand .logo { width: 34px; height: 34px; font-size: 18px; flex: none; }
-  .brand b { font-size: 16px; letter-spacing: 0; }
-  .brand small { display: block; font-size: 11px; }
-  .actions { gap: 2px; }
-  .actions .btn, .actions .icon-btn { min-height: 40px; min-width: 40px; padding: 7px 8px; }
-  .container { padding: 4px 12px 24px; }
-  .card { padding: 14px; box-shadow: 3px 3px 0 var(--hard); }
-  main:has(> .send-grid) { justify-content: flex-start; }
-  .send-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .flow-strip { flex-direction: row; gap: 6px; padding: 10px; margin-bottom: 12px; box-shadow: 3px 3px 0 var(--hard); }
-  .flow-step { flex-direction: column; gap: 3px; text-align: center; }
-  .flow-dot { width: 28px; height: 28px; font-size: 15px; }
-  .flow-tt b { font-size: 12px; letter-spacing: 0; }
-  .flow-tt small, .flow-link { display: none; }
-  .card-cap { margin: 0 0 10px; letter-spacing: 0.1em; }
-  .tabs { gap: 8px; margin-bottom: 12px; }
-  .tab { min-height: 42px; }
-  .dropzone { padding: 20px 12px; }
-  .dz-icon { font-size: 28px; margin-bottom: 4px; }
-  .options { gap: 12px; margin: 14px 0 0; }
-  .opt-group label { margin-bottom: 5px; letter-spacing: 0.04em; }
-  .seg { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 5px; }
-  .seg button { min-height: 40px; padding: 6px 4px; font-size: 12px; }
-  .btn.block { min-height: 44px; margin-top: 12px; }
-  textarea, .token-input { font-size: 16px; }
-  .file-row { gap: 8px; padding: 8px; }
-  .fr-remove { min-width: 40px; min-height: 40px; }
-  .fr-status { max-width: 5em; white-space: normal; overflow-wrap: anywhere; font-size: 12px; }
-  .feat-band { gap: 8px; margin-top: 14px; }
-  .feat { gap: 8px; padding: 10px; align-items: flex-start; }
-  .feat-ic { width: 28px; height: 28px; font-size: 14px; }
-  .feat > div { min-width: 0; overflow-wrap: anywhere; }
-  .feat b { font-size: 12px; letter-spacing: 0; }
-  .feat small { font-size: 11px; }
-  .foot { padding: 18px 12px 12px; letter-spacing: 0.06em; }
-  .otp-row, .code { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; width: 100%; max-width: 320px; margin-inline: auto; }
-  .otp-box, .code span { width: 100%; min-width: 0; height: 48px; font-size: 24px; }
-  .code { padding-inline: 2px; } /* Leave room for the tilted digit borders. */
-  .result-col { width: 100%; }
-  .result-batch-head { padding: 12px; gap: 8px; }
-  .result-batch-head .btn-row { width: 100%; flex-wrap: wrap; }
-  .result-batch-head .btn { min-width: 0; padding: 8px; }
-  .tk-head { gap: 8px; letter-spacing: 0.1em; }
-  .tk-body { padding: 14px 12px; }
-  .tk-foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; gap: 8px; }
-  .tk-foot .btn { min-height: 42px; padding: 8px 6px; }
-  .sc-meta small { overflow-wrap: anywhere; }
-  .modal-mask { padding: 12px; }
-  .modal-card { padding: 16px; max-height: calc(100dvh - 24px); overflow: auto; }
-  .modal-actions .btn { flex: 1; min-height: 42px; padding: 8px; }
-  .stats-counts { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
-  .stats-counts .stat-card { grid-column: span 2; min-height: 66px; padding: 10px 6px; gap: 3px; }
-  .stats-counts .stat-card:nth-last-child(-n+2) { grid-column: span 3; }
-  .stats-counts .stat-card:last-child { flex-direction: column; }
-  .stat-card small { letter-spacing: 0; font-size: 11px; }
-  .storage-card { padding: 12px 14px; }
-  #admin-panel .table-wrap { overscroll-behavior-x: contain; }
-  #admin-panel td .btn { min-height: 40px; }
-  .admin-pager { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 14px; }
-  .admin-pager .pager-btns { display: flex; gap: 6px; }
-  .admin-pager .btn { min-height: 40px; padding-inline: 8px; }
-  .admin-pager #page-info { grid-column: 1 / -1; grid-row: 2; text-align: center; }
-}
-@media (max-width: 360px) {
-  .topbar .brand .logo { display: none; }
-  .feat { gap: 6px; padding: 8px; }
-}
-
-.file-detail-link { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.file-detail-link:hover { color: var(--stamp); }
-.guest-settings { margin: 0 0 12px; font-size: 13px; }
-.guest-settings summary { cursor: pointer; padding: 4px 0; }
-.login-guard-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; }
-.login-guard-heading .btn, .login-guard-row .btn { flex-shrink: 0; }
-.login-guard-bans { display: grid; gap: 8px; max-height: 320px; overflow: auto; }
-.login-guard-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px dashed var(--line); }
-.login-guard-info { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
-@media (max-width: 540px) { #login-protection .btn { min-height: 40px; } }
-#guest-policy-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 10px 0; }
-#guest-policy-form label { display: grid; gap: 4px; }
-#guest-policy-form input { width: 110px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; }
-#guest-policy-form input:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
-#upload-policy-hint { display: block; margin: 0 0 8px; font-size: 12px; }
-.seg button:disabled { opacity: .4; cursor: not-allowed; }
-.file-detail-link:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
-.file-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
-.file-wide { grid-column: 1 / -1; }
-.file-identity { display: grid; gap: 2px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }
-.file-identity strong { font-size: 14px; font-weight: 600; line-height: 1.5; }
-.file-field { display: grid; align-content: start; gap: 1px; min-width: 0; }
-.file-field-value { min-width: 0; font-variant-numeric: tabular-nums; }
-.file-field .badge { white-space: normal; }
-.file-source-link { max-width: 100%; text-align: left; overflow-wrap: anywhere; }
-.file-technical { border-top: 1px dashed var(--line); padding-top: 8px; }
-.file-technical summary { cursor: pointer; color: var(--muted); }
-.file-technical-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
-.file-technical-grid > :first-child { grid-column: 1 / -1; }
-#file-dialog .source-body { padding-top: 8px; padding-bottom: 8px; }
-.retention-settings { padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px dashed var(--line); }
-#retention-form { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; }
-#retention-days { width: 80px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; }
-#retention-days:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
-#retention-error { margin: 8px 0; }
-@media (max-width: 640px) {
-  #retention-form .btn, #retention-days { min-height: 40px; }
-}
-
-/* Admin audit keeps the existing theme while separating logs from file management. */
-.admin-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
-#admin-settings-btn { margin-left: auto; }
-.audit-card { padding: 20px; }
-.audit-heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; }
-.audit-heading h2 { margin: 0 0 4px; font-size: 19px; }
-.audit-actions { display: flex; gap: 8px; align-items: center; }
-.audit-categories { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
-.audit-categories button { padding: 9px 12px; background: transparent; color: var(--muted); font: inherit; font-size: 13px; border: 0; border-bottom: 2px solid transparent; cursor: pointer; }
-.audit-categories button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--stamp); font-weight: bold; }
-.audit-categories button:focus-visible { outline: 2px solid var(--stamp); outline-offset: -2px; }
-.audit-filter { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
-.audit-filter label { display: grid; gap: 5px; font-size: 12px; min-width: 0; }
-.audit-filter input, .audit-filter select { min-width: 0; max-width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 14px; height: 36px; box-sizing: border-box; }
-.audit-filter input:focus-visible, .audit-filter select:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
-.audit-search { flex: 1; min-width: 140px !important; }
-.audit-table { width: 100%; font-size: 12px; }
-.audit-table td { padding-top: 12px; padding-bottom: 12px; vertical-align: middle; }
-.audit-table td small { display: block; margin-top: 3px; }
-.audit-table td .audit-mobile-label { display: none; }
-.audit-table td.audit-source, .audit-table td.audit-target { white-space: normal; min-width: 125px; max-width: 220px; overflow-wrap: anywhere; }
-.audit-result { display: inline-block; border-radius: 5px; padding: 2px 7px; white-space: nowrap; }
-.audit-success { color: #25814c; background: #53b77c22; }
-.audit-failed { color: #c34b3d; background: #d45e5022; }
-.audit-blocked { color: #bd791f; background: #dd9e3522; }
-[data-theme="dark"] .audit-success { color: #8cd2a9; }
-[data-theme="dark"] .audit-failed { color: #f09a8f; }
-[data-theme="dark"] .audit-blocked { color: #ebbd72; }
-.audit-pager { gap: 10px; margin-top: 14px; }
-#audit-detail .file-field { min-width: 0; overflow-wrap: anywhere; }
-#audit-detail .file-field:nth-child(10), #audit-detail .file-field:nth-child(11) { grid-column: 1 / -1; }
-@media (max-width: 600px) {
-  .audit-card { padding: 12px; }
-  .audit-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
-  .audit-heading .audit-actions { width: 100%; }
-  .audit-heading .audit-actions .btn { flex: 1; }
-  .audit-categories { gap: 0; }
-  .audit-categories button { flex: 1; padding: 9px 5px; font-size: 12px; }
-  .audit-filter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .audit-filter .audit-search { min-width: 0 !important; }
-  .audit-filter .audit-actions { grid-column: 1 / -1; }
-  .audit-filter .audit-actions .btn { flex: 1; }
-  .audit-filter input, .audit-filter select { width: 100%; font-size: 16px; height: 40px; }
-  #admin-audit-view .btn, .admin-nav .btn { min-height: 40px; }
-  .audit-table-wrap { overflow: visible; }
-  .audit-table, .audit-table tbody { display: block; min-width: 0; }
-  .audit-table thead { display: none; }
-  .audit-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; padding: 12px 0; border-top: 1px dashed var(--line); }
-  .audit-table tbody tr:hover { background: var(--rowbg); }
-  .audit-table tbody tr:hover td { background: transparent; }
-  .audit-table td { padding: 2px 0; border: 0; min-width: 0; white-space: normal; }
-  .audit-table td:nth-child(1) { grid-row: 2; grid-column: 1; color: var(--muted); }
-  .audit-table td:nth-child(2) { grid-row: 1; grid-column: 1; }
-  .audit-table td:nth-child(2) small { display: none; }
-  .audit-table td:nth-child(3) { grid-row: 1; grid-column: 2; text-align: right; }
-  .audit-table td:nth-child(4) { grid-row: 4; grid-column: 1; }
-  .audit-table td:nth-child(5) { grid-row: 3; grid-column: 1; }
-  .audit-table td:nth-child(6) { grid-row: 5; grid-column: 1 / -1; }
-  .audit-table td:nth-child(7) { grid-row: 2 / 5; grid-column: 2; align-self: center; }
-  .audit-table td.audit-source, .audit-table td.audit-target { min-width: 0; max-width: none; }
-  .audit-table td .audit-mobile-label { display: inline; margin-right: 8px; }
-}
-/* Shared controls and compact upload context. */
-button, input, select, textarea { font: inherit; }
-.btn, .icon-btn, .seg button, .tab { min-height: 36px; }
-button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-.source-link, .file-detail-link { min-height: 24px; }
-[data-theme='dark'] .btn.danger { color: #241713; }
-.upload-context { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 8px; font-size: 13px; }
-.upload-context summary, .settings-section summary, .source-history summary, .source-agent summary, .file-technical summary { cursor: pointer; min-height: 32px; padding-block: 5px; }
-.context-fields { display: grid; gap: 6px; padding-top: 8px; }
-.context-fields label { display: block; font-weight: 500; }
-.context-fields input, .context-fields textarea { display: block; width: 100%; min-width: 0; margin: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); font-size: 16px; }
-.context-fields textarea { min-height: 76px; resize: vertical; }
-#upload-description-field { display: grid; gap: 6px; }
-#description-count { text-align: right; }
-.admin-settings { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
-.settings-section { min-width: 0; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--paper); font-size: 13px; }
-.admin-settings .retention-settings, .admin-settings .guest-settings { margin: 0; }
-.settings-section > summary { font-weight: 600; }
-.settings-section form { margin-block: 8px; }
-.settings-section .btn, .settings-section input { min-height: 36px; }
-.admin-list-card { padding: 14px; }
-.source-heading { flex-shrink: 0; }
-#source-form .note-privileges { grid-column: 1 / -1; font-size: 12px; }
-.source-ip { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
-.source-ip .btn { min-height: 28px; padding: 2px 8px; font-size: 12px; }
-.source-agent { margin-top: 4px; }
-.source-agent p { margin: 4px 0; font-size: 12px; overflow-wrap: anywhere; }
-.source-history { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 4px; font-size: 13px; }
-#source-history-list { display: grid; }
-.source-activity { display: grid; gap: 2px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
-.source-activity:last-child { border-bottom: 0; }
-.source-activity small { overflow-wrap: anywhere; }
-.activity-head { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-.activity-head > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-.activity-head .badge { flex-shrink: 0; }
-#source-back { margin-right: auto; }
-.file-description { padding-bottom: 6px; border-bottom: 1px solid var(--line); }
-.file-description p { margin: 4px 0 0; white-space: pre-wrap; }
-.delete-dialog { width: min(430px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 0; border: 0; border-radius: var(--radius); background: var(--paper); color: var(--ink); }
-.delete-dialog::backdrop { background: var(--mask); }
-.delete-dialog .modal-card { width: 100%; box-shadow: none; }
-@media (max-width: 760px) {
-  .admin-settings { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-}
-@media (max-width: 600px), (pointer: coarse) {
-  .btn, .btn.small, .icon-btn, .seg button, .tab, .source-footer .btn,
-  .settings-section .btn, .settings-section input, .source-ip .btn, .audit-filter input, .audit-filter select,
-  .actions .btn, .actions .icon-btn, #admin-panel td .btn, .admin-pager .btn,
-  #login-protection .btn, #retention-form .btn, #retention-days, #admin-audit-view .btn, .admin-nav .btn { min-height: 44px; }
-  .source-link, .file-detail-link { min-height: 32px; }
-  .source-heading h3 { font-size: 16px; }
-  #source-form { grid-template-columns: 84px minmax(0, 1fr); gap: 4px 8px; }
-  .source-footer { gap: 6px; }
-  .source-footer .btn { padding-inline: 8px; font-size: 13px; }
-  .upload-context summary, .settings-section summary, .source-history summary { min-height: 40px; padding-block: 8px; }
-}
-/* Pagination is a primary list control, outside the horizontally scrolling table. */
-.list-toolbar { position: sticky; top: 8px; z-index: 5; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 10px; padding: 10px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: 0 3px 8px var(--hard-soft); }
-.page-summary { color: var(--ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.list-toolbar .pager-btns { flex-wrap: wrap; gap: 6px; }
-.admin-list-card .table-wrap, .audit-table-wrap { scroll-margin-top: 84px; }
-.settings-dialog { width: min(520px, calc(100vw - 24px)); }
-.settings-dialog h4 { margin: 0 0 6px; font-size: 13px; }
-.settings-saved { display: block; color: var(--ok); margin-top: 4px; }
-.settings-dialog #btn-logout { margin-right: auto; }
-.preference-row { display: grid; grid-template-columns: minmax(0, 1fr) 84px; align-items: center; gap: 8px; margin-bottom: 6px; }
-.preference-row select { width: 100%; min-height: 36px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
-@media (max-width: 600px) {
-  .list-toolbar { top: 4px; padding: 8px; gap: 6px; }
-  .list-toolbar .page-summary { width: 100%; }
-  .list-toolbar .pager-btns { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .list-toolbar .btn { padding-inline: 5px; }
-  .admin-nav { gap: 6px; }
-  .admin-nav .btn { padding-inline: 8px; }
-  .preference-row select { min-height: 44px; font-size: 16px; }
-  .settings-dialog .source-body { padding: 8px; }
+`, "style.css": `/* ============================================================\r
+   \u90AE\u653F\u7968\u636E\u4E3B\u9898:\u725B\u76AE\u7EB8\u5E95 \xB7 \u58A8\u7EFF\u6CB9\u58A8 \xB7 \u6A59\u8272\u90AE\u6233 \xB7 \u786C\u6295\u5F71\u63CF\u8FB9\r
+   \u7ED3\u679C\u5361\u7247 = \u53D6\u4EF6\u51ED\u8BC1(\u7968\u5934 + \u90AE\u6233\u53E3\u4EE4\u74E6\u7247 + \u6495\u7968\u7EBF + \u7968\u811A)\r
+   ============================================================ */\r
+:root {\r
+  --bag: #efe8d8;            /* \u725B\u76AE\u7EB8\u5E95 */\r
+  --paper: #fffdf6;          /* \u7968\u636E\u7EB8\u9762 */\r
+  --ink: #26382c;            /* \u6CB9\u58A8(\u6B63\u6587/\u4E3B\u8272) */\r
+  --line: #26382c;           /* \u63CF\u8FB9 */\r
+  --muted: #6b7563;          /* \u892A\u8272\u58A8 */\r
+  --stamp: #d96f32;          /* \u90AE\u6233\u6A59 */\r
+  --stamp-dark: #b85a24;\r
+  --ok: #3c7a52;\r
+  --ok-soft: #eef3ec;\r
+  --danger: #b3403a;\r
+  --danger-soft: #f7e9e4;\r
+  --warn: #a2661c;\r
+  --warn-soft: #f8efdd;\r
+  --rowbg: #f7f2e4;          /* \u6587\u4EF6\u884C\u5E95 */\r
+  --track: #e6dfca;          /* \u8FDB\u5EA6\u69FD */\r
+  --tkhead-bg: #26382c;      /* \u7968\u5934\u5E95 */\r
+  --tkhead-fg: #f4efdd;      /* \u7968\u5934\u5B57 */\r
+  --hard: rgba(38, 56, 44, 0.9);   /* \u786C\u6295\u5F71 */\r
+  --mask: rgba(24, 20, 12, 0.55);  /* \u5F39\u7A97\u906E\u7F69 */\r
+  --hard-soft: rgba(38, 56, 44, 0.35);\r
+  --dots: rgba(38, 56, 44, 0.05);  /* \u7EB8\u9762\u7F51\u70B9\u7EB9\u7406 */\r
+  --radius: 14px;\r
+  --radius-sm: 9px;\r
+  --serif: Georgia, 'Times New Roman', 'Songti SC', 'SimSun', serif;\r
+  /* \u52A8\u6548\u8282\u594F */\r
+  --t-fast: 0.15s;\r
+  --t-med: 0.25s;\r
+  --t-slow: 0.35s;\r
+  --ease: cubic-bezier(0.2, 0, 0, 1);\r
+}\r
+[data-theme='dark'] {\r
+  /* \u58A8\u84DD\u591C\u822A:\u85CF\u84DD\u7EB8\u9762,\u84DD\u6A59\u4E92\u8865,\u90AE\u6233\u6A59\u591C\u91CC\u6700\u8DF3 */\r
+  --bag: #12161f;\r
+  --paper: #1a2130;\r
+  --ink: #e8e5d6;\r
+  --line: #46516b;\r
+  --muted: #a9b2c9;\r
+  --stamp: #e68d4f;\r
+  --stamp-dark: #c9702f;\r
+  --ok: #7fc79c;\r
+  --ok-soft: #254432;\r
+  --danger: #e08a7c;\r
+  --danger-soft: #462822;\r
+  --warn: #d9ab63;\r
+  --warn-soft: #413120;\r
+  --rowbg: #222b44;\r
+  --track: #151b28;\r
+  --tkhead-bg: #33415c;\r
+  --tkhead-fg: #f0eee0;\r
+  --hard: rgba(0, 0, 0, 0.5);\r
+  --hard-soft: rgba(0, 0, 0, 0.32);\r
+  /* \u6DF1\u8272\u4E0B\u540C\u900F\u660E\u5EA6\u7684\u906E\u7F69\u51E0\u4E4E\u770B\u4E0D\u51FA\u6765,\u52A0\u6DF1\u4E00\u6863\u4FDD\u4F4F\u5F39\u7A97\u4E0E\u80CC\u666F\u7684\u5206\u79BB\u611F */\r
+  --mask: rgba(4, 7, 14, 0.72);\r
+  --dots: rgba(232, 229, 214, 0.05);\r
+}\r
+\r
+* { box-sizing: border-box; }\r
+/* [hidden] \u515C\u5E95:\u7C7B\u4E0A\u7684 display:flex/inline-flex \u4F1A\u76D6\u8FC7 UA \u6837\u5F0F\u8868\u7684 [hidden]{display:none},\r
+   \u5BFC\u81F4 .result-placeholder/.file-list \u7B49\u8BBE\u4E86 hidden \u4ECD\u53EF\u89C1 */\r
+[hidden] { display: none !important; }\r
+html { -webkit-text-size-adjust: 100%; }\r
+body {\r
+  margin: 0;\r
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto,\r
+    'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei', sans-serif;\r
+  font-size: 15px;\r
+  line-height: 1.6;\r
+  color: var(--ink);\r
+  min-height: 100vh;\r
+  /* \u7EB5\u5411 flex \u9AA8\u67B6:main \u5403\u6389\u5269\u4F59\u9AD8\u5EA6,\u9875\u811A\u8D34\u89C6\u53E3\u5E95 */\r
+  display: flex;\r
+  flex-direction: column;\r
+  background:\r
+    radial-gradient(var(--dots) 1px, transparent 1px) 0 0 / 22px 22px,\r
+    var(--bag);\r
+  -webkit-font-smoothing: antialiased;\r
+  text-rendering: optimizeLegibility;\r
+}\r
+\r
+::selection { background: var(--stamp); color: #fff; }\r
+\r
+/* \u7EC6\u6EDA\u52A8\u6761 */\r
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }\r
+::-webkit-scrollbar { width: 8px; height: 8px; }\r
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }\r
+::-webkit-scrollbar-track { background: transparent; }\r
+\r
+/* ============ \u9876\u680F ============ */\r
+.topbar {\r
+  display: flex;\r
+  align-items: center;\r
+  justify-content: space-between;\r
+  padding: 22px 20px 14px;\r
+  width: 100%; /* body \u6539\u7EB5\u5411 flex \u540E,auto margin \u6761\u76EE\u4F1A\u6536\u7F29\u5230\u5185\u5BB9\u5BBD,\u663E\u5F0F\u62C9\u6EE1\u518D\u7531 max-width \u6536\u53E3 */\r
+  max-width: 720px;\r
+  margin: 0 auto 26px;\r
+  border-bottom: 3px double var(--line);\r
+}\r
+.topbar.wide { max-width: 1080px; }\r
+.brand { display: flex; align-items: center; gap: 12px; }\r
+.brand .logo {\r
+  display: grid;\r
+  place-items: center;\r
+  width: 42px;\r
+  height: 42px;\r
+  font-size: 21px;\r
+  border-radius: 10px;\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  box-shadow: 3px 3px 0 var(--hard);\r
+}\r
+.brand b {\r
+  font-family: var(--serif);\r
+  font-size: 18px;\r
+  font-weight: 700;\r
+  display: block;\r
+  line-height: 1.25;\r
+  letter-spacing: 0.05em;\r
+}\r
+.brand small { color: var(--muted); font-size: 12px; }\r
+.actions { display: flex; align-items: center; gap: 8px; }\r
+\r
+/* ============ \u5E03\u5C40 ============ */\r
+.container { width: 100%; max-width: 720px; margin: 0 auto; padding: 8px 16px 48px; }\r
+.container.wide { max-width: 1080px; }\r
+.container.narrow { max-width: 460px; }\r
+.card {\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: var(--radius);\r
+  box-shadow: 6px 6px 0 var(--hard);\r
+  padding: 24px;\r
+  margin-bottom: 18px;\r
+}\r
+.card.center { text-align: center; }\r
+.muted { color: var(--muted); }\r
+.row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }\r
+\r
+main { flex: 1 0 auto; } /* \u6491\u6EE1\u89C6\u53E3\u5269\u4F59\u9AD8\u5EA6,\u628A\u9875\u811A\u63A8\u5230\u5E95 */\r
+/* \u515C\u5E95:\u5373\u4F7F main \u6CA1\u6491\u5F00(\u5F02\u5E38\u9875\u9762)\u4E5F\u628A\u9875\u811A\u63A8\u5230\u5E95 */\r
+.foot {\r
+  margin-top: auto;\r
+  text-align: center;\r
+  color: var(--muted);\r
+  font-size: 12px;\r
+  letter-spacing: 0.14em;\r
+  padding: 32px 16px 10px;\r
+}\r
+\r
+/* ============ \u90AE\u8DEF\u4E09\u6B65\u6761(\u67DC\u53F0\u4E0A\u65B9:\u5BC4\u4EF6\u2192\u51FA\u7968\u2192\u53D6\u4EF6) ============ */\r
+.flow-strip {\r
+  display: flex;\r
+  align-items: center;\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 13px;\r
+  box-shadow: 6px 6px 0 var(--hard);\r
+  padding: 18px 26px;\r
+  margin-bottom: 24px;\r
+  animation: fade-up var(--t-slow) var(--ease) both;\r
+}\r
+.flow-step { flex: 1; display: flex; align-items: center; gap: 13px; min-width: 0; }\r
+.flow-dot {\r
+  width: 46px; height: 46px; flex: none;\r
+  border: 2.5px double var(--stamp); border-radius: 50%;\r
+  display: grid; place-items: center;\r
+  font-size: 20px; color: var(--stamp); font-family: var(--serif);\r
+}\r
+.flow-step:nth-child(1) .flow-dot { transform: rotate(-7deg); }\r
+.flow-step:nth-child(3) .flow-dot { transform: rotate(5deg); }\r
+.flow-step:nth-child(5) .flow-dot { transform: rotate(-4deg); }\r
+.flow-tt b { display: block; font-size: 14px; font-family: var(--serif); letter-spacing: 0.06em; }\r
+.flow-tt small { color: var(--muted); font-size: 12px; }\r
+.flow-link { flex: 0 0 58px; border-top: 2px dashed var(--line); margin: 0 12px; position: relative; }\r
+.flow-link::after {\r
+  content: '\u2708'; position: absolute; right: -4px; top: -11px;\r
+  font-size: 12px; color: var(--stamp);\r
+}\r
+\r
+/* ============ \u53D1\u9001\u9875:\u67DC\u53F0\u53CC\u680F(\u5DE6\u5BC4\u4EF6\u5355 / \u53F3\u56DE\u6267\u5E38\u9A7B) ============ */\r
+/* \u5185\u5BB9\u4E0D\u8DB3\u4E00\u5C4F\u65F6\u67DC\u53F0\u4E0A/\u4E0B\u7559\u767D\u5747\u8861;\u8D85\u51FA\u4E00\u5C4F\u65F6 main \u9AD8\u5EA6=\u5185\u5BB9\u9AD8,\u81EA\u52A8\u9000\u5316\u4E3A\u9876\u5BF9\u9F50 */\r
+main:has(> .send-grid) { display: flex; flex-direction: column; justify-content: center; }\r
+.send-grid {\r
+  display: grid;\r
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);\r
+  gap: 26px;\r
+  align-items: stretch; /* \u4E24\u680F\u540C\u9AD8:\u7A7A\u6001\u65F6\u53F3\u680F\u5360\u4F4D\u6491\u5230\u4E0E\u8868\u5355\u5361\u9F50\u5E95 */\r
+}\r
+.form-card { min-width: 0; margin-bottom: 0; align-self: stretch; display: flex; flex-direction: column; } /* \u4E24\u680F\u9F50\u5E95:\u8868\u5355\u5361\u540C\u6837\u62C9\u4F38(\u56DE\u6267\u680F\u5185\u5BB9\u66F4\u9AD8\u65F6\u4E0D\u518D\u53C2\u5DEE) */\r
+/* \u62C9\u4F38\u540E\u7684\u591A\u4F59\u9AD8\u5EA6\u4EA4\u7ED9\u8F93\u5165\u533A\u5438\u6536:\u62D6\u62FD\u533A/\u6587\u672C\u6846/\u6587\u4EF6\u961F\u5217\u957F\u9AD8,\u9009\u9879\u548C\u6309\u94AE\u4E0D\u88AB\u9876\u5F97\u60AC\u7A7A */\r
+.form-card .panel { display: flex; flex-direction: column; flex: 1; }\r
+.form-card .dropzone, .form-card textarea, .form-card .file-list { flex: 1; }\r
+.form-card .dropzone { display: flex; flex-direction: column; justify-content: center; }\r
+.card-cap, .side-cap {\r
+  display: flex;\r
+  justify-content: space-between;\r
+  align-items: baseline;\r
+  margin: -4px 0 16px;\r
+  font-size: 11.5px;\r
+  letter-spacing: 0.3em;\r
+  color: var(--muted);\r
+  font-weight: 600;\r
+}\r
+.card-cap .cap-date {\r
+  font-family: var(--serif);\r
+  color: var(--stamp);\r
+  letter-spacing: 0.08em;\r
+  font-size: 12.5px;\r
+}\r
+/* \u53F3\u680F\u968F\u884C\u9AD8\u62C9\u4F38:sticky \u5728 stretch \u4E0B\u4E0D\u518D\u751F\u6548(\u4E24\u680F\u6C38\u8FDC\u540C\u9AD8,\u65E0\u53EF\u7C98\u6EDE\u4F59\u91CF),\u6539\u4E3A flex \u7EB5\u5411\u680F */\r
+.send-side { display: flex; flex-direction: column; min-width: 0; }\r
+.send-side .results { margin-top: 0; }\r
+/* \u56DE\u6267\u7A7A\u6001:\u5F85\u51FA\u7968\u90AE\u6233 */\r
+.result-placeholder {\r
+  border: 1.5px dashed var(--line);\r
+  border-radius: 13px;\r
+  padding: 38px 20px;\r
+  min-height: 340px; /* \u4E0E\u5DE6\u680F\u8868\u5355\u5361\u89C6\u89C9\u5E73\u8861 */\r
+  flex: 1; /* \u53F3\u680F\u88AB\u62C9\u4F38\u65F6\u5360\u4F4D\u968F\u4E4B\u957F\u9AD8,\u5E95\u8FB9\u4E0E\u8868\u5355\u5361\u5BF9\u9F50 */\r
+  display: flex;\r
+  flex-direction: column;\r
+  justify-content: center;\r
+  align-items: center;\r
+  text-align: center;\r
+  animation: fade-up var(--t-slow) var(--ease) both;\r
+}\r
+.ph-postmark {\r
+  width: 76px;\r
+  height: 76px;\r
+  margin: 0 auto 14px;\r
+  border: 2.5px double var(--stamp);\r
+  border-radius: 50%;\r
+  display: grid;\r
+  place-items: center;\r
+  color: var(--stamp);\r
+  font-family: var(--serif);\r
+  font-size: 10px;\r
+  letter-spacing: 0.22em;\r
+  text-indent: 0.22em; /* \u8865\u507F\u5B57\u8DDD,\u8BA9\u5706\u5F62\u90AE\u6233\u89C6\u89C9\u5C45\u4E2D */\r
+  transform: rotate(-8deg);\r
+  opacity: 0.8;\r
+}\r
+.result-placeholder p { margin: 0 0 4px; font-weight: 700; font-family: var(--serif); letter-spacing: 0.08em; }\r
+.result-placeholder small { color: var(--muted); font-size: 12.5px; }\r
+/* \u7A7A\u6001\u5185\u5D4C\u300C\u5728\u9014\u90AE\u8DEF\u300D\u7AD6\u5411\u65F6\u95F4\u7EBF:\u53F3\u680F\u4E0D\u7A7A */\r
+.ph-route { margin-top: 24px; width: 100%; max-width: 300px; text-align: left; }\r
+.ph-leg { display: flex; gap: 13px; align-items: flex-start; }\r
+.ph-ic {\r
+  width: 40px; height: 40px; flex: none;\r
+  border: 1.5px solid var(--line); border-radius: 50%;\r
+  background: var(--rowbg);\r
+  display: grid; place-items: center; font-size: 17px;\r
+}\r
+.ph-leg:nth-child(1) .ph-ic { transform: rotate(-6deg); }\r
+.ph-leg b { display: block; font-size: 13px; font-family: var(--serif); letter-spacing: 0.04em; }\r
+.ph-leg small { color: var(--muted); font-size: 11.5px; line-height: 1.5; }\r
+.ph-dash { width: 0; height: 22px; border-left: 2px dashed var(--line); margin: 3px 0 3px 19px; }\r
+.ph-fine {\r
+  margin-top: 22px; padding-top: 13px; width: 100%; max-width: 300px;\r
+  border-top: 1.5px dashed var(--line);\r
+  color: var(--muted); font-size: 11px; letter-spacing: 0.12em; text-align: center;\r
+}\r
+\r
+/* ============ \u6309\u94AE:\u90AE\u6233\u7AE0 ============ */\r
+.btn {\r
+  display: inline-flex;\r
+  align-items: center;\r
+  justify-content: center;\r
+  gap: 6px;\r
+  padding: 9px 18px;\r
+  border-radius: var(--radius-sm);\r
+  border: 1.5px solid var(--line);\r
+  background: var(--paper);\r
+  color: var(--ink);\r
+  font-size: 14px;\r
+  font-weight: 600;\r
+  cursor: pointer;\r
+  text-decoration: none;\r
+  box-shadow: 2px 2px 0 var(--hard-soft);\r
+  transition: transform var(--t-fast), box-shadow var(--t-fast), background var(--t-fast), color var(--t-fast), opacity var(--t-fast);\r
+}\r
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--hard-soft); }\r
+.btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--hard-soft); }\r
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: 2px 2px 0 var(--hard-soft); }\r
+.btn.primary {\r
+  background: var(--tkhead-bg);\r
+  border-color: var(--line);\r
+  color: var(--tkhead-fg);\r
+  box-shadow: 3px 3px 0 var(--stamp);\r
+}\r
+.btn.primary:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 var(--stamp); }\r
+.btn.primary:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--stamp); }\r
+.btn.primary:disabled { box-shadow: 2px 2px 0 var(--hard-soft); } /* \u7981\u7528\u65F6\u4E0D\u4EAE\u6A59\u5F71,\u907F\u514D\u8BEF\u8BFB\u4E3A\u53EF\u70B9 */\r
+.btn.ghost { background: transparent; box-shadow: none; border-color: var(--line); }\r
+.btn.ghost:hover { background: var(--rowbg); transform: none; }\r
+.btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; box-shadow: 2px 2px 0 var(--hard-soft); }\r
+.btn.small { padding: 5px 12px; font-size: 13px; border-radius: 8px; }\r
+.btn.block { width: 100%; margin-top: 16px; }\r
+.btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }\r
+.icon-btn {\r
+  background: transparent;\r
+  border: none;\r
+  font-size: 17px;\r
+  cursor: pointer;\r
+  color: var(--muted);\r
+  padding: 7px 9px;\r
+  border-radius: 8px;\r
+  transition: background var(--t-fast), color var(--t-fast);\r
+}\r
+.icon-btn:hover { background: var(--rowbg); color: var(--ink); }\r
+/* \u8BED\u8A00\u5207\u6362:\u663E\u793A\u76EE\u6807\u8BED\u8A00(\u7528\u5168\u58A8\u8272,\u907F\u514D\u6DF1\u8272\u6A21\u5F0F\u4E0B\u8FC7\u6DE1) */\r
+.lang-btn { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; padding: 7px 10px; color: var(--ink); }\r
+.lang-float { position: fixed; top: 14px; right: 14px; z-index: 10; background: var(--paper); border: 1.5px solid var(--line); box-shadow: 3px 3px 0 var(--hard); }\r
+\r
+/* ============ Tabs:\u7968\u6839 ============ */\r
+.tabs { display: flex; gap: 10px; margin-bottom: 20px; }\r
+.tab {\r
+  flex: 1;\r
+  padding: 9px;\r
+  border: 1.5px dashed var(--line);\r
+  background: transparent;\r
+  border-radius: var(--radius-sm);\r
+  font-size: 14px;\r
+  font-weight: 600;\r
+  color: var(--muted);\r
+  cursor: pointer;\r
+  transition: color var(--t-fast), background var(--t-fast), border-color var(--t-fast);\r
+}\r
+.tab:hover { color: var(--ink); background: var(--rowbg); }\r
+.tab.active { border-style: solid; background: var(--tkhead-bg); border-color: var(--line); color: var(--tkhead-fg); }\r
+\r
+/* ============ \u62D6\u62FD\u533A:\u5305\u88F9\u5355 ============ */\r
+.dropzone {\r
+  border: 2px dashed var(--line);\r
+  border-radius: 12px;\r
+  padding: 36px 16px;\r
+  text-align: center;\r
+  cursor: pointer;\r
+  transition: background var(--t-fast);\r
+  outline: none;\r
+}\r
+.dropzone:hover, .dropzone:focus-visible, .dropzone.dragover { background: var(--rowbg); }\r
+.dz-icon { font-size: 34px; margin-bottom: 8px; transition: transform var(--t-med) ease; }\r
+.dropzone:hover .dz-icon, .dropzone.dragover .dz-icon { transform: scale(1.1) translateY(-2px); }\r
+.dropzone p { margin: 0 0 6px; font-size: 14px; }\r
+.dropzone p b { font-weight: 700; }\r
+.dropzone small { color: var(--muted); font-size: 13px; }\r
+\r
+/* ============ \u6587\u4EF6\u961F\u5217(\u591A\u9009\u6279\u91CF) ============ */\r
+.file-list { display: flex; flex-direction: column; gap: 8px; }\r
+.file-row {\r
+  position: relative;\r
+  display: flex;\r
+  align-items: center;\r
+  gap: 12px;\r
+  background: var(--rowbg);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 10px;\r
+  padding: 10px 12px;\r
+  overflow: hidden;\r
+  animation: fade-up var(--t-slow) var(--ease) both;\r
+}\r
+.file-row.uploading { background: var(--warn-soft); }\r
+.file-row.done { background: var(--ok-soft); }\r
+.file-row.fail { background: var(--danger-soft); }\r
+.fr-icon { font-size: 20px; flex: none; }\r
+.fr-meta { flex: 1; min-width: 0; }\r
+.fr-meta b { display: block; font-size: 13.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r
+.fr-meta small { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r
+.fr-status { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--serif); }\r
+.file-row.done .fr-status { color: var(--ok); font-weight: 700; }\r
+.file-row.fail .fr-status { color: var(--danger); font-weight: 700; }\r
+.fr-remove { padding: 5px 7px; font-size: 13px; flex: none; }\r
+/* \u8FF7\u4F60\u8FDB\u5EA6\u6761:\u8D34\u884C\u5E95\u7F18(\u8721\u5C01\u6761) */\r
+.fr-bar {\r
+  position: absolute;\r
+  left: 0;\r
+  bottom: 0;\r
+  height: 3px;\r
+  width: 0;\r
+  border-radius: 999px;\r
+  background: var(--stamp);\r
+  transition: width var(--t-med) ease;\r
+}\r
+.file-row.done .fr-bar { width: 100%; background: var(--ok); }\r
+.file-row.fail .fr-bar { width: 100%; background: var(--danger); }\r
+\r
+/* ============ \u6587\u672C\u8F93\u5165 ============ */\r
+textarea {\r
+  width: 100%;\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 10px;\r
+  background: var(--paper);\r
+  color: var(--ink);\r
+  padding: 12px 14px;\r
+  font-size: 14px;\r
+  font-family: inherit;\r
+  line-height: 1.65;\r
+  resize: vertical;\r
+  transition: box-shadow var(--t-fast);\r
+}\r
+textarea:focus { outline: none; box-shadow: 3px 3px 0 var(--hard-soft); }\r
+\r
+/* ============ \u9009\u9879 segmented:\u90AE\u8D44\u6807\u7B7E ============ */\r
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; margin: 22px 0 6px; }\r
+.opt-group label {\r
+  display: block;\r
+  font-size: 11.5px;\r
+  color: var(--muted);\r
+  letter-spacing: 0.18em;\r
+  margin-bottom: 7px;\r
+}\r
+.seg { display: flex; gap: 6px; flex-wrap: wrap; }\r
+.seg button {\r
+  padding: 6px 13px;\r
+  border: 1.5px solid var(--line);\r
+  background: transparent;\r
+  border-radius: 8px;\r
+  font-size: 13px;\r
+  font-weight: 600;\r
+  color: var(--muted);\r
+  cursor: pointer;\r
+  transition: color var(--t-fast), background var(--t-fast);\r
+}\r
+.seg button:hover { color: var(--ink); background: var(--rowbg); }\r
+.seg button.active { background: var(--stamp); border-color: var(--stamp); color: #fff; }\r
+\r
+/* ============ \u8FDB\u5EA6\u6761 ============ */\r
+.progress { margin-top: 18px; }\r
+.bar {\r
+  height: 12px;\r
+  background: var(--track);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 999px;\r
+  overflow: hidden;\r
+}\r
+.bar > div {\r
+  height: 100%;\r
+  width: 0;\r
+  background: linear-gradient(90deg, var(--stamp-dark), var(--stamp));\r
+  border-radius: 999px;\r
+  transition: width var(--t-med) ease;\r
+}\r
+.progress small { color: var(--muted); font-variant-numeric: tabular-nums; }\r
+\r
+/* ============ \u7ED3\u679C:\u53D6\u4EF6\u51ED\u8BC1(\u7968\u636E) ============ */\r
+.results { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }\r
+.result {\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 13px;\r
+  box-shadow: 6px 6px 0 var(--hard);\r
+  overflow: hidden;\r
+}\r
+/* \u6279\u91CF\u5934\u90E8 */\r
+.result-batch-head {\r
+  display: flex;\r
+  align-items: center;\r
+  justify-content: space-between;\r
+  gap: 12px;\r
+  flex-wrap: wrap;\r
+  padding: 13px 16px;\r
+  border-radius: 13px;\r
+  background: var(--ok-soft);\r
+  border: 1.5px solid var(--line);\r
+  box-shadow: 4px 4px 0 var(--hard);\r
+}\r
+.result-batch-head .result-title { margin: 0; }\r
+.result-batch-head .btn-row { margin: 0; flex-wrap: nowrap; }\r
+.result-title { margin: 0; font-weight: 700; font-size: 14.5px; }\r
+.result-title.batch { font-family: var(--serif); letter-spacing: 0.04em; }\r
+/* \u7968\u5934 */\r
+.tk-head {\r
+  display: flex;\r
+  justify-content: space-between;\r
+  align-items: center;\r
+  background: var(--tkhead-bg);\r
+  color: var(--tkhead-fg);\r
+  padding: 9px 16px;\r
+  font-size: 12px;\r
+  letter-spacing: 0.3em;\r
+  font-weight: 600;\r
+}\r
+.tk-head .tk-no { letter-spacing: 0.08em; color: var(--stamp); font-family: var(--serif); }\r
+/* \u7968\u8EAB */\r
+.tk-body { padding: 18px 16px 14px; text-align: center; }\r
+.result-main { display: flex; align-items: center; justify-content: center; gap: 22px; flex-wrap: wrap; }\r
+.result-col { display: flex; flex-direction: column; align-items: center; min-width: 0; }\r
+.result-file-name { font-size: 13px; color: var(--muted); word-break: break-all; margin-bottom: 2px; }\r
+/* \u53E3\u4EE4\u74E6\u7247:\u90AE\u6233 */\r
+.code { display: flex; justify-content: center; gap: 8px; margin: 8px 0 10px; }\r
+.code span {\r
+  display: grid;\r
+  place-items: center;\r
+  width: 46px;\r
+  height: 58px;\r
+  font-family: var(--serif);\r
+  font-size: 30px;\r
+  font-weight: 700;\r
+  font-variant-numeric: tabular-nums;\r
+  color: var(--ink);\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 7px;\r
+  box-shadow: 2px 2px 0 var(--hard-soft);\r
+  user-select: all;\r
+}\r
+.code span:nth-child(odd) { transform: rotate(-1.6deg); }\r
+.code span:nth-child(even) { transform: rotate(1.4deg); }\r
+.result-link { color: var(--muted); font-size: 12px; word-break: break-all; }\r
+.result-meta { color: var(--muted); font-size: 12.5px; margin-top: 8px; }\r
+/* \u4E8C\u7EF4\u7801:\u767D\u5E95\u4FDD\u8BC1\u6DF1\u8272\u6A21\u5F0F\u53EF\u626B\u63CF */\r
+.qr-wrap {\r
+  flex: none;\r
+  background: #fff;\r
+  padding: 8px;\r
+  border-radius: 9px;\r
+  border: 1.5px solid var(--line);\r
+  box-shadow: 2px 2px 0 var(--hard-soft);\r
+}\r
+.qr-wrap svg { display: block; width: 110px; height: 110px; }\r
+.qr-hint { text-align: center; font-size: 10.5px; color: #6b7280; margin-top: 5px; letter-spacing: 0.18em; }\r
+/* \u6495\u7968\u7EBF(\u5E26\u7F3A\u53E3) */\r
+.tk-tear { border-top: 2px dashed var(--line); position: relative; margin: 0 14px; }\r
+.tk-tear::before, .tk-tear::after {\r
+  content: '';\r
+  position: absolute;\r
+  top: -9px;\r
+  width: 16px;\r
+  height: 16px;\r
+  border-radius: 50%;\r
+  background: var(--bag);\r
+  border: 1.5px solid var(--line);\r
+}\r
+.tk-tear::before { left: -24px; }\r
+.tk-tear::after { right: -24px; }\r
+/* \u7968\u811A */\r
+.tk-foot { display: flex; gap: 10px; justify-content: center; padding: 14px; flex-wrap: wrap; }\r
+.result .btn-row { justify-content: center; }\r
+\r
+/* ============ \u7279\u6027\u5E26(\u67DC\u53F0\u4E0B\u65B9:\u4E00\u6392\u4E1A\u52A1\u516C\u544A\u7AE0) ============ */\r
+.feat-band { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 28px; }\r
+.feat {\r
+  background: var(--paper);\r
+  border: 1.5px dashed var(--line);\r
+  border-radius: 11px;\r
+  box-shadow: 3px 3px 0 var(--hard-soft);\r
+  padding: 14px 16px;\r
+  display: flex; gap: 12px; align-items: center;\r
+  animation: fade-up var(--t-slow) var(--ease) both;\r
+}\r
+.feat:nth-child(2) { transform: rotate(0.4deg); }\r
+.feat:nth-child(3) { transform: rotate(-0.3deg); }\r
+.feat-ic {\r
+  width: 40px; height: 40px; flex: none;\r
+  border: 2px double var(--stamp); border-radius: 50%;\r
+  display: grid; place-items: center; font-size: 17px;\r
+}\r
+.feat b { display: block; font-size: 13.5px; font-family: var(--serif); letter-spacing: 0.04em; }\r
+.feat small { color: var(--muted); font-size: 12px; }\r
+\r
+/* ============ \u53D6\u4EF6\u9875 ============ */\r
+h2.title { margin: 8px 0 6px; font-size: 22px; font-weight: 700; line-height: 1.3; font-family: var(--serif); letter-spacing: 0.04em; }\r
+.pk-sub { margin: 0 0 16px; font-size: 13.5px; }\r
+.error-box {\r
+  margin-top: 14px;\r
+  padding: 12px 14px;\r
+  border-radius: var(--radius-sm);\r
+  background: var(--danger-soft);\r
+  border: 1.5px solid var(--danger);\r
+  color: var(--danger);\r
+  font-size: 14px;\r
+}\r
+.share-card {\r
+  display: flex;\r
+  align-items: center;\r
+  gap: 14px;\r
+  background: var(--rowbg);\r
+  border: 1.5px dashed var(--line);\r
+  border-radius: 10px;\r
+  padding: 16px;\r
+}\r
+.sc-icon { font-size: 32px; }\r
+.sc-meta { flex: 1; min-width: 0; text-align: left; }\r
+.sc-meta b { display: block; font-size: 15px; font-weight: 700; word-break: break-all; }\r
+.sc-meta small { color: var(--muted); }\r
+.meta-line { color: var(--muted); font-size: 13px; margin: 12px 2px 0; text-align: left; }\r
+pre.text-body {\r
+  background: var(--rowbg);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 10px;\r
+  padding: 14px 16px;\r
+  white-space: pre-wrap;\r
+  word-break: break-all;\r
+  font-size: 13px;\r
+  line-height: 1.7;\r
+  max-height: 340px;\r
+  overflow: auto;\r
+  margin: 0 0 4px;\r
+  text-align: left;\r
+}\r
+\r
+/* ============ \u7BA1\u7406\u9875 ============ */\r
+.stats-row { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; margin-bottom: 20px; }\r
+.stats-counts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }\r
+.stats-counts .stat-card { display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0; }\r
+.stat-card {\r
+  background: var(--paper);\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 11px;\r
+  padding: 16px 12px;\r
+  text-align: center;\r
+  box-shadow: 3px 3px 0 var(--hard-soft);\r
+}\r
+.stat-card b { display: block; font-size: 24px; font-weight: 700; font-family: var(--serif); font-variant-numeric: tabular-nums; line-height: 1.3; }\r
+.stat-card small { color: var(--muted); font-size: 12px; letter-spacing: 0.08em; }\r
+.table-wrap { overflow-x: auto; }\r
+table { width: 100%; border-collapse: collapse; font-size: 13px; }\r
+th, td { text-align: left; padding: 10px; border-bottom: 1px dashed var(--line); white-space: nowrap; }\r
+th { color: var(--muted); font-weight: 600; font-size: 11.5px; letter-spacing: 0.1em; }\r
+tbody tr:last-child td { border-bottom: none; }\r
+tbody tr:hover td { background: var(--rowbg); }\r
+td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }\r
+.badge {\r
+  display: inline-block;\r
+  padding: 2px 10px;\r
+  border-radius: 999px;\r
+  border: 1.5px solid transparent;\r
+  font-size: 12px;\r
+  font-weight: 600;\r
+}\r
+.badge.active { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }\r
+.badge.expired { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }\r
+.badge.exhausted { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }\r
+.badge.kind-file { background: transparent; color: var(--stamp); border-color: var(--stamp); }\r
+.badge.kind-text { background: transparent; color: var(--muted); border-color: var(--line); }\r
+.token-input {\r
+  width: 100%;\r
+  padding: 11px 13px;\r
+  border: 1.5px solid var(--line);\r
+  border-radius: var(--radius-sm);\r
+  background: var(--paper);\r
+  color: var(--ink);\r
+  font-size: 14px;\r
+  margin: 12px 0 4px;\r
+  transition: box-shadow var(--t-fast);\r
+}\r
+.token-input:focus { outline: none; box-shadow: 3px 3px 0 var(--hard-soft); }\r
+.admin-foot { margin-top: 18px; display: flex; justify-content: flex-end; }\r
+.pager-btns { display: flex; gap: 8px; }\r
+\r
+/* ============ \u4F5C\u5E9F\u786E\u8BA4\u5F39\u7A97(\u7BA1\u7406\u9875):\u7968\u636E\u5361 + \u786C\u504F\u79FB\u6295\u5F71 ============ */\r
+.modal-mask {\r
+  position: fixed;\r
+  inset: 0;\r
+  z-index: 90;\r
+  display: flex;\r
+  align-items: center;\r
+  justify-content: center;\r
+  padding: 20px;\r
+  background: var(--mask);\r
+}\r
+.modal-mask[hidden] { display: none; }\r
+.modal-card {\r
+  background: var(--paper);\r
+  border: 2px solid var(--line);\r
+  border-radius: var(--radius);\r
+  box-shadow: 8px 8px 0 var(--hard);\r
+  padding: 22px 22px 18px;\r
+  width: min(430px, 100%);\r
+  animation: pop-in 0.18s ease-out;\r
+}\r
+.modal-title { margin: 0 0 14px; font-family: var(--serif); font-size: 19px; letter-spacing: 0.04em; }\r
+.del-target {\r
+  border: 1.5px dashed var(--line);\r
+  border-radius: var(--radius-sm);\r
+  background: var(--rowbg);\r
+  padding: 10px 14px;\r
+  margin-bottom: 12px;\r
+  display: grid;\r
+  gap: 6px;\r
+}\r
+.del-line { display: flex; gap: 10px; align-items: baseline; min-width: 0; }\r
+.del-line > :first-child { flex: 0 0 4em; font-size: 12px; letter-spacing: 0.08em; }\r
+.del-line > :last-child { min-width: 0; overflow-wrap: anywhere; }\r
+.del-warn { margin: 0 0 16px; color: var(--danger); font-size: 13px; line-height: 1.5; }\r
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; }\r
+@keyframes pop-in { from { transform: translateY(8px); opacity: 0; } }\r
+\r
+/* ============ toast:\u58A8\u6761 ============ */\r
+#toast-host {\r
+  position: fixed;\r
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));\r
+  left: 50%;\r
+  transform: translateX(-50%);\r
+  display: flex;\r
+  flex-direction: column;\r
+  gap: 8px;\r
+  z-index: 99;\r
+  pointer-events: none;\r
+}\r
+.toast {\r
+  background: var(--tkhead-bg);\r
+  color: var(--tkhead-fg);\r
+  padding: 10px 18px;\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 10px;\r
+  font-size: 14px;\r
+  box-shadow: 3px 3px 0 var(--hard);\r
+  opacity: 0;\r
+  transform: translateY(8px);\r
+  transition: opacity var(--t-med), transform var(--t-med);\r
+}\r
+.toast.show { opacity: 1; transform: translateY(0); }\r
+.toast.ok { background: var(--ok); border-color: var(--ok); color: #fff; }\r
+.toast.error { background: var(--danger); border-color: var(--danger); color: #fff; }\r
+\r
+/* ============ \u79FB\u52A8\u7AEF ============ */\r
+/* \u53CC\u680F\u5E76\u56DE\u5355\u680F:\u53F3\u680F\u56DE\u5230\u8868\u5355\u4E0B\u65B9,\u7A7A\u6001\u5360\u4F4D\u9690\u85CF */\r
+@media (max-width: 880px) {\r
+  .send-grid { grid-template-columns: 1fr; gap: 18px; }\r
+  .send-side .side-cap, .result-placeholder { display: none; }\r
+  /* \u90AE\u8DEF\u6761\u7AD6\u6392,\u8FDE\u7EBF\u8F6C\u4E3A\u5411\u4E0B\u865A\u7EBF;\u7279\u6027\u5E26\u4E24\u5217 */\r
+  .flow-strip { flex-direction: column; align-items: stretch; gap: 14px; padding: 16px 18px; }\r
+  .flow-link { flex: 0 0 0; width: 0; height: 26px; border-top: none; border-left: 2px dashed var(--line); margin: 0 0 0 22px; }\r
+  .flow-link::after { right: -6px; top: 12px; }\r
+  .feat-band { grid-template-columns: repeat(2, 1fr); margin-top: 20px; gap: 12px; }\r
+}\r
+@media (max-width: 640px) {\r
+  .options { grid-template-columns: 1fr; }\r
+  .card { padding: 18px; }\r
+  .topbar { padding: 14px 16px 8px; }\r
+  .code { gap: 6px; }\r
+  .code span { width: 42px; height: 52px; font-size: 27px; }\r
+  .otp-row { gap: 6px; }\r
+  .otp-box { width: 42px; height: 54px; font-size: 24px; }\r
+  .btn-row .btn { flex: 1; }\r
+  th, td { padding: 8px 6px; }\r
+  .row-between { flex-wrap: wrap; }\r
+  .stat-card b { font-size: 21px; }\r
+  .result-main { gap: 14px; }\r
+  .qr-wrap svg { width: 92px; height: 92px; }\r
+  .tk-tear::before, .tk-tear::after { width: 13px; height: 13px; top: -7.5px; }\r
+  .tk-tear::before { left: -20px; }\r
+  .tk-tear::after { right: -20px; }\r
+}\r
+\r
+/* ============ \u52A8\u6548 ============ */\r
+@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }\r
+@keyframes pop { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }\r
+.card { animation: fade-up var(--t-slow) var(--ease) both; }\r
+.result:not([hidden]) { animation: pop var(--t-slow) var(--ease) both; }\r
+\r
+@keyframes shake {\r
+  10%, 90% { transform: translateX(-2px); }\r
+  20%, 80% { transform: translateX(3px); }\r
+  30%, 50%, 70% { transform: translateX(-5px); }\r
+  40%, 60% { transform: translateX(5px); }\r
+}\r
+.shake { animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }\r
+\r
+/* \u952E\u76D8\u7126\u70B9\u53EF\u89C1\u6027 */\r
+.btn:focus-visible, .icon-btn:focus-visible, .tab:focus-visible,\r
+.seg button:focus-visible, a:focus-visible, .otp-box:focus-visible {\r
+  outline: 2px solid var(--stamp);\r
+  outline-offset: 2px;\r
+}\r
+\r
+/* \u53D6\u4EF6\u9875:6 \u683C\u53E3\u4EE4\u8F93\u5165(\u90AE\u6233\u683C) */\r
+.otp-row { display: flex; gap: 8px; justify-content: center; margin: 4px 0 8px; }\r
+.otp-box {\r
+  width: 46px;\r
+  height: 58px;\r
+  padding: 0;\r
+  text-align: center;\r
+  font-family: var(--serif);\r
+  font-size: 26px;\r
+  font-weight: 700;\r
+  font-variant-numeric: tabular-nums;\r
+  border: 1.5px solid var(--line);\r
+  border-radius: 9px;\r
+  background: var(--paper);\r
+  color: var(--ink);\r
+  caret-color: var(--stamp);\r
+  box-shadow: 2px 2px 0 var(--hard-soft);\r
+  transition: box-shadow var(--t-fast), border-color var(--t-fast);\r
+}\r
+.otp-box:focus { outline: none; border-color: var(--stamp); box-shadow: 3px 3px 0 var(--stamp); }\r
+\r
+/* \u8FDB\u5EA6\u6761:\u7B49\u5F85\u6001\u6D41\u5149 */\r
+@keyframes pending-slide { from { background-position: 0 0; } to { background-position: 34px 0; } }\r
+.bar > div.pending {\r
+  background-image: repeating-linear-gradient(\r
+    45deg,\r
+    rgba(255, 255, 255, 0) 0,\r
+    rgba(255, 255, 255, 0) 12px,\r
+    rgba(255, 255, 255, 0.3) 12px,\r
+    rgba(255, 255, 255, 0.3) 24px\r
+  );\r
+  background-size: 34px 34px;\r
+  animation: pending-slide 0.8s linear infinite;\r
+}\r
+\r
+.mono { font-family: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace; font-variant-numeric: tabular-nums; }\r
+\r
+/* \u52A8\u753B\u654F\u611F\u7528\u6237 */\r
+@media (prefers-reduced-motion: reduce) {\r
+  *, *::before, *::after {\r
+    animation-duration: 0.01ms !important;\r
+    animation-iteration-count: 1 !important;\r
+    transition-duration: 0.01ms !important;\r
+  }\r
+}\r
+\r
+.storage-card { padding: 14px 18px; text-align: left; min-width: 0; }\r
+.storage-card small { letter-spacing: 0; }\r
+.storage-value { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }\r
+.storage-value b { font-size: 24px; white-space: nowrap; }\r
+.storage-total { font-size: 14px; color: var(--muted); white-space: nowrap; }\r
+.storage-meter { display: block; width: 100%; height: 6px; border: 0; background: var(--track); border-radius: 4px; overflow: hidden; }\r
+.storage-meter::-webkit-meter-bar { background: var(--track); border: 0; border-radius: 4px; height: 6px; }\r
+.storage-meter::-webkit-meter-optimum-value { background: var(--stamp); border-radius: 4px; }\r
+.storage-meter::-moz-meter-bar { background: var(--stamp); border-radius: 4px; }\r
+.storage-caption { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; }\r
+@media (max-width: 1000px) {\r
+  .stats-row { grid-template-columns: minmax(0, 1fr); gap: 12px; }\r
+  .stats-counts .stat-card { min-height: 90px; }\r
+}\r
+@media (max-width: 540px) {\r
+  .stats-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }\r
+  .stats-counts .stat-card:last-child { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px; min-height: 60px; }\r
+}\r
+\r
+/* Upload source labels and private admin details. */\r
+.source-cell { min-width: 150px; max-width: 210px; white-space: normal; }\r
+.source-cell small { display: block; font-size: 11px; overflow-wrap: anywhere; }\r
+.source-link { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }\r
+.source-link:hover { color: var(--stamp); }\r
+.source-dialog { width: min(500px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow: hidden; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink); background: var(--paper); box-shadow: 0 20px 64px var(--mask); }\r
+.source-dialog[open] { display: flex; flex-direction: column; }\r
+.source-dialog::backdrop { background: var(--mask); }\r
+.source-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); }\r
+.source-heading h3 { margin: 0; font-size: 16px; }\r
+.source-heading h3:focus { outline: none; }\r
+.source-body { padding: 8px 12px; overflow: auto; min-height: 0; }\r
+#source-detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; font-size: 13px; }\r
+#source-detail:not(:has(.source-field)) { display: block; overflow-wrap: anywhere; }\r
+.source-field { min-width: 0; display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: baseline; gap: 10px; }\r
+.source-field-wide { grid-column: 1 / -1; }\r
+.source-field small { font-family: inherit; font-size: 12px; font-weight: 400; }\r
+.source-field span { overflow-wrap: anywhere; }\r
+.source-field.mono span { font-size: 12px; line-height: 1.6; }\r
+#source-form { display: grid; grid-template-columns: 80px minmax(0, 1fr); align-items: center; gap: 4px 8px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }\r
+#source-form label { font-size: 12px; color: var(--muted); }\r
+#source-note { width: 100%; min-width: 0; padding: 5px 8px; background: var(--bag); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-sm); font: inherit; font-size: 16px; }\r
+#source-note:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\r
+#source-error { grid-column: 1 / -1; margin: 4px 0 0; }\r
+.source-footer { flex-shrink: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; padding: 8px 12px; background: var(--paper); border-top: 1px solid var(--line); }\r
+.source-footer .btn { min-height: 36px; padding: 5px 12px; }\r
+@media (max-width: 420px) {\r
+  .source-heading { padding: 8px 12px; }\r
+  .source-body { padding: 8px 12px; }\r
+  .source-field, #source-form { grid-template-columns: 84px minmax(0, 1fr); column-gap: 8px; }\r
+  .source-footer { padding: 8px 12px; }\r
+  .source-footer .btn { flex: 1; min-height: 40px; }\r
+}\r
+\r
+/* Keep the type visible above the filename baseline, outside its ellipsis. */\r
+.share-filename-line { display: flex; align-items: baseline; gap: 5px; width: clamp(150px, 18vw, 220px); }\r
+.share-filename { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\r
+.share-kind.badge { flex: none; position: relative; top: -0.45em; padding: 0 4px; font-size: 10px; line-height: 1.4; }\r
+\r
+/* Phone layouts keep the primary action close to the input. */\r
+@media (max-width: 640px) {\r
+  .topbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 10px 12px; margin-bottom: 12px; }\r
+  .brand { min-width: 0; gap: 8px; }\r
+  .brand .logo { width: 34px; height: 34px; font-size: 18px; flex: none; }\r
+  .brand b { font-size: 16px; letter-spacing: 0; }\r
+  .brand small { display: block; font-size: 11px; }\r
+  .actions { gap: 2px; }\r
+  .actions .btn, .actions .icon-btn { min-height: 40px; min-width: 40px; padding: 7px 8px; }\r
+  .container { padding: 4px 12px 24px; }\r
+  .card { padding: 14px; box-shadow: 3px 3px 0 var(--hard); }\r
+  main:has(> .send-grid) { justify-content: flex-start; }\r
+  .send-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }\r
+  .flow-strip { flex-direction: row; gap: 6px; padding: 10px; margin-bottom: 12px; box-shadow: 3px 3px 0 var(--hard); }\r
+  .flow-step { flex-direction: column; gap: 3px; text-align: center; }\r
+  .flow-dot { width: 28px; height: 28px; font-size: 15px; }\r
+  .flow-tt b { font-size: 12px; letter-spacing: 0; }\r
+  .flow-tt small, .flow-link { display: none; }\r
+  .card-cap { margin: 0 0 10px; letter-spacing: 0.1em; }\r
+  .tabs { gap: 8px; margin-bottom: 12px; }\r
+  .tab { min-height: 42px; }\r
+  .dropzone { padding: 20px 12px; }\r
+  .dz-icon { font-size: 28px; margin-bottom: 4px; }\r
+  .options { gap: 12px; margin: 14px 0 0; }\r
+  .opt-group label { margin-bottom: 5px; letter-spacing: 0.04em; }\r
+  .seg { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 5px; }\r
+  .seg button { min-height: 40px; padding: 6px 4px; font-size: 12px; }\r
+  .btn.block { min-height: 44px; margin-top: 12px; }\r
+  textarea, .token-input { font-size: 16px; }\r
+  .file-row { gap: 8px; padding: 8px; }\r
+  .fr-remove { min-width: 40px; min-height: 40px; }\r
+  .fr-status { max-width: 5em; white-space: normal; overflow-wrap: anywhere; font-size: 12px; }\r
+  .feat-band { gap: 8px; margin-top: 14px; }\r
+  .feat { gap: 8px; padding: 10px; align-items: flex-start; }\r
+  .feat-ic { width: 28px; height: 28px; font-size: 14px; }\r
+  .feat > div { min-width: 0; overflow-wrap: anywhere; }\r
+  .feat b { font-size: 12px; letter-spacing: 0; }\r
+  .feat small { font-size: 11px; }\r
+  .foot { padding: 18px 12px 12px; letter-spacing: 0.06em; }\r
+  .otp-row, .code { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; width: 100%; max-width: 320px; margin-inline: auto; }\r
+  .otp-box, .code span { width: 100%; min-width: 0; height: 48px; font-size: 24px; }\r
+  .code { padding-inline: 2px; } /* Leave room for the tilted digit borders. */\r
+  .result-col { width: 100%; }\r
+  .result-batch-head { padding: 12px; gap: 8px; }\r
+  .result-batch-head .btn-row { width: 100%; flex-wrap: wrap; }\r
+  .result-batch-head .btn { min-width: 0; padding: 8px; }\r
+  .tk-head { gap: 8px; letter-spacing: 0.1em; }\r
+  .tk-body { padding: 14px 12px; }\r
+  .tk-foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; gap: 8px; }\r
+  .tk-foot .btn { min-height: 42px; padding: 8px 6px; }\r
+  .sc-meta small { overflow-wrap: anywhere; }\r
+  .modal-mask { padding: 12px; }\r
+  .modal-card { padding: 16px; max-height: calc(100dvh - 24px); overflow: auto; }\r
+  .modal-actions .btn { flex: 1; min-height: 42px; padding: 8px; }\r
+  .stats-counts { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }\r
+  .stats-counts .stat-card { grid-column: span 2; min-height: 66px; padding: 10px 6px; gap: 3px; }\r
+  .stats-counts .stat-card:nth-last-child(-n+2) { grid-column: span 3; }\r
+  .stats-counts .stat-card:last-child { flex-direction: column; }\r
+  .stat-card small { letter-spacing: 0; font-size: 11px; }\r
+  .storage-card { padding: 12px 14px; }\r
+  #admin-panel .table-wrap { overscroll-behavior-x: contain; }\r
+  #admin-panel td .btn { min-height: 40px; }\r
+  .admin-pager { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 14px; }\r
+  .admin-pager .pager-btns { display: flex; gap: 6px; }\r
+  .admin-pager .btn { min-height: 40px; padding-inline: 8px; }\r
+  .admin-pager #page-info { grid-column: 1 / -1; grid-row: 2; text-align: center; }\r
+}\r
+@media (max-width: 360px) {\r
+  .topbar .brand .logo { display: none; }\r
+  .feat { gap: 6px; padding: 8px; }\r
+}\r
+\r
+.file-detail-link { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }\r
+.file-detail-link:hover { color: var(--stamp); }\r
+.guest-settings { margin: 0 0 12px; font-size: 13px; }\r
+.guest-settings summary { cursor: pointer; padding: 4px 0; }\r
+.login-guard-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px 0; }\r
+.login-guard-heading .btn, .login-guard-row .btn { flex-shrink: 0; }\r
+.login-guard-bans { display: grid; gap: 8px; max-height: 320px; overflow: auto; }\r
+.login-guard-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px dashed var(--line); }\r
+.login-guard-info { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }\r
+@media (max-width: 540px) { #login-protection .btn { min-height: 40px; } }\r
+#guest-policy-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 10px 0; }\r
+#guest-policy-form label { display: grid; gap: 4px; }\r
+#guest-policy-form input { width: 110px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; }\r
+#guest-policy-form input:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\r
+#upload-policy-hint { display: block; margin: 0 0 8px; font-size: 12px; }\r
+.seg button:disabled { opacity: .4; cursor: not-allowed; }\r
+.file-detail-link:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\r
+.file-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }\r
+.file-wide { grid-column: 1 / -1; }\r
+.file-identity { display: grid; gap: 2px; padding-bottom: 6px; border-bottom: 1px dashed var(--line); }\r
+.file-identity strong { font-size: 14px; font-weight: 600; line-height: 1.5; }\r
+.file-field { display: grid; align-content: start; gap: 1px; min-width: 0; }\r
+.file-field-value { min-width: 0; font-variant-numeric: tabular-nums; }\r
+.file-field .badge { white-space: normal; }\r
+.file-source-link { max-width: 100%; text-align: left; overflow-wrap: anywhere; }\r
+#file-dialog .source-body { padding-top: 8px; padding-bottom: 8px; }\r
+.retention-settings { padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px dashed var(--line); }\r
+#retention-form { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; }\r
+#retention-days { width: 80px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 16px; }\r
+#retention-days:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\r
+#retention-error { margin: 8px 0; }\r
+@media (max-width: 640px) {\r
+  #retention-form .btn, #retention-days { min-height: 40px; }\r
+}\r
+\r
+/* Admin audit keeps the existing theme while separating logs from file management. */\r
+.admin-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }\r
+#admin-settings-btn svg { display: block; }\r
+.audit-card { padding: 20px; }\r
+.audit-heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; }\r
+.audit-heading h2 { margin: 0 0 4px; font-size: 19px; }\r
+.audit-actions { display: flex; gap: 8px; align-items: center; }\r
+.audit-categories { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }\r
+.audit-categories button { padding: 9px 12px; background: transparent; color: var(--muted); font: inherit; font-size: 13px; border: 0; border-bottom: 2px solid transparent; cursor: pointer; }\r
+.audit-categories button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--stamp); font-weight: bold; }\r
+.audit-categories button:focus-visible { outline: 2px solid var(--stamp); outline-offset: -2px; }\r
+.audit-filter { display: flex; align-items: end; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }\r
+.audit-filter label { display: grid; gap: 5px; font-size: 12px; min-width: 0; }\r
+.audit-filter input, .audit-filter select { min-width: 0; max-width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; font-size: 14px; height: 36px; box-sizing: border-box; }\r
+.audit-filter input:focus-visible, .audit-filter select:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }\r
+.audit-search { flex: 1; min-width: 140px !important; }\r
+.audit-table { width: 100%; font-size: 12px; }\r
+.audit-table td { padding-top: 12px; padding-bottom: 12px; vertical-align: middle; }\r
+.audit-table td small { display: block; margin-top: 3px; }\r
+.audit-table td .audit-mobile-label { display: none; }\r
+.audit-table td.audit-source, .audit-table td.audit-target { white-space: normal; min-width: 125px; max-width: 220px; overflow-wrap: anywhere; }\r
+.audit-result { display: inline-block; border-radius: 5px; padding: 2px 7px; white-space: nowrap; }\r
+.audit-success { color: #25814c; background: #53b77c22; }\r
+.audit-failed { color: #c34b3d; background: #d45e5022; }\r
+.audit-blocked { color: #bd791f; background: #dd9e3522; }\r
+[data-theme="dark"] .audit-success { color: #8cd2a9; }\r
+[data-theme="dark"] .audit-failed { color: #f09a8f; }\r
+[data-theme="dark"] .audit-blocked { color: #ebbd72; }\r
+.audit-pager { gap: 10px; margin-top: 14px; }\r
+#audit-detail .file-field { min-width: 0; overflow-wrap: anywhere; }\r
+#audit-detail .file-field:nth-child(10), #audit-detail .file-field:nth-child(11) { grid-column: 1 / -1; }\r
+@media (max-width: 600px) {\r
+  .audit-card { padding: 12px; }\r
+  .audit-heading { align-items: flex-start; flex-direction: column; gap: 10px; }\r
+  .audit-heading .audit-actions { width: 100%; }\r
+  .audit-heading .audit-actions .btn { flex: 1; }\r
+  .audit-categories { gap: 0; }\r
+  .audit-categories button { flex: 1; padding: 9px 5px; font-size: 12px; }\r
+  .audit-filter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }\r
+  .audit-filter .audit-search { min-width: 0 !important; }\r
+  .audit-filter .audit-actions { grid-column: 1 / -1; }\r
+  .audit-filter .audit-actions .btn { flex: 1; }\r
+  .audit-filter input, .audit-filter select { width: 100%; font-size: 16px; height: 40px; }\r
+  #admin-audit-view .btn, .admin-nav .btn { min-height: 40px; }\r
+  .audit-table-wrap { overflow: visible; }\r
+  .audit-table, .audit-table tbody { display: block; min-width: 0; }\r
+  .audit-table thead { display: none; }\r
+  .audit-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; padding: 12px 0; border-top: 1px dashed var(--line); }\r
+  .audit-table tbody tr:hover { background: var(--rowbg); }\r
+  .audit-table tbody tr:hover td { background: transparent; }\r
+  .audit-table td { padding: 2px 0; border: 0; min-width: 0; white-space: normal; }\r
+  .audit-table td:nth-child(1) { grid-row: 2; grid-column: 1; color: var(--muted); }\r
+  .audit-table td:nth-child(2) { grid-row: 1; grid-column: 1; }\r
+  .audit-table td:nth-child(2) small { display: none; }\r
+  .audit-table td:nth-child(3) { grid-row: 1; grid-column: 2; text-align: right; }\r
+  .audit-table td:nth-child(4) { grid-row: 4; grid-column: 1; }\r
+  .audit-table td:nth-child(5) { grid-row: 3; grid-column: 1; }\r
+  .audit-table td:nth-child(6) { grid-row: 5; grid-column: 1 / -1; }\r
+  .audit-table td:nth-child(7) { grid-row: 2 / 5; grid-column: 2; align-self: center; }\r
+  .audit-table td.audit-source, .audit-table td.audit-target { min-width: 0; max-width: none; }\r
+  .audit-table td .audit-mobile-label { display: inline; margin-right: 8px; }\r
+}\r
+/* Shared controls and compact upload context. */\r
+button, input, select, textarea { font: inherit; }\r
+.btn, .icon-btn, .seg button, .tab { min-height: 36px; }\r
+button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }\r
+.source-link, .file-detail-link { min-height: 24px; }\r
+[data-theme='dark'] .btn.danger { color: #241713; }\r
+.upload-context { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 8px; font-size: 13px; }\r
+.upload-context summary, .source-history summary, .source-agent summary { cursor: pointer; min-height: 32px; padding-block: 5px; }\r
+.context-fields { display: grid; gap: 6px; padding-top: 8px; }\r
+.context-fields label { display: block; font-weight: 500; }\r
+.context-fields input, .context-fields textarea { display: block; width: 100%; min-width: 0; margin: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); font-size: 16px; }\r
+.context-fields textarea { min-height: 76px; resize: vertical; }\r
+#upload-description-field { display: grid; gap: 6px; }\r
+#description-count { text-align: right; }\r
+.admin-settings { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }\r
+.settings-section { min-width: 0; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; }\r
+.settings-section:last-child { border-bottom: 0; }\r
+.admin-settings .retention-settings, .admin-settings .guest-settings { margin: 0; }\r
+.settings-section form { margin-block: 8px; }\r
+.settings-section .btn, .settings-section input { min-height: 36px; }\r
+.admin-list-card { padding: 14px; }\r
+.source-heading { flex-shrink: 0; }\r
+.source-ip { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }\r
+.source-ip .btn { min-height: 28px; padding: 2px 8px; font-size: 12px; }\r
+.source-agent { margin-top: 4px; }\r
+.source-agent p { margin: 4px 0; font-size: 12px; overflow-wrap: anywhere; }\r
+.source-history { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 4px; font-size: 13px; }\r
+#source-history-list { display: grid; }\r
+.source-activity { display: grid; gap: 2px; padding: 6px 0; border-bottom: 1px dashed var(--line); }\r
+.source-activity:last-child { border-bottom: 0; }\r
+.source-activity small { overflow-wrap: anywhere; }\r
+.activity-head { display: flex; align-items: baseline; gap: 8px; min-width: 0; }\r
+.activity-head > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }\r
+.activity-head .badge { flex-shrink: 0; }\r
+#source-back { margin-right: auto; }\r
+.file-description { padding-bottom: 6px; border-bottom: 1px solid var(--line); }\r
+.file-description p { margin: 4px 0 0; white-space: pre-wrap; }\r
+.delete-dialog { width: min(430px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 0; border: 0; border-radius: var(--radius); background: var(--paper); color: var(--ink); }\r
+.delete-dialog::backdrop { background: var(--mask); }\r
+.delete-dialog .modal-card { width: 100%; box-shadow: none; }\r
+@media (max-width: 760px) {\r
+  .admin-settings { grid-template-columns: minmax(0, 1fr); }\r
+}\r
+@media (max-width: 600px), (pointer: coarse) {\r
+  .btn, .btn.small, .icon-btn, .seg button, .tab, .source-footer .btn,\r
+  .settings-section .btn, .settings-section input, .source-ip .btn, .audit-filter input, .audit-filter select,\r
+  .actions .btn, .actions .icon-btn, #admin-panel td .btn, .admin-pager .btn,\r
+  #login-protection .btn, #retention-form .btn, #retention-days, #admin-audit-view .btn, .admin-nav .btn { min-height: 44px; }\r
+  .source-link, .file-detail-link { min-height: 32px; }\r
+  .source-heading h3 { font-size: 16px; }\r
+  #source-form { grid-template-columns: 84px minmax(0, 1fr); gap: 4px 8px; }\r
+  .source-footer { gap: 6px; }\r
+  .source-footer .btn { padding-inline: 8px; font-size: 13px; }\r
+  .upload-context summary, .source-history summary { min-height: 40px; padding-block: 8px; }\r
+}\r
+/* The active list pager shares the persistent admin header with the brand. */\r
+.admin-topbar { position: sticky; top: 0; z-index: 10; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; padding-block: 12px; margin-bottom: 12px; background: var(--paper); }\r
+.admin-topbar .brand { min-width: 0; }\r
+.admin-topbar .brand b { white-space: nowrap; }\r
+.admin-topbar .actions { grid-column: 3; }\r
+#admin-pagination { min-width: 0; justify-self: center; }\r
+.list-toolbar { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 12px; }\r
+.page-summary { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }\r
+.list-toolbar .pager-btns { gap: 4px; }\r
+.list-toolbar .btn { padding-inline: 8px; }\r
+.pager-icon { display: none; }\r
+.admin-list-card .table-wrap, .audit-table-wrap { scroll-margin-top: 100px; }\r
+.file-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); }\r
+.file-summary .badge { font-size: 12px; }\r
+#file-detail .file-field { grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 8px; }\r
+#file-detail .file-field > small:last-child:not(:first-child) { grid-column: 2; }\r
+.settings-dialog { width: min(540px, calc(100vw - 24px)); }\r
+.settings-dialog h4 { margin: 0 0 8px; font-size: 13px; }\r
+.settings-saved { display: block; color: var(--ok); margin-top: 4px; }\r
+.settings-dialog #btn-logout { margin-right: auto; }\r
+.display-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }\r
+.preference-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px; align-items: center; gap: 8px; margin-bottom: 6px; }\r
+.preference-row select { width: 100%; min-height: 36px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }\r
+#retention-form, #guest-policy-form { display: grid; grid-template-columns: minmax(0, 1fr) 110px auto; align-items: center; gap: 8px; margin: 0; }\r
+.setting-value { display: flex; align-items: center; gap: 6px; min-width: 0; }\r
+#retention-form .setting-value input, #guest-policy-form input { width: 80px; min-width: 0; }\r
+#guest-policy-form { margin-top: 8px; }\r
+.settings-section > .muted { display: block; margin-top: 6px; line-height: 1.5; }\r
+.settings-dialog .login-guard-heading { margin: 0; }\r
+.settings-dialog .login-guard-heading h4 { margin: 0; }\r
+@media (max-width: 900px) {\r
+  .admin-topbar { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }\r
+  .admin-topbar .actions { grid-column: 2; }\r
+  #admin-pagination { grid-column: 1 / -1; grid-row: 2; width: 100%; }\r
+  .list-toolbar { justify-content: space-between; }\r
+}\r
+@media (max-width: 600px) {\r
+  .admin-topbar { padding: 8px 12px; }\r
+  .admin-topbar .actions { gap: 2px; }\r
+  .admin-topbar .actions .icon-btn { width: 36px; padding-inline: 4px; }\r
+  .admin-topbar .actions .btn { padding-inline: 8px; }\r
+  .admin-topbar .brand b { font-size: 16px; white-space: normal; }\r
+  .list-toolbar { flex-wrap: nowrap; gap: 6px; }\r
+  .list-toolbar .pager-btns { display: flex; flex-shrink: 0; }\r
+  .list-toolbar .page-summary { min-width: 0; }\r
+  .list-toolbar .btn { width: 44px; padding-inline: 0; }\r
+  .pager-label { display: none; }\r
+  .pager-icon { display: inline; font-size: 20px; line-height: 1; }\r
+  .admin-nav { gap: 6px; }\r
+  .admin-nav .btn { padding-inline: 8px; }\r
+  .preference-row select { min-height: 44px; font-size: 16px; }\r
+  .display-options { grid-template-columns: minmax(0, 1fr); gap: 0; }\r
+  .preference-row { grid-template-columns: minmax(0, 1fr) 110px; }\r
+  #retention-form, #guest-policy-form { grid-template-columns: minmax(0, 1fr) 90px auto; gap: 6px; }\r
+  #retention-form .setting-value input, #guest-policy-form input { width: 64px; }\r
+  .settings-dialog .source-body { padding: 0 12px; }\r
+  #file-detail .file-field { grid-column: 1 / -1; grid-template-columns: 88px minmax(0, 1fr); }\r
 }\r
 ` });
 

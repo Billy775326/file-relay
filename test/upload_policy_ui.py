@@ -29,7 +29,6 @@ with sync_playwright() as p:
     expect(admin.locator('#guest-weekly')).to_have_value('5')
     expect(admin.locator('#guest-size')).to_have_count(0)
     admin.click('#admin-settings-btn')
-    admin.locator('[data-i18n="ad.guestLimits"]').click()
     admin.fill('#guest-weekly', '2')
     admin.click('#guest-save')
     expect(admin.locator('#guest-save')).to_be_enabled()
@@ -38,7 +37,6 @@ with sync_playwright() as p:
     admin.reload()
     expect(admin.locator('#guest-weekly')).to_have_value('2')
     admin.click('#admin-settings-btn')
-    admin.locator('[data-i18n="ad.guestLimits"]').click()
     page.reload()
     expect(page.locator('#upload-policy-hint')).to_contain_text('1 / 2')
     expect(page.locator('#dz-hint')).to_contain_text('9.9 GB')
@@ -91,7 +89,6 @@ with sync_playwright() as p:
     assert admin.request.get(base + '/api/admin/upload-policy').json()['weeklyFileLimit'] == 3
     admin.reload()
     admin.click('#admin-settings-btn')
-    admin.locator('[data-i18n="ad.guestLimits"]').click()
     expect(admin.locator('#guest-retry')).to_be_visible()
     expect(admin.locator('#guest-weekly')).to_be_disabled()
     admin.unroute('**/api/admin/upload-policy')

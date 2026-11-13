@@ -1,7 +1,7 @@
-import { $, api, fmtBytes, fmtDate, fmtDuration, toast, copyText, initTheme, initDialogs, el } from './common.js';
+import { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el } from './common.js';
 import { LANG, t, onLangChange, initI18n } from './i18n.js';
 import { initAudit } from './admin-audit.js';
-import { pageSize, initAdminPreferences } from './admin-preferences.js';
+import { pageSize, scrollToList, initAdminPreferences } from './admin-preferences.js';
 
 initTheme();
 initI18n();
@@ -68,6 +68,8 @@ tokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());
 function showPanel() {
   loginCard.hidden = true;
   panel.hidden = false;
+  $('#admin-pagination').hidden = false;
+  $('#admin-settings-btn').hidden = false;
   loadStats();
   loadList();
   loadSettings();
@@ -206,8 +208,8 @@ function updatePager() {
   btnPrev.disabled = listBusy || offset <= 0;
   btnNext.disabled = listBusy || offset + limit >= total;
 }
-btnPrev.addEventListener('click', () => { offset = Math.max(0, offset - limit); $('#files-pager').scrollIntoView({ block: 'start' }); loadList(); });
-btnNext.addEventListener('click', () => { offset += limit; $('#files-pager').scrollIntoView({ block: 'start' }); loadList(); });
+btnPrev.addEventListener('click', async () => { offset = Math.max(0, offset - limit); await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });
+btnNext.addEventListener('click', async () => { offset += limit; await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });
 btnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });
 window.addEventListener('admin-page-size', event => {
   if (event.detail.name !== 'files') return;
@@ -429,22 +431,6 @@ const fileDialog = $('#file-dialog');
 const fileDetail = $('#file-detail');
 const fileDownload = $('#file-download');
 let fileRequest = 0;
-function fileFormat(filename) {
-  const ext = filename?.match(/\.([a-z0-9]{1,12})$/i)?.[1]?.toLowerCase();
-  const groups = {
-    archive: ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'],
-    program: ['exe', 'msi', 'apk', 'dmg', 'deb', 'rpm'],
-    document: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'epub'],
-    image: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg', 'bmp', 'ico', 'heic', 'avif'],
-    video: ['mp4', 'mkv', 'mov', 'avi', 'webm', 'm4v'],
-    audio: ['mp3', 'wav', 'flac', 'ogg', 'm4a', 'aac'],
-    text: ['txt', 'md', 'csv', 'json', 'xml', 'html', 'js', 'ts', 'py', 'log'],
-  };
-  if (!ext) return t('ad.formatUnknown');
-  const group = Object.entries(groups).find(([, extensions]) => extensions.includes(ext))?.[0] || 'file';
-  const keys = { archive: 'ad.format.archive', program: 'ad.format.program', document: 'ad.format.document', image: 'ad.format.image', video: 'ad.format.video', audio: 'ad.format.audio', text: 'ad.format.text', file: 'ad.format.file' };
-  return `${ext.toUpperCase()} · ${t(keys[group])}`;
-}
 function fileField(label, value, secondary) {
   return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),
     el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);
@@ -461,7 +447,6 @@ async function openFileDetails(code) {
   try {
     const detail = await api(`/api/admin/shares/${code}`);
     if (request !== fileRequest || !fileDialog.open) return;
-    const now = detail.evaluatedAt ?? Date.now();
     const state = detail.storage?.state || 'unknown';
     const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };
     const source = detail.source;
@@ -469,31 +454,21 @@ async function openFileDetails(code) {
       title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }, code); },
     }, sourceLabel(source)) : t('ad.sourceUnrecorded');
     if (source) sourceButton.dataset.visitor = source.visitorId;
-    const lifetime = detail.expireAt === null ? null
-      : t(detail.expireAt > now ? 'ad.timeLeft' : 'ad.timeExpired', fmtDuration(Math.abs(detail.expireAt - now) / 1000));
-    const cleanupLabels = { permanent: 'ad.cleanupPermanent', active: 'ad.cleanupActive', retained: 'ad.cleanupRetained', pending: 'ad.cleanupPending' };
-    const cleanupLabel = t(cleanupLabels[detail.cleanupStatus] || 'ad.sourceUnknown', detail.retentionDays);
-    const technical = el('details', { class: 'file-technical file-wide' },
-      el('summary', {}, t('ad.technical')),
-      el('div', { class: 'file-technical-grid' },
-        fileField('MIME', detail.mime || t('ad.sourceUnknown')),
-        Number.isSafeInteger(detail.storage?.size) ? fileField(t('ad.storedSize'), t('ad.exactBytes', detail.storage.size.toLocaleString())) : null,
-        detail.storage?.uploadedAt != null ? fileField(t('ad.storedAt'), fmtDate(detail.storage.uploadedAt)) : null,
-      ));
     fileDetail.replaceChildren(
       el('div', { class: 'file-identity file-wide' },
-        el('strong', {}, detail.filename || t('ad.unnamed')), el('small', { class: 'muted' }, fileFormat(detail.filename))),
+        el('strong', {}, detail.filename || t('ad.unnamed')),
+        el('div', { class: 'file-summary' },
+          el('span', { title: t('ad.exactBytes', detail.size.toLocaleString()) }, fmtBytes(detail.size)),
+          el('span', { class: `badge ${detail.status}`, title: t('ad.shareState') }, t(STATUS_KEY[detail.status])),
+          state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),
       ...(detail.description ? [el('div', { class: 'file-description file-wide' },
         el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),
-      fileField(t('ad.th.size'), fmtBytes(detail.size), detail.size >= 1000 ? t('ad.exactBytes', detail.size.toLocaleString()) : null),
-      fileField(t('ad.fileAvailability'), el('span', { class: `badge ${state === 'available' ? 'active' : state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state]))),
       fileField(t('ad.source'), sourceButton),
-      fileField(t('ad.shareState'), el('span', { class: `badge ${detail.status}` }, t(STATUS_KEY[detail.status]))),
       fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '∞'}`),
       fileField(t('ad.th.created'), fmtDate(detail.createdAt)),
-      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt), lifetime),
-      fileField(t('ad.cleanupAfter'), detail.cleanupAfter === null ? t('ad.forever') : fmtDate(detail.cleanupAfter), cleanupLabel),
-      technical,
+      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)),
+      ...(detail.cleanupAfter != null ? [fileField(t('ad.cleanupAfter'), fmtDate(detail.cleanupAfter),
+        detail.cleanupStatus === 'pending' ? t('ad.cleanupPending') : null)] : []),
     );
     fileDownload.href = `/api/admin/shares/${code}/download`;
     fileDownload.download = detail.filename || 'file';

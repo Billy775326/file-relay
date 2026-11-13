@@ -11,6 +11,12 @@ for (const name of Object.keys(values)) {
 }
 export function pageSize(name) { return values[name]; }
 
+export function scrollToList(selector) {
+  const top = $(selector).getBoundingClientRect().top + window.scrollY
+    - $('.admin-topbar').getBoundingClientRect().height - 12;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+}
+
 export function initAdminPreferences() {
   const dialog = $('#settings-dialog');
   $('#admin-settings-btn').addEventListener('click', () => dialog.showModal());

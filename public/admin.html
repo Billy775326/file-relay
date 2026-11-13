@@ -16,12 +16,33 @@
 </script>
 </head>
 <body>
-<header class="topbar wide">
+<header class="topbar wide admin-topbar">
   <div class="brand">
     <span class="logo">📦</span>
     <div><b data-i18n="brand.name">文件中转站</b><small data-i18n="brand.admin">管理后台</small></div>
   </div>
+  <div id="admin-pagination" hidden>
+    <div id="files-pager" class="list-toolbar" role="group" aria-label="文件分页" data-i18n-aria="ad.filesPagination">
+        <small id="page-info" class="page-summary" role="status" aria-live="polite"></small>
+        <div class="pager-btns">
+          <button id="btn-prev" class="btn small" type="button" disabled data-i18n-aria="ad.prev" data-i18n-title="ad.prev"><span class="pager-icon" aria-hidden="true">‹</span><span class="pager-label" data-i18n="ad.prev">上一页</span></button>
+          <button id="btn-next" class="btn small" type="button" disabled data-i18n-aria="ad.next" data-i18n-title="ad.next"><span class="pager-icon" aria-hidden="true">›</span><span class="pager-label" data-i18n="ad.next">下一页</span></button>
+          <button id="btn-refresh" class="btn small ghost" type="button" data-i18n-aria="ad.refresh" data-i18n-title="ad.refresh"><span class="pager-icon" aria-hidden="true">↻</span><span class="pager-label" data-i18n="ad.refresh">↻ 刷新</span></button>
+        </div>
+      </div>
+    <div id="audit-pager" class="list-toolbar" hidden role="group" aria-label="日志分页" data-i18n-aria="ad.auditPagination">
+        <small id="audit-page" class="page-summary" role="status" aria-live="polite"></small>
+        <div class="pager-btns">
+          <button id="audit-prev" class="btn small" type="button" disabled data-i18n-aria="ad.prev" data-i18n-title="ad.prev"><span class="pager-icon" aria-hidden="true">‹</span><span class="pager-label" data-i18n="ad.prev">上一页</span></button>
+          <button id="audit-next" class="btn small" type="button" disabled data-i18n-aria="ad.next" data-i18n-title="ad.next"><span class="pager-icon" aria-hidden="true">›</span><span class="pager-label" data-i18n="ad.next">下一页</span></button>
+          <button id="audit-refresh" class="btn small ghost" type="button" data-i18n-aria="ad.refresh" data-i18n-title="ad.refresh"><span class="pager-icon" aria-hidden="true">↻</span><span class="pager-label" data-i18n="ad.refresh">↻ 刷新</span></button>
+        </div>
+      </div>
+  </div>
   <div class="actions">
+    <button id="admin-settings-btn" class="icon-btn" type="button" hidden aria-haspopup="dialog" aria-label="设置" data-i18n-aria="ad.settings" data-i18n-title="ad.settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m9 3-.6 2.4-2 .9L4 5.6 1.8 9.4l1.8 1.7v1.8l-1.8 1.7L4 18.4l2.4-.7 2 .9L9 21h6l.6-2.4 2-.9 2.4.7 2.2-3.8-1.8-1.7v-1.8l1.8-1.7L20 5.6l-2.4.7-2-.9L15 3Z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
     <button id="lang-btn" class="icon-btn lang-btn" data-i18n-title="nav.lang">EN</button>
     <button id="theme-btn" class="icon-btn" data-i18n-title="nav.theme">🌗</button>
     <a class="btn ghost small" href="/" target="_blank" rel="noopener noreferrer" data-i18n="nav.send">发送</a>
@@ -41,20 +62,11 @@
     <nav class="admin-nav" aria-label="管理页面" data-i18n-aria="audit.navigation">
       <button id="admin-files-tab" class="btn small" type="button" aria-pressed="true" data-i18n="audit.files">文件管理</button>
       <button id="admin-audit-tab" class="btn small ghost" type="button" aria-pressed="false" data-i18n="audit.title">日志审计</button>
-      <button id="admin-settings-btn" class="btn small ghost" type="button" aria-haspopup="dialog" data-i18n="ad.settings">设置</button>
     </nav>
     <p id="audit-write-warning" class="error-box" hidden role="alert" data-i18n="audit.writeFailed">操作已处理，但审计记录未保存，请检查日志存储。</p>
     <div id="admin-files-view">
     <div class="stats-row" id="stats-row"></div>
     <div class="card admin-list-card">
-      <div id="files-pager" class="list-toolbar" role="group" aria-label="文件分页" data-i18n-aria="ad.filesPagination">
-        <small id="page-info" class="page-summary" role="status" aria-live="polite"></small>
-        <div class="pager-btns">
-          <button id="btn-prev" class="btn small" type="button" disabled data-i18n="ad.prev">上一页</button>
-          <button id="btn-next" class="btn small" type="button" disabled data-i18n="ad.next">下一页</button>
-          <button id="btn-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">↻ 刷新</button>
-        </div>
-      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -86,14 +98,6 @@
         <label class="audit-search"><span data-i18n="audit.keyword">IP / 操作对象</span><input id="audit-q" type="search" maxlength="80" placeholder="搜索 IP 或取件码" data-i18n-ph="audit.search"></label>
         <div class="audit-actions"><button class="btn small primary" type="submit" data-i18n="audit.filter">筛选</button><button id="audit-reset" class="btn small ghost" type="button" data-i18n="audit.reset">重置</button></div>
       </form>
-      <div id="audit-pager" class="list-toolbar" role="group" aria-label="日志分页" data-i18n-aria="ad.auditPagination">
-        <small id="audit-page" class="page-summary" role="status" aria-live="polite"></small>
-        <div class="pager-btns">
-          <button id="audit-prev" class="btn small" type="button" disabled data-i18n="ad.prev">上一页</button>
-          <button id="audit-next" class="btn small" type="button" disabled data-i18n="ad.next">下一页</button>
-          <button id="audit-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">↻ 刷新</button>
-        </div>
-      </div>
       <p id="audit-error" class="error-box" role="alert" hidden></p>
       <p id="audit-state" class="muted" role="status"></p>
       <div class="table-wrap audit-table-wrap"><table class="audit-table">
@@ -127,7 +131,6 @@
     <form id="source-form" hidden>
       <label for="source-note" data-i18n="ad.sourceNote">管理员备注</label>
       <input id="source-note" type="text" maxlength="64" autocomplete="off">
-      <small class="muted note-privileges" data-i18n="ad.notePrivileges">备注将授予上传豁免；清空恢复限制。</small>
       <p class="error-box" id="source-error" hidden role="alert"></p>
     </form>
     <details id="source-history" class="source-history" hidden>
@@ -167,44 +170,44 @@
 <div class="admin-settings">
       <section class="settings-section display-settings" aria-labelledby="display-title">
         <h4 id="display-title" data-i18n="ad.displaySettings">列表显示</h4>
+        <div class="display-options">
         <div class="preference-row"><label for="files-page-size" data-i18n="ad.filesPageSize">文件每页条数</label><select id="files-page-size"><option value="10">10</option><option value="20">20</option><option value="40">40</option></select></div>
         <div class="preference-row"><label for="audit-page-size" data-i18n="ad.auditPageSize">日志每页条数</label><select id="audit-page-size"><option value="20">20</option><option value="50">50</option><option value="100">100</option></select></div>
+        </div>
         <small class="muted" data-i18n="ad.browserSettings">立即生效，仅保存在当前浏览器</small>
         <p id="preferences-error" class="error-box" role="alert" data-i18n="ad.preferenceNotSaved" hidden></p>
       </section>
 
-      <details class="settings-section retention-settings" open>
-        <summary data-i18n="ad.retentionTitle">自动清理</summary>
+      <section class="settings-section share-settings" aria-labelledby="share-settings-title">
+        <h4 id="share-settings-title" data-i18n="ad.shareSettings">分享规则</h4>
         <form id="retention-form">
           <label for="retention-days" data-i18n="ad.retentionDays">过期后保留</label>
-          <input id="retention-days" type="number" min="0" max="3650" step="1" required disabled>
-          <span data-i18n="ad.days">天</span>
+          <div class="setting-value"><input id="retention-days" type="number" min="0" max="3650" step="1" required disabled>
+          <span data-i18n="ad.days">天</span></div>
           <button id="retention-save" class="btn small" type="submit" disabled data-i18n="ad.save">保存</button>
         </form>
         <p id="retention-error" class="error-box" hidden role="alert"></p>
         <small id="retention-status" class="settings-saved" role="status" data-i18n="ad.settingsSaved" hidden></small>
         <button id="retention-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">重试</button>
-      </details>
-      <details class="settings-section guest-settings">
-        <summary data-i18n="ad.guestLimits">未备注访客限制</summary>
+
         <form id="guest-policy-form">
-          <label><span data-i18n="ad.weeklyFiles">每周文件数</span><input id="guest-weekly" type="number" min="0" max="1000" step="1" required disabled></label>
+          <label for="guest-weekly" data-i18n="ad.guestWeeklyFiles">未备注访客每周文件数</label><div class="setting-value"><input id="guest-weekly" type="number" min="0" max="1000" step="1" required disabled></div>
           <button id="guest-save" class="btn small" type="submit" disabled data-i18n="ad.save">保存</button>
         </form>
         <small class="muted" data-i18n="ad.guestRules">北京时间周一重置；已接纳上传计次，取消不退回。未备注访客不能永久分享或不限次取件。</small>
         <p id="guest-error" class="error-box" hidden role="alert"></p>
         <small id="guest-status" class="settings-saved" role="status" data-i18n="ad.guestSaved" hidden></small>
         <button id="guest-retry" class="btn small ghost" type="button" hidden data-i18n="ad.retry">重试</button>
-      </details>
-      <details class="settings-section guest-settings" id="login-protection">
-        <summary data-i18n="ad.loginProtection">登录防护</summary>
+      </section>
+      <section class="settings-section guest-settings" id="login-protection" aria-labelledby="guard-title">
         <div class="login-guard-heading">
-          <small class="muted" id="login-guard-status" role="status"></small>
+          <h4 id="guard-title" data-i18n="ad.loginProtection">登录防护</h4>
           <button id="login-guard-refresh" class="btn small ghost" type="button" data-i18n="ad.refresh">↻ 刷新</button>
         </div>
+        <small class="muted" id="login-guard-status" role="status"></small>
         <p id="login-guard-error" class="error-box" hidden role="alert"></p>
         <div id="login-guard-bans" class="login-guard-bans"></div>
-      </details>
+      </section>
     </div>
   </div>
   <div class="source-footer">

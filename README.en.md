@@ -108,7 +108,7 @@ The bucket threshold is **not an environment variable**. It is `R2_CAPACITY_MAX`
 
 ## Cleanup
 
-Public pickup stops at expiry. Shares are then retained for **30 days** by default before becoming eligible for cleanup. Change the retention period under Settings → Automatic cleanup; permanent shares and exhausted pickup limits alone do not trigger cleanup. Click a filename to view details and download a retained file. See the [admin guide](docs/admin.md) for settings and API behavior.
+Public pickup stops at expiry. Shares are then retained for **30 days** by default before becoming eligible for cleanup. Change the retention period under Settings → Sharing rules; permanent shares and exhausted pickup limits alone do not trigger cleanup. Click a filename to view details and download a retained file. See the [admin guide](docs/admin.md) for settings and API behavior.
 
 - **Standalone Workers:** configure Cron Trigger `0 */6 * * *` in the dashboard.
 - **Pages:** homepage visits trigger background cleanup, with an approximate six-hour KV throttle. This is not a strict distributed lock. D1 deployments without KV have no such throttle marker.
