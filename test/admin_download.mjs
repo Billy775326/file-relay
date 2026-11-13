@@ -21,11 +21,12 @@ for (const [metadata, backend] of [['kv', 'kv'], ['kv', 'r2'], ['d1', 'r2']]) {
     if (db) for (const sql of schema) await db.prepare(sql).run();
     const base = { kind: 'file', filename, size: bytes.length, mime: 'application/octet-stream',
       text: null, pickupCount: 0, maxPickups: 1, createdAt: Date.now(), expireAt: null };
+    const source = { visitorId: crypto.randomUUID(), ip: '203.0.113.42', country: 'CN', region: 'Zhejiang', city: 'Hangzhou', capturedAt: Date.now() };
     const records = [
-      { ...base, code: '100001' },
-      { ...base, code: '100002', pickupCount: 1 },
+      { ...base, code: '100001', source },
+      { ...base, code: '100002', pickupCount: 1, expireAt: Date.now() + 2 * 86400000 },
       { ...base, code: '100003', expireAt: Date.now() - 1000 },
-      { ...base, code: '100004' }, // Object missing.
+      { ...base, code: '100004', expireAt: Date.now() - 31 * 86400000 }, // Object missing.
       { ...base, code: '100005', kind: 'text', text: 'hello', size: 5 },
       { ...base, code: '100006' }, // Storage key missing.
     ].map(r => ({ ...r, id: crypto.randomUUID(), r2Key: ['100005', '100006'].includes(r.code) ? null : (backend === 'kv' ? 'f:' : '') + r.code }));
@@ -38,9 +39,11 @@ for (const [metadata, backend] of [['kv', 'kv'], ['kv', 'r2'], ['d1', 'r2']]) {
         id: r.id, k: r.kind, n: Buffer.from(filename).toString('base64'), s: r.size,
         t: r.createdAt, e: r.expireAt, c: r.pickupCount, m: r.maxPickups, r: r.r2Key, p: null,
       } });
-      else await db.prepare('INSERT INTO shares (id,code,kind,filename,size,mime,r2_key,text,max_pickups,pickup_count,created_at,expire_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
-        .bind(r.id,r.code,r.kind,r.filename,r.size,r.mime,r.r2Key,r.text,r.maxPickups,r.pickupCount,r.createdAt,r.expireAt).run();
+      else await db.prepare('INSERT INTO shares (id,code,kind,filename,size,mime,r2_key,text,max_pickups,pickup_count,created_at,expire_at,source_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+        .bind(r.id,r.code,r.kind,r.filename,r.size,r.mime,r.r2Key,r.text,r.maxPickups,r.pickupCount,r.createdAt,r.expireAt,r.source ? JSON.stringify(r.source) : null).run();
     }
+    if (kv) await kv.put('v:' + source.visitorId, '示例好友');
+    else await db.prepare('INSERT INTO visitor_notes (visitor_id,note) VALUES (?,?)').bind(source.visitorId, '示例好友').run();
     const record = async code => kv ? await kv.get('s:' + code, 'json') : await db.prepare('SELECT * FROM shares WHERE code=?').bind(code).first();
     const url = code => `/api/admin/shares/${code}/download`;
     for (const opts of [{}, { headers: { Cookie: 'admin=0.invalid' } }, { headers: { Authorization: 'Bearer download-test-only' } }]) {
@@ -57,9 +60,31 @@ for (const [metadata, backend] of [['kv', 'kv'], ['kv', 'r2'], ['d1', 'r2']]) {
     assert.equal(detail.filename, filename);
     assert.equal(detail.cleanupAfter, null);
     assert.equal(detail.downloadUrl, url('100001'));
-    assert.ok(!('r2Key' in detail) && !('source' in detail));
+    assert.ok(!('r2Key' in detail) && !('ip' in detail.source));
+    assert.equal(detail.source.note, '示例好友');
+    assert.equal(detail.source.city, 'Hangzhou');
+    assert.equal(detail.storage.state, 'available');
+    assert.equal(detail.storage.size, bucket ? bytes.length : null);
+    assert.equal(detail.cleanupStatus, 'permanent');
+    assert.ok(detail.evaluatedAt >= records[0].createdAt);
+    if (bucket) assert.ok(detail.storage.uploadedAt > 0);
+    for (const [code, state, cleanup] of [['100002','available','active'],['100004','missing','pending'],['100006','missing','permanent']]) {
+      const info = await (await call('/api/admin/shares/' + code, { headers: { Cookie: cookie } })).json();
+      assert.equal(info.storage.state, state);
+      assert.equal(info.cleanupStatus, cleanup);
+      assert.equal(info.source, null);
+    }
     const expiredDetail = await (await call('/api/admin/shares/100003', { headers: { Cookie: cookie } })).json();
+    assert.equal(expiredDetail.cleanupStatus, 'retained');
+    assert.equal(expiredDetail.retentionDays, 30);
+    assert.equal(expiredDetail.storage.state, 'available');
     assert.equal(expiredDetail.cleanupAfter, records[2].expireAt + 30 * 86400000);
+    await call('/api/admin/settings', { method: 'PUT', headers: { Cookie: cookie, 'Content-Type': 'application/json' }, body: JSON.stringify({ expiredRetentionDays: 0 }) });
+    const updatedExpiry = await (await call('/api/admin/shares/100003', { headers: { Cookie: cookie } })).json();
+    assert.equal(updatedExpiry.cleanupStatus, 'pending');
+    assert.equal(updatedExpiry.cleanupAfter, records[2].expireAt);
+    assert.equal(updatedExpiry.storage.state, 'available'); // Reading details does not clean a file.
+    await call('/api/admin/settings', { method: 'PUT', headers: { Cookie: cookie, 'Content-Type': 'application/json' }, body: JSON.stringify({ expiredRetentionDays: 30 }) });
     for (const [code, status] of [['bad',400],['999999',404],['100005',400]]) {
       assert.equal((await call(`/api/admin/shares/${code}`, { headers: { Cookie: cookie } })).status, status);
     }

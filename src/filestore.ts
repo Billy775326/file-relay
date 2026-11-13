@@ -50,6 +50,35 @@ export async function readFileStream(env: Env, key: string): Promise<ReadableStr
   return obj?.body ?? null;
 }
 
+export interface FileStorageInfo {
+  state: 'available' | 'missing' | 'unknown';
+  size: number | null;
+  uploadedAt: number | null;
+}
+
+/** Inspect on demand without buffering a file or treating an outage as deletion. */
+export async function inspectFile(env: Env, key: string | null): Promise<FileStorageInfo> {
+  const unknown: FileStorageInfo = { state: 'unknown', size: null, uploadedAt: null };
+  const missing: FileStorageInfo = { state: 'missing', size: null, uploadedAt: null };
+  if (!key) return missing;
+  try {
+    if (isKvFileKey(key)) {
+      if (!env.fileKV) return unknown;
+      // KV has no HEAD operation. Cancel the stream without reading its body.
+      const stream = await env.fileKV.get(key, 'stream');
+      if (!stream) return missing;
+      await stream.cancel();
+      return { state: 'available', size: null, uploadedAt: null };
+    }
+    if (!env.BUCKET) return unknown;
+    const object = await env.BUCKET.head(key);
+    return object ? { state: 'available', size: object.size, uploadedAt: object.uploaded.getTime() } : missing;
+  } catch {
+    console.warn('File metadata check unavailable');
+    return unknown;
+  }
+}
+
 /** 删文件:按键前缀路由;后端未绑定时静默跳过(仅元数据删除) */
 export async function deleteFile(env: Env, key: string | null): Promise<void> {
   if (!key) return;

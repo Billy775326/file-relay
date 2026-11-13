@@ -1,3 +1,4 @@
+import json
 import hashlib
 import sys
 from pathlib import Path
@@ -32,6 +33,12 @@ with sync_playwright() as p:
                 name.click()
                 expect(link).to_be_visible()
                 assert filename in page.locator('#file-detail').inner_text()
+                expect(page.locator('.file-source-link')).to_have_text('示例好友')
+                assert 'Hangzhou' in page.locator('#file-detail').inner_text()
+                assert '203.0.113.42' not in page.locator('#file-detail').inner_text()
+                assert 'TXT' in page.locator('.file-identity').inner_text()
+                page.locator('.file-technical summary').click()
+                assert 'application/octet-stream' in page.locator('.file-technical').inner_text()
                 assert page.locator('#file-dialog').evaluate('(e)=>e.scrollWidth<=e.clientWidth')
                 if lang == 'zh' and theme == 'dark' and width in [390, 1135]:
                     page.screenshot(path=f'.wrangler/file-details-{width}.png', animations='disabled')
@@ -50,6 +57,37 @@ with sync_playwright() as p:
                 row.locator('button.btn.danger').click()
                 expect(page.locator('#del-mask')).to_be_visible()
                 page.click('#del-cancel')
+    # Reuse the source dialog, including safe note edits and private IP access there.
+    name.click()
+    page.locator('.file-source-link').click()
+    expect(page.locator('#file-dialog')).not_to_be_visible()
+    expect(page.locator('#source-dialog')).to_be_visible()
+    expect(page.locator('#source-detail')).to_contain_text('203.0.113.42')
+    updated_note = 'Updated fixture <img src=x>'
+    page.fill('#source-note', updated_note)
+    page.click('#source-save')
+    expect(page.locator('#source-dialog')).not_to_be_visible()
+    name.click()
+    expect(page.locator('.file-source-link')).to_have_text(updated_note)
+    expect(page.locator('#file-detail img')).to_have_count(0)
+    page.click('#file-close')
+    for code, text, downloadable in [('100004', 'Awaiting cleanup', False), ('100003', 'Retained after expiry', True), ('100002', 'Kept for 30 days after expiry', True)]:
+        page.locator('#shares-body tr').filter(has=page.locator('td.mono', has_text=code)).locator('.file-detail-link').click()
+        expect(page.locator('#file-detail')).to_contain_text(text)
+        if downloadable: expect(link).to_be_visible()
+        else:
+            expect(link).not_to_be_visible()
+            expect(page.locator('#file-detail')).to_contain_text('File missing')
+        page.click('#file-close')
+    unknown = page.request.get(base + '/api/admin/shares/100001').json()
+    unknown['storage'] = {'state': 'unknown', 'size': None, 'uploadedAt': None}
+    page.route('**/api/admin/shares/100001', lambda route: route.fulfill(content_type='application/json', body=json.dumps(unknown)))
+    name.click()
+    expect(page.locator('#file-detail')).to_contain_text('Unable to verify')
+    expect(link).to_have_text('Try download')
+    expect(link).to_be_visible()
+    page.click('#file-close')
+    page.unroute('**/api/admin/shares/100001')
     # Closing a loading dialog must discard late details and the download link.
     pending = []
     page.route('**/api/admin/shares/100001', lambda route: pending.append(route))

@@ -6,7 +6,7 @@
   "scripts": {
     "test:upload-policy": "node test/upload_policy.mjs",
     "test:retention": "node test/retention.mjs",
-    "test:admin-download": "node test/admin_download.mjs",
+    "test:admin-download": "node test/file_storage_info.mjs && node test/admin_download.mjs",
     "test:source": "node test/upload_source.mjs",
     "test:limits": "node test/upload_limits.mjs",
     "test:quota": "node test/quota.mjs",

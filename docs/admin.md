@@ -1,8 +1,12 @@
 # 后台文件管理
 
-登录后台后，点击内容栏的文件名打开详情弹窗。弹窗显示完整文件名、大小、类型、取件次数、创建时间、过期时间及最早清理时间，并提供下载按钮。文本分享不显示文件详情入口。
+登录后台后，点击内容栏的文件名打开详情弹窗。弹窗采用两列布局，显示完整文件名、格式、大小、文件与分享状态、上传者及属地、取件次数、创建时间、剩余有效期与清理安排，并提供下载按钮。点击上传者进入来源弹窗查看 IP 或编辑备注。MIME、可用的存储大小和入库时间放在“技术信息”折叠区。文本分享不显示文件详情入口。
 
 管理员下载不增加取件次数；过期或次数用完的文件，只要仍在存储中就能下载。文件被删除后无法恢复。公开取件仍按原有有效期和次数限制执行。
+
+文件状态在打开详情时检查：R2 只读取对象元数据，KV 获取流后立即取消，不将整个文件缓冲到内存。文件不存在时隐藏下载入口；存储服务异常或后端未绑定时显示“暂时无法确认”，仍可尝试下载。检查结果是当时状态，不保证文件在后续操作前不会被删除。
+
+文件格式按扩展名归类，不代表内容校验；未提取软件版本、媒体时长或原文件修改时间。剩余有效期根据接口返回的服务器时间计算，是打开弹窗时的快照；“最早清理”不是精确删除时间。
 
 ## 未备注访客限制
 
@@ -54,7 +58,13 @@ Workers 的 Cron、Pages 首页触发和外部定时调用共用此规则。Page
 | `GET /api/admin/shares/:code` | 六位口令；返回文件详情，不增加取件次数 |
 | `GET /api/admin/shares/:code/download` | 返回文件流及附件文件名；不增加取件次数 |
 
-文件详情包含 `code`、`filename`、`size`（字节）、`mime`、`createdAt`、`expireAt`、`cleanupAfter`、`pickupCount`、`maxPickups`、`status` 和 `downloadUrl`。时间使用 Unix 毫秒；永久分享的 `expireAt`、`cleanupAfter` 为 `null`，不限次时 `maxPickups` 为 `null`。详情不包含完整 IP 或内部文件存储键。
+文件详情包含 `code`、`filename`、`size`（字节）、`mime`、`createdAt`、`expireAt`、`cleanupAfter`、`pickupCount`、`maxPickups`、`status` 和 `downloadUrl`，另含 `evaluatedAt`（检查时间）、`retentionDays`、`cleanupStatus`、`storage` 与 `source`。时间使用 Unix 毫秒；永久分享的 `expireAt`、`cleanupAfter` 为 `null`，不限次时 `maxPickups` 为 `null`。详情不包含完整 IP 或内部文件存储键。
+
+- `cleanupStatus`：`permanent` 不自动清理、`active` 未过期、`retained` 过期保留中、`pending` 已达到清理时间。它与文件是否实际存在分别显示。
+- `storage`：`state` 为 `available`、`missing` 或 `unknown`；R2 对象存在时附 `size`（字节）和 `uploadedAt`（入库时间），KV 或无法取得时相应值为 `null`。存储检查失败仍返回详情，不能将 `unknown` 当作删除。
+- `source`：无来源的旧记录为 `null`，否则包含访客标识、国家、地区、城市、记录时间和管理员备注。完整 IP 仍仅由来源详情接口提供。
+
+本次扩充不增加数据库字段，也不修改已有分享或取件计数。
 
 未登录返回 401；非法口令、天数或非文件记录返回 400；记录不存在返回 404；下载时文件已清理返回 410。设置接口的非 JSON 请求返回 415，跨来源请求返回 403。降低保留天数可能使旧记录进入下一次清理范围。
 

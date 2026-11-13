@@ -4,7 +4,8 @@ import type { Context } from 'hono';
 import type { Env } from './types';
 import { err, contentDisposition } from './util';
 import { getStore, shareStatusOf } from './store';
-import { deleteFile, readFileStream } from './filestore';
+import { deleteFile, readFileStream, inspectFile } from './filestore';
+import { sourceSummary } from './upload-source';
 import { runCleanup } from './cleanup';
 import { getCapacityUsage } from './quota';
 import { getRetentionDays, setRetentionDays, validRetentionDays, RETENTION_DAY_MS } from './settings';
@@ -180,15 +181,24 @@ adminRoutes.get('/shares', async (c) => {
 adminRoutes.get('/shares/:code', async (c) => {
   const code = c.req.param('code');
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
-  const record = await getStore(c.env).getByCode(code);
+  const store = getStore(c.env);
+  const record = await store.getByCode(code);
   if (!record) return err(c, 404, 'not_found', '分享不存在');
   if (record.kind !== 'file') return err(c, 400, 'bad_request', '此分享不是文件');
-  const days = await getRetentionDays(c.env);
+  const [days, storage, note] = await Promise.all([
+    getRetentionDays(c.env), inspectFile(c.env, record.r2Key),
+    record.source ? store.getVisitorNote(record.source.visitorId) : Promise.resolve(''),
+  ]);
+  const evaluatedAt = Date.now();
+  const cleanupAfter = record.expireAt === null ? null : record.expireAt + days * RETENTION_DAY_MS;
+  const cleanupStatus = cleanupAfter === null ? 'permanent' : record.expireAt! > evaluatedAt ? 'active'
+    : cleanupAfter > evaluatedAt ? 'retained' : 'pending';
   return c.json({ code, filename: record.filename, size: record.size, mime: record.mime,
     createdAt: record.createdAt, expireAt: record.expireAt,
-    cleanupAfter: record.expireAt === null ? null : record.expireAt + days * RETENTION_DAY_MS,
+    cleanupAfter, cleanupStatus, retentionDays: days, evaluatedAt, storage,
+    source: record.source ? { ...sourceSummary(record.source), note } : null,
     pickupCount: record.pickupCount, maxPickups: record.maxPickups,
-    status: shareStatusOf(record.expireAt, record.maxPickups, record.pickupCount, Date.now()),
+    status: shareStatusOf(record.expireAt, record.maxPickups, record.pickupCount, evaluatedAt),
     downloadUrl: `/api/admin/shares/${code}/download`,
   });
 });
