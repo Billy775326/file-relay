@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:login-protection": "node test/login_protection.mjs",
     "test:upload-policy": "node test/upload_policy.mjs",
     "test:retention": "node test/retention.mjs",
     "test:admin-download": "node test/file_storage_info.mjs && node test/admin_download.mjs",

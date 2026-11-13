@@ -10,6 +10,7 @@ import { runCleanup } from './cleanup';
 import { getCapacityUsage } from './quota';
 import { getRetentionDays, setRetentionDays, validRetentionDays, RETENTION_DAY_MS } from './settings';
 import { getGuestLimits, setGuestLimits, validGuestLimits } from './upload-policy';
+import { checkLogin, recordLogin, loginIP, loginProtectionStatus, unblockLogin } from './login-protection';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
 
@@ -77,8 +78,14 @@ adminRoutes.use('*', async (c, next) => {
   // cleanup 双通道:外部定时器/脚本带 Bearer token(Pages 无 Cron Triggers 的补偿),或管理页 cookie
   if (c.req.method === 'POST' && c.req.path === '/api/admin/cleanup') {
     const bearer = c.req.header('Authorization');
-    if (bearer?.startsWith('Bearer ') && (await safeEqual(bearer.slice(7), c.env.ADMIN_TOKEN || ''))) {
-      return next();
+    if (bearer?.startsWith('Bearer ')) {
+      if (!c.env.ADMIN_TOKEN) return c.json({ error: 'config', message: '管理员令牌未配置' }, 503);
+      const ip = loginIP(c);
+      await checkLogin(c.env, ip);
+      const valid = await safeEqual(bearer.slice(7), c.env.ADMIN_TOKEN);
+      await recordLogin(c.env, ip, valid);
+      if (valid) return next();
+      return err(c, 401, 'unauthorized', '令牌无效');
     }
   }
   if (!(await isValidCookie(c.env, getCookie(c, 'admin')))) {
@@ -88,11 +95,18 @@ adminRoutes.use('*', async (c, next) => {
 });
 
 adminRoutes.post('/login', async (c) => {
+  if (!c.env.ADMIN_TOKEN) return c.json({ error: 'config', message: '管理员令牌未配置' }, 503);
+  const origin = c.req.header('Origin');
+  if (origin && origin !== new URL(c.req.url).origin) return c.json({ error: 'forbidden', message: '请求来源不匹配' }, 403);
+  const ip = loginIP(c);
+  await checkLogin(c.env, ip);
   const body = (await c.req.json().catch(() => null)) as { token?: unknown } | null;
   const token = body?.token;
   if (typeof token !== 'string' || !(await safeEqual(token, c.env.ADMIN_TOKEN || ''))) {
+    await recordLogin(c.env, ip, false);
     return err(c, 401, 'unauthorized', '令牌无效');
   }
+  await recordLogin(c.env, ip, true);
   // 生产恒为 HTTPS;本地 http://localhost 下 Chrome/FF 仍接受 Secure cookie
   const secure = c.req.url.startsWith('https');
   setCookie(c, 'admin', await makeCookieValue(c.env), {
@@ -107,6 +121,18 @@ adminRoutes.post('/login', async (c) => {
 
 adminRoutes.post('/logout', (c) => {
   deleteCookie(c, 'admin', { path: '/' });
+  return c.json({ ok: true });
+});
+
+/** Bans affect new logins only; existing authenticated sessions can inspect and unblock. */
+adminRoutes.get('/login-protection', async c => c.json(await loginProtectionStatus(c.env)));
+adminRoutes.post('/login-protection/unblock', async c => {
+  const origin = c.req.header('Origin');
+  if (origin && origin !== new URL(c.req.url).origin) return c.json({ error: 'forbidden', message: '请求来源不匹配' }, 403);
+  if (!c.req.header('Content-Type')?.startsWith('application/json')) return c.json({ error: 'bad_request', message: '请使用 JSON' }, 415);
+  const body = await c.req.json().catch(() => null) as { ip?: unknown } | null;
+  if (typeof body?.ip !== 'string' || !/^(unknown|[0-9a-f:.]{3,45})$/.test(body.ip)) return err(c, 400, 'bad_request', 'IP 格式无效');
+  await unblockLogin(c.env, body.ip);
   return c.json({ ok: true });
 });
 
@@ -129,8 +155,8 @@ adminRoutes.put('/upload-policy', async c => {
   if (origin && origin !== new URL(c.req.url).origin) return c.json({ error: 'forbidden', message: '请求来源不匹配' }, 403);
   if (!c.req.header('Content-Type')?.startsWith('application/json')) return c.json({ error: 'bad_request', message: '请使用 JSON' }, 415);
   const body: unknown = await c.req.json().catch(() => null);
-  if (!validGuestLimits(body)) return err(c, 400, 'bad_request', '周次数应为 0–1000，单文件大小应为 1–9900 MB 的整数');
-  const limits = { weeklyFileLimit: body.weeklyFileLimit, maxFileSizeMB: body.maxFileSizeMB };
+  if (!validGuestLimits(body)) return err(c, 400, 'bad_request', '周次数应为 0–1000 的整数');
+  const limits = { weeklyFileLimit: body.weeklyFileLimit };
   await setGuestLimits(c.env, limits);
   return c.json(limits);
 });

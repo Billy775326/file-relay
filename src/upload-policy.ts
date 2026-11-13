@@ -11,23 +11,23 @@ export const USAGE_KEY = '__file-relay/guest-uploads-v1.json';
 const WEEK = 7 * 86_400_000;
 const SHANGHAI_OFFSET = 8 * 3_600_000;
 const MAX_SUBJECTS = 10_000;
-export interface GuestLimits { weeklyFileLimit: number; maxFileSizeMB: number }
-export const DEFAULT_GUEST_LIMITS: GuestLimits = { weeklyFileLimit: 5, maxFileSizeMB: 100 };
+export interface GuestLimits { weeklyFileLimit: number }
+export const DEFAULT_GUEST_LIMITS: GuestLimits = { weeklyFileLimit: 5 };
 export function validGuestLimits(value: unknown): value is GuestLimits {
   const v = value as GuestLimits | null;
-  return !!v && Number.isInteger(v.weeklyFileLimit) && v.weeklyFileLimit >= 0 && v.weeklyFileLimit <= 1000 &&
-    Number.isInteger(v.maxFileSizeMB) && v.maxFileSizeMB >= 1 && v.maxFileSizeMB <= 9900;
+  return !!v && Number.isInteger(v.weeklyFileLimit) && v.weeklyFileLimit >= 0 && v.weeklyFileLimit <= 1000;
 }
 export async function getGuestLimits(env: Env): Promise<GuestLimits> {
   const raw = await readSetting(env, SETTINGS_KEY);
   if (raw === null) return { ...DEFAULT_GUEST_LIMITS };
   const limits: unknown = JSON.parse(raw);
   if (!validGuestLimits(limits)) throw new Error('Invalid guest upload policy');
-  return limits;
+  // Ignore the retired size field in existing settings; preserve weekly quotas.
+  return { weeklyFileLimit: limits.weeklyFileLimit };
 }
 export async function setGuestLimits(env: Env, limits: GuestLimits): Promise<void> {
   if (!validGuestLimits(limits)) throw new Error('Invalid guest upload policy');
-  await writeSetting(env, SETTINGS_KEY, JSON.stringify(limits));
+  await writeSetting(env, SETTINGS_KEY, JSON.stringify({ weeklyFileLimit: limits.weeklyFileLimit }));
 }
 
 export class UploadPolicyError extends Error {
@@ -125,7 +125,7 @@ export async function uploadAccess(c: Context<{ Bindings: Env }>) {
   const source = await captureSource(c);
   const noted = !!(await getStore(c.env).getVisitorNote(source.visitorId)).trim();
   const limits = await getGuestLimits(c.env);
-  return { source, noted, limits, maxFileSize: Math.min(fileMaxSize(c.env), noted ? Infinity : limits.maxFileSizeMB * 1_000_000) };
+  return { source, noted, limits, maxFileSize: fileMaxSize(c.env) };
 }
 export type UploadAccess = Awaited<ReturnType<typeof uploadAccess>>;
 

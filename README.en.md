@@ -15,10 +15,11 @@ Designed for the **Cloudflare Free plan**. KV stores text and small files from n
 - File and text sharing through pickup codes, links and QR codes.
 - Select up to 10 files, upload sequentially and receive a separate code for each; progress, speed and retries included.
 - Expiry options: 1, 7 or 30 days. Noted visitors can also create permanent or unlimited-pickup shares.
-- Unnoted visitors default to five file-upload attempts per week and 100 MB per file, editable in the admin page.
+- Unnoted visitors default to five file-upload attempts per week, editable in the admin page.
 - Direct KV uploads; multipart uploads with cancellation when R2 is bound.
 - A capacity alert stops the upload batch when R2 space is insufficient.
 - Token-protected admin page with statistics, file details and downloads, deletion and an optional custom entry path.
+- R2/D1 deployments automatically block repeated failed admin logins; the admin page lists blocked IPs and supports unblocking.
 - Expiry cleanup, Chinese and English UI, dark mode and mobile layouts.
 
 ## Deploy
@@ -58,7 +59,7 @@ All applicable limits are enforced together. **MB / GB are decimal; MiB / GiB ar
 | R2 part count | Default maximum 10,000 | Also constrained by `PART_SIZE` and `MAX_PARTS` |
 | R2 capacity protection | Fixed 9.99 GB = 9,990,000,000 bytes | Objects, upload reservations and ledger in the bound bucket |
 
-Noted visitors default to 9.9 GB per file. Unnoted visitors default to 100 MB per file and five accepted file-upload attempts per week, subject to storage limits. Quotas reset Monday at 00:00 Asia/Shanghai; cancellation does not refund attempts. Available bucket capacity is also checked. See the [admin guide](docs/admin.md).
+All visitors share the global file-size limit: 9.9 GB by default with R2, or 25 MiB with KV. Unnoted visitors default to five accepted file-upload attempts per week. Quotas reset Monday at 00:00 Asia/Shanghai; cancellation does not refund attempts. Available bucket capacity is also checked. See the [admin guide](docs/admin.md).
 
 The upload path is browser → Worker → R2. R2's native single-request limit is not the limit of this Worker path. S3 presigned direct uploads are not implemented.
 

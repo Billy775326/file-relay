@@ -9,10 +9,11 @@ import { fileMode } from './filestore';
 import { uploadPartSize } from './limits';
 import { publicUploadPolicy, policyErrorResponse } from './upload-policy';
 import { serveAsset } from './asset-resolver';
+import { loginProtectionResponse } from './login-protection';
 
 const app = new Hono<{ Bindings: Env }>();
 app.onError((error, c) => {
-  const rejection = policyErrorResponse(c, error);
+  const rejection = policyErrorResponse(c, error) ?? loginProtectionResponse(c, error);
   if (rejection) return rejection;
   console.error('Request failed', error);
   return c.json({ error: 'internal', message: '服务暂不可用，请稍后重试' }, 500);

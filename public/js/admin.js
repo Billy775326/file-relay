@@ -26,6 +26,7 @@ onLangChange(() => {
   if (!panel.hidden) {
     loadStats();
     loadList();
+    loadLoginProtection();
   }
 });
 
@@ -42,15 +43,17 @@ onLangChange(() => {
 
 async function login() {
   const token = tokenInput.value.trim();
-  if (!token) return;
+  if (!token || $('#btn-login').disabled) return;
+  $('#btn-login').disabled = true;
   loginError.hidden = true;
   try {
     await api('/api/admin/login', { method: 'POST', body: { token } });
     showPanel();
   } catch (e) {
-    loginError.textContent = e.message || t('ad.badToken');
+    loginError.textContent = e.code === 'login_blocked' ? t('ad.loginBlocked')
+      : e.code === 'login_protection_unavailable' ? t('ad.guardUnavailable') : e.message || t('ad.badToken');
     loginError.hidden = false;
-  }
+  } finally { $('#btn-login').disabled = false; }
 }
 $('#btn-login').addEventListener('click', login);
 tokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());
@@ -62,6 +65,7 @@ function showPanel() {
   loadList();
   loadSettings();
   loadGuestPolicy();
+  loadLoginProtection();
 }
 
 $('#btn-logout').addEventListener('click', async () => {
@@ -457,11 +461,10 @@ $('#retention-form').addEventListener('submit', async e => {
 });
 
 const guestWeekly = $('#guest-weekly');
-const guestSize = $('#guest-size');
 const guestSave = $('#guest-save');
 const guestError = $('#guest-error');
 function guestBusy(busy) {
-  for (const control of [guestWeekly, guestSize, guestSave]) control.disabled = busy;
+  for (const control of [guestWeekly, guestSave]) control.disabled = busy;
 }
 async function loadGuestPolicy() {
   guestBusy(true);
@@ -469,10 +472,8 @@ async function loadGuestPolicy() {
   $('#guest-retry').hidden = true;
   try {
     const policy = await api('/api/admin/upload-policy');
-    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000 ||
-        !Number.isInteger(policy.maxFileSizeMB) || policy.maxFileSizeMB < 1 || policy.maxFileSizeMB > 9900) throw new Error(t('ad.loadFail'));
+    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000) throw new Error(t('ad.loadFail'));
     guestWeekly.value = policy.weeklyFileLimit;
-    guestSize.value = policy.maxFileSizeMB;
     guestBusy(false);
   } catch (error) {
     guestError.textContent = error.message || t('ad.loadFail');
@@ -484,7 +485,7 @@ $('#guest-retry').addEventListener('click', loadGuestPolicy);
 $('#guest-policy-form').addEventListener('submit', async e => {
   e.preventDefault();
   if (guestSave.disabled || !e.target.reportValidity()) return;
-  const body = { weeklyFileLimit: Number(guestWeekly.value), maxFileSizeMB: Number(guestSize.value) };
+  const body = { weeklyFileLimit: Number(guestWeekly.value) };
   guestBusy(true);
   guestError.hidden = true;
   try {
@@ -495,3 +496,50 @@ $('#guest-policy-form').addEventListener('submit', async e => {
     guestError.hidden = false;
   } finally { guestBusy(false); }
 });
+
+let guardRequest = 0;
+async function loadLoginProtection() {
+  const request = ++guardRequest;
+  const refresh = $('#login-guard-refresh');
+  const error = $('#login-guard-error');
+  refresh.disabled = true;
+  error.hidden = true;
+  $('#login-guard-bans').replaceChildren();
+  $('#login-guard-status').textContent = '';
+  try {
+    const data = await api('/api/admin/login-protection');
+    if (request !== guardRequest) return;
+    if (typeof data.enabled !== 'boolean' || !Array.isArray(data.bans) ||
+        ![data.maxFailures, data.windowSeconds, data.banSeconds].every(n => Number.isInteger(n) && n > 0)) throw new Error(t('ad.loadFail'));
+    $('#login-guard-status').textContent = data.enabled
+      ? t('ad.guardRule', data.windowSeconds / 60, data.maxFailures, data.banSeconds / 60) : t('ad.guardDisabled');
+    if (!data.enabled) return;
+    if (!data.bans.length) $('#login-guard-bans').append(el('small', { class: 'muted' }, t('ad.guardEmpty')));
+    for (const ban of data.bans) {
+      const button = el('button', { class: 'btn small ghost', type: 'button' }, t('ad.guardUnblock'));
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        error.hidden = true;
+        try {
+          await api('/api/admin/login-protection/unblock', { method: 'POST', body: { ip: ban.ip } });
+          toast(t('ad.guardUnblocked'), 'ok');
+          await loadLoginProtection();
+        } catch (e) {
+          error.textContent = e.message || t('ad.loadFail');
+          error.hidden = false;
+          button.disabled = false;
+        }
+      });
+      $('#login-guard-bans').append(el('div', { class: 'login-guard-row' },
+        el('div', { class: 'login-guard-info' },
+          el('b', {}, ban.ip === 'unknown' ? t('ad.guardUnknown') : ban.ip),
+          el('small', { class: 'muted' }, t('ad.guardFailures', ban.failures) + ' · ' + t('ad.guardUntil', fmtDate(ban.bannedUntil))),
+          el('small', { class: 'muted' }, t('ad.guardLast', fmtDate(ban.lastFailedAt)))), button));
+    }
+  } catch (e) {
+    if (request !== guardRequest) return;
+    error.textContent = e.message || t('ad.loadFail');
+    error.hidden = false;
+  } finally { if (request === guardRequest) refresh.disabled = false; }
+}
+$('#login-guard-refresh').addEventListener('click', loadLoginProtection);

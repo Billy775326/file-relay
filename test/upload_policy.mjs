@@ -39,11 +39,17 @@ for (const mode of ['kv-r2', 'd1-r2', 'kv-d1', 'kv-only', 'd1-only']) {
     assert.equal((await call('/api/admin/upload-policy')).status, 401);
     assert.equal((await settings({ weeklyFileLimit: 0, maxFileSizeMB: 1 }, { cookie: '' })).status, 401);
     assert.equal((await settings({ weeklyFileLimit: 1.5, maxFileSizeMB: 100 })).status, 400);
-    assert.equal((await settings({ weeklyFileLimit: 1, maxFileSizeMB: 0 })).status, 400);
+    assert.equal((await settings({ weeklyFileLimit: -1 })).status, 400);
     assert.equal((await settings({ weeklyFileLimit: 1, maxFileSizeMB: 100 }, { headers: { Origin: 'https://other.test' } })).status, 403);
+    const legacy = JSON.stringify({ weeklyFileLimit: 5, maxFileSizeMB: 100 });
+    if (kv) await kv.put('sys:guest-upload-policy', legacy);
+    else {
+      await db.prepare('CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)').run();
+      await db.prepare('INSERT INTO app_settings (key,value) VALUES (?,?)').bind('sys:guest-upload-policy', legacy).run();
+    }
     const initial = await config(visitor);
     assert.equal(initial.allowPermanent, false); assert.equal(initial.allowUnlimited, false);
-    assert.equal(initial.maxFileSize, hasR2 ? 100_000_000 : hasKV ? 25 * 1024 ** 2 : 0);
+    assert.equal(initial.maxFileSize, hasR2 ? 9_900_000_000 : hasKV ? 25 * 1024 ** 2 : 0);
     assert.equal(initial.weeklyFileLimit, 5);
     const text = await call('/api/shares/text', { method: 'POST', cookie: visitor, json: { text: 'source fixture', expiry: '1d', maxPickups: 5 } });
     assert.equal(text.status, 201); const code = (await text.json()).code;
@@ -71,7 +77,11 @@ for (const mode of ['kv-r2', 'd1-r2', 'kv-d1', 'kv-only', 'd1-only']) {
     }
     assert.equal(initial.uploadsRemaining, 5);
     if (hasR2) {
-      assert.equal((await upload(visitor, undefined, { size: 100_000_001 })).status, 413);
+      const largeVisitor = await newVisitor();
+      const large = await upload(largeVisitor, '203.0.113.55', { size: 100_000_001 });
+      assert.equal(large.status, 200, await large.clone().text());
+      await call(`/api/uploads/${(await large.json()).uploadId}/abort`, { method: 'POST', cookie: largeVisitor });
+      assert.equal((await upload(visitor, undefined, { size: 9_900_000_001 })).status, 413);
       assert.equal((await upload(visitor, undefined, { expiry: 'forever' })).status, 403);
       assert.equal((await upload(visitor, undefined, { maxPickups: null })).status, 403);
       assert.equal((await config(visitor)).uploadsRemaining, 5);
@@ -128,9 +138,9 @@ for (const mode of ['kv-r2', 'd1-r2', 'kv-d1', 'kv-only', 'd1-only']) {
     assert.equal((await upload()).status, 429);
     await settings({ weeklyFileLimit: 6, maxFileSizeMB: 1 });
     assert.equal((await config(visitor)).uploadsRemaining, 1);
-    assert.equal((await config(visitor)).maxFileSize, 1_000_000);
+    assert.equal((await config(visitor)).maxFileSize, hasR2 ? 9_900_000_000 : 25 * 1024 ** 2, 'retired size setting has no effect');
     if (!hasR2) {
-      const tooBig = await call('/api/shares/file?filename=x&expiry=1d&maxPickups=5', { method: 'POST', cookie: visitor, body: new Uint8Array(1_000_001) });
+      const tooBig = await call('/api/shares/file?filename=x&expiry=1d&maxPickups=5', { method: 'POST', cookie: visitor, body: new Uint8Array(25 * 1024 ** 2 + 1) });
       assert.equal(tooBig.status, 413);
     }
     await settings({ weeklyFileLimit: 0, maxFileSizeMB: 1 });

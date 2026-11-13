@@ -8,6 +8,19 @@
 
 const DICT = {
   zh: {
+    'ad.loginProtection': "登录防护",
+    'ad.guardRule': "{0} 分钟内失败 {1} 次，封禁登录 {2} 分钟",
+    'ad.guardDisabled': "未启用：需绑定 R2 或 D1",
+    'ad.guardEmpty': "当前没有封禁 IP",
+    'ad.guardUnknown': "未知来源（共用限制）",
+    'ad.guardFailures': "失败 {0} 次",
+    'ad.guardUntil': "解封于 {0}",
+    'ad.guardLast': "最近失败 {0}",
+    'ad.guardUnblock': "解封",
+    'ad.guardUnblocked': "已解封",
+    'ad.loginBlocked': "登录失败次数过多，请等待封禁到期后重试",
+    'ad.guardUnavailable': "登录防护暂不可用，请稍后重试",
+
     'ad.formatUnknown': "格式未知",
     'ad.format.archive': "压缩包",
     'ad.format.program': "应用程序",
@@ -37,7 +50,6 @@ const DICT = {
     'ad.tryDownload': "尝试下载",
     'ad.guestLimits': "未备注访客限制",
     'ad.weeklyFiles': "每周文件数",
-    'ad.guestSize': "单文件上限（MB）",
     'ad.guestRules': "北京时间周一重置；已接纳上传计次，取消不退回。未备注访客不能永久分享或不限次取件。",
     'ad.notePrivileges': "备注后免除访客上传限制，并允许永久、不限次分享；清空备注恢复限制。",
     'ad.guestSaved': "已保存，将用于后续上传",
@@ -237,6 +249,19 @@ const DICT = {
   },
 
   en: {
+    'ad.loginProtection': "Login protection",
+    'ad.guardRule': "{1} failures in {0} minutes block login for {2} minutes",
+    'ad.guardDisabled': "Not enabled: bind R2 or D1",
+    'ad.guardEmpty': "No blocked IPs",
+    'ad.guardUnknown': "Unknown source (shared limit)",
+    'ad.guardFailures': "{0} failures",
+    'ad.guardUntil': "Unblocks at {0}",
+    'ad.guardLast': "Last failure {0}",
+    'ad.guardUnblock': "Unblock",
+    'ad.guardUnblocked': "IP unblocked",
+    'ad.loginBlocked': "Too many failed logins. Wait until the block expires.",
+    'ad.guardUnavailable': "Login protection unavailable. Please try again later.",
+
     'ad.formatUnknown': "Unknown format",
     'ad.format.archive': "Archive",
     'ad.format.program': "Application",
@@ -266,7 +291,6 @@ const DICT = {
     'ad.tryDownload': "Try download",
     'ad.guestLimits': "Unnoted visitor limits",
     'ad.weeklyFiles': "Files per week",
-    'ad.guestSize': "Max file size (MB)",
     'ad.guestRules': "Resets Monday, Beijing time. Accepted uploads count even if cancelled. Unnoted visitors cannot create permanent or unlimited-pickup shares.",
     'ad.notePrivileges': "A note grants unrestricted guest uploads and permanent/unlimited-pickup shares. Clear it to restore restrictions.",
     'ad.guestSaved': "Saved for subsequent uploads",
