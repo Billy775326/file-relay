@@ -153,7 +153,13 @@ async function loadList() {
           el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),
           el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),
           el('td', {}, fmtDate(r.created_at)),
-          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),
+          el('td', {}, el('div', { class: 'admin-row-actions' },
+            r.kind === 'file' ? el('a', {
+              class: 'btn small', href: `/api/admin/shares/${r.code}/download`,
+              download: r.filename || 'file', target: '_blank', rel: 'noopener noreferrer',
+              title: `${t('ad.download')} ${content}`,
+            }, t('ad.download')) : null,
+            el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete')))),
         ),
       );
     }

@@ -17,7 +17,7 @@ Designed for the **Cloudflare Free plan**. The default deployment needs one KV n
 - Expiry options: 1, 7 or 30 days, or forever. The UI offers 1, 5 or unlimited pickups.
 - Direct KV uploads; multipart uploads with cancellation when R2 is bound.
 - A capacity alert stops the upload batch when R2 space is insufficient.
-- Token-protected admin page with statistics, share lists, deletion and an optional custom entry path.
+- Token-protected admin page with statistics, direct file downloads, deletion and an optional custom entry path.
 - Expiry cleanup, Chinese and English UI, dark mode and mobile layouts.
 
 ## Deploy
@@ -158,6 +158,7 @@ python -m pip install playwright
 python -m playwright install chromium
 npm run test:quota-runtime
 npm run test:source
+npm run test:admin-download
 ```
 
 The quota runtime test starts a local emulator using the build output. It covers admission, upload/download, cancellation, deletion and the browser alert without Cloudflare credentials.
@@ -189,6 +190,7 @@ These tests create shares and files. The R2 API test uses a file larger than one
 | POST | `/api/uploads/:id/abort` | Cancel and release reclaimable reservations |
 | POST | `/api/admin/login`, `/api/admin/logout` | Manage admin session |
 | GET | `/api/admin/stats`, `/api/admin/shares` | Share statistics and list; R2 capacity includes bucket objects and upload reservations |
+| GET | `/api/admin/shares/:code/download` | Admin file download without counting pickups; retained expired files are allowed |
 | DELETE | `/api/admin/shares/:code` | Delete share and file |
 | POST | `/api/admin/cleanup` | Clean expired shares and stale upload sessions |
 

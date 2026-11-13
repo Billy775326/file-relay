@@ -2,9 +2,9 @@ import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import type { Context } from 'hono';
 import type { Env } from './types';
-import { err } from './util';
+import { err, contentDisposition } from './util';
 import { getStore, shareStatusOf } from './store';
-import { deleteFile } from './filestore';
+import { deleteFile, readFileStream } from './filestore';
 import { runCleanup } from './cleanup';
 import { getCapacityUsage } from './quota';
 
@@ -146,6 +146,25 @@ adminRoutes.get('/shares', async (c) => {
       text_preview: r.textPreview,
       source: r.source ? { ...r.source, note: notes.get(r.source.visitorId) ?? '' } : null,
     })),
+  });
+});
+
+/** Admin downloads read retained files without consuming public pickup limits. */
+adminRoutes.get('/shares/:code/download', async (c) => {
+  const code = c.req.param('code');
+  if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
+  const record = await getStore(c.env).getByCode(code);
+  if (!record) return err(c, 404, 'not_found', '分享不存在');
+  if (record.kind !== 'file') return err(c, 400, 'bad_request', '此分享不是文件');
+  if (!record.r2Key) return err(c, 410, 'gone', '文件已被清理');
+  const body = await readFileStream(c.env, record.r2Key);
+  if (!body) return err(c, 410, 'gone', '文件已被清理');
+  return c.body(body, 200, {
+    'Content-Type': record.mime || 'application/octet-stream',
+    'Content-Length': String(record.size),
+    'Content-Disposition': contentDisposition(record.filename || 'file'),
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
   });
 });
 

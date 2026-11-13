@@ -17,7 +17,7 @@
 - 有效期支持 1 天、7 天、30 天或永久；页面可选取件 1 次、5 次或不限。
 - KV 文件直传；绑定 R2 后自动改为分片上传，支持取消。
 - R2 容量不足时弹出“容量超出免费额度”，停止后续批量上传。
-- 管理后台支持令牌登录、统计、分享列表与删除，可自定义入口。
+- 管理后台支持令牌登录、统计、文件直接下载与删除，可自定义入口。
 - 自动清理过期分享，中英文界面、深色模式和移动端适配。
 
 ## 快速部署
@@ -158,6 +158,7 @@ python -m pip install playwright
 python -m playwright install chromium
 npm run test:quota-runtime
 npm run test:source
+npm run test:admin-download
 ```
 
 `test:quota-runtime` 使用构建产物启动本地模拟环境，验证容量拦截、上传下载、取消删除及浏览器弹窗，不需要 Cloudflare 凭据。
@@ -189,6 +190,7 @@ python test/ui_smoke.py http://localhost:8787
 | POST | `/api/uploads/:id/abort` | 取消上传并释放可回收的预留 |
 | POST | `/api/admin/login`、`/api/admin/logout` | 管理会话登录、退出 |
 | GET | `/api/admin/stats`、`/api/admin/shares` | 分享统计与列表；R2 容量包含桶内对象与上传预留 |
+| GET | `/api/admin/shares/:code/download` | 管理员下载文件，不消耗取件次数；支持尚未清理的过期文件 |
 | DELETE | `/api/admin/shares/:code` | 删除分享及对应文件 |
 | POST | `/api/admin/cleanup` | 清理过期分享和遗留上传会话 |
 
