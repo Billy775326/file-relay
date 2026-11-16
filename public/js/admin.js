@@ -280,9 +280,9 @@ let activeSource = null;
 let sourceReturnCode = null;
 let sourceHistoryLoaded = false;
 
-function sourceField(label, value, className = '') {
+function sourceField(label, value, className = '', hint = '') {
   return el('div', { class: `source-field ${className}` },
-    el('small', { class: 'muted' }, label), el('span', {}, value));
+    el('small', { class: 'muted', ...(hint ? { title: hint } : {}) }, label), el('span', {}, value));
 }
 function browserLabel(ua) {
   if (!ua) return t('ad.sourceUnrecorded');
@@ -342,10 +342,10 @@ async function openSource(row, returnCode = null) {
       sourceField(t('ad.sourceLocation'), locationLabel(source)),
       ...(source.asn || source.organization ? [sourceField(t('ad.network'),
         [source.organization, source.asn ? `AS${source.asn}` : null].filter(Boolean).join(' · '))] : []),
-      sourceField(t('ad.browserReported'), browserLabel(source.userAgent)),
+      sourceField(t('ad.browserReported'), browserLabel(source.userAgent), '', t('ad.browserHint')),
       sourceField(t('ad.sourceTime'), fmtDate(source.capturedAt)),
       ...(source.userAgent ? [el('div', { class: 'source-agent source-field-wide' }, el('small', { class: 'muted' }, 'User-Agent'),
-        el('p', { class: 'mono' }, source.userAgent))] : []),
+        el('p', { class: 'mono', title: source.userAgent, tabIndex: 0 }, source.userAgent))] : []),
     );
     $('#source-history').hidden = false;
     sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';

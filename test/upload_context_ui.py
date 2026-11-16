@@ -76,6 +76,13 @@ with sync_playwright() as p:
                 expect(page.locator('#source-detail')).to_contain_text('同事 <img src=x>')
                 expect(page.locator('#source-detail img')).to_have_count(0)
                 assert description not in page.locator('#source-detail').inner_text()
+                agent = page.locator('.source-agent p')
+                assert agent.get_attribute('title') == agent.inner_text()
+                assert agent.get_attribute('tabindex') == '0'
+                agent.focus()
+                assert agent.evaluate('(e)=>getComputedStyle(e).whiteSpace') == 'normal'
+                page.locator('#source-note').focus()
+                assert agent.evaluate('(e)=>getComputedStyle(e).whiteSpace') == 'nowrap'
                 page.locator('.source-activity').first.wait_for()
                 assert page.locator('#source-dialog').evaluate('(e)=>e.scrollWidth<=e.clientWidth')
                 # Native modal focus never escapes to the page underneath.

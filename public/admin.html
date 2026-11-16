@@ -126,9 +126,9 @@
   </div>
   <div class="source-body">
     <form id="source-form" hidden>
-      <label for="source-note" data-i18n="ad.sourceNote">管理员备注</label>
-      <input id="source-note" type="text" maxlength="64" autocomplete="off">
-      <button id="source-save" class="btn small" type="submit" hidden data-i18n="ad.sourceSave">保存备注</button>
+      <label for="source-note" data-i18n="ad.noteShort" data-i18n-title="ad.sourceNote">备注</label>
+      <input id="source-note" type="text" maxlength="64" autocomplete="off" data-i18n-aria="ad.sourceNote" aria-label="管理员备注">
+      <button id="source-save" class="btn small" type="submit" hidden data-i18n="ad.save">保存</button>
       <p class="error-box" id="source-error" hidden role="alert"></p>
     </form>
     <div id="source-detail" aria-live="polite"></div>

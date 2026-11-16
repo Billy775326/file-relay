@@ -49,6 +49,9 @@ with sync_playwright() as p:
             page.set_viewport_size({'width': width, 'height': 900})
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             assert page.locator('#source-dialog').evaluate('(el) => el.scrollWidth <= el.clientWidth')
+            field, save = page.locator('#source-note').bounding_box(), page.locator('#source-save').bounding_box()
+            assert abs(field['y'] + field['height']/2 - save['y'] - save['height']/2) < 2
+            assert page.locator('#source-form').bounding_box()['width'] <= 380
             page.screenshot(path=f'.wrangler/source-{theme}-{width}.png', full_page=True, animations='disabled')
     page.fill('#source-note', '')
     page.click('#source-save')
@@ -70,6 +73,6 @@ with sync_playwright() as p:
     page.wait_for_function("document.querySelector('[data-i18n=\"ad.source\"]').textContent === 'Upload source'")
     buttons.first.click()
     page.locator('#source-form').wait_for(state='visible')
-    assert page.locator('#source-save').inner_text() == 'Save note'
+    assert page.locator('#source-save').inner_text() == 'Save'
     browser.close()
 print('PASS source UI: city, private IP, visitor notes, clearing, safe text, failure, dialog and responsive themes')

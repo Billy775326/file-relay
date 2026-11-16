@@ -1113,7 +1113,12 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
 #file-dialog, #source-dialog { width: min(720px, calc(100vw - 24px)); }
 #source-detail { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; }
 #source-detail .source-field { grid-template-columns: 82px minmax(0, 1fr); gap: 8px; }
-#source-form { grid-template-columns: auto minmax(0, 1fr) auto; border: 0; margin: 0 0 14px; padding: 0; }
+#source-form { grid-template-columns: auto minmax(0, 1fr) auto; max-width: 380px; border: 0; margin: 0 0 10px; padding: 0; }
+#source-form label { white-space: nowrap; }
+#source-note { font-size: 14px; }
+.source-agent { position: relative; min-height: 24px; display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.source-agent p { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.source-agent p:focus { position: absolute; left: 90px; right: 0; top: 0; z-index: 2; white-space: normal; background: var(--paper); outline: 2px solid var(--stamp); outline-offset: 2px; }
 #source-history h4 { margin: 4px 0; font-size: 13px; }
 .file-preview { border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
 .file-preview-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 8px 10px; background: var(--rowbg); font-size: 13px; }
@@ -1125,9 +1130,13 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
 .file-preview-table td { padding: 5px 8px; border-bottom: 1px solid var(--line); min-width: 100px; max-width: 240px; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 600px) {
   #source-detail { grid-template-columns: minmax(0, 1fr); }
-  #source-form { grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
-  #source-form label { grid-column: 1 / -1; }
+  #source-form { gap: 6px; }
+  #source-note { font-size: 16px; }
   #source-save { min-height: 44px; }
+}
+@media (pointer: coarse) {
+  .source-agent p { white-space: normal; }
+  .source-agent p:focus { position: static; }
 }
 /* Primary navigation belongs in the header; paging stays with its list. */
 .admin-topbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 24px; padding-block: 12px; margin-bottom: 12px; background: var(--paper); }
