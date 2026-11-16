@@ -17,7 +17,7 @@ with sync_playwright() as p:
     assert page.locator('#shares-body').inner_text().find('203.0.113.10') == -1
     buttons.first.click()
     page.locator('#source-form').wait_for(state='visible')
-    assert visitor in page.locator('#source-detail').inner_text()
+    assert page.locator('#source-visitor-id').inner_text() == visitor
     assert 'IP' in page.locator('#source-detail').inner_text()
     page.locator('.source-activity').first.wait_for()
     assert page.locator('.source-activity').count() <= 10
@@ -42,7 +42,7 @@ with sync_playwright() as p:
     buttons.first.click()
     page.locator('#source-form').wait_for(state='visible')
     assert page.input_value('#source-note') == note
-    assert visitor in page.locator('#source-detail').inner_text()
+    assert page.locator('#source-visitor-id').inner_text() == visitor
     for theme in ['light', 'dark']:
         page.evaluate('(t) => document.documentElement.dataset.theme = t', theme)
         for width in [1280, 390, 320]:
@@ -52,6 +52,13 @@ with sync_playwright() as p:
             field, save = page.locator('#source-note').bounding_box(), page.locator('#source-save').bounding_box()
             assert abs(field['y'] + field['height']/2 - save['y'] - save['height']/2) < 2
             assert page.locator('#source-form').bounding_box()['width'] <= 380
+            identity = page.locator('.source-visitor').bounding_box()
+            form = page.locator('#source-form').bounding_box()
+            if width > 600:
+                assert abs(identity['y']-form['y']) < 2
+                assert identity['x']+identity['width'] < form['x']
+            else:
+                assert identity['y']+identity['height'] <= form['y']
             page.screenshot(path=f'.wrangler/source-{theme}-{width}.png', full_page=True, animations='disabled')
     page.fill('#source-note', '')
     page.click('#source-save')
@@ -68,6 +75,7 @@ with sync_playwright() as p:
     page.keyboard.press('Escape')
     page.locator('#source-dialog').wait_for(state='hidden')
     assert page.locator('#source-detail').inner_text() == ''
+    assert page.locator('#source-visitor-id').inner_text() == ''
     page.unroute('**/api/admin/shares/*/source')
     page.click('#lang-btn')
     page.wait_for_function("document.querySelector('[data-i18n=\"ad.source\"]').textContent === 'Upload source'")

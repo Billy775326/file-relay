@@ -322,6 +322,8 @@ async function openSource(row, returnCode = null) {
   $('#source-history-list').replaceChildren();
   sourceHistoryLoaded = false;
   sourceForm.hidden = true;
+  $('#source-identity').hidden = true;
+  $('#source-visitor-id').textContent = '';
   sourceError.hidden = true;
   sourceSave.disabled = false;
   sourceSave.hidden = true;
@@ -333,11 +335,11 @@ async function openSource(row, returnCode = null) {
     if (request !== sourceRequest || !sourceDialog.open) return;
     if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }
     activeSource = { code: row.code, visitorId: source.visitorId };
+    $('#source-visitor-id').textContent = source.visitorId;
     const ip = el('span', { class: 'source-ip' }, source.ip || t('ad.sourceUnknown'));
     if (source.ip) ip.append(el('button', { class: 'btn small ghost', type: 'button',
       onclick: async () => toast(t(await copyText(source.ip) ? 'ad.ipCopied' : 'ad.copyFailed')) }, t('ad.copyIP')));
     $('#source-detail').replaceChildren(
-      sourceField(t('ad.visitorId'), source.visitorId, 'mono'),
       ...(source.displayName ? [sourceField(t('ad.submittedName'), source.displayName)] : []),
       sourceField(t('ad.requestIP'), ip),
       sourceField(t('ad.sourceLocation'), locationLabel(source)),
@@ -351,6 +353,7 @@ async function openSource(row, returnCode = null) {
     $('#source-history').hidden = false;
     sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';
     sourceForm.hidden = false;
+    $('#source-identity').hidden = false;
     sourceSave.hidden = false;
     loadSourceHistory();
   } catch (e) {
@@ -365,6 +368,8 @@ function closeSource() {
   $('#source-history-list').replaceChildren();
   $('#source-back').hidden = true;
   sourceNote.value = '';
+  $('#source-identity').hidden = true;
+  $('#source-visitor-id').textContent = '';
   sourceForm.hidden = true;
   sourceSave.hidden = true;
   $('#source-context').textContent = '';

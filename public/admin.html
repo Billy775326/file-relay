@@ -126,12 +126,18 @@
     <small id="source-context" class="muted mono"></small>
   </div>
   <div class="source-body">
-    <form id="source-form" hidden>
-      <label for="source-note" data-i18n="ad.noteShort" data-i18n-title="ad.sourceNote">备注</label>
-      <input id="source-note" type="text" maxlength="64" autocomplete="off" data-i18n-aria="ad.sourceNote" aria-label="管理员备注">
-      <button id="source-save" class="btn small" type="submit" hidden data-i18n="ad.save">保存</button>
-      <p class="error-box" id="source-error" hidden role="alert"></p>
-    </form>
+    <div id="source-identity" hidden>
+      <div class="source-visitor">
+        <small class="muted" data-i18n="ad.visitorId">访客标识</small>
+        <span id="source-visitor-id" class="mono"></span>
+      </div>
+      <form id="source-form" hidden>
+        <label for="source-note" data-i18n="ad.noteShort" data-i18n-title="ad.sourceNote">备注</label>
+        <input id="source-note" type="text" maxlength="64" autocomplete="off" data-i18n-aria="ad.sourceNote" aria-label="管理员备注">
+        <button id="source-save" class="btn small" type="submit" hidden data-i18n="ad.save">保存</button>
+        <p class="error-box" id="source-error" hidden role="alert"></p>
+      </form>
+    </div>
     <div id="source-detail" aria-live="polite"></div>
     <section id="source-history" class="source-history" hidden>
       <h4 data-i18n="ad.recentUploads">近期上传</h4>
