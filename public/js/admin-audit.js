@@ -12,6 +12,14 @@ export function initAudit() {
   const action = row => t(`audit.action.${row.action}`);
   const actor = row => t(`audit.actor.${row.actor}`);
   const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;
+  function shareRules(value) {
+    try {
+      const rules = JSON.parse(value);
+      if (!Number.isSafeInteger(rules?.pickupCount) || !(rules.maxPickups === null || Number.isSafeInteger(rules.maxPickups)) ||
+          !(rules.expireAt === null || Number.isSafeInteger(rules.expireAt))) return String(value);
+      return `${t('ad.th.pickups')} ${rules.pickupCount} / ${rules.maxPickups ?? '∞'} · ${t('ad.th.expire')} ${rules.expireAt === null ? t('ad.forever') : fmtDate(rules.expireAt)}`;
+    } catch { return String(value); } // Older/external records may not contain a rule snapshot.
+  }
   function place(row) {
     let country = row.country;
     if (/^[A-Z]{2}$/.test(country)) country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);
@@ -28,7 +36,7 @@ export function initAudit() {
       [t('audit.agent'), row.agent || '—'],
     ];
     for (const [key, value] of Object.entries(row.detail)) {
-      fields.push([t(`audit.detail.${key}`), key === 'bannedUntil' ? fmtDate(value)
+      fields.push([t(`audit.detail.${key}`), ['beforeRules','afterRules'].includes(key) ? shareRules(value) : key === 'bannedUntil' ? fmtDate(value)
         : typeof value === 'boolean' ? t(value ? 'audit.yes' : 'audit.no') : String(value)]);
     }
     if (row.action === 'download') fields.push([t('audit.description'), t('audit.downloadHint')]);

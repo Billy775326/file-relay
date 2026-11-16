@@ -145,6 +145,16 @@ export function createD1Store(db: D1Database): ShareStore {
       return r ? toRec(r) : null;
     },
 
+    async updateRules(code, expected, rules, cleanupCutoff) {
+      const row = await db.prepare(`UPDATE shares SET pickup_count=?1, max_pickups=?2, expire_at=?3
+        WHERE code=?4 AND id=?5 AND pickup_count=?6 AND max_pickups IS ?7 AND expire_at IS ?8
+          AND (expire_at IS NULL OR expire_at>?9)
+        RETURNING ${SHARE_COLUMNS}`)
+        .bind(rules.pickupCount, rules.maxPickups, rules.expireAt, code,
+          expected.id, expected.pickupCount, expected.maxPickups, expected.expireAt, cleanupCutoff).first<ShareRow>();
+      return row ? toRec(row) : null;
+    },
+
     /** 原子取件计数:0 行 = 不存在/失效/textOnly 撞上文件,交回调用方分类 */
     async tryPickup(code, opts) {
       const kindCond = opts?.textOnly ? `AND kind = 'text'` : '';

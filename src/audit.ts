@@ -102,6 +102,7 @@ export async function auditRequest(c: Context<{ Bindings: Env }>, next: () => Pr
   if (share) {
     target = share[1];
     if (c.req.method === 'DELETE' && !share[2]) selected = ['operation', 'delete'];
+    if (c.req.method === 'PUT' && !share[2]) selected = ['operation', 'editShare'];
     if (c.req.method === 'PUT' && share[2] === 'source') selected = ['operation', 'note'];
     if (c.req.method === 'GET' && share[2]?.startsWith('source')) selected = ['operation', 'viewSource'];
     if (c.req.method === 'GET' && share[2] === 'preview') selected = ['operation', 'preview'];

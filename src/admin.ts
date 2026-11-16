@@ -14,6 +14,7 @@ import { getRetentionDays, setRetentionDays, validRetentionDays, RETENTION_DAY_M
 import { getGuestLimits, setGuestLimits, validGuestLimits } from './upload-policy';
 import { checkLogin, recordLogin, loginIP, loginProtectionStatus, unblockLogin, unblockLogins } from './login-protection';
 import { auditRequest, auditState, queryAudit } from './audit';
+import { validShareBase, validShareRules } from './share-edit';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
 adminRoutes.use('*', auditRequest);
@@ -283,7 +284,7 @@ adminRoutes.get('/shares/:code', async (c) => {
   const cleanupAfter = record.expireAt === null ? null : record.expireAt + days * RETENTION_DAY_MS;
   const cleanupStatus = cleanupAfter === null ? 'permanent' : record.expireAt! > evaluatedAt ? 'active'
     : cleanupAfter > evaluatedAt ? 'retained' : 'pending';
-  return c.json({ code, filename: record.filename, size: record.size, mime: record.mime,
+  return c.json({ id: record.id, code, filename: record.filename, size: record.size, mime: record.mime,
     description: record.source?.submission?.description || null,
     displayName: record.source?.submission?.displayName || null,
     createdAt: record.createdAt, expireAt: record.expireAt,
@@ -293,6 +294,39 @@ adminRoutes.get('/shares/:code', async (c) => {
     status: shareStatusOf(record.expireAt, record.maxPickups, record.pickupCount, evaluatedAt),
     downloadUrl: `/api/admin/shares/${code}/download`,
   });
+});
+
+/** Administrative correction preserves the file and refuses a stale edit snapshot. */
+adminRoutes.put('/shares/:code', async c => {
+  const origin = c.req.header('Origin');
+  if (origin && origin !== new URL(c.req.url).origin) return err(c, 403, 'forbidden', '请求来源不匹配');
+  if (!c.req.header('Content-Type')?.startsWith('application/json')) return err(c, 415, 'bad_request', '请使用 JSON');
+  const code = c.req.param('code');
+  if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
+  if (Number(c.req.header('Content-Length') || 0) > 4096) return err(c, 400, 'bad_request', '请求过大');
+  const raw = await c.req.text();
+  if (raw.length > 4096) return err(c, 400, 'bad_request', '请求过大');
+  let body; try { body = JSON.parse(raw); } catch { return err(c, 400, 'bad_request', 'JSON 格式无效'); }
+  if (!validShareRules(body?.rules) || !validShareBase(body?.expected)) return err(c, 400, 'bad_request', '次数、有效期或状态参数无效');
+  const store = getStore(c.env), record = await store.getByCode(code);
+  if (!record) return err(c, 404, 'not_found', '分享不存在');
+  if (record.kind !== 'file') return err(c, 400, 'bad_request', '此分享不是文件');
+  const cutoff = Date.now() - (await getRetentionDays(c.env)) * RETENTION_DAY_MS;
+  if (record.expireAt !== null && record.expireAt <= cutoff)
+    return err(c, 409, 'cleanup_pending', '此文件已进入清理期，不能修改；如仍可下载，请先备份后重新上传');
+  const storage = await inspectFile(c.env, record.r2Key);
+  if (storage.state === 'missing') return err(c, 410, 'gone', '文件已被清理');
+  if (storage.state !== 'available') return err(c, 503, 'storage_unavailable', '无法确认文件存储状态，请稍后重试');
+  // Explicit projection: callers cannot change filenames, storage keys or provenance.
+  const { pickupCount, maxPickups, expireAt, status } = body.rules;
+  const rules = { pickupCount, maxPickups, expireAt };
+  if (shareStatusOf(expireAt, maxPickups, pickupCount, Date.now()) !== status)
+    return c.json({ error: 'status_mismatch', message: '状态与次数或过期时间不一致，请检查后保存' }, 400);
+  const updated = await store.updateRules(code, body.expected, rules, cutoff);
+  if (!updated) return err(c, 409, 'share_conflict', '记录已被取件或修改，请重新加载后编辑');
+  auditState(c).detail.beforeRules = JSON.stringify({ pickupCount: record.pickupCount, maxPickups: record.maxPickups, expireAt: record.expireAt });
+  auditState(c).detail.afterRules = JSON.stringify(rules);
+  return c.json({ ok: true, code, ...rules, status: shareStatusOf(expireAt, maxPickups, pickupCount, Date.now()) });
 });
 
 /** Private bounded previews leave share state and pickup counts untouched. */

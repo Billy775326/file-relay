@@ -8,6 +8,23 @@
 
 const DICT = {
   zh: {
+    "ad.editShare": "编辑分享",
+    "ad.editCount": "已取次数",
+    "ad.editLimit": "取件上限",
+    "ad.editUnlimited": "不限次",
+    "ad.editSave": "保存修改",
+    "ad.editCancel": "取消",
+    "ad.editReload": "放弃修改并重新加载",
+    "ad.editSaved": "分享规则已更新",
+    "ad.editInvalid": "请填写有效的次数和过期时间",
+    "ad.editTimeChanged": "有效期已到，状态已更新，请确认后再次保存",
+    "ad.editCleanupPending": "文件已进入清理期，如仍可下载，请先备份后重新上传",
+    "ad.editHint": "时间按 {0} 显示和输入。过去时间会使分享过期，并按后台保留天数进入清理流程。永久分享仍占用存储。",
+    "ad.editStatusHint": "有效：必要时延长至 7 天后，并将上限设为已取次数 + 1（达到计数上界时设为不限次）。已过期：时间设为当前。已取完：补齐已取次数；原本不限次时设定有限上限。原本过期的文件会延长至 7 天后。所有联动值均显示在表单中，保存后生效。",
+    "audit.action.editShare": "修改分享规则",
+    "audit.detail.beforeRules": "修改前",
+    "audit.detail.afterRules": "修改后",
+
     'ad.settings': '设置',
     'ad.shareSettings': '分享规则',
     'ad.guestWeeklyFiles': '未备注访客每周文件数',
@@ -353,6 +370,23 @@ const DICT = {
   },
 
   en: {
+    "ad.editShare": "Edit share",
+    "ad.editCount": "Picked up",
+    "ad.editLimit": "Pickup limit",
+    "ad.editUnlimited": "Unlimited",
+    "ad.editSave": "Save changes",
+    "ad.editCancel": "Cancel",
+    "ad.editReload": "Discard changes and reload",
+    "ad.editSaved": "Share rules updated",
+    "ad.editInvalid": "Enter valid counts and an expiry time",
+    "ad.editTimeChanged": "The expiry time has passed. Review the updated status and save again.",
+    "ad.editCleanupPending": "This file is eligible for cleanup. Download a backup and upload it again if available.",
+    "ad.editHint": "Dates use {0}. Past dates expire the share and affect scheduled cleanup according to the retention setting. Permanent shares still use storage.",
+    "ad.editStatusHint": "Active extends expired dates by 7 days and raises an exhausted limit above the current count (or removes the limit at the count ceiling). Expired sets the expiry to now. Exhausted raises the count to its limit, assigns a limit if unlimited, and extends an expired date by 7 days. Review the changed values before saving.",
+    "audit.action.editShare": "Edit share rules",
+    "audit.detail.beforeRules": "Before",
+    "audit.detail.afterRules": "After",
+
     'ad.settings': 'Settings',
     'ad.shareSettings': 'Sharing rules',
     'ad.guestWeeklyFiles': 'Unnoted guest files / week',

@@ -69,6 +69,28 @@
 .ui-enhanced .source-activity .source-link{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:100%}
 .ui-enhanced #file-dialog{width:min(680px,calc(100vw - 24px))}
 .ui-enhanced #file-detail .file-field{grid-template-columns:70px minmax(0,1fr)}
+.ui-enhanced #file-edit{margin-right:auto}
+.ui-enhanced .share-edit-form{display:grid;gap:14px}
+.ui-enhanced .share-edit-filename{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ui-enhanced .share-edit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 12px;align-items:start}
+.ui-enhanced .share-edit-field{display:grid;gap:7px;min-width:0}
+.ui-enhanced .share-edit-field>label,.ui-enhanced .share-edit-field>.ui-help-anchor{font-size:12px;color:var(--muted);min-height:24px;display:flex;align-items:center}
+.ui-enhanced .share-edit-field input,.ui-enhanced .share-edit-field select{width:100%;min-width:0;box-sizing:border-box}
+.ui-enhanced .share-edit-field select,.ui-enhanced .share-edit-field input[type=datetime-local]{min-height:40px;padding:6px 9px;color:var(--ink);background:var(--bag);border:1px solid var(--line);border-radius:var(--radius-sm);font:inherit}
+.ui-enhanced .share-edit-expiry{grid-column:1/-1;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.ui-enhanced .share-edit-expiry>.ui-help-anchor,.ui-enhanced .share-edit-expiry>label:first-child{grid-column:1/-1}
+.ui-enhanced .share-edit-check{display:flex;align-items:center;gap:6px;white-space:nowrap;min-height:28px}
+.ui-enhanced .share-edit-check input{width:16px;height:16px;accent-color:var(--stamp)}
+.ui-enhanced[data-theme=dark] .share-edit-field input[type=datetime-local]{color-scheme:dark}
+.ui-enhanced .share-edit-linked{margin:0;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.ui-enhanced .share-edit-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid var(--line)}
+@media(max-width:600px){
+ .ui-enhanced .share-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ui-enhanced .share-edit-field:has(#share-edit-status){grid-column:1/-1}
+ .ui-enhanced .share-edit-field select,.ui-enhanced .share-edit-field input[type=datetime-local]{min-height:44px;font-size:16px}
+ .ui-enhanced .share-edit-actions>.btn{flex:1;min-height:44px}
+ .ui-enhanced .share-edit-expiry{grid-template-columns:1fr}
+}
 .ui-enhanced .settings-dialog{width:min(560px,calc(100vw - 24px))}
 .ui-enhanced .settings-section{padding-block:12px}
 .ui-enhanced .display-options{grid-template-columns:1fr 1fr;gap:16px}
@@ -323,14 +345,14 @@
 .ui-enhanced .sec-table .sec-address{min-width:160px;max-width:240px}
 .ui-enhanced .sec-row-actions{white-space:nowrap!important}
 .ui-enhanced .sec-row-actions .btn{padding:5px 8px;margin-right:4px}
-.ui-enhanced :is(#security-view,#security-dialog) input[type=checkbox]{appearance:none;display:inline-grid;place-content:center;flex:0 0 18px;width:18px;height:18px;min-height:18px;margin:0;padding:0;border:1px solid var(--muted);border-radius:5px;background:var(--paper);vertical-align:middle;cursor:pointer}
-.ui-enhanced :is(#security-view,#security-dialog) input[type=checkbox]::after{content:'';width:9px;height:5px;border:solid #1a2130;border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg);opacity:0}
-.ui-enhanced :is(#security-view,#security-dialog) input[type=checkbox]:is(:checked,:indeterminate){background:var(--stamp);border-color:var(--stamp)}
-.ui-enhanced :is(#security-view,#security-dialog) input[type=checkbox]:is(:checked,:indeterminate)::after{opacity:1}
-.ui-enhanced :is(#security-view,#security-dialog) input[type=checkbox]:indeterminate::after{height:0;border-width:0 0 2px;transform:none}
-.ui-enhanced :is(#security-view,#security-dialog) input[type=checkbox]:hover:not(:disabled){border-color:var(--stamp)}
-.ui-enhanced :is(#security-view,#security-dialog) input[type=checkbox]:focus-visible{outline:2px solid var(--stamp);outline-offset:3px}
-.ui-enhanced :is(#security-view,#security-dialog) input[type=checkbox]:disabled{background:var(--track);border-color:var(--line);cursor:not-allowed;opacity:.65}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]{appearance:none;display:inline-grid;place-content:center;flex:0 0 18px;width:18px;height:18px;min-height:18px;margin:0;padding:0;border:1px solid var(--muted);border-radius:5px;background:var(--paper);vertical-align:middle;cursor:pointer}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]::after{content:'';width:9px;height:5px;border:solid #1a2130;border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg);opacity:0}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:is(:checked,:indeterminate){background:var(--stamp);border-color:var(--stamp)}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:is(:checked,:indeterminate)::after{opacity:1}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:indeterminate::after{height:0;border-width:0 0 2px;transform:none}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:hover:not(:disabled){border-color:var(--stamp)}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:focus-visible{outline:2px solid var(--stamp);outline-offset:3px}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:disabled{background:var(--track);border-color:var(--line);cursor:not-allowed;opacity:.65}
 .ui-enhanced .sec-check:has(input:disabled){color:var(--muted);opacity:.65;cursor:not-allowed}
 .ui-enhanced .sec-number{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;min-width:0;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--paper);overflow:hidden}
 .ui-enhanced .sec-number:focus-within{border-color:var(--stamp);outline:2px solid color-mix(in srgb,var(--stamp) 25%,transparent);outline-offset:1px}
@@ -442,8 +464,8 @@
  .ui-enhanced .sec-scope-picker .sec-check{min-height:32px}
 }
 @media(forced-colors:active){
- .ui-enhanced :is(#security-view,#security-dialog) input[type=checkbox]{appearance:auto}
- .ui-enhanced :is(#security-view,#security-dialog) input[type=checkbox]::after{display:none}
+ .ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]{appearance:auto}
+ .ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]::after{display:none}
 }
 
 .ui-enhanced .sec-number input[type=number]{appearance:textfield;-moz-appearance:textfield;min-width:0;width:100%;min-height:38px;padding:6px 2px;border:0;border-radius:0;box-shadow:none;outline:none;text-align:center;background:transparent;color:var(--ink);font:inherit;font-variant-numeric:tabular-nums}

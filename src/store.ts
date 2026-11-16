@@ -92,6 +92,13 @@ export interface ShareStats {
   todayCreated: number;
 }
 
+export type ShareRules = Pick<ShareRecord, 'pickupCount' | 'maxPickups' | 'expireAt'>;
+export type ShareEditBase = ShareRules & Pick<ShareRecord, 'id'>;
+export function sameShareRules(record: ShareRecord, expected: ShareEditBase): boolean {
+  return record.id === expected.id && record.pickupCount === expected.pickupCount &&
+    record.maxPickups === expected.maxPickups && record.expireAt === expected.expireAt;
+}
+
 export interface ShareStore {
   /** Latest retained shares for one signed visitor; never infer identity from a shared IP. */
   visitorShares(visitorId: string): Promise<ShareRecord[]>;
@@ -101,6 +108,8 @@ export interface ShareStore {
   /** 创建分享(内部处理口令碰撞重试);closeSessionId 非空时原子关闭上传会话 */
   createShare(s: NewShare, closeSessionId?: string): Promise<{ id: string; code: string }>;
   getByCode(code: string): Promise<ShareRecord | null>;
+  /** Reject stale edits, including downloads since the form was opened. KV remains best-effort. */
+  updateRules(code: string, expected: ShareEditBase, rules: ShareRules, cleanupCutoff: number): Promise<ShareRecord | null>;
   /**
    * 取件计数并返回记录(已 +1);返回 null = 未取走(口令不存在 / 已失效 /
    * textOnly 时口令对应的不是文本分享),具体原因由调用方 getByCode 后分类。

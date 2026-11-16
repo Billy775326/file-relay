@@ -3,6 +3,7 @@ import { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el 
 import { LANG, t, onLangChange, initI18n } from './i18n.js';
 import { initAudit } from './admin-audit.js';
 import { createFilePreview } from './admin-preview.js';
+import { createShareEditor } from './admin-share-editor.js';
 import { pageSize, scrollToList, initAdminPreferences } from './admin-preferences.js';
 
 initTheme();
@@ -441,12 +442,25 @@ const fileDetail = $('#file-detail');
 const fileDownload = $('#file-download');
 let fileRequest = 0;
 let activePreview = null;
+let activeFileDetail = null;
+let shareEditBusy = false;
+function resetShareEditor() {
+  $('#file-editor').hidden = true;
+  $('#file-editor').replaceChildren();
+  fileDetail.hidden = false;
+  fileDialog.querySelector('.source-footer').hidden = false;
+  $('#file-title').textContent = t('ad.fileDetails');
+}
 function fileField(label, value, secondary) {
   return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),
     el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);
 }
 
 async function openFileDetails(code) {
+  if (shareEditBusy) return;
+  activeFileDetail = null;
+  resetShareEditor();
+  $('#file-edit').hidden = true;
   activePreview?.dispose(); activePreview = null;
   const request = ++fileRequest;
   fileDownload.hidden = true;
@@ -458,6 +472,7 @@ async function openFileDetails(code) {
   try {
     const detail = await api(`/api/admin/shares/${code}`);
     if (request !== fileRequest || !fileDialog.open) return;
+    activeFileDetail = detail;
     const state = detail.storage?.state || 'unknown';
     const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };
     const source = detail.source;
@@ -485,11 +500,18 @@ async function openFileDetails(code) {
     fileDownload.download = detail.filename || 'file';
     fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');
     fileDownload.hidden = state === 'missing';
+    $('#file-edit').hidden = state !== 'available';
+    $('#file-edit').disabled = detail.cleanupStatus === 'pending';
+    $('#file-edit').title = detail.cleanupStatus === 'pending' ? t('ad.editCleanupPending') : '';
   } catch (error) {
     if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');
   }
 }
 function closeFileDetails() {
+  if (shareEditBusy) return;
+  activeFileDetail = null;
+  resetShareEditor();
+  $('#file-edit').hidden = true;
   activePreview?.dispose(); activePreview = null;
   fileRequest++;
   fileDetail.replaceChildren();
@@ -500,6 +522,25 @@ function closeFileDetails() {
   fileDialog.close();
 }
 $('#file-close').addEventListener('click', closeFileDetails);
+$('#file-edit').addEventListener('click', () => {
+  if (!activeFileDetail || shareEditBusy) return;
+  const detail = activeFileDetail;
+  const editor = createShareEditor(detail, {
+    onBusy(value) { shareEditBusy = value; $('#lang-btn').disabled = value; },
+    onCancel() { openFileDetails(detail.code); },
+    onSaved() {
+      toast(t('ad.editSaved'));
+      openFileDetails(detail.code);
+      loadList(); loadStats();
+    },
+  });
+  fileDetail.hidden = true;
+  fileDialog.querySelector('.source-footer').hidden = true;
+  $('#file-title').textContent = t('ad.editShare');
+  $('#file-editor').replaceChildren(editor.element);
+  $('#file-editor').hidden = false;
+  editor.enhance();
+});
 fileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });
 
 /* Keep unsaved input local; only a validated save changes retention. */

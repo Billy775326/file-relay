@@ -23,7 +23,8 @@
     "db:local": "wrangler d1 execute file-relay --local --file=./schema/schema.sql",
     "db:remote": "wrangler d1 execute file-relay --remote --file=./schema/schema.sql",
     "tail": "wrangler tail",
-    "test:security": "node test/security.mjs"
+    "test:security": "node test/security.mjs",
+    "test:share-edit": "node test/share_edit.mjs"
   },
   "dependencies": {
     "hono": "^4.6.0"

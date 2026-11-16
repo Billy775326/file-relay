@@ -1,4 +1,5 @@
 import { sourceSummary } from './upload-source';
+import { sameShareRules } from './store';
 /**
  * Workers KV 实现:免建 D1 的轻量后端(最终一致)。
  * 键空间:s:{口令} = 分享全量 JSON,metadata 携带列表/统计投影(list 免逐键 get);
@@ -137,6 +138,15 @@ export function createKVStore(kv: KVNamespace): ShareStore {
 
     async getByCode(code) {
       return kv.get<ShareRecord>(SHARE_PREFIX + code, 'json');
+    },
+
+    async updateRules(code, expected, rules, cleanupCutoff) {
+      const record = await kv.get<ShareRecord>(SHARE_PREFIX + code, 'json');
+      if (!record || !sameShareRules(record, expected) ||
+          (record.expireAt !== null && record.expireAt <= cleanupCutoff)) return null;
+      const updated = { ...record, ...rules };
+      await kv.put(SHARE_PREFIX + code, JSON.stringify(updated), { metadata: metaOf(updated) });
+      return updated;
     },
 
     async tryPickup(code, opts) {
