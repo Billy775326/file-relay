@@ -169,7 +169,7 @@ export function initSecurity() {
             e.preventDefault();
             first.focus();
         } });
-        function modal(zh, en) { clearFeedback(); lastFocus = document.activeElement; dialog.replaceChildren(); const head = el('div', { class: 'source-heading' }, el('h3', { id: 'security-dialog-title' }, t(zh, en)), btn('关闭', 'Close', close)); const body = el('div', { class: 'source-body sec-dialog-body' }), error = el('p', { id: 'sec-form-error', class: 'error-box', hidden: '', role: 'alert' }), foot = el('div', { class: 'source-footer' }); body.append(error); dialog.append(head, body, foot); dialog.showModal(); return { body, foot, error }; }
+        function modal(zh, en) { clearFeedback(); lastFocus = document.activeElement; dialog.classList.remove('sec-rules-dialog'); dialog.replaceChildren(); const head = el('div', { class: 'source-heading' }, el('h3', { id: 'security-dialog-title' }, t(zh, en)), btn('关闭', 'Close', close)); const body = el('div', { class: 'source-body sec-dialog-body' }), error = el('p', { id: 'sec-form-error', class: 'error-box', hidden: '', role: 'alert' }), foot = el('div', { class: 'source-footer' }); body.append(error); dialog.append(head, body, foot); dialog.showModal(); return { body, foot, error }; }
         function fail(node, msg) { node.textContent = msg; node.hidden = false; }
         function canonical(value) { const s = value.trim(); if (/^\d{1,3}(\.\d{1,3}){3}$/.test(s) && s.split('.').every(x => Number(x) <= 255 && !/^0\d/.test(x)))
             return s; if (s.includes(':') && !/[\s/%\[\]]/.test(s)) {
@@ -213,6 +213,12 @@ export function initSecurity() {
         function removeAllow(row) { const m = modal('移除允许 IP', 'Remove allowed IP'); m.body.prepend(el('p', { class: 'mono' }, row.ip), scopeBadges(row.scopes), el('p', {}, t('移除后，该 IP 将重新适用所选范围的自动封禁规则。', 'Automatic ban rules will apply again in these scopes.'))); m.foot.append(btn('取消', 'Cancel', close), btn('移除', 'Remove', async () => { await mutate('removeAllow', { ip: row.ip }); close(); render(); toast(t('已移除允许 IP', 'Allow entry removed')); }, 'btn primary')); }
         function editRules() {
             const m = modal('自动防护规则', 'Automatic protection rules'), controls = [];
+            dialog.classList.add('sec-rules-dialog');
+            m.body.prepend(el('div', { class: 'sec-rules-columns', 'aria-hidden': 'true' },
+                el('span', {}, t('保护范围', 'Protection')),
+                el('span', {}, t('统计窗口 / 分钟', 'Window / min')),
+                el('span', {}, t('触发次数', 'Threshold')),
+                el('span', {}, t('封禁时长 / 分钟', 'Ban / min'))));
             for (const [key, zh, en] of scopes) {
                 const rule = store.rules[key], suffix = key === 'login' ? '' : '-' + key;
                 const enabled = input('sec-enabled' + suffix, '', { type: 'checkbox' });
@@ -223,7 +229,7 @@ export function initSecurity() {
                 enabled.onchange = toggle;
                 toggle();
                 const descriptions = { login: ['管理令牌校验失败次数', 'Failed admin-token checks'], upload: ['发起分享次数；文件和文本均计入，分片不重复计数', 'Share creation attempts; files and text count, chunks do not'], pickup: ['无效取件口令次数；成功取件不计入', 'Invalid pickup-code attempts; successful pickups do not count'] };
-                m.body.append(el('section', { class: 'sec-rule-section' }, el('label', { class: 'sec-check' }, enabled, el('b', {}, t(zh, en))), el('small', { class: 'muted' }, t(...descriptions[key])), el('div', { class: 'sec-rule-fields' }, field('窗口（分钟）', 'Window (min)', minutes), field('触发次数', 'Threshold', limit), field('封禁（分钟）', 'Ban (min)', duration))));
+                m.body.append(el('section', { class: 'sec-rule-section', 'aria-labelledby': 'sec-rule-label-' + key }, el('label', { class: 'sec-check', id: 'sec-rule-label-' + key }, enabled, el('b', {}, t(zh, en))), el('small', { class: 'muted' }, t(...descriptions[key])), el('div', { class: 'sec-rule-fields' }, field('窗口（分钟）', 'Window (min)', minutes), field('触发次数', 'Threshold', limit), field('封禁（分钟）', 'Ban (min)', duration))));
                 controls.push({ key, enabled, limit, minutes, duration });
                 const section = m.body.lastElementChild;
                 window.attachHelp(section.querySelector('.sec-check'), section.querySelector(':scope > small'));

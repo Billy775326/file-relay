@@ -21,6 +21,21 @@ with sync_playwright() as p:
   page.evaluate('(v)=>document.documentElement.dataset.theme=v',theme)
   for width in [1440,1024,390,320]:
    page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
+   action('防护规则').click()
+   rules_dialog=page.locator('#security-dialog')
+   assert rules_dialog.evaluate('(n)=>n.scrollWidth<=n.clientWidth+1')
+   if width>600:
+    boxes=[page.locator(selector).bounding_box() for selector in ['#sec-enabled','#sec-window','#sec-threshold','#sec-ban-minutes']]
+    centers=[box['y']+box['height']/2 for box in boxes]
+    assert max(centers)-min(centers)<3,centers
+    assert rules_dialog.bounding_box()['height']<380
+   page.locator('#sec-enabled-upload').uncheck()
+   expect(page.locator('#sec-window-upload')).to_be_disabled()
+   expect(page.locator('#sec-window-upload').locator('..').get_by_role('button').first).to_be_disabled()
+   page.locator('#sec-enabled-upload').check()
+   expect(page.locator('#sec-window-upload')).to_be_enabled()
+   if width in [1440,390]:page.screenshot(path=f'.wrangler/security-rules-{theme}-{width}.png')
+   foot('取消').click()
    action('地区封禁').click();action('添加地区').click();expect(page.locator('#sec-scope-login')).to_be_disabled();assert page.locator('#security-dialog').evaluate('(n)=>n.scrollWidth<=n.clientWidth+1');foot('取消').click()
  page.set_viewport_size({'width':1440,'height':1000});page.screenshot(path='.wrangler/security-production.png')
  with context.expect_page() as popup:page.locator('.topbar a[data-i18n="nav.send"]').click()

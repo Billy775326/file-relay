@@ -352,6 +352,29 @@
 .ui-enhanced .sec-form-grid>.sec-check{min-height:38px}
 .ui-enhanced .sec-rule-section{display:grid;gap:10px;border-bottom:1px solid var(--line);padding-bottom:14px}
 .ui-enhanced .sec-rule-section>small{font-size:12px}
+.ui-enhanced .sec-rules-dialog{width:min(720px,calc(100vw - 24px))}
+.ui-enhanced .sec-rules-dialog .sec-dialog-body{gap:0;padding-block:8px}
+.ui-enhanced .sec-rules-columns{display:grid;grid-template-columns:148px repeat(3,minmax(0,1fr));gap:12px;padding:8px 0;color:var(--muted);font-size:12px}
+.ui-enhanced .sec-rules-dialog .sec-rule-section{grid-template-columns:148px minmax(0,1fr);align-items:center;gap:12px;padding:14px 0}
+.ui-enhanced .sec-rules-dialog .sec-rule-section:last-child{border-bottom:0}
+.ui-enhanced .sec-rules-dialog .sec-check{min-height:38px;gap:6px}
+.ui-enhanced .sec-rules-dialog .sec-check b{font-size:13px;font-weight:500}
+.ui-enhanced .sec-rules-dialog .sec-rule-fields{gap:12px}
+@media(min-width:601px){
+ .ui-enhanced .sec-rules-dialog .sec-field>span:first-child{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .ui-enhanced .sec-rules-dialog .sec-field{gap:0}
+}
+@media(max-width:600px){
+ .ui-enhanced .sec-rules-columns{display:none}
+ .ui-enhanced .sec-rules-dialog .sec-rule-section{grid-template-columns:1fr;gap:6px;padding:10px 0}
+ .ui-enhanced .sec-rules-dialog .sec-rule-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ .ui-enhanced .sec-rules-dialog .sec-rule-fields .sec-field{grid-template-columns:1fr;font-size:12px;gap:6px}
+ .ui-enhanced .sec-rules-dialog .sec-number{grid-template-columns:26px minmax(0,1fr) 26px}
+}
+@media(max-width:380px){
+ .ui-enhanced .sec-rules-dialog .sec-rule-fields{grid-template-columns:1fr}
+ .ui-enhanced .sec-rules-dialog .sec-rule-fields .sec-field{grid-template-columns:minmax(0,1fr) 142px}
+}
 .ui-enhanced .sec-list-help{margin:0 0 16px;font-size:12px;line-height:1.7}
 .ui-enhanced .sec-test-result{padding:12px 14px;display:grid;gap:8px;border-left:3px solid var(--ok);background:var(--paper)}
 .ui-enhanced .sec-test-result[hidden]{display:none}
