@@ -1,3 +1,4 @@
+import { securityResponse } from './security';
 import { captureSource, parseSubmission } from './upload-source';
 import { Hono } from 'hono';
 import type { Env } from './types';
@@ -10,7 +11,7 @@ import { uploadAccess, checkUploadOptions, admitFile, checkUploadSession, policy
 
 export const uploadRoutes = new Hono<{ Bindings: Env }>();
 uploadRoutes.onError((e, c) => {
-  const rejection = policyErrorResponse(c, e);
+  const rejection = policyErrorResponse(c, e) ?? securityResponse(c, e);
   if (rejection) return rejection;
   if (e instanceof CapacityError) return c.json({ error: 'capacity_exceeded', message: e.message, remainingBytes: e.remainingBytes, capacityBytes: R2_CAPACITY_MAX }, 507);
   console.error('Upload failed', e);

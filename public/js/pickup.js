@@ -1,3 +1,4 @@
+import { initUi } from './ui.js';
 import { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js';
 import { t, onLangChange, initI18n } from './i18n.js';
 
@@ -152,3 +153,5 @@ if (fromUrl && /^\d{1,6}$/.test(fromUrl)) {
 } else {
   boxes[0].focus();
 }
+
+initUi('pickup');

@@ -1,3 +1,4 @@
+import { securityResponse } from './security';
 import { uploadAccess, checkUploadOptions, admitFile, policyErrorResponse } from './upload-policy';
 import { Hono } from 'hono';
 import { num, type Env } from './types';
@@ -9,7 +10,7 @@ import { parseSubmission } from './upload-source';
 
 export const shareRoutes = new Hono<{ Bindings: Env }>();
 shareRoutes.onError((error, c) => {
-  const rejection = policyErrorResponse(c, error);
+  const rejection = policyErrorResponse(c, error) ?? securityResponse(c, error);
   if (rejection) return rejection;
   console.error('Share request failed', error);
   return c.json({ error: 'internal', message: '分享服务暂不可用，请稍后重试' }, 503);

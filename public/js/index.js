@@ -1,3 +1,4 @@
+import { initUi } from './ui.js';
 import { $, $$, api, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme, el } from './common.js';
 import { t, onLangChange, initI18n } from './i18n.js';
 
@@ -612,3 +613,5 @@ function hideResult() {
   if (els.placeholder) els.placeholder.hidden = false;
   els.results.replaceChildren();
 }
+
+initUi('index');

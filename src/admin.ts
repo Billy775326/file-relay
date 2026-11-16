@@ -1,3 +1,4 @@
+import { securityEnabled, securityState, enforceSecurity, editSecurity, SecurityError, canonicalIP, evaluate, exempt, SCOPES, type Scope } from './security';
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import type { Context } from 'hono';
@@ -11,7 +12,7 @@ import { runCleanup } from './cleanup';
 import { getCapacityUsage } from './quota';
 import { getRetentionDays, setRetentionDays, validRetentionDays, RETENTION_DAY_MS } from './settings';
 import { getGuestLimits, setGuestLimits, validGuestLimits } from './upload-policy';
-import { checkLogin, recordLogin, loginIP, loginProtectionStatus, unblockLogin } from './login-protection';
+import { checkLogin, recordLogin, loginIP, loginProtectionStatus, unblockLogin, unblockLogins } from './login-protection';
 import { auditRequest, auditState, queryAudit } from './audit';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
@@ -84,6 +85,7 @@ adminRoutes.use('*', async (c, next) => {
     if (bearer?.startsWith('Bearer ')) {
       if (!c.env.ADMIN_TOKEN) return c.json({ error: 'config', message: '管理员令牌未配置' }, 503);
       const ip = loginIP(c);
+      await enforceSecurity(c.env, ip, 'login');
       await checkLogin(c.env, ip);
       const valid = await safeEqual(bearer.slice(7), c.env.ADMIN_TOKEN);
       await recordLogin(c.env, ip, valid);
@@ -104,6 +106,7 @@ adminRoutes.post('/login', async (c) => {
   const origin = c.req.header('Origin');
   if (origin && origin !== new URL(c.req.url).origin) return c.json({ error: 'forbidden', message: '请求来源不匹配' }, 403);
   const ip = loginIP(c);
+  await enforceSecurity(c.env, ip, 'login');
   await checkLogin(c.env, ip);
   const body = (await c.req.json().catch(() => null)) as { token?: unknown } | null;
   const token = body?.token;
@@ -154,6 +157,45 @@ adminRoutes.post('/login-protection/unblock', async c => {
   auditState(c).target = body.ip;
   await unblockLogin(c.env, body.ip);
   return c.json({ ok: true });
+});
+
+/** Existing authenticated sessions retain access even if new logins are blocked. */
+async function securityView(env: Env) {
+  const state = await securityState(env), legacy = await loginProtectionStatus(env);
+  const all = [...state.bans, ...legacy.bans.map(old=>({ip:old.ip,scopes:['login'] as Scope[],kind:'auto' as const,failures:old.failures,reason:'登录失败次数过多',at:old.lastFailedAt,until:old.bannedUntil}))];
+  const grouped = new Map<string, typeof all>();
+  for(const entry of all) grouped.set(entry.ip,[...(grouped.get(entry.ip)||[]),entry]);
+  const bans=[...grouped].map(([ip,segments])=>({ip,segments,scopes:[...new Set(segments.flatMap(b=>b.scopes))],kind:segments.some(b=>b.kind==='manual')?'manual':'auto',failures:Math.max(...segments.map(b=>b.failures)),reason:[...new Set(segments.map(b=>b.reason))].join(' / '),at:Math.min(...segments.map(b=>b.at)),until:segments.some(b=>b.until===null)?null:Math.max(...segments.map(b=>b.until!))}));
+  return { enabled: securityEnabled(env), configRevision: state.configRevision, rules: state.rules, bans, allow: state.allow, regions: state.regions };
+}
+adminRoutes.get('/security', async c => c.json(await securityView(c.env)));
+adminRoutes.post('/security/test', async c => {
+  const origin=c.req.header('Origin');if(origin&&origin!==new URL(c.req.url).origin)return c.json({error:'forbidden',message:'请求来源不匹配'},403);
+  if(!c.req.header('Content-Type')?.startsWith('application/json'))throw new SecurityError(400,'请使用 JSON');
+  const body=await c.req.json().catch(()=>null);
+  const ip=canonicalIP(body?.ip),scope=body?.scope as Scope;
+  if(!securityEnabled(c.env))throw new SecurityError(503,'安全防护需要绑定 R2 或 D1');
+  if(!ip||!SCOPES.includes(scope)||typeof body.country!=='string'||!/^([A-Z]{2})?$/.test(body.country)||typeof body.region!=='string'||!/^[A-Z0-9-]{0,10}$/.test(body.region)||!Number.isInteger(body.count)||body.count<0||body.count>100000)throw new SecurityError(400,'测试参数无效');
+  const state=await securityState(c.env);let result=evaluate(state,ip,scope,body.country,body.region);
+  if(!result.blocked&&!exempt(state,ip,scope)){
+    if(scope==='login'&&(await loginProtectionStatus(c.env)).bans.some(b=>b.ip===ip))result={blocked:true,reason:'已有登录自动封禁',retryAt:undefined,status:429};
+    else if(state.rules[scope].enabled&&body.count>=state.rules[scope].limit)result={blocked:true,reason:'达到自动封禁阈值',retryAt:undefined,status:429};
+  }
+  return c.json(result);
+});
+adminRoutes.post('/security', async c => {
+  const origin=c.req.header('Origin');
+  if(origin&&origin!==new URL(c.req.url).origin)return c.json({error:'forbidden',message:'请求来源不匹配'},403);
+  if(!c.req.header('Content-Type')?.startsWith('application/json'))return c.json({error:'bad_request',message:'请使用 JSON'},415);
+  if(Number(c.req.header('Content-Length')||0)>65536)throw new SecurityError(400,'规则请求过大');
+  const raw=await c.req.text();if(raw.length>65536)throw new SecurityError(400,'规则请求过大');
+  let body:any;try{body=JSON.parse(raw);}catch{throw new SecurityError(400,'JSON 格式无效');}
+  const next=await editSecurity(c.env,body);
+  if(body.action==='unban')await unblockLogins(c.env,body.ips.map((ip:string)=>canonicalIP(ip)||'unknown'));
+  auditState(c).target=typeof body.ip==='string'?body.ip:typeof body.id==='string'?body.id:'security';
+  auditState(c).detail.action=body.action;
+  auditState(c).detail.configRevision=next.configRevision;
+  return c.json({ok:true,configRevision:next.configRevision});
 });
 
 /** Retention is applied on the next cleanup run; saving never deletes files. */

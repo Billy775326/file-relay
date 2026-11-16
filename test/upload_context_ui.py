@@ -15,7 +15,7 @@ with sync_playwright() as p:
     page.on('pageerror', lambda e: errors.append(str(e)))
     page.goto(base + '/')
     expect(page.locator('#seg-expiry [data-v="forever"]')).to_be_enabled()
-    page.locator('.upload-context summary').click()
+    expect(page.locator('.upload-context')).to_have_attribute('open', '')
     page.get_by_label('怎么称呼你', exact=True).fill('同事 <img src=x>')
     description = '本周图片素材 <img src=x onerror=alert(1)>\n请保留原文件名。'
     page.get_by_label('文件说明', exact=True).fill(description)
@@ -82,7 +82,7 @@ with sync_playwright() as p:
                 agent.focus()
                 assert agent.evaluate('(e)=>getComputedStyle(e).whiteSpace') == 'normal'
                 page.locator('#source-note').focus()
-                assert agent.evaluate('(e)=>getComputedStyle(e).whiteSpace') == 'nowrap'
+                assert agent.evaluate('(e)=>getComputedStyle(e).whiteSpace') == ('normal' if width <= 600 else 'nowrap')
                 page.locator('.source-activity').first.wait_for()
                 assert page.locator('#source-dialog').evaluate('(e)=>e.scrollWidth<=e.clientWidth')
                 # Native modal focus never escapes to the page underneath.

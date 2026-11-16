@@ -22,7 +22,8 @@
     "build:pages": "npm run build:single && node tools/build-pages.mjs",
     "db:local": "wrangler d1 execute file-relay --local --file=./schema/schema.sql",
     "db:remote": "wrangler d1 execute file-relay --remote --file=./schema/schema.sql",
-    "tail": "wrangler tail"
+    "tail": "wrangler tail",
+    "test:security": "node test/security.mjs"
   },
   "dependencies": {
     "hono": "^4.6.0"

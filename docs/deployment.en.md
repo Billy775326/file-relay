@@ -223,4 +223,6 @@ See [configuration](../README.en.md#configuration) for variables. Finish old upl
 
 ## Existing D1 database upgrade
 
+The security workspace reuses existing R2/D1 bindings and requires no share-table migration. Upload rate protection and invalid pickup-code protection are enabled by default after upgrading; adjust them under **Security → Protection rules**. KV-only deployments do not enable persistent protection. Existing login bans are retained. See the [security guide (Chinese)](security.md).
+
 Before deploying upload-source tracking, export a backup and apply [the source migration](../schema/migrations/0001-upload-source.sql) once. Fresh databases use the complete schema; do not also run this migration. KV deployments need no migration. See [upgrade commands and behavior](upload-sources.md).

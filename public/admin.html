@@ -9,6 +9,7 @@
 <title data-i18n="doc.admin">文件中转站 - 管理</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
 <link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/ui.css">
 <script>
   document.documentElement.dataset.theme =
     localStorage.getItem('theme') ||
@@ -153,7 +154,7 @@
   </div>
   <div class="source-footer">
     <button id="file-close" class="btn ghost" type="button" data-i18n="ad.sourceClose">关闭</button>
-    <a id="file-download" class="btn primary" target="_blank" rel="noopener noreferrer" hidden data-i18n="ad.download">下载</a>
+    <a id="file-download" class="btn primary" hidden data-i18n="ad.download">下载</a>
   </div>
 </dialog>
 <dialog id="audit-dialog" class="source-dialog" aria-labelledby="audit-detail-title">

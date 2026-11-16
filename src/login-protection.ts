@@ -1,3 +1,4 @@
+import { securityState, exempt } from './security';
 import type { Context } from 'hono';
 import type { Env } from './types';
 import { CREATE_SETTINGS } from './settings';
@@ -34,13 +35,13 @@ export function loginIP(c: Context<{ Bindings: Env }>): string {
 
 export function loginProtectionEnabled(env: Env): boolean { return !!(env.BUCKET || env.DB); }
 
-function parse(raw: string | null, now: number): Ledger {
+function parse(raw: string | null, now: number, windowSeconds = LOGIN_RULES.windowSeconds): Ledger {
   if (raw === null) return { version: 1, revision: '', entries: [] };
   const data = JSON.parse(raw) as Ledger;
   if (data?.version !== 1 || typeof data.revision !== 'string' || !Array.isArray(data.entries) ||
       data.entries.length > MAX_RECORDS || data.entries.some(e => !e || typeof e.ip !== 'string' ||
         !/^(unknown|[0-9a-f:.]{3,45})$/.test(e.ip) || !Number.isInteger(e.failures) || e.failures < 1 ||
-        e.failures > LOGIN_RULES.maxFailures || !Array.isArray(e.failedAt) || e.failedAt.length !== e.failures ||
+        e.failures > 10000 || !Array.isArray(e.failedAt) || e.failedAt.length !== e.failures ||
         !e.failedAt.every((n, i) => Number.isSafeInteger(n) && n >= 0 && (i === 0 || n >= e.failedAt[i - 1])) ||
         e.firstFailedAt !== e.failedAt[0] || e.lastFailedAt !== e.failedAt[e.failedAt.length - 1] ||
         ![e.firstFailedAt, e.lastFailedAt, e.bannedUntil].every(n => Number.isSafeInteger(n) && n >= 0)) ||
@@ -48,7 +49,7 @@ function parse(raw: string | null, now: number): Ledger {
   // Expired bans do not carry their failures into the next window. Bound storage without an external cron.
   data.entries = data.entries.filter(e => {
     if (e.bannedUntil) return e.bannedUntil > now;
-    e.failedAt = e.failedAt.filter(at => at + LOGIN_RULES.windowSeconds * 1000 > now);
+    e.failedAt = e.failedAt.filter(at => at + windowSeconds * 1000 > now);
     e.failures = e.failedAt.length;
     e.firstFailedAt = e.failedAt[0];
     return e.failures > 0;
@@ -56,14 +57,14 @@ function parse(raw: string | null, now: number): Ledger {
   return data;
 }
 
-async function read(env: Env, now: number) {
+async function read(env: Env, now: number, windowSeconds = LOGIN_RULES.windowSeconds) {
   if (env.BUCKET) {
     const object = await env.BUCKET.get(LOGIN_GUARD_KEY);
-    return { data: parse(object ? await object.text() : null, now), previous: object?.etag ?? null };
+    return { data: parse(object ? await object.text() : null, now, windowSeconds), previous: object?.etag ?? null };
   }
   await env.DB!.prepare(CREATE_SETTINGS).run();
   const row = await env.DB!.prepare('SELECT value FROM app_settings WHERE key=?').bind(LOGIN_GUARD_KEY).first<{ value: string }>();
-  return { data: parse(row?.value ?? null, now), previous: row?.value ?? null };
+  return { data: parse(row?.value ?? null, now, windowSeconds), previous: row?.value ?? null };
 }
 
 async function write(env: Env, data: Ledger, previous: string | null): Promise<boolean> {
@@ -79,12 +80,13 @@ async function write(env: Env, data: Ledger, previous: string | null): Promise<b
   return result.meta.changes === 1;
 }
 
-async function change(env: Env, edit: (data: Ledger, now: number) => boolean): Promise<void> {
+async function change(env: Env, edit: (data: Ledger, now: number) => boolean, windowSeconds?: number): Promise<void> {
   try {
+    const window = windowSeconds ?? (await securityState(env)).rules.login.window * 60;
     for (let attempt = 0; attempt < 5; attempt++) {
       if (attempt) await new Promise(resolve => setTimeout(resolve, 1100 + Math.random() * 200));
       const now = Date.now();
-      const { data, previous } = await read(env, now);
+      const { data, previous } = await read(env, now, window);
       if (!edit(data, now)) return;
       try { if (await write(env, data, previous)) return; }
       catch (error) { if (!/429|rate|too many/i.test(String(error))) throw error; }
@@ -104,8 +106,10 @@ function rejectBanned(entry: Entry | undefined, now: number) {
 export async function checkLogin(env: Env, ip: string): Promise<void> {
   if (!loginProtectionEnabled(env)) return;
   try {
+    const config = await securityState(env);
+    if (exempt(config, ip, 'login')) return;
     const now = Date.now();
-    rejectBanned((await read(env, now)).data.entries.find(e => e.ip === ip), now);
+    rejectBanned((await read(env, now, config.rules.login.window * 60)).data.entries.find(e => e.ip === ip), now);
   } catch (error) {
     if (error instanceof LoginProtectionError) throw error;
     throw new LoginProtectionError();
@@ -114,6 +118,8 @@ export async function checkLogin(env: Env, ip: string): Promise<void> {
 
 export async function recordLogin(env: Env, ip: string, success: boolean): Promise<void> {
   if (!loginProtectionEnabled(env)) return;
+  const config = await securityState(env), rule = config.rules.login;
+  if (exempt(config, ip, 'login') || !rule.enabled) return;
   let bannedUntil = 0;
   await change(env, (data, now) => {
     const entry = data.entries.find(e => e.ip === ip);
@@ -127,11 +133,11 @@ export async function recordLogin(env: Env, ip: string, success: boolean): Promi
     next.failures++;
     next.failedAt.push(now);
     next.lastFailedAt = now;
-    if (next.failures >= LOGIN_RULES.maxFailures) next.bannedUntil = now + LOGIN_RULES.banSeconds * 1000;
+    if (next.failures >= rule.limit) next.bannedUntil = now + rule.duration * 60000;
     bannedUntil = next.bannedUntil;
     if (!entry) data.entries.push(next);
     return true;
-  });
+  }, rule.window * 60);
   if (bannedUntil) throw new LoginProtectionError(bannedUntil, true);
 }
 
@@ -140,17 +146,22 @@ export async function loginProtectionStatus(env: Env) {
   if (!enabled) return { enabled, ...LOGIN_RULES, bans: [] as Entry[] };
   try {
     const now = Date.now();
-    const { data } = await read(env, now);
-    return { enabled, ...LOGIN_RULES, bans: data.entries.filter(e => e.bannedUntil > now)
+    const rule=(await securityState(env)).rules.login;
+    const { data } = await read(env, now, rule.window * 60);
+    return { enabled, automaticEnabled:rule.enabled, maxFailures:rule.limit, windowSeconds:rule.window*60, banSeconds:rule.duration*60, bans: data.entries.filter(e => e.bannedUntil > now)
       .sort((a, b) => b.lastFailedAt - a.lastFailedAt).map(({ failedAt: _times, ...entry }) => entry) };
   } catch { throw new LoginProtectionError(); }
 }
 
-export async function unblockLogin(env: Env, ip: string): Promise<void> {
+export async function unblockLogins(env: Env, ips: string[]): Promise<void> {
   if (!loginProtectionEnabled(env)) throw new LoginProtectionError();
+  const selected = new Set(ips);
   await change(env, data => {
     const count = data.entries.length;
-    data.entries = data.entries.filter(e => e.ip !== ip);
+    data.entries = data.entries.filter(e => !selected.has(e.ip));
     return data.entries.length !== count;
   });
+}
+export async function unblockLogin(env: Env, ip: string): Promise<void> {
+  return unblockLogins(env, [ip]);
 }

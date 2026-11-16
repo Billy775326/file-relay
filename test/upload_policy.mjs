@@ -35,6 +35,14 @@ for (const mode of ['kv-r2', 'd1-r2', 'kv-d1', 'kv-only', 'd1-only']) {
     const visitorId = decodeURIComponent(visitor.slice(visitor.indexOf('=') + 1)).split('.')[0];
     const auth = await call('/api/admin/login', { method: 'POST', json: { token: 'policy-test-only' } });
     const admin = auth.headers.get('set-cookie').split(';')[0];
+    // Isolate weekly quota tests from the separately tested burst limiter.
+    if (bucket || db) {
+      const protection = await (await call('/api/admin/security', { cookie: admin })).json();
+      protection.rules.upload.enabled = false;
+      assert.equal((await call('/api/admin/security', { cookie: admin, method: 'POST', json: {
+        action: 'rules', configRevision: protection.configRevision, rules: protection.rules,
+      } })).status, 200);
+    }
     const settings = (json, extra = {}) => call('/api/admin/upload-policy', { method: 'PUT', cookie: admin, json, ...extra });
     assert.equal((await call('/api/admin/upload-policy')).status, 401);
     assert.equal((await settings({ weeklyFileLimit: 0, maxFileSizeMB: 1 }, { cookie: '' })).status, 401);

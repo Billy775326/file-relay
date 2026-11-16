@@ -1,3 +1,4 @@
+import { SecurityError } from './security';
 import type { Context } from 'hono';
 import type { Env } from './types';
 import { CREATE_SETTINGS } from './settings';
@@ -81,6 +82,7 @@ export async function appendAudit(env: Env, event: AuditEntry): Promise<boolean>
 
 const routes: Record<string, [AuditCategory, string]> = {
   'POST /api/admin/login': ['login', 'login'],
+  'POST /api/admin/security': ['security', 'securityRules'],
   'POST /api/admin/logout': ['login', 'logout'],
   'PUT /api/admin/settings': ['operation', 'retention'],
   'PUT /api/admin/upload-policy': ['operation', 'uploadPolicy'],
@@ -110,6 +112,7 @@ export async function auditRequest(c: Context<{ Bindings: Env }>, next: () => Pr
   const bearer = path === '/api/admin/cleanup' && c.req.header('Authorization')?.startsWith('Bearer ');
   if (!state.authenticated && !isLogin && !bearer) return;
   if (isLogin && c.res.status === 403) return; // Cross-site rejected requests are not credential attempts.
+  if(c.error instanceof SecurityError && [403,429].includes(c.error.status))return;
   const protectionError = c.error instanceof LoginProtectionError ? c.error : null;
   // Log the transition into a ban, not every blocked retry during an attack.
   if (protectionError?.retryAt && !protectionError.newBan) return;

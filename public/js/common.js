@@ -133,6 +133,9 @@ export function initTheme() {
   const sync = () => {
     if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';
   };
+  window.addEventListener('storage', event => {
+    if(event.key === 'theme' && ['dark','light'].includes(event.newValue)){document.documentElement.dataset.theme=event.newValue;sync();}
+  });
   sync();
   btn?.addEventListener('click', () => {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';

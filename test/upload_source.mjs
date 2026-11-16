@@ -38,6 +38,12 @@ for (const metadata of ['kv', 'd1']) {
     assert.match(secureCfg.headers.get('set-cookie'), /SameSite=Lax/i);
     const auth = await call('/api/admin/login', json({ token: 'source-test-only' }));
     const admin = auth.headers.get('set-cookie').split(';')[0];
+    // Exercise source history independently of the burst limiter (covered by security.mjs).
+    if (backend === 'r2' || metadata === 'd1') {
+      const guard = await (await call('/api/admin/security', { headers: { Cookie: admin } })).json();
+      guard.rules.upload.enabled = false;
+      assert.equal((await call('/api/admin/security', json({ action: 'rules', configRevision: guard.configRevision, rules: guard.rules }, { headers: { Cookie: admin } }))).status, 200);
+    }
     const adminGet = (path) => call(path, { headers: { Cookie: admin } });
     const cfg = await call('/api/config');
     const cookie = cfg.headers.get('set-cookie').split(';')[0];

@@ -1,3 +1,5 @@
+import { securityResponse } from './security';
+import { publicSecurity } from './security-middleware';
 import { Hono } from 'hono';
 import type { Env } from './types';
 import { num } from './types';
@@ -13,7 +15,7 @@ import { loginProtectionResponse } from './login-protection';
 
 const app = new Hono<{ Bindings: Env }>();
 app.onError((error, c) => {
-  const rejection = policyErrorResponse(c, error) ?? loginProtectionResponse(c, error);
+  const rejection = policyErrorResponse(c, error) ?? loginProtectionResponse(c, error) ?? securityResponse(c, error);
   if (rejection) return rejection;
   console.error('Request failed', error);
   return c.json({ error: 'internal', message: '服务暂不可用，请稍后重试' }, 500);
@@ -45,6 +47,8 @@ app.use('/api/*', async (c, next) => {
   }
   await next();
 });
+
+app.use('/api/*', publicSecurity);
 
 app.get('/api/health', (c) => c.json({ ok: true }));
 

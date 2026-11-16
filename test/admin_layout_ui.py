@@ -173,8 +173,10 @@ with sync_playwright() as p:
                 page.click('#admin-settings-btn')
                 assert page.locator('#settings-dialog').evaluate('(e)=>e.scrollWidth<=e.clientWidth')
                 expect(page.locator('#settings-dialog details')).to_have_count(0)
-                for control in ['retention-days', 'guest-weekly', 'login-guard-refresh']:
+                for control in ['retention-days', 'guest-weekly']:
                     expect(page.locator('#' + control)).to_be_visible()
+                expect(page.locator('#login-protection')).to_be_hidden()
+                expect(page.locator('.sec-setting-entry button')).to_be_visible()
                 # The input and its save button share a row at all tested widths.
                 for field, save in [('retention-days', 'retention-save'), ('guest-weekly', 'guest-save')]:
                     a, b = page.locator('#' + field).bounding_box(), page.locator('#' + save).bounding_box()
@@ -184,6 +186,10 @@ with sync_playwright() as p:
                 assert page.evaluate("document.activeElement.closest('dialog')?.id==='settings-dialog'")
                 if lang == 'zh' and theme == 'dark' and width in [390, 1135]:
                     page.screenshot(path=f'.wrangler/layout-settings-{width}.png', animations='disabled')
+                if page.locator('.ui-help-popover:popover-open').count():
+                    page.keyboard.press('Escape')
+                    expect(page.locator('.ui-help-popover:popover-open')).to_have_count(0)
+                    expect(page.locator('#settings-dialog')).to_be_visible()
                 page.keyboard.press('Escape')
                 expect(page.locator('#admin-settings-btn')).to_be_focused()
     assert not errors, errors

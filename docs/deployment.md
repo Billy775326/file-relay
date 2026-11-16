@@ -211,6 +211,8 @@ curl -X POST 'https://your-domain.example/api/admin/cleanup' \
 
 ### 已有 D1 部署升级
 
+本次安全工作区沿用现有 R2/D1 绑定，无需迁移分享表。更新后默认启用上传频率和无效取件口令防护，可在后台“安全防护 → 防护规则”调整；纯 KV 不启用持久化防护。已有登录封禁保留，详见[安全防护](security.md)。
+
 启用上传来源前，先导出备份，再执行一次 [来源字段迁移](../schema/migrations/0001-upload-source.sql)，最后部署新代码。新建数据库直接使用完整 schema，不重复执行此迁移。KV 部署无需迁移。命令和回退边界见 [上传来源与升级说明](upload-sources.md)。
 
 ## 更新与常见问题

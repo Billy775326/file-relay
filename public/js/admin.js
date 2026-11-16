@@ -1,3 +1,4 @@
+import { initUi } from './ui.js';
 import { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el } from './common.js';
 import { LANG, t, onLangChange, initI18n } from './i18n.js';
 import { initAudit } from './admin-audit.js';
@@ -628,3 +629,5 @@ async function loadLoginProtection() {
   } finally { if (request === guardRequest) refresh.disabled = false; }
 }
 $('#login-guard-refresh').addEventListener('click', loadLoginProtection);
+
+initUi('admin');
