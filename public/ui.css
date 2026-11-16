@@ -255,8 +255,9 @@
 .ui-enhanced.ui-send .ph-route{margin-top:18px}
 .ui-enhanced.ui-send .ph-dash{height:18px}
 .ui-enhanced.ui-send .ph-fine{margin-top:18px;padding-top:10px}
-.ui-enhanced.ui-send .ui-send-footer{width:100%;max-width:none;margin:0;padding:0;border-top:0;background:transparent;text-align:left;letter-spacing:0;flex-shrink:0}
-.ui-enhanced.ui-send .ui-footer-inner{display:flex;align-items:center;gap:24px;padding:8px 0;border-top:1px solid var(--ui-divider,var(--line))}
+.ui-enhanced .ui-send-footer{width:100%;max-width:none;margin:0;padding:0;border-top:0;background:transparent;text-align:left;letter-spacing:0;flex-shrink:0}
+.ui-enhanced .ui-footer-inner{display:flex;align-items:center;gap:24px;padding:8px 0;border-top:1px solid var(--ui-divider,var(--line))}
+.ui-enhanced.ui-pickup .ui-footer-inner{width:calc(100% - 64px);max-width:1200px;margin-inline:auto}
 .ui-enhanced .ui-footer-about{margin-right:auto;color:var(--muted)}
 .ui-enhanced .ui-send-footer small{display:block;font-size:12px;line-height:1.7}
 .ui-enhanced .ui-footer-contact{display:flex;align-items:center;gap:8px;padding-left:24px;border-left:1px solid var(--ui-divider,var(--line))}
@@ -297,7 +298,8 @@
  .ui-enhanced.ui-send .context-fields{gap:10px}
  .ui-enhanced.ui-send .context-fields textarea{height:64px}
  .ui-enhanced.ui-send .btn.block{min-height:44px}
- .ui-enhanced.ui-send .ui-footer-inner{flex-wrap:wrap;justify-content:flex-start;gap:0 20px;padding-block:10px 12px}
+ .ui-enhanced .ui-footer-inner{flex-wrap:wrap;justify-content:flex-start;gap:0 20px;padding-block:10px 12px}
+ .ui-enhanced.ui-pickup .ui-footer-inner{width:calc(100% - 24px)}
  .ui-enhanced .ui-footer-about{width:100%;margin-bottom:4px}
  .ui-enhanced .ui-footer-links{gap:18px}
  .ui-enhanced .ui-footer-link{min-height:44px}

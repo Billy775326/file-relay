@@ -33,6 +33,9 @@ export function initEntry() {
             summary.removeAttribute('data-i18n');
             summary.replaceChildren(caption);
             summary.append(q('[data-i18n="context.visibility"]'));
+        }
+        if (q('#dropzone') || q('#otp-row')) {
+            const isPickup = !!q('#otp-row');
             const footer = q('.foot');
             footer.removeAttribute('data-i18n');
             footer.classList.add('ui-send-footer');
@@ -51,9 +54,9 @@ export function initEntry() {
             links.className = 'ui-footer-links';
             links.setAttribute('aria-label', '页尾导航');
             const help = button('ui-send-help', '使用帮助', 'Help', 'ui-footer-link'), pickup = document.createElement('a');
-            pickup.href = '/pickup';
+            pickup.href = isPickup ? '/' : '/pickup';
             pickup.className = 'ui-footer-link';
-            label(pickup, '前往取件', 'Pick up a share');
+            label(pickup, isPickup ? '前往发送' : '前往取件', isPickup ? 'Send a share' : 'Pick up a share');
             links.append(help, pickup);
             const footerInner = document.createElement('div');
             footerInner.className = 'ui-footer-inner';
