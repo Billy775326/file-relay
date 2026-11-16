@@ -161,6 +161,7 @@ npm run build:pages
 python -m pip install playwright
 python -m playwright install chromium
 npm run test:quota-runtime
+npm run test:preview
 npm run test:source
 npm run test:admin-download
 npm run test:retention
@@ -200,6 +201,7 @@ python test/ui_smoke.py http://localhost:8787
 | GET / PUT | `/api/admin/upload-policy` | 读取或保存未备注访客的周次数和单文件大小 |
 | GET / PUT | `/api/admin/settings` | 读取或保存过期保留天数 |
 | GET | `/api/admin/shares/:code` | 完整文件详情及最早清理时间 |
+| GET | `/api/admin/shares/:code/preview` | 管理员预览文本、CSV 或小图片，不消耗取件次数 |
 | GET | `/api/admin/shares/:code/download` | 管理员下载文件，不消耗取件次数；支持尚未清理的过期文件 |
 | DELETE | `/api/admin/shares/:code` | 删除分享及对应文件 |
 | POST | `/api/admin/cleanup` | 清理过期分享和遗留上传会话 |

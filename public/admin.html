@@ -125,22 +125,22 @@
     <small id="source-context" class="muted mono"></small>
   </div>
   <div class="source-body">
-    <div id="source-detail" aria-live="polite"></div>
     <form id="source-form" hidden>
       <label for="source-note" data-i18n="ad.sourceNote">管理员备注</label>
       <input id="source-note" type="text" maxlength="64" autocomplete="off">
+      <button id="source-save" class="btn small" type="submit" hidden data-i18n="ad.sourceSave">保存备注</button>
       <p class="error-box" id="source-error" hidden role="alert"></p>
     </form>
-    <details id="source-history" class="source-history" hidden>
-      <summary data-i18n="ad.recentUploads">近期上传</summary>
+    <div id="source-detail" aria-live="polite"></div>
+    <section id="source-history" class="source-history" hidden>
+      <h4 data-i18n="ad.recentUploads">近期上传</h4>
       <small class="muted" data-i18n="ad.historyScope">最近 10 条现存分享</small>
       <div id="source-history-list" aria-live="polite"></div>
-    </details>
+    </section>
   </div>
   <div class="source-footer">
     <button id="source-back" class="btn ghost" type="button" hidden data-i18n="ad.backFile">返回文件</button>
     <button id="source-close" class="btn ghost" type="button" data-i18n="ad.sourceClose">关闭</button>
-    <button id="source-save" class="btn primary" type="submit" form="source-form" hidden data-i18n="ad.sourceSave">保存备注</button>
   </div>
 </dialog>
 <dialog id="file-dialog" class="source-dialog" aria-labelledby="file-title">

@@ -1,6 +1,7 @@
 import { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el } from './common.js';
 import { LANG, t, onLangChange, initI18n } from './i18n.js';
 import { initAudit } from './admin-audit.js';
+import { createFilePreview } from './admin-preview.js';
 import { pageSize, scrollToList, initAdminPreferences } from './admin-preferences.js';
 
 initTheme();
@@ -317,7 +318,6 @@ async function openSource(row, returnCode = null) {
   sourceReturnCode = returnCode;
   $('#source-back').hidden = !returnCode;
   $('#source-history').hidden = true;
-  $('#source-history').open = false;
   $('#source-history-list').replaceChildren();
   sourceHistoryLoaded = false;
   sourceForm.hidden = true;
@@ -344,13 +344,14 @@ async function openSource(row, returnCode = null) {
         [source.organization, source.asn ? `AS${source.asn}` : null].filter(Boolean).join(' · '))] : []),
       sourceField(t('ad.browserReported'), browserLabel(source.userAgent)),
       sourceField(t('ad.sourceTime'), fmtDate(source.capturedAt)),
-      ...(source.userAgent ? [el('details', { class: 'source-agent' }, el('summary', {}, 'User-Agent'),
+      ...(source.userAgent ? [el('div', { class: 'source-agent source-field-wide' }, el('small', { class: 'muted' }, 'User-Agent'),
         el('p', { class: 'mono' }, source.userAgent))] : []),
     );
     $('#source-history').hidden = false;
     sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';
     sourceForm.hidden = false;
     sourceSave.hidden = false;
+    loadSourceHistory();
   } catch (e) {
     if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');
   }
@@ -359,7 +360,6 @@ function closeSource() {
   sourceRequest++;
   activeSource = null;
   sourceReturnCode = null;
-  $('#source-history').open = false;
   $('#source-history').hidden = true;
   $('#source-history-list').replaceChildren();
   $('#source-back').hidden = true;
@@ -377,8 +377,8 @@ $('#source-back').addEventListener('click', () => {
   closeSource();
   if (code) openFileDetails(code);
 });
-$('#source-history').addEventListener('toggle', async () => {
-  if (!$('#source-history').open || !activeSource || sourceHistoryLoaded) return;
+async function loadSourceHistory() {
+  if (!activeSource || sourceHistoryLoaded) return;
   sourceHistoryLoaded = true;
   const request = sourceRequest;
   const list = $('#source-history-list');
@@ -387,7 +387,10 @@ $('#source-history').addEventListener('toggle', async () => {
     const { rows } = await api(`/api/admin/shares/${activeSource.code}/source/activity`);
     if (request !== sourceRequest || !sourceDialog.open) return;
     list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },
-      el('div', { class: 'activity-head' }, el('span', { title: row.filename || t('ad.textFallback') }, row.filename || t('ad.textFallback')),
+      el('div', { class: 'activity-head' }, row.kind === 'file'
+        ? el('button', { type: 'button', class: 'source-link', title: row.filename || t('ad.unnamed'),
+          onclick: () => { closeSource(); openFileDetails(row.code); } }, row.filename || t('ad.unnamed'))
+        : el('span', {}, t('ad.textFallback')),
         el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),
       el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} · ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} · ${row.code}`),
       row.ip || row.country || row.region || row.city
@@ -398,9 +401,9 @@ $('#source-history').addEventListener('toggle', async () => {
     if (request !== sourceRequest || !sourceDialog.open) return;
     sourceHistoryLoaded = false;
     list.replaceChildren(el('p', { class: 'error-box', role: 'alert' }, error.message || t('ad.loadFail')),
-      el('button', { type: 'button', class: 'btn small ghost', onclick: () => $('#source-history').dispatchEvent(new Event('toggle')) }, t('ad.retry')));
+      el('button', { type: 'button', class: 'btn small ghost', onclick: loadSourceHistory }, t('ad.retry')));
   }
-});
+}
 sourceForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!activeSource || sourceSave.disabled) return;
@@ -431,12 +434,14 @@ const fileDialog = $('#file-dialog');
 const fileDetail = $('#file-detail');
 const fileDownload = $('#file-download');
 let fileRequest = 0;
+let activePreview = null;
 function fileField(label, value, secondary) {
   return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),
     el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);
 }
 
 async function openFileDetails(code) {
+  activePreview?.dispose(); activePreview = null;
   const request = ++fileRequest;
   fileDownload.hidden = true;
   fileDownload.removeAttribute('href');
@@ -463,7 +468,7 @@ async function openFileDetails(code) {
           state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),
       ...(detail.description ? [el('div', { class: 'file-description file-wide' },
         el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),
-      ...(detail.displayName ? [fileField(t('ad.submittedName'), detail.displayName)] : []),
+      ...(state === 'available' ? [(activePreview = createFilePreview(code, detail.filename || '')).element] : []),
       fileField(t('ad.source'), sourceButton),
       fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '∞'}`),
       fileField(t('ad.th.created'), fmtDate(detail.createdAt)),
@@ -479,6 +484,7 @@ async function openFileDetails(code) {
   }
 }
 function closeFileDetails() {
+  activePreview?.dispose(); activePreview = null;
   fileRequest++;
   fileDetail.replaceChildren();
   $('#file-context').textContent = '';

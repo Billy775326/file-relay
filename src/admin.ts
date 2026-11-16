@@ -5,6 +5,7 @@ import type { Env } from './types';
 import { err, contentDisposition } from './util';
 import { getStore, shareStatusOf } from './store';
 import { deleteFile, readFileStream, inspectFile } from './filestore';
+import { previewFile } from './file-preview';
 import { sourceSummary } from './upload-source';
 import { runCleanup } from './cleanup';
 import { getCapacityUsage } from './quota';
@@ -250,6 +251,28 @@ adminRoutes.get('/shares/:code', async (c) => {
     status: shareStatusOf(record.expireAt, record.maxPickups, record.pickupCount, evaluatedAt),
     downloadUrl: `/api/admin/shares/${code}/download`,
   });
+});
+
+/** Private bounded previews leave share state and pickup counts untouched. */
+adminRoutes.get('/shares/:code/preview', async c => {
+  const code = c.req.param('code');
+  if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
+  const record = await getStore(c.env).getByCode(code);
+  if (!record) return err(c, 404, 'not_found', '分享不存在');
+  if (record.kind !== 'file') return err(c, 400, 'bad_request', '此分享不是文件');
+  if (!record.r2Key) return err(c, 410, 'gone', '文件已被清理');
+  const preview = await previewFile(c.env, record.r2Key, record.filename || '', record.size);
+  if (!preview) return err(c, 410, 'gone', '文件已被清理');
+  c.header('X-Content-Type-Options', 'nosniff');
+  c.header('Content-Security-Policy', "default-src 'none'; sandbox");
+  if (preview.kind === 'image') {
+    c.header('Content-Type', preview.mime);
+    c.header('Content-Disposition', 'inline');
+    c.header('X-Preview-Width', String(preview.width));
+    c.header('X-Preview-Height', String(preview.height));
+    return c.body(new Uint8Array(preview.bytes).buffer);
+  }
+  return c.json(preview);
 });
 
 /** Admin downloads read retained files without consuming public pickup limits. */

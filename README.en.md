@@ -161,6 +161,7 @@ Browser testing requires Python, Playwright and Chromium:
 python -m pip install playwright
 python -m playwright install chromium
 npm run test:quota-runtime
+npm run test:preview
 npm run test:source
 npm run test:admin-download
 npm run test:retention
@@ -200,6 +201,7 @@ These tests create shares and files. The R2 API test uses a file larger than one
 | GET / PUT | `/api/admin/upload-policy` | Read or save unnoted visitor upload limits |
 | GET / PUT | `/api/admin/settings` | Read or save retention days after expiry |
 | GET | `/api/admin/shares/:code` | Full file details and earliest cleanup time |
+| GET | `/api/admin/shares/:code/preview` | Admin text, CSV and small-image preview without counting pickups |
 | GET | `/api/admin/shares/:code/download` | Admin file download without counting pickups; retained expired files are allowed |
 | DELETE | `/api/admin/shares/:code` | Delete share and file |
 | POST | `/api/admin/cleanup` | Clean expired shares and stale upload sessions |

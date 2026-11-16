@@ -56,6 +56,35 @@ export interface FileStorageInfo {
   uploadedAt: number | null;
 }
 
+/** Bounded preview reads: R2 range at origin; KV stream is cancelled once enough bytes arrive. */
+export async function readFilePrefix(env: Env, key: string, limit: number): Promise<Uint8Array | null> {
+  let stream: ReadableStream<Uint8Array> | null = null;
+  if (isKvFileKey(key)) {
+    if (!env.fileKV) return null;
+    stream = await env.fileKV.get(key, 'stream');
+  } else {
+    if (!env.BUCKET) return null;
+    const head = await env.BUCKET.head(key);
+    if (!head) return null;
+    if (!head.size) return new Uint8Array();
+    const object = await env.BUCKET.get(key, { range: { offset: 0, length: Math.min(head.size, limit) } });
+    stream = object?.body ?? null;
+  }
+  if (!stream) return null;
+  const reader = stream.getReader();
+  const out = new Uint8Array(limit);
+  let length = 0;
+  try {
+    while (length < limit) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const count = Math.min(value.length, limit - length);
+      out.set(value.subarray(0, count), length); length += count;
+    }
+  } finally { await reader.cancel(); reader.releaseLock(); }
+  return out.slice(0, length);
+}
+
 /** Inspect on demand without buffering a file or treating an outage as deletion. */
 export async function inspectFile(env: Env, key: string | null): Promise<FileStorageInfo> {
   const unknown: FileStorageInfo = { state: 'unknown', size: null, uploadedAt: null };

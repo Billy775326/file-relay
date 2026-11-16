@@ -1109,6 +1109,26 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
   .source-footer .btn { padding-inline: 8px; font-size: 13px; }
   .upload-context summary, .source-history summary { min-height: 40px; padding-block: 8px; }
 }
+/* File content and upload source have separate, compact reading layouts. */
+#file-dialog, #source-dialog { width: min(720px, calc(100vw - 24px)); }
+#source-detail { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; }
+#source-detail .source-field { grid-template-columns: 82px minmax(0, 1fr); gap: 8px; }
+#source-form { grid-template-columns: auto minmax(0, 1fr) auto; border: 0; margin: 0 0 14px; padding: 0; }
+#source-history h4 { margin: 4px 0; font-size: 13px; }
+.file-preview { border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+.file-preview-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 8px 10px; background: var(--rowbg); font-size: 13px; }
+.file-preview-body { max-height: 320px; overflow: auto; padding: 10px; font-size: 13px; overflow-wrap: anywhere; }
+.file-preview-body pre { margin: 0; font: 13px/1.65 ui-monospace, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.file-preview-body .btn { margin-left: 8px; }
+.file-preview-image { display: block; max-width: 100%; max-height: 280px; object-fit: contain; margin: auto; }
+.file-preview-table { width: 100%; border-collapse: collapse; }
+.file-preview-table td { padding: 5px 8px; border-bottom: 1px solid var(--line); min-width: 100px; max-width: 240px; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  #source-detail { grid-template-columns: minmax(0, 1fr); }
+  #source-form { grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+  #source-form label { grid-column: 1 / -1; }
+  #source-save { min-height: 44px; }
+}
 /* Primary navigation belongs in the header; paging stays with its list. */
 .admin-topbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 24px; padding-block: 12px; margin-bottom: 12px; background: var(--paper); }
 .admin-topbar .brand { min-width: 0; }

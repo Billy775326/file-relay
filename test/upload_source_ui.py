@@ -19,16 +19,13 @@ with sync_playwright() as p:
     page.locator('#source-form').wait_for(state='visible')
     assert visitor in page.locator('#source-detail').inner_text()
     assert 'IP' in page.locator('#source-detail').inner_text()
-    page.locator('#source-history summary').click()
     page.locator('.source-activity').first.wait_for()
     assert page.locator('.source-activity').count() <= 10
     assert page.locator('#source-history-list img').count() == 0
-    page.locator('#source-history summary').click()
     page.route('**/api/admin/shares/*/source/activity', lambda route: route.fulfill(status=503, content_type='application/json', body='{"message":"History unavailable"}'))
     page.keyboard.press('Escape')
     buttons.first.click()
     page.locator('#source-form').wait_for(state='visible')
-    page.locator('#source-history summary').click()
     page.locator('#source-history-list .error-box').wait_for()
     page.unroute('**/api/admin/shares/*/source/activity')
     page.locator('#source-history-list button').click()

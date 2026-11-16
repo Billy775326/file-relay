@@ -66,7 +66,7 @@ with sync_playwright() as p:
                 page.set_viewport_size({'width': width, 'height': 844})
                 row.locator('.file-detail-link').click()
                 expect(page.locator('.file-description p')).to_have_text(description)
-                expect(page.locator('#file-detail')).to_contain_text('同事 <img src=x>')
+                expect(page.locator('#file-detail')).not_to_contain_text('同事 <img src=x>')
                 expect(page.locator('#file-detail')).not_to_contain_text('最早清理')
                 expect(page.locator('#file-detail')).not_to_contain_text('Cleanup after')
                 expect(page.locator('#file-detail img')).to_have_count(0)
@@ -76,7 +76,6 @@ with sync_playwright() as p:
                 expect(page.locator('#source-detail')).to_contain_text('同事 <img src=x>')
                 expect(page.locator('#source-detail img')).to_have_count(0)
                 assert description not in page.locator('#source-detail').inner_text()
-                page.locator('#source-history summary').click()
                 page.locator('.source-activity').first.wait_for()
                 assert page.locator('#source-dialog').evaluate('(e)=>e.scrollWidth<=e.clientWidth')
                 # Native modal focus never escapes to the page underneath.
