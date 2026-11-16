@@ -133,10 +133,10 @@ setInlineAssets({ "404.html": `<!doctype html>
     <span class="logo">\u{1F4E6}</span>\r
     <div><b data-i18n="brand.name">\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b><small data-i18n="brand.admin">\u7BA1\u7406\u540E\u53F0</small></div>\r
   </div>\r
-    <nav id="admin-navigation" class="admin-nav" hidden aria-label="\u7BA1\u7406\u9875\u9762" data-i18n-aria="audit.navigation">\r
-      <button id="admin-files-tab" class="btn small" type="button" aria-pressed="true" data-i18n="audit.files">\u6587\u4EF6\u7BA1\u7406</button>\r
-      <button id="admin-audit-tab" class="btn small ghost" type="button" aria-pressed="false" data-i18n="audit.title">\u65E5\u5FD7\u5BA1\u8BA1</button>\r
-    </nav>\r
+  <nav id="admin-navigation" class="admin-nav" hidden aria-label="\u7BA1\u7406\u9875\u9762" data-i18n-aria="audit.navigation">\r
+    <button id="admin-files-tab" class="admin-nav-link" type="button" aria-pressed="true" aria-controls="admin-files-view" data-i18n="audit.files">\u6587\u4EF6\u7BA1\u7406</button>\r
+    <button id="admin-audit-tab" class="admin-nav-link" type="button" aria-pressed="false" aria-controls="admin-audit-view" data-i18n="audit.title">\u65E5\u5FD7\u5BA1\u8BA1</button>\r
+  </nav>\r
   <div class="actions">\r
     <button id="admin-settings-btn" class="icon-btn" type="button" hidden aria-haspopup="dialog" aria-label="\u8BBE\u7F6E" data-i18n-aria="ad.settings" data-i18n-title="ad.settings">\r
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m9 3-.6 2.4-2 .9L4 5.6 1.8 9.4l1.8 1.7v1.8l-1.8 1.7L4 18.4l2.4-.7 2 .9L9 21h6l.6-2.4 2-.9 2.4.7 2.2-3.8-1.8-1.7v-1.8l1.8-1.7L20 5.6l-2.4.7-2-.9L15 3Z"/><circle cx="12" cy="12" r="3"/></svg>\r
@@ -328,863 +328,863 @@ setInlineAssets({ "404.html": `<!doctype html>
 <script type="module" src="/js/admin.js"><\/script>\r
 </body>\r
 </html>\r
-`, "index.html": `<!doctype html>\r
-<html lang="zh-CN">\r
-<head>\r
-<meta charset="utf-8">\r
-<meta name="viewport" content="width=device-width, initial-scale=1">\r
-<meta name="description" content="\u5206\u4EAB\u6587\u4EF6\u6216\u6587\u672C\uFF0C\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4\u3002\u652F\u6301\u94FE\u63A5\u548C\u626B\u7801\u53D6\u4EF6\uFF0C\u53EF\u8BBE\u7F6E\u6709\u6548\u671F\u4E0E\u53EF\u53D6\u6B21\u6570\u3002">\r
-<meta name="theme-color" content="#efe8d8">\r
-<title data-i18n="doc.send">\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001</title>\r
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\u{1F4E6}</text></svg>">\r
-<link rel="stylesheet" href="/style.css">\r
-<script>\r
-  // \u9632 FOUC:\u6E32\u67D3\u524D\u5B9A\u4E3B\u9898\r
-  document.documentElement.dataset.theme =\r
-    localStorage.getItem('theme') ||\r
-    (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');\r
-<\/script>\r
-</head>\r
-<body>\r
-<header class="topbar wide">\r
-  <div class="brand">\r
-    <span class="logo">\u{1F4E6}</span>\r
-    <div><b data-i18n="brand.name">\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b><small data-i18n="brand.tagline">\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u6587\u4EF6</small></div>\r
-  </div>\r
-  <div class="actions">\r
-    <button id="lang-btn" class="icon-btn lang-btn" data-i18n-title="nav.lang">EN</button>\r
-    <button id="theme-btn" class="icon-btn" data-i18n-title="nav.theme">\u{1F317}</button>\r
-    <a class="btn ghost small" href="/pickup" data-i18n="nav.pickup">\u53D6\u4EF6</a>\r
-  </div>\r
-</header>\r
-\r
-<main class="container wide">\r
-  <section class="flow-strip">\r
-    <div class="flow-step"><span class="flow-dot">\u{1F4E6}</span><div class="flow-tt"><b data-i18n="flow.dropT">\u5BC4\u4EF6</b><small data-i18n="flow.dropS">\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C</small></div></div>\r
-    <div class="flow-link"></div>\r
-    <div class="flow-step"><span class="flow-dot">\u{1F3AB}</span><div class="flow-tt"><b data-i18n="flow.tickT">\u5206\u4EAB\u53E3\u4EE4</b><small data-i18n="flow.tickS">\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4</small></div></div>\r
-    <div class="flow-link"></div>\r
-    <div class="flow-step"><span class="flow-dot">\u{1F4E5}</span><div class="flow-tt"><b data-i18n="flow.pickT">\u53D6\u4EF6</b><small data-i18n="flow.pickS">\u8F93\u5165\u53E3\u4EE4\u5373\u53EF\u4E0B\u8F7D\u6216\u67E5\u770B</small></div></div>\r
-  </section>\r
-  <div class="send-grid">\r
-  <section class="card form-card">\r
-    <div class="card-cap">\r
-      <span data-i18n="send.cap">\u5206\u4EAB\u5185\u5BB9</span>\r
-      <span class="cap-date" id="cap-date"></span>\r
-    </div>\r
-    <div class="tabs">\r
-      <button class="tab active" data-tab="file" data-i18n="tab.file">\u53D1\u6587\u4EF6</button>\r
-      <button class="tab" data-tab="text" data-i18n="tab.text">\u53D1\u6587\u672C</button>\r
-    </div>\r
-\r
-    <div id="panel-file" class="panel">\r
-      <div id="dropzone" class="dropzone" tabindex="0" role="button" data-i18n-aria="dz.aria" aria-label="\u9009\u62E9\u6587\u4EF6">\r
-        <input type="file" id="file-input" multiple hidden>\r
-        <div class="dz-icon">\u{1F4C4}</div>\r
-        <p><b data-i18n="dz.click">\u70B9\u51FB\u9009\u62E9\u6587\u4EF6</b><span data-i18n="dz.drop">,\u6216\u62D6\u62FD / \u7C98\u8D34\u5230\u6B64\u5904</span></p>\r
-        <small id="dz-hint" data-i18n="dz.hint">\u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4</small>\r
-      </div>\r
-      <div id="file-list" class="file-list" hidden></div>\r
-    </div>\r
-\r
-    <div id="panel-text" class="panel" hidden>\r
-      <textarea id="text-input" rows="6" maxlength="65536" data-i18n-aria="tab.text" aria-label="\u53D1\u6587\u672C" data-i18n-ph="text.placeholder" placeholder="\u7C98\u8D34\u6216\u8F93\u5165\u8981\u5206\u4EAB\u7684\u6587\u672C\u2026"></textarea>\r
-      <div class="row-between"><small class="muted" id="text-counter">0 / 65536</small></div>\r
-    </div>\r
-\r
-    <details class="upload-context">\r
-      <summary data-i18n="context.add">\u8865\u5145\u4FE1\u606F\uFF08\u9009\u586B\uFF09</summary>\r
-      <div class="context-fields">\r
-        <div class="context-row">\r
-          <label for="upload-name" data-i18n="context.name">\u600E\u4E48\u79F0\u547C\u4F60</label>\r
-          <input id="upload-name" type="text" maxlength="40" autocomplete="nickname" data-i18n-ph="context.namePh" placeholder="\u586B\u5199\u4F60\u5E38\u7528\u7684\u79F0\u547C">\r
-        </div>\r
-        <div id="upload-description-field" class="context-row">\r
-          <div class="context-label"><label for="upload-description" data-i18n="context.description">\u6587\u4EF6\u8BF4\u660E</label><small id="description-count" class="muted">0 / 300</small></div>\r
-          <textarea id="upload-description" rows="3" maxlength="300" aria-describedby="description-count" data-i18n-ph="context.descriptionPh" placeholder="\u7B80\u8FF0\u6587\u4EF6\u5185\u5BB9\uFF0C\u540C\u6279\u6587\u4EF6\u5171\u7528"></textarea>\r
-        </div>\r
-        <small class="muted" data-i18n="context.visibility">\u8865\u5145\u4FE1\u606F\u4EC5\u7BA1\u7406\u5458\u53EF\u89C1</small>\r
-      </div>\r
-    </details>\r
-\r
-    <div class="options">\r
-      <div class="opt-group">\r
-        <label data-i18n="opt.expiry">\u6709\u6548\u671F</label>\r
-        <div class="seg" id="seg-expiry" role="group" data-i18n-aria="opt.expiry" aria-label="\u6709\u6548\u671F">\r
-          <button type="button" data-v="1d" data-i18n="seg.1d">1 \u5929</button>\r
-          <button type="button" data-v="7d" class="active" data-i18n="seg.7d">7 \u5929</button>\r
-          <button type="button" data-v="30d" data-i18n="seg.30d">30 \u5929</button>\r
-          <button type="button" data-v="forever" data-i18n="seg.forever" disabled>\u6C38\u4E45</button>\r
-        </div>\r
-      </div>\r
-      <div class="opt-group">\r
-        <label data-i18n="opt.pickups">\u53EF\u53D6\u6B21\u6570</label>\r
-        <div class="seg" id="seg-pickups" role="group" data-i18n-aria="opt.pickups" aria-label="\u53EF\u53D6\u6B21\u6570">\r
-          <button type="button" data-v="1" data-i18n="seg.p1">1 \u6B21</button>\r
-          <button type="button" data-v="5" class="active" data-i18n="seg.p5">5 \u6B21</button>\r
-          <button type="button" data-v="null" data-i18n="seg.punlimited" disabled>\u4E0D\u9650</button>\r
-        </div>\r
-      </div>\r
-    </div>\r
-\r
-    <small id="upload-policy-hint" class="muted" aria-live="polite"></small>\r
-    <button id="btn-upload" class="btn primary block" disabled data-i18n="btn.upload">\u5F00\u59CB\u4E0A\u4F20</button>\r
-    <button id="btn-text" class="btn primary block" hidden disabled data-i18n="btn.genCode">\u751F\u6210\u53E3\u4EE4</button>\r
-\r
-\r
-    <div id="progress" class="progress" hidden>\r
-      <div class="bar"><div id="progress-fill"></div></div>\r
-      <div class="row-between">\r
-        <small id="progress-text">\u2026</small>\r
-        <button id="btn-cancel" class="btn danger small" type="button" data-i18n="btn.cancel">\u53D6\u6D88</button>\r
-      </div>\r
-    </div>\r
-\r
-    </section>\r
-\r
-    <aside class="send-side">\r
-      <div class="side-cap" data-i18n="receipt.cap">\u5206\u4EAB\u7ED3\u679C</div>\r
-      <div id="result-placeholder" class="result-placeholder">\r
-        <div class="ph-postmark">READY</div>\r
-        <p data-i18n="ph.title">\u7B49\u5F85\u5206\u4EAB</p>\r
-        <small data-i18n="ph.sub">\u5206\u4EAB\u6210\u529F\u540E\uFF0C\u5728\u8FD9\u91CC\u590D\u5236\u53E3\u4EE4\u6216\u94FE\u63A5</small>\r
-        <div class="ph-route">\r
-          <div class="ph-leg"><span class="ph-ic">\u{1F9D1}</span><div><b data-i18n="route.senderT">\u5BC4\u4EF6\u4EBA \xB7 \u4F60</b><small data-i18n="route.senderS">\u9009\u62E9\u5185\u5BB9\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u548C\u53EF\u53D6\u6B21\u6570</small></div></div>\r
-          <div class="ph-dash"></div>\r
-          <div class="ph-leg"><span class="ph-ic">\u2601\uFE0F</span><div><b data-i18n="route.relayT">\u751F\u6210\u5206\u4EAB</b><small data-i18n="route.relayS">\u628A\u53D6\u4EF6\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9</small></div></div>\r
-          <div class="ph-dash"></div>\r
-          <div class="ph-leg"><span class="ph-ic">\u{1F9F2}</span><div><b data-i18n="route.takerT">\u53D6\u4EF6\u4EBA \xB7 \u5BF9\u65B9</b><small data-i18n="route.takerS">\u8F93\u5165\u53E3\u4EE4\u6216\u6253\u5F00\u94FE\u63A5\uFF0C\u5373\u53EF\u53D6\u4EF6</small></div></div>\r
-        </div>\r
-        <div class="ph-fine" data-i18n="route.fine">\u53E3\u4EE4\u8BF7\u59A5\u5584\u4FDD\u7BA1\uFF0C\u4EC5\u5206\u4EAB\u7ED9\u9700\u8981\u7684\u4EBA</div>\r
-      </div>\r
-      <div id="results" class="results"></div>\r
-    </aside>\r
-  </div>\r
-  <section class="feat-band">\r
-    <div class="feat"><span class="feat-ic">\u{1F9E9}</span><div><b data-i18n="feat.splitT">\u6587\u4EF6\u5206\u4EAB</b><small data-i18n="feat.splitS">\u9009\u62E9\u6587\u4EF6\u540E\u5F00\u59CB\u5206\u4EAB</small></div></div>\r
-    <div class="feat"><span class="feat-ic">\u23F3</span><div><b data-i18n="feat.ttlT">\u81EA\u9009\u6709\u6548\u671F</b><small data-i18n="feat.ttlS">1 ~ 30 \u5929\u6216\u6C38\u4E45</small></div></div>\r
-    <div class="feat"><span class="feat-ic">\u{1F522}</span><div><b data-i18n="feat.limitT">\u9650\u6B21\u53D6\u4EF6</b><small data-i18n="feat.limitS">1 \u6B21 \xB7 5 \u6B21 \xB7 \u4E0D\u9650</small></div></div>\r
-    <div class="feat"><span class="feat-ic">\u{1F512}</span><div><b data-i18n="feat.selfT">\u4FBF\u6377\u53D6\u4EF6</b><small data-i18n="feat.selfS">\u652F\u6301\u53E3\u4EE4\u3001\u94FE\u63A5\u548C\u626B\u7801\u53D6\u4EF6</small></div></div>\r
-  </section>\r
-</main>\r
-\r
-<footer class="foot" data-i18n="foot">\u89C1\u5B57\u5982\u9762</footer>\r
-\r
-<script src="/js/vendor/qrcode.js"><\/script>\r
-<script type="module" src="/js/index.js"><\/script>\r
-</body>\r
-</html>\r
-`, "js/admin-audit.js": "import { $, api, el, fmtDate } from './common.js';\r\nimport { t, LANG, onLangChange } from './i18n.js';\r\nimport { pageSize, scrollToList } from './admin-preferences.js';\r\n\r\nexport function initAudit() {\r\n  const view = $('#admin-audit-view');\r\n  const body = $('#audit-body');\r\n  const dialog = $('#audit-dialog');\r\n  let category = 'all', offset = 0, total = 0, request = 0;\r\n  let filters = {}, rows = [], available = false;\r\n  let limit = pageSize('audit');\r\n  const action = row => t(`audit.action.${row.action}`);\r\n  const actor = row => t(`audit.actor.${row.actor}`);\r\n  const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;\r\n  function place(row) {\r\n    let country = row.country;\r\n    if (/^[A-Z]{2}$/.test(country)) country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\r\n    return [...new Set([country, row.region, row.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\r\n  }\r\n  function close() { dialog.close(); $('#audit-detail').replaceChildren(); }\r\n  function details(row) {\r\n    const fields = [\r\n      [t('audit.time'), fmtDate(row.at)], [t('audit.action'), action(row)],\r\n      [t('audit.result'), t(`audit.${row.result}`)], [t('audit.actor'), actor(row)],\r\n      ['IP', ip(row)], [t('ad.sourceLocation'), place(row)],\r\n      [t('audit.target'), row.target || '\u2014'], [t('audit.http'), `${row.method} \xB7 ${row.status}`],\r\n      [t('audit.duration'), `${row.durationMs} ms`], [t('audit.id'), row.id],\r\n      [t('audit.agent'), row.agent || '\u2014'],\r\n    ];\r\n    for (const [key, value] of Object.entries(row.detail)) {\r\n      fields.push([t(`audit.detail.${key}`), key === 'bannedUntil' ? fmtDate(value)\r\n        : typeof value === 'boolean' ? t(value ? 'audit.yes' : 'audit.no') : String(value)]);\r\n    }\r\n    if (row.action === 'download') fields.push([t('audit.description'), t('audit.downloadHint')]);\r\n    $('#audit-detail').replaceChildren(...fields.map(([label, value]) => el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));\r\n    dialog.showModal();\r\n  }\r\n  function render() {\r\n    body.replaceChildren(...rows.map(row => el('tr', {},\r\n      el('td', {}, fmtDate(row.at)),\r\n      el('td', {}, el('span', {}, action(row)), el('small', { class: 'muted' }, t(`audit.${row.category}`))),\r\n      el('td', {}, el('span', { class: `audit-result audit-${row.result}` }, t(`audit.${row.result}`))),\r\n      el('td', { class: 'audit-actor' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.actor')), actor(row)),\r\n      el('td', { class: 'audit-source' }, el('span', { class: 'mono' }, ip(row)),\r\n        row.country || row.region || row.city ? el('small', { class: 'muted' }, place(row)) : null),\r\n      el('td', { class: 'audit-target' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.target')), row.target || '\u2014'),\r\n      el('td', {}, el('button', { type: 'button', class: 'btn small ghost', onclick: () => details(row) }, t('audit.details'))),\r\n    )));\r\n    $('#audit-page').textContent = t('audit.page', Math.floor(offset / limit) + 1, Math.max(1, Math.ceil(total / limit)), total);\r\n    $('#audit-prev').disabled = offset === 0;\r\n    $('#audit-next').disabled = offset + limit >= total;\r\n  }\r\n  async function load() {\r\n    const ticket = ++request;\r\n    available = false;\r\n    $('#audit-error').hidden = true;\r\n    $('#audit-state').textContent = t('ad.loading');\r\n    $('#audit-page').textContent = '';\r\n    body.replaceChildren();\r\n    for (const id of ['audit-prev', 'audit-next', 'audit-export', 'audit-refresh']) $('#' + id).disabled = true;\r\n    try {\r\n      const params = new URLSearchParams({ ...filters, category, offset, limit });\r\n      const data = await api(`/api/admin/audit-logs?${params}`);\r\n      if (ticket !== request || view.hidden) return;\r\n      if (typeof data.enabled !== 'boolean' || !Array.isArray(data.rows) || !Number.isSafeInteger(data.total)) throw new Error(t('ad.loadFail'));\r\n      available = data.enabled;\r\n      rows = data.rows; total = data.total;\r\n      if (available && offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return load(); }\r\n      $('#audit-state').textContent = !available ? t('audit.disabled') : !total ? t('audit.empty') : '';\r\n      render();\r\n      $('#audit-export').disabled = !available || total === 0;\r\n    } catch (e) {\r\n      if (ticket !== request || view.hidden) return;\r\n      $('#audit-state').textContent = '';\r\n      $('#audit-error').textContent = e.message || t('ad.loadFail');\r\n      $('#audit-error').hidden = false;\r\n    } finally { if (ticket === request) $('#audit-refresh').disabled = false; }\r\n  }\r\n  function selectView(audit) {\r\n    view.hidden = !audit;\r\n    $('#admin-files-view').hidden = audit;\r\n    for (const [id, active] of [['admin-files-tab', !audit], ['admin-audit-tab', audit]]) {\r\n      $('#' + id).setAttribute('aria-pressed', String(active));\r\n      $('#' + id).classList.toggle('ghost', !active);\r\n    }\r\n    if (audit) load(); else { request++; close(); }\r\n  }\r\n  $('#admin-files-tab').addEventListener('click', () => selectView(false));\r\n  $('#admin-audit-tab').addEventListener('click', () => selectView(true));\r\n  $('#audit-filter').addEventListener('submit', e => {\r\n    e.preventDefault();\r\n    const from = $('#audit-from').value, to = $('#audit-to').value;\r\n    if (from && to && from > to) {\r\n      $('#audit-error').textContent = t('audit.dateError'); $('#audit-error').hidden = false; return;\r\n    }\r\n    filters = { result: $('#audit-result').value, q: $('#audit-q').value.trim() };\r\n    if (from) filters.from = new Date(`${from}T00:00:00`).getTime();\r\n    if (to) { const end = new Date(`${to}T00:00:00`); end.setDate(end.getDate() + 1); filters.to = end.getTime() - 1; }\r\n    offset = 0; load();\r\n  });\r\n  $('#audit-reset').addEventListener('click', () => { $('#audit-filter').reset(); filters = {}; offset = 0; load(); });\r\n  for (const button of document.querySelectorAll('.audit-categories button')) button.addEventListener('click', () => {\r\n    category = button.dataset.category; offset = 0;\r\n    for (const item of document.querySelectorAll('.audit-categories button')) item.setAttribute('aria-pressed', String(item === button));\r\n    load();\r\n  });\r\n  $('#audit-prev').addEventListener('click', async () => { offset = Math.max(0, offset - limit); await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\r\n  $('#audit-next').addEventListener('click', async () => { offset += limit; await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\r\n  $('#audit-refresh').addEventListener('click', load);\r\n  window.addEventListener('admin-page-size', event => {\r\n    if (event.detail.name !== 'audit') return;\r\n    limit = event.detail.value; offset = 0;\r\n    if (!view.hidden) load();\r\n  });\r\n  $('#audit-export').addEventListener('click', async () => {\r\n    $('#audit-export').disabled = true;\r\n    $('#audit-error').hidden = true;\r\n    const exportFilters = { ...filters, category };\r\n    try {\r\n      const params = new URLSearchParams({ ...exportFilters, offset: 0, limit: 1000 });\r\n      const data = await api(`/api/admin/audit-logs/export?${params}`);\r\n      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), filters: exportFilters, ...data }, null, 2)], { type: 'application/json' });\r\n      const url = URL.createObjectURL(blob);\r\n      const link = el('a', { href: url, download: `audit-${new Date().toISOString().slice(0, 10)}.json` });\r\n      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);\r\n    } catch (e) { $('#audit-error').textContent = e.message || t('ad.loadFail'); $('#audit-error').hidden = false; }\r\n    finally { $('#audit-export').disabled = !available || total === 0; }\r\n  });\r\n  $('#audit-close').addEventListener('click', close);\r\n  dialog.addEventListener('cancel', e => { e.preventDefault(); close(); });\r\n  window.addEventListener('audit-write-failed', () => { $('#audit-write-warning').hidden = false; });\r\n  onLangChange(() => { close(); if (!view.hidden) load(); });\r\n}\r\n", "js/admin-preferences.js": "import { $ } from './common.js';\r\nimport { t } from './i18n.js';\r\n\r\nconst options = { files: [10, 20, 40], audit: [20, 50, 100] };\r\nconst values = { files: 20, audit: 20 };\r\nfor (const name of Object.keys(values)) {\r\n  try {\r\n    const saved = Number(localStorage.getItem(`admin-page-size-${name}`));\r\n    if (options[name].includes(saved)) values[name] = saved;\r\n  } catch { /* Browser preferences are optional when persistent storage is blocked. */ }\r\n}\r\nexport function pageSize(name) { return values[name]; }\r\n\r\nexport function scrollToList(selector) {\r\n  const list = $(selector);\r\n  const top = list.querySelector('.table-wrap').getBoundingClientRect().top + window.scrollY\r\n    - list.querySelector('.list-toolbar').getBoundingClientRect().height - 20;\r\n  window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });\r\n}\r\n\r\nexport function initAdminPreferences() {\r\n  const dialog = $('#settings-dialog');\r\n  $('#admin-settings-btn').addEventListener('click', () => dialog.showModal());\r\n  $('#settings-close').addEventListener('click', () => dialog.close());\r\n  for (const name of Object.keys(values)) {\r\n    const select = $(`#${name}-page-size`);\r\n    select.value = String(values[name]);\r\n    select.addEventListener('change', () => {\r\n      const value = Number(select.value);\r\n      if (!options[name].includes(value)) return;\r\n      values[name] = value;\r\n      $('#preferences-error').hidden = true;\r\n      try { localStorage.setItem(`admin-page-size-${name}`, String(value)); }\r\n      catch {\r\n        $('#preferences-error').textContent = t('ad.preferenceNotSaved');\r\n        $('#preferences-error').hidden = false;\r\n      }\r\n      window.dispatchEvent(new CustomEvent('admin-page-size', { detail: { name, value } }));\r\n    });\r\n  }\r\n  window.addEventListener('audit-write-failed', () => { $('#settings-audit-warning').hidden = false; });\r\n}\r\n", "js/admin.js": "import { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el } from './common.js';\r\nimport { LANG, t, onLangChange, initI18n } from './i18n.js';\r\nimport { initAudit } from './admin-audit.js';\r\nimport { pageSize, scrollToList, initAdminPreferences } from './admin-preferences.js';\r\n\r\ninitTheme();\r\ninitI18n();\r\ninitDialogs();\r\ninitAdminPreferences();\r\ninitAudit();\r\n\r\nconst loginCard = $('#admin-login');\r\nconst panel = $('#admin-panel');\r\nconst loginError = $('#login-error');\r\nconst tokenInput = $('#admin-token');\r\nconst statsRow = $('#stats-row');\r\nconst tbody = $('#shares-body');\r\nconst btnPrev = $('#btn-prev');\r\nconst btnNext = $('#btn-next');\r\nconst btnRefresh = $('#btn-refresh');\r\nconst pageInfo = $('#page-info');\r\n\r\nlet limit = pageSize('files'); // Bounded to 40 to leave room for KV reads on the free plan.\r\nlet offset = 0;\r\nlet total = 0;\r\nlet listRequest = 0;\r\nlet listBusy = false;\r\n\r\n/* \u8BED\u8A00\u5207\u6362:\u9762\u677F\u53EF\u89C1\u65F6\u6309\u65B0\u8BED\u8A00\u91CD\u62C9\u6587\u6848 */\r\nonLangChange(() => {\r\n  if ($('#source-dialog').open) closeSource();\r\n  if ($('#file-dialog').open) closeFileDetails();\r\n  if (!panel.hidden) {\r\n    loadStats();\r\n    loadList();\r\n    loadLoginProtection();\r\n  }\r\n});\r\n\r\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\r\n(async () => {\r\n  try {\r\n    await api('/api/admin/stats');\r\n    showPanel();\r\n  } catch {\r\n    loginCard.hidden = false;\r\n    tokenInput.focus();\r\n  }\r\n})();\r\n\r\nasync function login() {\r\n  const token = tokenInput.value.trim();\r\n  if (!token || $('#btn-login').disabled) return;\r\n  $('#btn-login').disabled = true;\r\n  loginError.hidden = true;\r\n  try {\r\n    await api('/api/admin/login', { method: 'POST', body: { token } });\r\n    showPanel();\r\n  } catch (e) {\r\n    loginError.textContent = e.code === 'login_blocked' ? t('ad.loginBlocked')\r\n      : e.code === 'login_protection_unavailable' ? t('ad.guardUnavailable') : e.message || t('ad.badToken');\r\n    loginError.hidden = false;\r\n  } finally { $('#btn-login').disabled = false; }\r\n}\r\n$('#btn-login').addEventListener('click', login);\r\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\r\n\r\nfunction showPanel() {\r\n  loginCard.hidden = true;\r\n  panel.hidden = false;\r\n  $('#admin-navigation').hidden = false;\r\n  $('#admin-settings-btn').hidden = false;\r\n  loadStats();\r\n  loadList();\r\n  loadSettings();\r\n  loadGuestPolicy();\r\n  loadLoginProtection();\r\n}\r\n\r\n$('#btn-logout').addEventListener('click', async () => {\r\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\r\n  location.reload();\r\n});\r\n\r\n/* ---------- \u7EDF\u8BA1 ---------- */\r\nlet lastStats = null; // \u5220\u9664\u540E\u672C\u5730\u9012\u51CF\u7528,\u907F\u514D\u7ACB\u5373\u91CD\u62C9\u649E\u4E0A KV \u6700\u7EC8\u4E00\u81F4\u7A97\u53E3\r\n\r\nfunction renderStats(s) {\r\n  const counts = [\r\n    [s.total, 'ad.total'], [s.active, 'ad.active'], [s.files, 'ad.files'],\r\n    [s.texts, 'ad.texts'], [s.todayCreated, 'ad.today'],\r\n  ];\r\n  const capacity = s.fileBackend === 'r2' ? s.storage : null;\r\n  const storageCard = el('div', { class: 'stat-card storage-card' },\r\n    el('small', {}, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes')),\r\n    capacity\r\n      ? el('div', { class: 'storage-value' },\r\n          el('b', {}, fmtBytes(capacity.usedBytes)),\r\n          el('span', { class: 'storage-total' }, ` / ${fmtBytes(capacity.capacityBytes)}`))\r\n      : el('div', { class: 'storage-value' }, el('b', {}, s.fileBackend === 'r2'\r\n          ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),\r\n  );\r\n  if (capacity) {\r\n    const ratio = Math.min(1, Math.max(0, capacity.usedBytes / capacity.capacityBytes));\r\n    storageCard.append(\r\n      el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,\r\n        value: capacity.usedBytes, ariaLabel: t('ad.storage') }),\r\n      el('div', { class: 'storage-caption' },\r\n        el('small', {}, t('ad.storageReserved')), el('small', {}, `${Math.round(ratio * 100)}%`)),\r\n    );\r\n  }\r\n  statsRow.replaceChildren(\r\n    el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>\r\n      el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),\r\n    storageCard,\r\n  );\r\n}\r\n\r\nasync function loadStats() {\r\n  try {\r\n    lastStats = await api('/api/admin/stats');\r\n    renderStats(lastStats);\r\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\r\n}\r\n\r\n/** \u5220\u9664\u6210\u529F\u540E\u672C\u5730\u540C\u6B65\u7EDF\u8BA1(\u670D\u52A1\u7AEF KV \u7D22\u5F15\u6700\u957F 60s \u624D\u53CD\u6620\u5220\u9664,\u91CD\u62C9\u4F1A\u770B\u5230\u65E7\u6570) */\r\nasync function statsAfterDelete(r) {\r\n  if (!lastStats) return;\r\n  const s = { ...lastStats };\r\n  s.total = Math.max(0, s.total - 1);\r\n  if (r.kind === 'file') s.files = Math.max(0, s.files - 1);\r\n  else s.texts = Math.max(0, s.texts - 1);\r\n  s.totalBytes = Math.max(0, s.totalBytes - r.size);\r\n  if (r.status === 'active') s.active = Math.max(0, s.active - 1);\r\n  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);\r\n  if (r.created_at >= todayStart.getTime()) s.todayCreated = Math.max(0, s.todayCreated - 1);\r\n  lastStats = s;\r\n  renderStats(s);\r\n  if (s.fileBackend === 'r2') {\r\n    try { s.storage = (await api('/api/admin/stats')).storage; }\r\n    catch { s.storage = null; } // Do not present stale capacity as current after deletion.\r\n    if (lastStats === s) renderStats(s);\r\n  }\r\n}\r\n\r\n/* ---------- \u5217\u8868 ---------- */\r\nconst STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };\r\nconst KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };\r\n\r\nasync function loadList() {\r\n  const request = ++listRequest;\r\n  listBusy = true;\r\n  btnPrev.disabled = btnNext.disabled = btnRefresh.disabled = true;\r\n  pageInfo.textContent = t('ad.loading');\r\n  tbody.setAttribute('aria-busy', 'true');\r\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));\r\n  try {\r\n    const data = await api(`/api/admin/shares?limit=${limit}&offset=${offset}`);\r\n    if (request !== listRequest) return;\r\n    if (!Number.isSafeInteger(data.total) || data.total < 0 || !Array.isArray(data.rows)) throw new Error(t('ad.loadFail'));\r\n    total = data.total;\r\n    if (offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return loadList(); }\r\n    const rows = data.rows ?? [];\r\n    tbody.replaceChildren();\r\n    for (const r of rows) {\r\n      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\r\n      tbody.append(\r\n        el('tr', {},\r\n          el('td', { class: 'mono' }, r.code),\r\n          el('td', { class: 'share-content-cell' },\r\n            el('div', { class: 'share-filename-line' },\r\n              r.kind === 'file'\r\n                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)\r\n                : el('span', { class: 'share-filename', title: content }, content),\r\n              el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),\r\n          sourceCell(r),\r\n          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),\r\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\r\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),\r\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),\r\n          el('td', {}, fmtDate(r.created_at)),\r\n          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),\r\n        ),\r\n      );\r\n    }\r\n    if (rows.length === 0) {\r\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));\r\n    }\r\n    listBusy = false;\r\n    updatePager();\r\n  } catch (e) {\r\n    if (request !== listRequest) return;\r\n    pageInfo.textContent = t('ad.loadFail');\r\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));\r\n  } finally {\r\n    if (request === listRequest) {\r\n      listBusy = false;\r\n      btnRefresh.disabled = false;\r\n      tbody.setAttribute('aria-busy', 'false');\r\n    }\r\n  }\r\n}\r\n\r\nfunction updatePager() {\r\n  const page = Math.floor(offset / limit) + 1;\r\n  const pages = Math.max(1, Math.ceil(total / limit));\r\n  pageInfo.textContent = t('ad.page', page, pages, total);\r\n  btnPrev.disabled = listBusy || offset <= 0;\r\n  btnNext.disabled = listBusy || offset + limit >= total;\r\n}\r\nbtnPrev.addEventListener('click', async () => { offset = Math.max(0, offset - limit); await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\r\nbtnNext.addEventListener('click', async () => { offset += limit; await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\r\nbtnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });\r\nwindow.addEventListener('admin-page-size', event => {\r\n  if (event.detail.name !== 'files') return;\r\n  limit = event.detail.value; offset = 0;\r\n  if (!panel.hidden) loadList();\r\n});\r\n\r\n/* ---------- \u5220\u9664:\u7968\u636E\u98CE\u786E\u8BA4\u5F39\u7A97 + \u672C\u5730\u540C\u6B65(KV \u6700\u7EC8\u4E00\u81F4,\u5220\u9664\u540E\u7ACB\u5373\u91CD\u62C9\u4F1A\u770B\u5230\u6B8B\u7559\u7D22\u5F15) ---------- */\r\nconst delMask = $('#del-mask');\r\nconst delTarget = $('#del-target');\r\nlet delResolve = null;\r\n\r\nfunction confirmDelete(r) {\r\n  const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\r\n  delTarget.replaceChildren(\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.code')), el('b', { class: 'mono' }, r.code)),\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.content')), el('span', {}, content)),\r\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),\r\n      el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),\r\n  );\r\n  delMask.showModal();\r\n  $('#del-cancel').focus();\r\n  return new Promise((resolve) => { delResolve = resolve; });\r\n}\r\n\r\nfunction closeDelModal(v) {\r\n  if (!delResolve) return;\r\n  delMask.close();\r\n  const resolve = delResolve;\r\n  delResolve = null;\r\n  resolve(v);\r\n}\r\n$('#del-cancel').addEventListener('click', () => closeDelModal(false));\r\n$('#del-ok').addEventListener('click', () => closeDelModal(true));\r\ndelMask.addEventListener('click', (e) => e.target === delMask && closeDelModal(false));\r\ndelMask.addEventListener('cancel', e => { e.preventDefault(); closeDelModal(false); });\r\n\r\nasync function remove(r, tr) {\r\n  if (!(await confirmDelete(r))) return;\r\n  try {\r\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\r\n    toast(t('ad.deleted'), 'ok');\r\n    statsAfterDelete(r);\r\n    total = Math.max(0, total - 1);\r\n    tr?.remove();\r\n    // \u5F53\u524D\u9875\u5220\u7A7A\u4E14\u4E0D\u5728\u7B2C\u4E00\u9875:\u9000\u56DE\u4E0A\u4E00\u9875\u91CD\u62C9,\u907F\u514D\u505C\u5728\u7A7A\u9875\r\n    if (tbody.rows.length === 0 && offset > 0) {\r\n      offset = Math.max(0, offset - limit);\r\n      loadList();\r\n    } else {\r\n      updatePager();\r\n    }\r\n  } catch (e) {\r\n    toast(e.message || t('ad.deleteFail'), 'error');\r\n  }\r\n}\r\n\r\n/* Upload source details: source labels are text nodes, never interpolated HTML. */\r\nconst sourceDialog = $('#source-dialog');\r\nconst sourceForm = $('#source-form');\r\nconst sourceNote = $('#source-note');\r\nconst sourceSave = $('#source-save');\r\nconst sourceError = $('#source-error');\r\nconst noteOverrides = new Map(); // Read-your-write while KV propagation completes.\r\nlet sourceRequest = 0;\r\nlet activeSource = null;\r\nlet sourceReturnCode = null;\r\nlet sourceHistoryLoaded = false;\r\n\r\nfunction sourceField(label, value, className = '') {\r\n  return el('div', { class: `source-field ${className}` },\r\n    el('small', { class: 'muted' }, label), el('span', {}, value));\r\n}\r\nfunction browserLabel(ua) {\r\n  if (!ua) return t('ad.sourceUnrecorded');\r\n  const browser = /Edg\\//.test(ua) ? 'Edge' : /Firefox\\//.test(ua) ? 'Firefox'\r\n    : /Chrome\\//.test(ua) ? 'Chrome' : /Safari\\//.test(ua) ? 'Safari' : t('ad.sourceUnknown');\r\n  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS'\r\n    : /Windows/.test(ua) ? 'Windows' : /Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';\r\n  return [browser, os].filter(Boolean).join(' \xB7 ');\r\n}\r\n\r\nfunction visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }\r\nfunction sourceLabel(source) {\r\n  const override = noteOverrides.get(source.visitorId);\r\n  return (override !== undefined ? override : source.note) || visitorLabel(source.visitorId);\r\n}\r\nfunction locationLabel(source) {\r\n  let country = source.country;\r\n  if (country && /^[A-Z]{2}$/.test(country)) {\r\n    country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\r\n  }\r\n  return [...new Set([country, source.region, source.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\r\n}\r\nfunction sourceCell(row) {\r\n  if (!row.source) return el('td', { class: 'source-cell muted' }, t('ad.sourceUnrecorded'));\r\n  const button = el('button', { class: 'source-link', type: 'button', onclick: () => openSource(row) }, sourceLabel(row.source));\r\n  button.dataset.visitor = row.source.visitorId;\r\n  button.title = t('ad.source');\r\n  return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));\r\n}\r\nasync function openSource(row, returnCode = null) {\r\n  const request = ++sourceRequest;\r\n  activeSource = null;\r\n  sourceReturnCode = returnCode;\r\n  $('#source-back').hidden = !returnCode;\r\n  $('#source-history').hidden = true;\r\n  $('#source-history').open = false;\r\n  $('#source-history-list').replaceChildren();\r\n  sourceHistoryLoaded = false;\r\n  sourceForm.hidden = true;\r\n  sourceError.hidden = true;\r\n  sourceSave.disabled = false;\r\n  sourceSave.hidden = true;\r\n  $('#source-context').textContent = `${t('ad.th.code')} ${row.code}`;\r\n  $('#source-detail').textContent = t('ad.loading');\r\n  sourceDialog.showModal();\r\n  try {\r\n    const { source } = await api(`/api/admin/shares/${row.code}/source`);\r\n    if (request !== sourceRequest || !sourceDialog.open) return;\r\n    if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }\r\n    activeSource = { code: row.code, visitorId: source.visitorId };\r\n    const ip = el('span', { class: 'source-ip' }, source.ip || t('ad.sourceUnknown'));\r\n    if (source.ip) ip.append(el('button', { class: 'btn small ghost', type: 'button',\r\n      onclick: async () => toast(t(await copyText(source.ip) ? 'ad.ipCopied' : 'ad.copyFailed')) }, t('ad.copyIP')));\r\n    $('#source-detail').replaceChildren(\r\n      sourceField(t('ad.visitorId'), source.visitorId, 'mono'),\r\n      ...(source.displayName ? [sourceField(t('ad.submittedName'), source.displayName)] : []),\r\n      sourceField(t('ad.requestIP'), ip),\r\n      sourceField(t('ad.sourceLocation'), locationLabel(source)),\r\n      ...(source.asn || source.organization ? [sourceField(t('ad.network'),\r\n        [source.organization, source.asn ? `AS${source.asn}` : null].filter(Boolean).join(' \xB7 '))] : []),\r\n      sourceField(t('ad.browserReported'), browserLabel(source.userAgent)),\r\n      sourceField(t('ad.sourceTime'), fmtDate(source.capturedAt)),\r\n      ...(source.userAgent ? [el('details', { class: 'source-agent' }, el('summary', {}, 'User-Agent'),\r\n        el('p', { class: 'mono' }, source.userAgent))] : []),\r\n    );\r\n    $('#source-history').hidden = false;\r\n    sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';\r\n    sourceForm.hidden = false;\r\n    sourceSave.hidden = false;\r\n  } catch (e) {\r\n    if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');\r\n  }\r\n}\r\nfunction closeSource() {\r\n  sourceRequest++;\r\n  activeSource = null;\r\n  sourceReturnCode = null;\r\n  $('#source-history').open = false;\r\n  $('#source-history').hidden = true;\r\n  $('#source-history-list').replaceChildren();\r\n  $('#source-back').hidden = true;\r\n  sourceNote.value = '';\r\n  sourceForm.hidden = true;\r\n  sourceSave.hidden = true;\r\n  $('#source-context').textContent = '';\r\n  $('#source-detail').replaceChildren();\r\n  sourceDialog.close();\r\n}\r\nsourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });\r\n$('#source-close').addEventListener('click', closeSource);\r\n$('#source-back').addEventListener('click', () => {\r\n  const code = sourceReturnCode;\r\n  closeSource();\r\n  if (code) openFileDetails(code);\r\n});\r\n$('#source-history').addEventListener('toggle', async () => {\r\n  if (!$('#source-history').open || !activeSource || sourceHistoryLoaded) return;\r\n  sourceHistoryLoaded = true;\r\n  const request = sourceRequest;\r\n  const list = $('#source-history-list');\r\n  list.textContent = t('ad.loading');\r\n  try {\r\n    const { rows } = await api(`/api/admin/shares/${activeSource.code}/source/activity`);\r\n    if (request !== sourceRequest || !sourceDialog.open) return;\r\n    list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },\r\n      el('div', { class: 'activity-head' }, el('span', { title: row.filename || t('ad.textFallback') }, row.filename || t('ad.textFallback')),\r\n        el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),\r\n      el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} \xB7 ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} \xB7 ${row.code}`),\r\n      row.ip || row.country || row.region || row.city\r\n        ? el('small', { class: 'muted' }, [row.ip, row.country || row.region || row.city ? locationLabel(row) : null].filter(Boolean).join(' \xB7 ')) : null,\r\n    )));\r\n    if (!rows.length) list.textContent = t('ad.empty');\r\n  } catch (error) {\r\n    if (request !== sourceRequest || !sourceDialog.open) return;\r\n    sourceHistoryLoaded = false;\r\n    list.replaceChildren(el('p', { class: 'error-box', role: 'alert' }, error.message || t('ad.loadFail')),\r\n      el('button', { type: 'button', class: 'btn small ghost', onclick: () => $('#source-history').dispatchEvent(new Event('toggle')) }, t('ad.retry')));\r\n  }\r\n});\r\nsourceForm.addEventListener('submit', async (e) => {\r\n  e.preventDefault();\r\n  if (!activeSource || sourceSave.disabled) return;\r\n  const { code } = activeSource;\r\n  const request = sourceRequest;\r\n  sourceSave.disabled = true;\r\n  sourceError.hidden = true;\r\n  try {\r\n    const result = await api(`/api/admin/shares/${code}/source`, { method: 'PUT', body: { note: sourceNote.value } });\r\n    noteOverrides.set(result.visitorId, result.note);\r\n    document.querySelectorAll('[data-visitor]').forEach((button) => {\r\n      if (button.dataset.visitor === result.visitorId) button.textContent = result.note || visitorLabel(result.visitorId);\r\n    });\r\n    if (request === sourceRequest) closeSource();\r\n    toast(t('ad.sourceSaved'));\r\n  } catch (error) {\r\n    if (request === sourceRequest) {\r\n      sourceError.textContent = error.message || t('ad.loadFail');\r\n      sourceError.hidden = false;\r\n    }\r\n  } finally {\r\n    if (request === sourceRequest) sourceSave.disabled = false;\r\n  }\r\n});\r\n\r\n/* File details use their own request generation so closed dialogs stay empty. */\r\nconst fileDialog = $('#file-dialog');\r\nconst fileDetail = $('#file-detail');\r\nconst fileDownload = $('#file-download');\r\nlet fileRequest = 0;\r\nfunction fileField(label, value, secondary) {\r\n  return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),\r\n    el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);\r\n}\r\n\r\nasync function openFileDetails(code) {\r\n  const request = ++fileRequest;\r\n  fileDownload.hidden = true;\r\n  fileDownload.removeAttribute('href');\r\n  fileDownload.removeAttribute('download');\r\n  $('#file-context').textContent = `${t('ad.th.code')} ${code}`;\r\n  fileDetail.textContent = t('ad.loading');\r\n  fileDialog.showModal();\r\n  try {\r\n    const detail = await api(`/api/admin/shares/${code}`);\r\n    if (request !== fileRequest || !fileDialog.open) return;\r\n    const state = detail.storage?.state || 'unknown';\r\n    const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };\r\n    const source = detail.source;\r\n    const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',\r\n      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }, code); },\r\n    }, sourceLabel(source)) : t('ad.sourceUnrecorded');\r\n    if (source) sourceButton.dataset.visitor = source.visitorId;\r\n    fileDetail.replaceChildren(\r\n      el('div', { class: 'file-identity file-wide' },\r\n        el('strong', {}, detail.filename || t('ad.unnamed')),\r\n        el('div', { class: 'file-summary' },\r\n          el('span', { title: t('ad.exactBytes', detail.size.toLocaleString()) }, fmtBytes(detail.size)),\r\n          el('span', { class: `badge ${detail.status}`, title: t('ad.shareState') }, t(STATUS_KEY[detail.status])),\r\n          state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),\r\n      ...(detail.description ? [el('div', { class: 'file-description file-wide' },\r\n        el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),\r\n      ...(detail.displayName ? [fileField(t('ad.submittedName'), detail.displayName)] : []),\r\n      fileField(t('ad.source'), sourceButton),\r\n      fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '\u221E'}`),\r\n      fileField(t('ad.th.created'), fmtDate(detail.createdAt)),\r\n      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)),\r\n\r\n    );\r\n    fileDownload.href = `/api/admin/shares/${code}/download`;\r\n    fileDownload.download = detail.filename || 'file';\r\n    fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');\r\n    fileDownload.hidden = state === 'missing';\r\n  } catch (error) {\r\n    if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');\r\n  }\r\n}\r\nfunction closeFileDetails() {\r\n  fileRequest++;\r\n  fileDetail.replaceChildren();\r\n  $('#file-context').textContent = '';\r\n  fileDownload.hidden = true;\r\n  fileDownload.removeAttribute('href');\r\n  fileDownload.removeAttribute('download');\r\n  fileDialog.close();\r\n}\r\n$('#file-close').addEventListener('click', closeFileDetails);\r\nfileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });\r\n\r\n/* Keep unsaved input local; only a validated save changes retention. */\r\nconst retentionInput = $('#retention-days');\r\nconst retentionSave = $('#retention-save');\r\nconst retentionError = $('#retention-error');\r\nasync function loadSettings() {\r\n  $('#retention-status').hidden = true;\r\n  retentionInput.disabled = true;\r\n  retentionSave.disabled = true;\r\n  retentionError.hidden = true;\r\n  $('#retention-retry').hidden = true;\r\n  try {\r\n    const settings = await api('/api/admin/settings');\r\n    if (!Number.isInteger(settings.expiredRetentionDays) || settings.expiredRetentionDays < 0 || settings.expiredRetentionDays > 3650) throw new Error(t('ad.loadFail'));\r\n    retentionInput.value = settings.expiredRetentionDays;\r\n    retentionInput.disabled = false;\r\n    retentionSave.disabled = false;\r\n  } catch (error) {\r\n    retentionError.textContent = error.message || t('ad.loadFail');\r\n    retentionError.hidden = false;\r\n    $('#retention-retry').hidden = false;\r\n  }\r\n}\r\n$('#retention-retry').addEventListener('click', loadSettings);\r\nretentionInput.addEventListener('input', () => { $('#retention-status').hidden = true; });\r\n$('#retention-form').addEventListener('submit', async e => {\r\n  e.preventDefault();\r\n  if (retentionSave.disabled || !retentionInput.reportValidity()) return;\r\n  retentionSave.disabled = true;\r\n  retentionInput.disabled = true;\r\n  retentionError.hidden = true;\r\n  $('#retention-status').hidden = true;\r\n  try {\r\n    const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });\r\n    retentionInput.value = settings.expiredRetentionDays;\r\n    $('#retention-status').textContent = t('ad.settingsSaved');\r\n    $('#retention-status').hidden = false;\r\n  } catch (error) {\r\n    retentionError.textContent = error.message || t('ad.loadFail');\r\n    retentionError.hidden = false;\r\n  } finally {\r\n    retentionInput.disabled = false;\r\n    retentionSave.disabled = false;\r\n  }\r\n});\r\n\r\nconst guestWeekly = $('#guest-weekly');\r\nconst guestSave = $('#guest-save');\r\nconst guestError = $('#guest-error');\r\nfunction guestBusy(busy) {\r\n  for (const control of [guestWeekly, guestSave]) control.disabled = busy;\r\n}\r\nasync function loadGuestPolicy() {\r\n  $('#guest-status').hidden = true;\r\n  guestBusy(true);\r\n  guestError.hidden = true;\r\n  $('#guest-retry').hidden = true;\r\n  try {\r\n    const policy = await api('/api/admin/upload-policy');\r\n    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000) throw new Error(t('ad.loadFail'));\r\n    guestWeekly.value = policy.weeklyFileLimit;\r\n    guestBusy(false);\r\n  } catch (error) {\r\n    guestError.textContent = error.message || t('ad.loadFail');\r\n    guestError.hidden = false;\r\n    $('#guest-retry').hidden = false;\r\n  }\r\n}\r\n$('#guest-retry').addEventListener('click', loadGuestPolicy);\r\nguestWeekly.addEventListener('input', () => { $('#guest-status').hidden = true; });\r\n$('#guest-policy-form').addEventListener('submit', async e => {\r\n  e.preventDefault();\r\n  if (guestSave.disabled || !e.target.reportValidity()) return;\r\n  const body = { weeklyFileLimit: Number(guestWeekly.value) };\r\n  guestBusy(true);\r\n  guestError.hidden = true;\r\n  $('#guest-status').hidden = true;\r\n  try {\r\n    await api('/api/admin/upload-policy', { method: 'PUT', body });\r\n    $('#guest-status').textContent = t('ad.guestSaved');\r\n    $('#guest-status').hidden = false;\r\n  } catch (error) {\r\n    guestError.textContent = error.message || t('ad.loadFail');\r\n    guestError.hidden = false;\r\n  } finally { guestBusy(false); }\r\n});\r\n\r\nlet guardRequest = 0;\r\nasync function loadLoginProtection() {\r\n  const request = ++guardRequest;\r\n  const refresh = $('#login-guard-refresh');\r\n  const error = $('#login-guard-error');\r\n  refresh.disabled = true;\r\n  error.hidden = true;\r\n  $('#login-guard-bans').replaceChildren();\r\n  $('#login-guard-status').textContent = '';\r\n  try {\r\n    const data = await api('/api/admin/login-protection');\r\n    if (request !== guardRequest) return;\r\n    if (typeof data.enabled !== 'boolean' || !Array.isArray(data.bans) ||\r\n        ![data.maxFailures, data.windowSeconds, data.banSeconds].every(n => Number.isInteger(n) && n > 0)) throw new Error(t('ad.loadFail'));\r\n    $('#login-guard-status').textContent = data.enabled\r\n      ? t('ad.guardRule', data.windowSeconds / 60, data.maxFailures, data.banSeconds / 60) : t('ad.guardDisabled');\r\n    if (!data.enabled) return;\r\n    if (!data.bans.length) $('#login-guard-bans').append(el('small', { class: 'muted' }, t('ad.guardEmpty')));\r\n    for (const ban of data.bans) {\r\n      const button = el('button', { class: 'btn small ghost', type: 'button' }, t('ad.guardUnblock'));\r\n      button.addEventListener('click', async () => {\r\n        button.disabled = true;\r\n        error.hidden = true;\r\n        try {\r\n          await api('/api/admin/login-protection/unblock', { method: 'POST', body: { ip: ban.ip } });\r\n          toast(t('ad.guardUnblocked'), 'ok');\r\n          await loadLoginProtection();\r\n        } catch (e) {\r\n          error.textContent = e.message || t('ad.loadFail');\r\n          error.hidden = false;\r\n          button.disabled = false;\r\n        }\r\n      });\r\n      $('#login-guard-bans').append(el('div', { class: 'login-guard-row' },\r\n        el('div', { class: 'login-guard-info' },\r\n          el('b', {}, ban.ip === 'unknown' ? t('ad.guardUnknown') : ban.ip),\r\n          el('small', { class: 'muted' }, t('ad.guardFailures', ban.failures) + ' \xB7 ' + t('ad.guardUntil', fmtDate(ban.bannedUntil))),\r\n          el('small', { class: 'muted' }, t('ad.guardLast', fmtDate(ban.lastFailedAt)))), button));\r\n    }\r\n  } catch (e) {\r\n    if (request !== guardRequest) return;\r\n    error.textContent = e.message || t('ad.loadFail');\r\n    error.hidden = false;\r\n  } finally { if (request === guardRequest) refresh.disabled = false; }\r\n}\r\n$('#login-guard-refresh').addEventListener('click', loadLoginProtection);\r\n", "js/common.js": "import { t } from './i18n.js';\n\nexport const $ = (sel, el = document) => el.querySelector(sel);\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\n\n/** Keep Tab within modal content, including the wrap past the final button. */\nexport function initDialogs() {\n  for (const dialog of $$('dialog')) {\n    dialog.addEventListener('keydown', event => {\n      if (event.key !== 'Tab') return;\n      const controls = $$('button, a[href], input, select, textarea, summary, [tabindex]', dialog)\n        .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);\n      const first = controls[0];\n      const last = controls.at(-1);\n      if (!first) { event.preventDefault(); return; }\n      if (!controls.includes(document.activeElement) || (event.shiftKey && document.activeElement === first)) {\n        event.preventDefault(); (event.shiftKey ? last : first).focus();\n      } else if (!event.shiftKey && document.activeElement === last) {\n        event.preventDefault(); first.focus();\n      }\n    });\n  }\n}\n\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\nexport async function api(path, opts = {}) {\n  const res = await fetch(path, {\n    method: opts.method || 'GET',\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\n  });\n  if (res.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n  let data = null;\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\n  if (!res.ok) {\n    const e = new Error(data?.message || t('req.fail', res.status));\n    e.code = data?.error || 'unknown';\n    e.status = res.status;\n    e.remainingBytes = data?.remainingBytes;\n    throw e;\n  }\n  return data;\n}\n\nexport function fmtBytes(n) {\n  if (!Number.isFinite(n) || n < 0) return '-';\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\n  let i = 0;\n  while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 100) / 100;\n  return `${v} ${units[i]}`;\n}\n\n/** \u6C38\u4E45\u5206\u4EAB\u8FD4\u56DE null,\u7531\u8C03\u7528\u65B9\u6309\u8BED\u8A00\u6E32\u67D3\u300C\u6C38\u4E45 / Forever\u300D */\nexport function fmtDate(ms) {\n  if (ms === null || ms === undefined) return null;\n  const d = new Date(ms);\n  const p = (x) => String(x).padStart(2, '0');\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\n}\n\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6,\u5355\u4F4D\u8BCD\u968F\u8BED\u8A00 */\nexport function fmtDuration(sec) {\n  if (!Number.isFinite(sec) || sec < 0) return '-';\n  if (sec < 1) return t('dur.ms');\n  if (sec < 60) return t('dur.s', Math.round(sec));\n  if (sec < 3600) {\n    const m = Math.floor(sec / 60);\n    const s = Math.round(sec % 60);\n    return s ? t('dur.hm', m, s) : t('dur.h', m);\n  }\n  if (sec < 86400) {\n    const h = Math.floor(sec / 3600);\n    const m = Math.round((sec % 3600) / 60);\n    return m ? t('dur.hH', h, m) : t('dur.hH2', h);\n  }\n  return t('dur.d', Math.round(sec / 86400));\n}\n\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\nexport function iconFor(name = '', mime = '') {\n  const ext = (name.split('.').pop() || '').toLowerCase();\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\n  return '\u{1F4E6}';\n}\n\nexport async function copyText(text) {\n  try {\n    await navigator.clipboard.writeText(text);\n    return true;\n  } catch { /* \u8D70\u964D\u7EA7 */ }\n  try {\n    const ta = document.createElement('textarea');\n    ta.value = text;\n    ta.style.cssText = 'position:fixed;opacity:0';\n    document.body.appendChild(ta);\n    ta.select();\n    const ok = document.execCommand('copy');\n    ta.remove();\n    return ok;\n  } catch {\n    return false;\n  }\n}\n\nexport function toast(msg, type = 'info') {\n  let host = $('#toast-host');\n  if (!host) {\n    host = document.createElement('div');\n    host.id = 'toast-host';\n    document.body.appendChild(host);\n  }\n  const t = document.createElement('div');\n  t.className = `toast ${type}`;\n  t.textContent = msg;\n  host.appendChild(t);\n  requestAnimationFrame(() => t.classList.add('show'));\n  setTimeout(() => {\n    t.classList.remove('show');\n    setTimeout(() => t.remove(), 300);\n  }, 2400);\n}\n\nexport function initTheme() {\n  const btn = $('#theme-btn');\n  const meta = $('meta[name=\"theme-color\"]');\n  const sync = () => {\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\n  };\n  sync();\n  btn?.addEventListener('click', () => {\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\n    localStorage.setItem('theme', next);\n    document.documentElement.dataset.theme = next;\n    sync();\n  });\n}\n\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\nexport function el(tag, attrs = {}, ...children) {\n  const n = document.createElement(tag);\n  for (const [k, v] of Object.entries(attrs)) {\n    if (k === 'class') n.className = v;\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\n    else n[k] = v;\n  }\n  for (const c of children.flat(Infinity)) {\n    if (c == null || c === false) continue;\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\n  }\n  return n;\n}\n", "js/i18n.js": `/**\r
- * \u8F7B\u91CF i18n:HTML \u9759\u6001\u6587\u6848\u7528 data-i18n / data-i18n-ph / data-i18n-title \u6807\u8BB0,\r
- * JS \u52A8\u6001\u5B57\u7B26\u4E32\u7528 t('key', \u2026args);{n} \u5360\u4F4D\u3002\r
- * \u8BED\u8A00\u4F18\u5148\u7EA7:localStorage('lang') > \u6D4F\u89C8\u5668\u8BED\u8A00(en \u5F00\u5934\u2192\u82F1\u6587)> \u4E2D\u6587\u3002\r
- * \u5207\u6362\u540E\u8C03\u7528\u5DF2\u6CE8\u518C\u7684\u91CD\u6E32\u67D3\u94A9\u5B50(\u5404\u9875\u9762 setLang \u65F6\u767B\u8BB0)\u3002\r
- * \u8BCD\u5178\u503C\u4E3A\u6570\u7EC4\u65F6\u968F\u673A\u53D6\u4E00\u6761(\u9875\u811A\u5F69\u86CB,\u6BCF\u6B21\u52A0\u8F7D/\u5207\u8BED\u8A00\u91CD\u6447)\u3002\r
- */\r
-\r
-const DICT = {\r
-  zh: {\r
-    'ad.settings': '\u8BBE\u7F6E',\r
-    'ad.shareSettings': '\u5206\u4EAB\u89C4\u5219',\r
-    'ad.guestWeeklyFiles': '\u672A\u5907\u6CE8\u8BBF\u5BA2\u6BCF\u5468\u6587\u4EF6\u6570',\r
-    'ad.displaySettings': '\u5217\u8868\u663E\u793A',\r
-    'ad.filesPageSize': '\u6587\u4EF6\u6BCF\u9875\u6761\u6570',\r
-    'ad.auditPageSize': '\u65E5\u5FD7\u6BCF\u9875\u6761\u6570',\r
-    'ad.browserSettings': '\u7ACB\u5373\u751F\u6548\uFF0C\u4EC5\u4FDD\u5B58\u5728\u5F53\u524D\u6D4F\u89C8\u5668',\r
-    'ad.preferenceNotSaved': '\u672C\u6B21\u5DF2\u751F\u6548\uFF0C\u6D4F\u89C8\u5668\u672A\u80FD\u4FDD\u5B58\u6B64\u504F\u597D',\r
-    'ad.filesPagination': '\u6587\u4EF6\u5206\u9875',\r
-    'ad.auditPagination': '\u65E5\u5FD7\u5206\u9875',\r
-    'context.add': '\u8865\u5145\u4FE1\u606F\uFF08\u9009\u586B\uFF09',\r
-    'context.name': '\u600E\u4E48\u79F0\u547C\u4F60',\r
-    'context.description': '\u6587\u4EF6\u8BF4\u660E',\r
-    'context.namePh': '\u586B\u5199\u4F60\u5E38\u7528\u7684\u79F0\u547C',\r
-    'context.descriptionPh': '\u7B80\u8FF0\u6587\u4EF6\u5185\u5BB9\uFF0C\u540C\u6279\u6587\u4EF6\u5171\u7528',\r
-    'context.visibility': '\u8865\u5145\u4FE1\u606F\u4EC5\u7BA1\u7406\u5458\u53EF\u89C1',\r
-    'ad.retentionTitle': '\u81EA\u52A8\u6E05\u7406',\r
-    'ad.recentUploads': '\u8FD1\u671F\u4E0A\u4F20',\r
-    'ad.historyScope': '\u6700\u8FD1 10 \u6761\u73B0\u5B58\u5206\u4EAB',\r
-    'ad.backFile': '\u8FD4\u56DE\u6587\u4EF6',\r
-    'ad.submittedName': '\u81EA\u586B\u79F0\u547C',\r
-    'ad.requestIP': '\u8BF7\u6C42 IP',\r
-    'ad.network': '\u7F51\u7EDC\u7EC4\u7EC7',\r
-    'ad.browserReported': '\u6D4F\u89C8\u5668\uFF08\u81EA\u62A5\uFF09',\r
-    'ad.copyIP': '\u590D\u5236',\r
-    'ad.ipCopied': 'IP \u5DF2\u590D\u5236',\r
-    'ad.copyFailed': '\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u9009\u62E9',\r
-    'ad.fileDescription': '\u6587\u4EF6\u8BF4\u660E',\r
-    'audit.detail.filename': '\u6587\u4EF6\u540D',\r
-    'audit.detail.sizeBytes': '\u5927\u5C0F\uFF08\u5B57\u8282\uFF09',\r
-    'audit.navigation': "\u7BA1\u7406\u9875\u9762",\r
-    'audit.files': "\u6587\u4EF6\u7BA1\u7406",\r
-    'audit.title': "\u65E5\u5FD7\u5BA1\u8BA1",\r
-    'audit.retention': "\u6700\u8FD1 30 \u5929\uFF0C\u6700\u591A 1,000 \u6761\uFF1B\u65F6\u95F4\u6309\u672C\u5730\u65F6\u533A\u663E\u793A",\r
-    'audit.export': "\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C",\r
-    'audit.categories': "\u65E5\u5FD7\u5206\u7C7B",\r
-    'audit.all': "\u5168\u90E8\u65E5\u5FD7",\r
-    'audit.login': "\u767B\u5F55\u65E5\u5FD7",\r
-    'audit.operation': "\u64CD\u4F5C\u65E5\u5FD7",\r
-    'audit.security': "\u5B89\u5168\u4E8B\u4EF6",\r
-    'audit.result': "\u7ED3\u679C",\r
-    'audit.anyResult': "\u5168\u90E8\u7ED3\u679C",\r
-    'audit.success': "\u6210\u529F",\r
-    'audit.failed': "\u5931\u8D25",\r
-    'audit.blocked': "\u5DF2\u62E6\u622A",\r
-    'audit.from': "\u5F00\u59CB\u65E5\u671F",\r
-    'audit.to': "\u7ED3\u675F\u65E5\u671F",\r
-    'audit.keyword': "IP / \u64CD\u4F5C\u5BF9\u8C61",\r
-    'audit.search': "\u641C\u7D22 IP \u6216\u53D6\u4EF6\u7801",\r
-    'audit.filter': "\u7B5B\u9009",\r
-    'audit.reset': "\u91CD\u7F6E",\r
-    'audit.time': "\u65F6\u95F4",\r
-    'audit.action': "\u64CD\u4F5C",\r
-    'audit.actor': "\u64CD\u4F5C\u8EAB\u4EFD",\r
-    'audit.source': "\u6765\u6E90 IP / \u5C5E\u5730",\r
-    'audit.target': "\u64CD\u4F5C\u5BF9\u8C61",\r
-    'audit.details': "\u8BE6\u60C5",\r
-    'audit.empty': "\u6682\u65E0\u5339\u914D\u65E5\u5FD7\u3002\u65E5\u5FD7\u4ECE\u529F\u80FD\u4E0A\u7EBF\u540E\u5F00\u59CB\u8BB0\u5F55\u3002",\r
-    'audit.disabled': "\u672A\u542F\u7528\u65E5\u5FD7\u5BA1\u8BA1\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1\u3002",\r
-    'audit.page': "\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761",\r
-    'audit.dateError': "\u5F00\u59CB\u65E5\u671F\u4E0D\u80FD\u665A\u4E8E\u7ED3\u675F\u65E5\u671F",\r
-    'audit.http': "\u8BF7\u6C42 / \u72B6\u6001\u7801",\r
-    'audit.duration': "\u5904\u7406\u8017\u65F6",\r
-    'audit.id': "\u65E5\u5FD7\u7F16\u53F7",\r
-    'audit.agent': "\u6D4F\u89C8\u5668\u6807\u8BC6\uFF08\u5BA2\u6237\u7AEF\u63D0\u4F9B\uFF09",\r
-    'audit.yes': "\u662F",\r
-    'audit.no': "\u5426",\r
-    'audit.description': "\u8BF4\u660E",\r
-    'audit.downloadHint': "\u5DF2\u5F00\u59CB\u8FD4\u56DE\u6587\u4EF6\u6D41\uFF0C\u4E0D\u4EE3\u8868\u6D4F\u89C8\u5668\u5DF2\u5B8C\u6210\u4E0B\u8F7D\u3002",\r
-    'audit.writeFailed': "\u64CD\u4F5C\u5DF2\u5904\u7406\uFF0C\u4F46\u5BA1\u8BA1\u8BB0\u5F55\u672A\u4FDD\u5B58\uFF0C\u8BF7\u68C0\u67E5\u65E5\u5FD7\u5B58\u50A8\u3002",\r
-    'audit.action.login': "\u7BA1\u7406\u5458\u767B\u5F55",\r
-    'audit.action.logout': "\u9000\u51FA\u767B\u5F55",\r
-    'audit.action.retention': "\u4FEE\u6539\u8FC7\u671F\u4FDD\u7559\u5929\u6570",\r
-    'audit.action.uploadPolicy': "\u4FEE\u6539\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",\r
-    'audit.action.unblock': "\u624B\u52A8\u89E3\u5C01 IP",\r
-    'audit.action.cleanup': "\u6267\u884C\u8FC7\u671F\u6E05\u7406",\r
-    'audit.action.export': "\u5BFC\u51FA\u5BA1\u8BA1\u65E5\u5FD7",\r
-    'audit.action.ban': "\u89E6\u53D1\u767B\u5F55\u5C01\u7981",\r
-    'audit.action.delete': "\u5220\u9664\u5206\u4EAB",\r
-    'audit.action.note': "\u4FEE\u6539\u8BBF\u5BA2\u5907\u6CE8",\r
-    'audit.action.viewSource': "\u67E5\u770B\u6765\u6E90\u8BE6\u60C5",\r
-    'audit.action.download': "\u4E0B\u8F7D\u6587\u4EF6",\r
-    'audit.actor.admin': "\u7BA1\u7406\u5458",\r
-    'audit.actor.token': "\u5B9A\u65F6\u5668 / \u4EE4\u724C",\r
-    'audit.actor.anonymous': "\u672A\u8BA4\u8BC1",\r
-    'audit.detail.bannedUntil': "\u5C01\u7981\u622A\u6B62",\r
-    'audit.detail.expiredRetentionDays': "\u8FC7\u671F\u4FDD\u7559\u5929\u6570",\r
-    'audit.detail.weeklyFileLimit': "\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",\r
-    'audit.detail.notePresent': "\u8BBE\u7F6E\u5907\u6CE8",\r
-    'audit.detail.alreadyDeleted': "\u5206\u4EAB\u5DF2\u4E0D\u5B58\u5728",\r
-    'audit.detail.deletedShares': "\u5DF2\u6E05\u7406\u5206\u4EAB",\r
-    'audit.detail.abortedSessions': "\u5DF2\u53D6\u6D88\u4E0A\u4F20\u4F1A\u8BDD",\r
-\r
-    'ad.loginProtection': "\u767B\u5F55\u9632\u62A4",\r
-    'ad.guardRule': "{0} \u5206\u949F\u5185\u5931\u8D25 {1} \u6B21\uFF0C\u5C01\u7981\u767B\u5F55 {2} \u5206\u949F",\r
-    'ad.guardDisabled': "\u672A\u542F\u7528\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1",\r
-    'ad.guardEmpty': "\u5F53\u524D\u6CA1\u6709\u5C01\u7981 IP",\r
-    'ad.guardUnknown': "\u672A\u77E5\u6765\u6E90\uFF08\u5171\u7528\u9650\u5236\uFF09",\r
-    'ad.guardFailures': "\u5931\u8D25 {0} \u6B21",\r
-    'ad.guardUntil': "\u89E3\u5C01\u4E8E {0}",\r
-    'ad.guardLast': "\u6700\u8FD1\u5931\u8D25 {0}",\r
-    'ad.guardUnblock': "\u89E3\u5C01",\r
-    'ad.guardUnblocked': "\u5DF2\u89E3\u5C01",\r
-    'ad.loginBlocked': "\u767B\u5F55\u5931\u8D25\u6B21\u6570\u8FC7\u591A\uFF0C\u8BF7\u7B49\u5F85\u5C01\u7981\u5230\u671F\u540E\u91CD\u8BD5",\r
-    'ad.guardUnavailable': "\u767B\u5F55\u9632\u62A4\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5",\r
-\r
-    'ad.formatUnknown': "\u683C\u5F0F\u672A\u77E5",\r
-    'ad.format.archive': "\u538B\u7F29\u5305",\r
-    'ad.format.program': "\u5E94\u7528\u7A0B\u5E8F",\r
-    'ad.format.document': "\u6587\u6863",\r
-    'ad.format.image': "\u56FE\u7247",\r
-    'ad.format.video': "\u89C6\u9891",\r
-    'ad.format.audio': "\u97F3\u9891",\r
-    'ad.format.text': "\u6587\u672C / \u4EE3\u7801",\r
-    'ad.format.file': "\u6587\u4EF6",\r
-    'ad.uploader': "\u4E0A\u4F20\u8005",\r
-    'ad.shareState': "\u5206\u4EAB\u72B6\u6001",\r
-    'ad.fileAvailability': "\u6587\u4EF6\u72B6\u6001",\r
-    'ad.fileState.available': "\u53EF\u4E0B\u8F7D",\r
-    'ad.fileState.missing': "\u6587\u4EF6\u4E0D\u5B58\u5728",\r
-    'ad.fileState.unknown': "\u6682\u65F6\u65E0\u6CD5\u786E\u8BA4",\r
-    'ad.timeLeft': "\u5269\u4F59 {0}",\r
-    'ad.timeExpired': "\u5DF2\u8FC7\u671F {0}",\r
-    'ad.cleanupPermanent': "\u4E0D\u81EA\u52A8\u6E05\u7406",\r
-    'ad.cleanupActive': "\u8FC7\u671F\u540E\u4FDD\u7559 {0} \u5929",\r
-    'ad.cleanupRetained': "\u8FC7\u671F\u4FDD\u7559\u4E2D",\r
-    'ad.cleanupPending': "\u7B49\u5F85\u6E05\u7406\u4EFB\u52A1",\r
-    'ad.technical': "\u6280\u672F\u4FE1\u606F",\r
-    'ad.storedSize': "\u5B58\u50A8\u5927\u5C0F",\r
-    'ad.storedAt': "\u5165\u5E93\u65F6\u95F4",\r
-    'ad.exactBytes': "{0} \u5B57\u8282",\r
-    'ad.formatHint': "\u683C\u5F0F\u6309\u6587\u4EF6\u540D\u8BC6\u522B\uFF0C\u4E0D\u4EE3\u8868\u5185\u5BB9\u6821\u9A8C\u3002",\r
-    'ad.tryDownload': "\u5C1D\u8BD5\u4E0B\u8F7D",\r
-    'ad.guestLimits': "\u672A\u5907\u6CE8\u8BBF\u5BA2\u9650\u5236",\r
-    'ad.weeklyFiles': "\u6BCF\u5468\u6587\u4EF6\u6570",\r
-    'ad.guestRules': "\u5317\u4EAC\u65F6\u95F4\u5468\u4E00\u91CD\u7F6E\uFF1B\u5DF2\u63A5\u7EB3\u4E0A\u4F20\u8BA1\u6B21\uFF0C\u53D6\u6D88\u4E0D\u9000\u56DE\u3002\u672A\u5907\u6CE8\u8BBF\u5BA2\u4E0D\u80FD\u6C38\u4E45\u5206\u4EAB\u6216\u4E0D\u9650\u6B21\u53D6\u4EF6\u3002",\r
-    'ad.guestSaved': "\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u4E0A\u4F20",\r
-    'policy.expiry': "1 ~ 30 \u5929",\r
-    'policy.pickups': "1 \u6B21 \xB7 5 \u6B21",\r
-    'policy.remaining': "\u672C\u5468\u5269\u4F59 {0} / {1} \u4E2A\u6587\u4EF6 \xB7 {2} \u91CD\u7F6E",\r
-    'policy.unavailable': "\u6B63\u5728\u8BFB\u53D6\u4E0A\u4F20\u6743\u9650\uFF1B\u82E5\u957F\u65F6\u95F4\u672A\u6062\u590D\uFF0C\u8BF7\u5237\u65B0\u9875\u9762",\r
-    'policy.contact': "\u6682\u4E0D\u63A5\u53D7\u6587\u4EF6\u4E0A\u4F20\uFF0C\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458",\r
-    'ad.fileDetails': '\u6587\u4EF6\u8BE6\u60C5',\r
-    'ad.filename': '\u6587\u4EF6\u540D',\r
-    'ad.fileType': '\u6587\u4EF6\u7C7B\u578B',\r
-    'ad.cleanupAfter': '\u6700\u65E9\u6E05\u7406',\r
-    'ad.retentionDays': '\u8FC7\u671F\u540E\u4FDD\u7559',\r
-    'ad.days': '\u5929',\r
-    'ad.save': '\u4FDD\u5B58',\r
-    'ad.retry': '\u91CD\u8BD5',\r
-    'ad.settingsSaved': '\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u6E05\u7406',\r
-    'ad.source': '\u4E0A\u4F20\u6765\u6E90',\r
-    'ad.visitor': '\u8BBF\u5BA2 {0}',\r
-    'ad.visitorId': '\u8BBF\u5BA2\u6807\u8BC6',\r
-    'ad.sourceUnknown': '\u672A\u77E5',\r
-    'ad.sourceUnrecorded': '\u672A\u8BB0\u5F55',\r
-    'ad.sourceLocation': '\u51FA\u53E3\u5C5E\u5730',\r
-    'ad.sourceTime': '\u8BB0\u5F55\u65F6\u95F4',\r
-    'ad.sourceNote': '\u7BA1\u7406\u5458\u5907\u6CE8',\r
-    'ad.sourceSave': '\u4FDD\u5B58\u5907\u6CE8',\r
-    'ad.sourceClose': '\u5173\u95ED',\r
-    'ad.sourceSaved': '\u5907\u6CE8\u5DF2\u4FDD\u5B58',\r
-    'err.capacity': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6',\r
-    'err.capacityRemaining': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6\uFF0C\u5269\u4F59\u53EF\u7528\u7A7A\u95F4\u7EA6 {0} GB\uFF08{1} \u5B57\u8282\uFF09\u3002',\r
-    'doc.send': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001',\r
-    'doc.pickup': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D6\u4EF6',\r
-    'doc.admin': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u7BA1\u7406',\r
-    'doc.404': '404 - \u6587\u4EF6\u4E2D\u8F6C\u7AD9',\r
-\r
-    'brand.name': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9',\r
-    'brand.tagline': '\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u6587\u4EF6',\r
-    'brand.pickup': '\u53D6\u4EF6',\r
-    'brand.admin': '\u7BA1\u7406\u540E\u53F0',\r
-    'nav.pickup': '\u53D6\u4EF6',\r
-    'nav.send': '\u53D1\u9001',\r
-    'nav.theme': '\u5207\u6362\u4E3B\u9898',\r
-    'nav.lang': '\u5207\u6362\u8BED\u8A00',\r
-    'foot': [\r
-      '\u89C1\u5B57\u5982\u9762',\r
-      '\u7EB8\u77ED\u60C5\u957F',\r
-      '\u5C71\u9AD8\u6C34\u957F,\u540E\u4F1A\u6709\u671F',\r
-      '\u6B64\u4EF6\u5DF2\u7B7E\u6536,\u671B\u73CD\u91CD',\r
-      '\u98CE\u91CC\u96E8\u91CC,\u4E2D\u8F6C\u7AD9\u7B49\u4F60',\r
-      '\u6162\u4E00\u70B9,\u4E5F\u6CA1\u5173\u7CFB',\r
-    ],\r
-\r
-    'tab.file': '\u53D1\u6587\u4EF6',\r
-    'tab.text': '\u53D1\u6587\u672C',\r
-    'dz.click': '\u70B9\u51FB\u9009\u62E9\u6587\u4EF6',\r
-    'dz.drop': ',\u6216\u62D6\u62FD / \u7C98\u8D34\u5230\u6B64\u5904',\r
-    'dz.aria': '\u9009\u62E9\u6587\u4EF6',\r
-    'dz.hint': '\u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',\r
-    'dz.hintMax': '\u5355\u4E2A\u6587\u4EF6\u6700\u5927 {0} \xB7 \u652F\u6301\u591A\u9009,\u4E0A\u4F20\u540E\u751F\u6210\u53D6\u4EF6\u53E3\u4EE4',\r
-    'remove': '\u79FB\u9664',\r
-    'text.placeholder': '\u7C98\u8D34\u6216\u8F93\u5165\u8981\u5206\u4EAB\u7684\u6587\u672C\u2026',\r
-    'opt.expiry': '\u6709\u6548\u671F',\r
-    'opt.pickups': '\u53EF\u53D6\u6B21\u6570',\r
-    'seg.1d': '1 \u5929', 'seg.7d': '7 \u5929', 'seg.30d': '30 \u5929', 'seg.forever': '\u6C38\u4E45',\r
-    'seg.p1': '1 \u6B21', 'seg.p5': '5 \u6B21', 'seg.punlimited': '\u4E0D\u9650',\r
-    'btn.upload': '\u5F00\u59CB\u4E0A\u4F20',\r
-    'btn.genCode': '\u751F\u6210\u53E3\u4EE4',\r
-    'btn.cancel': '\u53D6\u6D88',\r
-    'btn.copyCode': '\u590D\u5236\u53E3\u4EE4',\r
-    'btn.copyLink': '\u590D\u5236\u94FE\u63A5',\r
-    'btn.copyAll': '\u590D\u5236\u5168\u90E8\u53E3\u4EE4',\r
-    'btn.again': '\u518D\u6765\u4E00\u4E2A',\r
-\r
-    'prog.preparing': '\u51C6\u5907\u4E2D\u2026',\r
-    'prog.uploading': '\u4E0A\u4F20\u4E2D\u2026',\r
-    'prog.init': '\u6B63\u5728\u68C0\u67E5\u53EF\u7528\u7A7A\u95F4\u2026',\r
-    'prog.merging': '\u6B63\u5728\u5B8C\u6210\u4E0A\u4F20\u2026',\r
-    'prog.file': '\u7B2C {0}/{1} \u4E2A',\r
-    'prog.part': '\u7B2C {0}/{1} \u7247',\r
-    'prog.eta': '\u5269\u4F59 {0}',\r
-    'prog.retry': '\u4E0A\u4F20\u5931\u8D25,\u91CD\u8BD5 {0}/3\u2026',\r
-\r
-    'result.ok': '\u2705 \u5206\u4EAB\u6210\u529F,\u628A\u53E3\u4EE4\u53D1\u7ED9\u5BF9\u65B9',\r
-    'result.okBatch': '\u2705 {0} \u4E2A\u6587\u4EF6\u5206\u4EAB\u6210\u529F',\r
-    'ticket.title': '\u53D6\u4EF6\u51ED\u8BC1',\r
-    'ticket.no': '\u2116 {0}',\r
-    'send.cap': '\u5206\u4EAB\u5185\u5BB9',\r
-    'receipt.cap': '\u5206\u4EAB\u7ED3\u679C',\r
-    'ph.title': '\u7B49\u5F85\u5206\u4EAB',\r
-    'ph.sub': '\u5206\u4EAB\u6210\u529F\u540E\uFF0C\u5728\u8FD9\u91CC\u590D\u5236\u53E3\u4EE4\u6216\u94FE\u63A5',\r
-\r
-    'flow.dropT': '\u5BC4\u4EF6',\r
-    'flow.dropS': '\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C',\r
-    'flow.tickT': '\u5206\u4EAB\u53E3\u4EE4',\r
-    'flow.tickS': '\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',\r
-    'flow.pickT': '\u53D6\u4EF6',\r
-    'flow.pickS': '\u8F93\u5165\u53E3\u4EE4\u5373\u53EF\u4E0B\u8F7D\u6216\u67E5\u770B',\r
-\r
-    'route.senderT': '\u5BC4\u4EF6\u4EBA \xB7 \u4F60',\r
-    'route.senderS': '\u9009\u62E9\u5185\u5BB9\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u548C\u53EF\u53D6\u6B21\u6570',\r
-    'route.relayT': '\u751F\u6210\u5206\u4EAB',\r
-    'route.relayS': '\u628A\u53D6\u4EF6\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9',\r
-    'route.takerT': '\u53D6\u4EF6\u4EBA \xB7 \u5BF9\u65B9',\r
-    'route.takerS': '\u8F93\u5165\u53E3\u4EE4\u6216\u6253\u5F00\u94FE\u63A5\uFF0C\u5373\u53EF\u53D6\u4EF6',\r
-    'route.fine': '\u53E3\u4EE4\u8BF7\u59A5\u5584\u4FDD\u7BA1\uFF0C\u4EC5\u5206\u4EAB\u7ED9\u9700\u8981\u7684\u4EBA',\r
-\r
-    'feat.splitT': '\u6587\u4EF6\u5206\u4EAB', 'feat.splitS': '\u5355\u6587\u4EF6\u6700\u5927 {0}',\r
-    'feat.ttlT': '\u81EA\u9009\u6709\u6548\u671F', 'feat.ttlS': '1 ~ 30 \u5929\u6216\u6C38\u4E45',\r
-    'feat.limitT': '\u9650\u6B21\u53D6\u4EF6', 'feat.limitS': '1 \u6B21 \xB7 5 \u6B21 \xB7 \u4E0D\u9650',\r
-    'feat.selfT': '\u4FBF\u6377\u53D6\u4EF6', 'feat.selfS': '\u652F\u6301\u53E3\u4EE4\u3001\u94FE\u63A5\u548C\u626B\u7801\u53D6\u4EF6',\r
-    'qr.hint': '\u626B\u7801\u76F4\u63A5\u53D6\u4EF6',\r
-    'label.code': '\u53E3\u4EE4',\r
-    'label.link': '\u94FE\u63A5',\r
-    'copied': '{0}\u5DF2\u590D\u5236',\r
-    'copy.fail': '\u590D\u5236\u5931\u8D25,\u8BF7\u624B\u52A8\u590D\u5236',\r
-    'copied.btn': '\u2713 \u5DF2\u590D\u5236',\r
-\r
-    'meta.after': '{0}\u540E\u8FC7\u671F({1})',\r
-    'meta.forever': '\u6C38\u4E45\u6709\u6548',\r
-    'meta.pickups': '\u53EF\u53D6 {0} \u6B21',\r
-    'meta.unlimited': '\u53D6\u4EF6\u6B21\u6570\u4E0D\u9650',\r
-    'files.count': '{0} \u4E2A\u6587\u4EF6 \xB7 \u5171 {1}',\r
-    'unknown.type': '\u672A\u77E5\u7C7B\u578B',\r
-    'text.counter': '{0} / {1}',\r
-\r
-    'err.oversize': '\u6587\u4EF6\u8D85\u8FC7 {0} \u4E0A\u9650({1})',\r
-    'err.empty': '\u7A7A\u6587\u4EF6\u4E0D\u80FD\u5206\u4EAB',\r
-    'err.tooMany': '\u4E00\u6B21\u6700\u591A\u5206\u4EAB {0} \u4E2A\u6587\u4EF6',\r
-    'err.upload': '\u4E0A\u4F20\u5931\u8D25,\u8BF7\u91CD\u8BD5',\r
-    'err.submit': '\u63D0\u4EA4\u5931\u8D25',\r
-    'req.fail': '\u8BF7\u6C42\u5931\u8D25 ({0})',\r
-    'toast.cancelled': '\u5DF2\u53D6\u6D88\u4E0A\u4F20',\r
-\r
-    'dur.s': '{0} \u79D2',\r
-    'dur.ms': '<1 \u79D2',\r
-    'dur.hm': '{0} \u5206 {1} \u79D2',\r
-    'dur.h': '{0} \u5206',\r
-    'dur.hH': '{0} \u65F6 {1} \u5206',\r
-    'dur.hH2': '{0} \u65F6',\r
-    'dur.d': '{0} \u5929',\r
-\r
-    'pk.title': '\u8F93\u5165\u53D6\u4EF6\u53E3\u4EE4',\r
-    'pk.sub': '\u8F93\u5165 6 \u4F4D\u6570\u5B57\u53E3\u4EE4,\u53D6\u51FA\u5206\u4EAB\u7684\u6587\u4EF6\u6216\u6587\u672C',\r
-    'pk.aria': '6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',\r
-    'pk.fail': '\u53D6\u4EF6\u5931\u8D25',\r
-    'pk.textChars': '\u6587\u672C \xB7 {0} \u5B57\u7B26',\r
-    'pk.copyAllText': '\u4E00\u952E\u590D\u5236\u5168\u6587',\r
-    'pk.download': '\u2B07 \u4E0B\u8F7D\u6587\u4EF6',\r
-    'pk.again': '\u91CD\u65B0\u8F93\u5165',\r
-    'pk.expireAt': '{0} \u8FC7\u671F',\r
-    'pk.left': '\u5269\u4F59\u53EF\u53D6 {0} \u6B21',\r
-    'pk.unnamed': '\u672A\u547D\u540D\u6587\u4EF6',\r
-    'copied.text': '\u5DF2\u590D\u5236\u5168\u6587',\r
-\r
-    'ad.loginTitle': '\u7BA1\u7406\u767B\u5F55',\r
-    'ad.loginSub': '\u4F7F\u7528\u7BA1\u7406\u4EE4\u724C\u767B\u5F55',\r
-    'ad.tokenPh': '\u7BA1\u7406\u4EE4\u724C',\r
-    'ad.login': '\u767B\u5F55',\r
-    'ad.badToken': '\u4EE4\u724C\u65E0\u6548',\r
-    'ad.total': '\u5206\u4EAB\u603B\u6570',\r
-    'ad.active': '\u5F53\u524D\u6709\u6548',\r
-    'ad.files': '\u6587\u4EF6',\r
-    'ad.texts': '\u6587\u672C',\r
-    'ad.storage': '\u5B58\u50A8\u7A7A\u95F4 \xB7 \u5DF2\u7528 / \u603B\u5BB9\u91CF',\r
-    'ad.storageReserved': '\u542B\u4E0A\u4F20\u9884\u7559\u7A7A\u95F4',\r
-    'ad.storageUnavailable': '\u6682\u4E0D\u53EF\u7528',\r
-    'ad.shareBytes': '\u5206\u4EAB\u5185\u5BB9\u5927\u5C0F',\r
-    'ad.today': '\u4ECA\u65E5\u65B0\u589E',\r
-    'ad.th.code': '\u53E3\u4EE4', 'ad.th.kind': '\u7C7B\u578B', 'ad.th.content': '\u5185\u5BB9',\r
-    'ad.th.size': '\u5927\u5C0F', 'ad.th.pickups': '\u5DF2\u53D6/\u4E0A\u9650', 'ad.th.expire': '\u8FC7\u671F\u65F6\u95F4',\r
-    'ad.th.status': '\u72B6\u6001', 'ad.th.created': '\u521B\u5EFA\u65F6\u95F4',\r
-    'ad.kind.file': '\u6587\u4EF6', 'ad.kind.text': '\u6587\u672C',\r
-    'ad.st.active': '\u6709\u6548', 'ad.st.expired': '\u5DF2\u8FC7\u671F', 'ad.st.exhausted': '\u5DF2\u53D6\u5B8C',\r
-    'ad.loading': '\u52A0\u8F7D\u4E2D\u2026',\r
-    'ad.empty': '\u6682\u65E0\u5206\u4EAB',\r
-    'ad.loadFail': '\u52A0\u8F7D\u5931\u8D25',\r
-    'ad.page': '\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761',\r
-    'ad.prev': '\u4E0A\u4E00\u9875', 'ad.next': '\u4E0B\u4E00\u9875',\r
-    'ad.refresh': '\u21BB \u5237\u65B0',\r
-    'ad.logout': '\u9000\u51FA\u767B\u5F55',\r
-    'ad.download': '\u4E0B\u8F7D',\r
-    'ad.delete': '\u5220\u9664',\r
-    'ad.deleted': '\u5DF2\u5220\u9664',\r
-    'ad.deleteFail': '\u5220\u9664\u5931\u8D25',\r
-    'ad.delTitle': '\u4F5C\u5E9F\u8FD9\u5F20\u53D6\u4EF6\u51ED\u8BC1?',\r
-    'ad.delWarn': '\u4F5C\u5E9F\u540E\u53E3\u4EE4\u7ACB\u5373\u5931\u6548,\u5BF9\u65B9\u5C06\u65E0\u6CD5\u53D6\u4EF6,\u4E14\u4E0D\u53EF\u6062\u590D\u3002',\r
-    'ad.delOk': '\u786E\u8BA4\u4F5C\u5E9F',\r
-    'ad.textFallback': '(\u6587\u672C)',\r
-    'ad.unnamed': '(\u672A\u547D\u540D)',\r
-    'ad.chars': '{0} \u5B57',\r
-    'ad.forever': '\u6C38\u4E45',\r
-\r
-    'nf.title': '\u9875\u9762\u4E0D\u5B58\u5728',\r
-    'nf.body': '\u4F60\u8981\u627E\u7684\u9875\u9762\u4E0D\u5728\u4E2D\u8F6C\u7AD9\u91CC',\r
-    'nf.send': '\u53BB\u53D1\u9001',\r
-    'nf.pickup': '\u53BB\u53D6\u4EF6',\r
-  },\r
-\r
-  en: {\r
-    'ad.settings': 'Settings',\r
-    'ad.shareSettings': 'Sharing rules',\r
-    'ad.guestWeeklyFiles': 'Unnoted guest files / week',\r
-    'ad.displaySettings': 'List display',\r
-    'ad.filesPageSize': 'Files per page',\r
-    'ad.auditPageSize': 'Logs per page',\r
-    'ad.browserSettings': 'Applied immediately, saved in this browser',\r
-    'ad.preferenceNotSaved': 'Applied for now; this browser could not save the preference',\r
-    'ad.filesPagination': 'File pagination',\r
-    'ad.auditPagination': 'Log pagination',\r
-    'context.add': 'Additional information (optional)',\r
-    'context.name': 'Your name',\r
-    'context.description': 'File description',\r
-    'context.namePh': 'Your name or nickname',\r
-    'context.descriptionPh': 'Describe the files; applies to this batch',\r
-    'context.visibility': 'Only visible to the administrator',\r
-    'ad.retentionTitle': 'Automatic cleanup',\r
-    'ad.recentUploads': 'Recent uploads',\r
-    'ad.historyScope': 'Latest 10 retained shares',\r
-    'ad.backFile': 'Back to file',\r
-    'ad.submittedName': 'Submitted name',\r
-    'ad.requestIP': 'Request IP',\r
-    'ad.network': 'Network',\r
-    'ad.browserReported': 'Browser (reported)',\r
-    'ad.copyIP': 'Copy',\r
-    'ad.ipCopied': 'IP copied',\r
-    'ad.copyFailed': 'Copy failed; select the IP manually',\r
-    'ad.fileDescription': 'Description',\r
-    'audit.detail.filename': 'Filename',\r
-    'audit.detail.sizeBytes': 'Size (bytes)',\r
-    'audit.navigation': "Admin pages",\r
-    'audit.files': "Files",\r
-    'audit.title': "Audit logs",\r
-    'audit.retention': "Last 30 days, up to 1,000 entries; times shown in your local timezone",\r
-    'audit.export': "Export results",\r
-    'audit.categories': "Log categories",\r
-    'audit.all': "All logs",\r
-    'audit.login': "Login logs",\r
-    'audit.operation': "Operations",\r
-    'audit.security': "Security",\r
-    'audit.result': "Result",\r
-    'audit.anyResult': "All results",\r
-    'audit.success': "Success",\r
-    'audit.failed': "Failed",\r
-    'audit.blocked': "Blocked",\r
-    'audit.from': "Start date",\r
-    'audit.to': "End date",\r
-    'audit.keyword': "IP / Target",\r
-    'audit.search': "Search IP or pickup code",\r
-    'audit.filter': "Filter",\r
-    'audit.reset': "Reset",\r
-    'audit.time': "Time",\r
-    'audit.action': "Action",\r
-    'audit.actor': "Actor",\r
-    'audit.source': "Source IP / Location",\r
-    'audit.target': "Target",\r
-    'audit.details': "Details",\r
-    'audit.empty': "No matching logs. Recording starts when this feature is deployed.",\r
-    'audit.disabled': "Audit logging is not enabled: bind R2 or D1.",\r
-    'audit.page': "Page {0} / {1} \xB7 {2} entries",\r
-    'audit.dateError': "Start date must not be after end date",\r
-    'audit.http': "Request / Status",\r
-    'audit.duration': "Processing time",\r
-    'audit.id': "Log ID",\r
-    'audit.agent': "Browser identifier (client supplied)",\r
-    'audit.yes': "Yes",\r
-    'audit.no': "No",\r
-    'audit.description': "Description",\r
-    'audit.downloadHint': "The file stream was opened; this does not confirm the browser finished downloading.",\r
-    'audit.writeFailed': "The operation was processed, but its audit record could not be saved. Check log storage.",\r
-    'audit.action.login': "Admin login",\r
-    'audit.action.logout': "Log out",\r
-    'audit.action.retention': "Change expired retention",\r
-    'audit.action.uploadPolicy': "Change weekly upload quota",\r
-    'audit.action.unblock': "Unblock IP",\r
-    'audit.action.cleanup': "Run expired cleanup",\r
-    'audit.action.export': "Export audit logs",\r
-    'audit.action.ban': "Trigger login ban",\r
-    'audit.action.delete': "Delete share",\r
-    'audit.action.note': "Change visitor note",\r
-    'audit.action.viewSource': "View source details",\r
-    'audit.action.download': "Download file",\r
-    'audit.actor.admin': "Administrator",\r
-    'audit.actor.token': "Scheduler / Token",\r
-    'audit.actor.anonymous': "Unauthenticated",\r
-    'audit.detail.bannedUntil': "Blocked until",\r
-    'audit.detail.expiredRetentionDays': "Expired retention days",\r
-    'audit.detail.weeklyFileLimit': "Weekly upload limit",\r
-    'audit.detail.notePresent': "Note set",\r
-    'audit.detail.alreadyDeleted': "Share already absent",\r
-    'audit.detail.deletedShares': "Shares deleted",\r
-    'audit.detail.abortedSessions': "Upload sessions aborted",\r
-\r
-    'ad.loginProtection': "Login protection",\r
-    'ad.guardRule': "{1} failures in {0} minutes block login for {2} minutes",\r
-    'ad.guardDisabled': "Not enabled: bind R2 or D1",\r
-    'ad.guardEmpty': "No blocked IPs",\r
-    'ad.guardUnknown': "Unknown source (shared limit)",\r
-    'ad.guardFailures': "{0} failures",\r
-    'ad.guardUntil': "Unblocks at {0}",\r
-    'ad.guardLast': "Last failure {0}",\r
-    'ad.guardUnblock': "Unblock",\r
-    'ad.guardUnblocked': "IP unblocked",\r
-    'ad.loginBlocked': "Too many failed logins. Wait until the block expires.",\r
-    'ad.guardUnavailable': "Login protection unavailable. Please try again later.",\r
-\r
-    'ad.formatUnknown': "Unknown format",\r
-    'ad.format.archive': "Archive",\r
-    'ad.format.program': "Application",\r
-    'ad.format.document': "Document",\r
-    'ad.format.image': "Image",\r
-    'ad.format.video': "Video",\r
-    'ad.format.audio': "Audio",\r
-    'ad.format.text': "Text / code",\r
-    'ad.format.file': "File",\r
-    'ad.uploader': "Uploaded by",\r
-    'ad.shareState': "Share status",\r
-    'ad.fileAvailability': "File status",\r
-    'ad.fileState.available': "Available",\r
-    'ad.fileState.missing': "File missing",\r
-    'ad.fileState.unknown': "Unable to verify",\r
-    'ad.timeLeft': "{0} left",\r
-    'ad.timeExpired': "Expired {0} ago",\r
-    'ad.cleanupPermanent': "No automatic cleanup",\r
-    'ad.cleanupActive': "Kept for {0} days after expiry",\r
-    'ad.cleanupRetained': "Retained after expiry",\r
-    'ad.cleanupPending': "Awaiting cleanup",\r
-    'ad.technical': "Technical details",\r
-    'ad.storedSize': "Stored size",\r
-    'ad.storedAt': "Stored at",\r
-    'ad.exactBytes': "{0} bytes",\r
-    'ad.formatHint': "Format is inferred from the filename; content has not been verified.",\r
-    'ad.tryDownload': "Try download",\r
-    'ad.guestLimits': "Unnoted visitor limits",\r
-    'ad.weeklyFiles': "Files per week",\r
-    'ad.guestRules': "Resets Monday, Beijing time. Accepted uploads count even if cancelled. Unnoted visitors cannot create permanent or unlimited-pickup shares.",\r
-    'ad.guestSaved': "Saved for subsequent uploads",\r
-    'policy.expiry': "1 to 30 days",\r
-    'policy.pickups': "1 or 5 pickups",\r
-    'policy.remaining': "{0} / {1} files left this week \xB7 resets {2}",\r
-    'policy.unavailable': "Loading upload permissions. Refresh if this persists.",\r
-    'policy.contact': "File uploads are unavailable. Contact the administrator.",\r
-    'ad.fileDetails': 'File details',\r
-    'ad.filename': 'Filename',\r
-    'ad.fileType': 'File type',\r
-    'ad.cleanupAfter': 'Cleanup after',\r
-    'ad.retentionDays': 'Keep after expiry',\r
-    'ad.days': 'days',\r
-    'ad.save': 'Save',\r
-    'ad.retry': 'Retry',\r
-    'ad.settingsSaved': 'Saved for subsequent cleanup runs',\r
-    'ad.source': 'Upload source',\r
-    'ad.visitor': 'Visitor {0}',\r
-    'ad.visitorId': 'Visitor ID',\r
-    'ad.sourceUnknown': 'Unknown',\r
-    'ad.sourceUnrecorded': 'Not recorded',\r
-    'ad.sourceLocation': 'Exit location',\r
-    'ad.sourceTime': 'Recorded at',\r
-    'ad.sourceNote': 'Admin note',\r
-    'ad.sourceSave': 'Save note',\r
-    'ad.sourceClose': 'Close',\r
-    'ad.sourceSaved': 'Note saved',\r
-    'err.capacity': 'Storage capacity exceeds the free quota.',\r
-    'err.capacityRemaining': 'Storage capacity exceeds the free quota. Available space: approximately {0} GB ({1} bytes).',\r
-    'doc.send': 'file-relay - Send',\r
-    'doc.pickup': 'file-relay - Pickup',\r
-    'doc.admin': 'file-relay - Admin',\r
-    'doc.404': '404 - file-relay',\r
-\r
-    'brand.name': 'file-relay',\r
-    'brand.tagline': 'Files, picked up like parcels',\r
-    'brand.pickup': 'Pickup',\r
-    'brand.admin': 'Admin',\r
-    'nav.pickup': 'Pick up',\r
-    'nav.send': 'Send',\r
-    'nav.theme': 'Toggle theme',\r
-    'nav.lang': 'Switch language',\r
-    'foot': [\r
-      'Yours, from afar',\r
-      'Words run short, feelings run long',\r
-      'See you down the road',\r
-      'Signed, sealed, delivered',\r
-      'Through wind and rain, the relay waits',\r
-      'Take care, until next time',\r
-    ],\r
-\r
-    'tab.file': 'Send file',\r
-    'tab.text': 'Send text',\r
-    'dz.click': 'Click to choose files',\r
-    'dz.drop': ', or drag & drop / paste here',\r
-    'dz.aria': 'Choose files',\r
-    'dz.hint': 'A 6-digit pickup code is generated after upload',\r
-    'dz.hintMax': 'Up to {0} per file \xB7 multiple selection supported',\r
-    'remove': 'Remove',\r
-    'text.placeholder': 'Paste or type the text to share\u2026',\r
-    'opt.expiry': 'Expires',\r
-    'opt.pickups': 'Pickup limit',\r
-    'seg.1d': '1 day', 'seg.7d': '7 days', 'seg.30d': '30 days', 'seg.forever': 'Forever',\r
-    'seg.p1': '1\xD7', 'seg.p5': '5\xD7', 'seg.punlimited': 'Unlimited',\r
-    'btn.upload': 'Start upload',\r
-    'btn.genCode': 'Generate code',\r
-    'btn.cancel': 'Cancel',\r
-    'btn.copyCode': 'Copy code',\r
-    'btn.copyLink': 'Copy link',\r
-    'btn.copyAll': 'Copy all codes',\r
-    'btn.again': 'New share',\r
-\r
-    'prog.preparing': 'Preparing\u2026',\r
-    'prog.uploading': 'Uploading\u2026',\r
-    'prog.init': 'Checking available space\u2026',\r
-    'prog.merging': 'Finishing upload\u2026',\r
-    'prog.file': 'file {0}/{1}',\r
-    'prog.part': 'part {0}/{1}',\r
-    'prog.eta': 'ETA {0}',\r
-    'prog.retry': 'Upload failed, retrying {0}/3\u2026',\r
-\r
-    'result.ok': '\u2705 Shared! Send the code to the recipient',\r
-    'result.okBatch': '\u2705 {0} files shared successfully',\r
-    'ticket.title': 'PICKUP TICKET',\r
-    'ticket.no': '\u2116 {0}',\r
-    'send.cap': 'SHARE CONTENT',\r
-    'receipt.cap': 'SHARE RESULTS',\r
-    'ph.title': 'READY TO SHARE',\r
-    'ph.sub': 'Copy your pickup code or link here after sharing',\r
-\r
-    'flow.dropT': 'Send',\r
-    'flow.dropS': 'Choose files or enter text',\r
-    'flow.tickT': 'Ticket',\r
-    'flow.tickS': 'A 6-digit pickup code is issued',\r
-    'flow.pickT': 'Pick up',\r
-    'flow.pickS': 'The recipient claims it with the code',\r
-\r
-    'route.senderT': 'Sender \xB7 you',\r
-    'route.senderS': 'Choose content, expiry and pickup limit',\r
-    'route.relayT': 'Create a share',\r
-    'route.relayS': 'Send the pickup code or link to the recipient',\r
-    'route.takerT': 'Recipient',\r
-    'route.takerS': 'Enter the code or open the link to pick up',\r
-    'route.fine': 'Keep the code private; share only with your recipients',\r
-\r
-    'feat.splitT': 'File sharing', 'feat.splitS': 'Up to {0} per file',\r
-    'feat.ttlT': 'You set the clock', 'feat.ttlS': '1-30 days, or forever',\r
-    'feat.limitT': 'Limited pickups', 'feat.limitS': '1\xD7 \xB7 5\xD7 \xB7 unlimited',\r
-    'feat.selfT': 'Easy pickup', 'feat.selfS': 'Use a code, link or QR code',\r
-    'qr.hint': 'Scan to pick up',\r
-    'label.code': 'code',\r
-    'label.link': 'link',\r
-    'copied': '{0} copied',\r
-    'copy.fail': 'Copy failed, please copy manually',\r
-    'copied.btn': '\u2713 Copied',\r
-\r
-    'meta.after': 'Expires in {0} ({1})',\r
-    'meta.forever': 'Never expires',\r
-    'meta.pickups': '{0} pickups allowed',\r
-    'meta.unlimited': 'Unlimited pickups',\r
-    'files.count': '{0} files \xB7 {1} total',\r
-    'unknown.type': 'unknown type',\r
-    'text.counter': '{0} / {1}',\r
-\r
-    'err.oversize': 'File exceeds the {0} limit ({1})',\r
-    'err.empty': 'Empty files cannot be shared',\r
-    'err.tooMany': 'Up to {0} files per batch',\r
-    'err.upload': 'Upload failed, please retry',\r
-    'err.submit': 'Submission failed',\r
-    'req.fail': 'Request failed ({0})',\r
-    'toast.cancelled': 'Upload cancelled',\r
-\r
-    'dur.s': '{0}s',\r
-    'dur.ms': '<1s',\r
-    'dur.hm': '{0}m {1}s',\r
-    'dur.h': '{0}m',\r
-    'dur.hH': '{0}h {1}m',\r
-    'dur.hH2': '{0}h',\r
-    'dur.d': '{0}d',\r
-\r
-    'pk.title': 'Enter pickup code',\r
-    'pk.sub': 'Enter the 6-digit code to retrieve the shared file or text',\r
-    'pk.aria': '6-digit pickup code',\r
-    'pk.fail': 'Pickup failed',\r
-    'pk.textChars': 'Text \xB7 {0} chars',\r
-    'pk.copyAllText': 'Copy all text',\r
-    'pk.download': '\u2B07 Download file',\r
-    'pk.again': 'Try another code',\r
-    'pk.expireAt': 'Expires {0}',\r
-    'pk.left': '{0} pickups left',\r
-    'pk.unnamed': 'Untitled file',\r
-    'copied.text': 'Full text copied',\r
-\r
-    'ad.loginTitle': 'Admin login',\r
-    'ad.loginSub': 'Sign in with your admin token',\r
-    'ad.tokenPh': 'Admin token',\r
-    'ad.login': 'Log in',\r
-    'ad.badToken': 'Invalid token',\r
-    'ad.total': 'Total shares',\r
-    'ad.active': 'Active',\r
-    'ad.files': 'Files',\r
-    'ad.texts': 'Texts',\r
-    'ad.storage': 'Storage \xB7 used / capacity',\r
-    'ad.storageReserved': 'Includes upload reservations',\r
-    'ad.storageUnavailable': 'Unavailable',\r
-    'ad.shareBytes': 'Shared content size',\r
-    'ad.today': 'New today',\r
-    'ad.th.code': 'Code', 'ad.th.kind': 'Type', 'ad.th.content': 'Content',\r
-    'ad.th.size': 'Size', 'ad.th.pickups': 'Picked/Limit', 'ad.th.expire': 'Expires',\r
-    'ad.th.status': 'Status', 'ad.th.created': 'Created',\r
-    'ad.kind.file': 'File', 'ad.kind.text': 'Text',\r
-    'ad.st.active': 'Active', 'ad.st.expired': 'Expired', 'ad.st.exhausted': 'Exhausted',\r
-    'ad.loading': 'Loading\u2026',\r
-    'ad.empty': 'No shares yet',\r
-    'ad.loadFail': 'Failed to load',\r
-    'ad.page': 'Page {0} / {1} \xB7 {2} total',\r
-    'ad.prev': 'Prev', 'ad.next': 'Next',\r
-    'ad.refresh': '\u21BB Refresh',\r
-    'ad.logout': 'Log out',\r
-    'ad.download': 'Download',\r
-    'ad.delete': 'Delete',\r
-    'ad.deleted': 'Deleted',\r
-    'ad.deleteFail': 'Delete failed',\r
-    'ad.delTitle': 'Void this ticket?',\r
-    'ad.delWarn': 'The code stops working immediately, the recipient can no longer pick it up, and this cannot be undone.',\r
-    'ad.delOk': 'Void it',\r
-    'ad.textFallback': '(text)',\r
-    'ad.unnamed': '(unnamed)',\r
-    'ad.chars': '{0} chars',\r
-    'ad.forever': 'Forever',\r
-\r
-    'nf.title': 'Page not found',\r
-    'nf.body': "The page you're looking for isn't in this relay",\r
-    'nf.send': 'Send files',\r
-    'nf.pickup': 'Pick up',\r
-  },\r
-};\r
-\r
-export let LANG =\r
-  localStorage.getItem('lang') ||\r
-  ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');\r
-\r
-/** \u53D6\u8BCD:\u5F53\u524D\u8BED\u8A00 \u2192 \u4E2D\u6587\u515C\u5E95 \u2192 key \u672C\u8EAB;\u6570\u7EC4\u503C\u968F\u673A\u53D6\u4E00\u6761;{0}{1}\u2026 \u4F9D\u6B21\u66FF\u6362 */\r
-export function t(key, ...args) {\r
-  let s = (DICT[LANG] && DICT[LANG][key]) ?? DICT.zh[key] ?? key;\r
-  if (Array.isArray(s)) s = s[Math.floor(Math.random() * s.length)];\r
-  args.forEach((v, i) => { s = s.replaceAll(\`{\${i}}\`, String(v)); });\r
-  return s;\r
-}\r
-\r
-const rerenders = [];\r
-/** \u5404\u9875\u9762\u767B\u8BB0:\u8BED\u8A00\u5207\u6362\u540E\u91CD\u7B97\u52A8\u6001\u6587\u6848 */\r
-export function onLangChange(fn) { rerenders.push(fn); }\r
-\r
-function applyLang() {\r
-  document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';\r
-  document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = t(n.dataset.i18n); });\r
-  document.querySelectorAll('[data-i18n-ph]').forEach((n) => { n.placeholder = t(n.dataset.i18nPh); });\r
-  document.querySelectorAll('[data-i18n-title]').forEach((n) => { n.title = t(n.dataset.i18nTitle); });\r
-  document.querySelectorAll('[data-i18n-aria]').forEach((n) => { n.setAttribute('aria-label', t(n.dataset.i18nAria)); });\r
-  const btn = document.getElementById('lang-btn');\r
-  if (btn) btn.textContent = LANG === 'en' ? '\u4E2D' : 'EN';\r
-}\r
-\r
-export function initI18n() {\r
-  applyLang();\r
-  document.getElementById('lang-btn')?.addEventListener('click', () => {\r
-    LANG = LANG === 'en' ? 'zh' : 'en';\r
-    localStorage.setItem('lang', LANG);\r
-    applyLang();\r
-    rerenders.forEach((fn) => fn());\r
-  });\r
-}\r
+`, "index.html": `<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="\u5206\u4EAB\u6587\u4EF6\u6216\u6587\u672C\uFF0C\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4\u3002\u652F\u6301\u94FE\u63A5\u548C\u626B\u7801\u53D6\u4EF6\uFF0C\u53EF\u8BBE\u7F6E\u6709\u6548\u671F\u4E0E\u53EF\u53D6\u6B21\u6570\u3002">
+<meta name="theme-color" content="#efe8d8">
+<title data-i18n="doc.send">\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\u{1F4E6}</text></svg>">
+<link rel="stylesheet" href="/style.css">
+<script>
+  // \u9632 FOUC:\u6E32\u67D3\u524D\u5B9A\u4E3B\u9898
+  document.documentElement.dataset.theme =
+    localStorage.getItem('theme') ||
+    (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+<\/script>
+</head>
+<body>
+<header class="topbar wide">
+  <div class="brand">
+    <span class="logo">\u{1F4E6}</span>
+    <div><b data-i18n="brand.name">\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b><small data-i18n="brand.tagline">\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u6587\u4EF6</small></div>
+  </div>
+  <div class="actions">
+    <button id="lang-btn" class="icon-btn lang-btn" data-i18n-title="nav.lang">EN</button>
+    <button id="theme-btn" class="icon-btn" data-i18n-title="nav.theme">\u{1F317}</button>
+    <a class="btn ghost small" href="/pickup" data-i18n="nav.pickup">\u53D6\u4EF6</a>
+  </div>
+</header>
+
+<main class="container wide">
+  <section class="flow-strip">
+    <div class="flow-step"><span class="flow-dot">\u{1F4E6}</span><div class="flow-tt"><b data-i18n="flow.dropT">\u5BC4\u4EF6</b><small data-i18n="flow.dropS">\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C</small></div></div>
+    <div class="flow-link"></div>
+    <div class="flow-step"><span class="flow-dot">\u{1F3AB}</span><div class="flow-tt"><b data-i18n="flow.tickT">\u5206\u4EAB\u53E3\u4EE4</b><small data-i18n="flow.tickS">\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4</small></div></div>
+    <div class="flow-link"></div>
+    <div class="flow-step"><span class="flow-dot">\u{1F4E5}</span><div class="flow-tt"><b data-i18n="flow.pickT">\u53D6\u4EF6</b><small data-i18n="flow.pickS">\u8F93\u5165\u53E3\u4EE4\u5373\u53EF\u4E0B\u8F7D\u6216\u67E5\u770B</small></div></div>
+  </section>
+  <div class="send-grid">
+  <section class="card form-card">
+    <div class="card-cap">
+      <span data-i18n="send.cap">\u5206\u4EAB\u5185\u5BB9</span>
+      <span class="cap-date" id="cap-date"></span>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="file" data-i18n="tab.file">\u53D1\u6587\u4EF6</button>
+      <button class="tab" data-tab="text" data-i18n="tab.text">\u53D1\u6587\u672C</button>
+    </div>
+
+    <div id="panel-file" class="panel">
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" data-i18n-aria="dz.aria" aria-label="\u9009\u62E9\u6587\u4EF6">
+        <input type="file" id="file-input" multiple hidden>
+        <div class="dz-icon">\u{1F4C4}</div>
+        <p><b data-i18n="dz.click">\u70B9\u51FB\u9009\u62E9\u6587\u4EF6</b><span data-i18n="dz.drop">,\u6216\u62D6\u62FD / \u7C98\u8D34\u5230\u6B64\u5904</span></p>
+        <small id="dz-hint" data-i18n="dz.hint">\u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4</small>
+      </div>
+      <div id="file-list" class="file-list" hidden></div>
+    </div>
+
+    <div id="panel-text" class="panel" hidden>
+      <textarea id="text-input" rows="6" maxlength="65536" data-i18n-aria="tab.text" aria-label="\u53D1\u6587\u672C" data-i18n-ph="text.placeholder" placeholder="\u7C98\u8D34\u6216\u8F93\u5165\u8981\u5206\u4EAB\u7684\u6587\u672C\u2026"></textarea>
+      <div class="row-between"><small class="muted" id="text-counter">0 / 65536</small></div>
+    </div>
+
+    <details class="upload-context">
+      <summary data-i18n="context.add">\u8865\u5145\u4FE1\u606F\uFF08\u9009\u586B\uFF09</summary>
+      <div class="context-fields">
+        <div class="context-row">
+          <label for="upload-name" data-i18n="context.name">\u600E\u4E48\u79F0\u547C\u4F60</label>
+          <input id="upload-name" type="text" maxlength="40" autocomplete="nickname" data-i18n-ph="context.namePh" placeholder="\u586B\u5199\u4F60\u5E38\u7528\u7684\u79F0\u547C">
+        </div>
+        <div id="upload-description-field" class="context-row">
+          <div class="context-label"><label for="upload-description" data-i18n="context.description">\u6587\u4EF6\u8BF4\u660E</label><small id="description-count" class="muted">0 / 300</small></div>
+          <textarea id="upload-description" rows="3" maxlength="300" aria-describedby="description-count" data-i18n-ph="context.descriptionPh" placeholder="\u7B80\u8FF0\u6587\u4EF6\u5185\u5BB9\uFF0C\u540C\u6279\u6587\u4EF6\u5171\u7528"></textarea>
+        </div>
+        <small class="muted" data-i18n="context.visibility">\u8865\u5145\u4FE1\u606F\u4EC5\u7BA1\u7406\u5458\u53EF\u89C1</small>
+      </div>
+    </details>
+
+    <div class="options">
+      <div class="opt-group">
+        <label data-i18n="opt.expiry">\u6709\u6548\u671F</label>
+        <div class="seg" id="seg-expiry" role="group" data-i18n-aria="opt.expiry" aria-label="\u6709\u6548\u671F">
+          <button type="button" data-v="1d" data-i18n="seg.1d">1 \u5929</button>
+          <button type="button" data-v="7d" class="active" data-i18n="seg.7d">7 \u5929</button>
+          <button type="button" data-v="30d" data-i18n="seg.30d">30 \u5929</button>
+          <button type="button" data-v="forever" data-i18n="seg.forever" disabled>\u6C38\u4E45</button>
+        </div>
+      </div>
+      <div class="opt-group">
+        <label data-i18n="opt.pickups">\u53EF\u53D6\u6B21\u6570</label>
+        <div class="seg" id="seg-pickups" role="group" data-i18n-aria="opt.pickups" aria-label="\u53EF\u53D6\u6B21\u6570">
+          <button type="button" data-v="1" data-i18n="seg.p1">1 \u6B21</button>
+          <button type="button" data-v="5" class="active" data-i18n="seg.p5">5 \u6B21</button>
+          <button type="button" data-v="null" data-i18n="seg.punlimited" disabled>\u4E0D\u9650</button>
+        </div>
+      </div>
+    </div>
+
+    <small id="upload-policy-hint" class="muted" aria-live="polite"></small>
+    <button id="btn-upload" class="btn primary block" disabled data-i18n="btn.upload">\u5F00\u59CB\u4E0A\u4F20</button>
+    <button id="btn-text" class="btn primary block" hidden disabled data-i18n="btn.genCode">\u751F\u6210\u53E3\u4EE4</button>
+
+
+    <div id="progress" class="progress" hidden>
+      <div class="bar"><div id="progress-fill"></div></div>
+      <div class="row-between">
+        <small id="progress-text">\u2026</small>
+        <button id="btn-cancel" class="btn danger small" type="button" data-i18n="btn.cancel">\u53D6\u6D88</button>
+      </div>
+    </div>
+
+    </section>
+
+    <aside class="send-side">
+      <div class="side-cap" data-i18n="receipt.cap">\u5206\u4EAB\u7ED3\u679C</div>
+      <div id="result-placeholder" class="result-placeholder">
+        <div class="ph-postmark">READY</div>
+        <p data-i18n="ph.title">\u7B49\u5F85\u5206\u4EAB</p>
+        <small data-i18n="ph.sub">\u5206\u4EAB\u6210\u529F\u540E\uFF0C\u5728\u8FD9\u91CC\u590D\u5236\u53E3\u4EE4\u6216\u94FE\u63A5</small>
+        <div class="ph-route">
+          <div class="ph-leg"><span class="ph-ic">\u{1F9D1}</span><div><b data-i18n="route.senderT">\u5BC4\u4EF6\u4EBA \xB7 \u4F60</b><small data-i18n="route.senderS">\u9009\u62E9\u5185\u5BB9\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u548C\u53EF\u53D6\u6B21\u6570</small></div></div>
+          <div class="ph-dash"></div>
+          <div class="ph-leg"><span class="ph-ic">\u2601\uFE0F</span><div><b data-i18n="route.relayT">\u751F\u6210\u5206\u4EAB</b><small data-i18n="route.relayS">\u628A\u53D6\u4EF6\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9</small></div></div>
+          <div class="ph-dash"></div>
+          <div class="ph-leg"><span class="ph-ic">\u{1F9F2}</span><div><b data-i18n="route.takerT">\u53D6\u4EF6\u4EBA \xB7 \u5BF9\u65B9</b><small data-i18n="route.takerS">\u8F93\u5165\u53E3\u4EE4\u6216\u6253\u5F00\u94FE\u63A5\uFF0C\u5373\u53EF\u53D6\u4EF6</small></div></div>
+        </div>
+        <div class="ph-fine" data-i18n="route.fine">\u53E3\u4EE4\u8BF7\u59A5\u5584\u4FDD\u7BA1\uFF0C\u4EC5\u5206\u4EAB\u7ED9\u9700\u8981\u7684\u4EBA</div>
+      </div>
+      <div id="results" class="results"></div>
+    </aside>
+  </div>
+  <section class="feat-band">
+    <div class="feat"><span class="feat-ic">\u{1F9E9}</span><div><b data-i18n="feat.splitT">\u6587\u4EF6\u5206\u4EAB</b><small data-i18n="feat.splitS">\u9009\u62E9\u6587\u4EF6\u540E\u5F00\u59CB\u5206\u4EAB</small></div></div>
+    <div class="feat"><span class="feat-ic">\u23F3</span><div><b data-i18n="feat.ttlT">\u81EA\u9009\u6709\u6548\u671F</b><small data-i18n="feat.ttlS">1 ~ 30 \u5929\u6216\u6C38\u4E45</small></div></div>
+    <div class="feat"><span class="feat-ic">\u{1F522}</span><div><b data-i18n="feat.limitT">\u9650\u6B21\u53D6\u4EF6</b><small data-i18n="feat.limitS">1 \u6B21 \xB7 5 \u6B21 \xB7 \u4E0D\u9650</small></div></div>
+    <div class="feat"><span class="feat-ic">\u{1F512}</span><div><b data-i18n="feat.selfT">\u4FBF\u6377\u53D6\u4EF6</b><small data-i18n="feat.selfS">\u652F\u6301\u53E3\u4EE4\u3001\u94FE\u63A5\u548C\u626B\u7801\u53D6\u4EF6</small></div></div>
+  </section>
+</main>
+
+<footer class="foot" data-i18n="foot">\u89C1\u5B57\u5982\u9762</footer>
+
+<script src="/js/vendor/qrcode.js"><\/script>
+<script type="module" src="/js/index.js"><\/script>
+</body>
+</html>
+`, "js/admin-audit.js": "import { $, api, el, fmtDate } from './common.js';\r\nimport { t, LANG, onLangChange } from './i18n.js';\r\nimport { pageSize, scrollToList } from './admin-preferences.js';\r\n\r\nexport function initAudit() {\r\n  const view = $('#admin-audit-view');\r\n  const body = $('#audit-body');\r\n  const dialog = $('#audit-dialog');\r\n  let category = 'all', offset = 0, total = 0, request = 0;\r\n  let filters = {}, rows = [], available = false;\r\n  let limit = pageSize('audit');\r\n  const action = row => t(`audit.action.${row.action}`);\r\n  const actor = row => t(`audit.actor.${row.actor}`);\r\n  const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;\r\n  function place(row) {\r\n    let country = row.country;\r\n    if (/^[A-Z]{2}$/.test(country)) country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\r\n    return [...new Set([country, row.region, row.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\r\n  }\r\n  function close() { dialog.close(); $('#audit-detail').replaceChildren(); }\r\n  function details(row) {\r\n    const fields = [\r\n      [t('audit.time'), fmtDate(row.at)], [t('audit.action'), action(row)],\r\n      [t('audit.result'), t(`audit.${row.result}`)], [t('audit.actor'), actor(row)],\r\n      ['IP', ip(row)], [t('ad.sourceLocation'), place(row)],\r\n      [t('audit.target'), row.target || '\u2014'], [t('audit.http'), `${row.method} \xB7 ${row.status}`],\r\n      [t('audit.duration'), `${row.durationMs} ms`], [t('audit.id'), row.id],\r\n      [t('audit.agent'), row.agent || '\u2014'],\r\n    ];\r\n    for (const [key, value] of Object.entries(row.detail)) {\r\n      fields.push([t(`audit.detail.${key}`), key === 'bannedUntil' ? fmtDate(value)\r\n        : typeof value === 'boolean' ? t(value ? 'audit.yes' : 'audit.no') : String(value)]);\r\n    }\r\n    if (row.action === 'download') fields.push([t('audit.description'), t('audit.downloadHint')]);\r\n    $('#audit-detail').replaceChildren(...fields.map(([label, value]) => el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));\r\n    dialog.showModal();\r\n  }\r\n  function render() {\r\n    body.replaceChildren(...rows.map(row => el('tr', {},\r\n      el('td', {}, fmtDate(row.at)),\r\n      el('td', {}, el('span', {}, action(row)), el('small', { class: 'muted' }, t(`audit.${row.category}`))),\r\n      el('td', {}, el('span', { class: `audit-result audit-${row.result}` }, t(`audit.${row.result}`))),\r\n      el('td', { class: 'audit-actor' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.actor')), actor(row)),\r\n      el('td', { class: 'audit-source' }, el('span', { class: 'mono' }, ip(row)),\r\n        row.country || row.region || row.city ? el('small', { class: 'muted' }, place(row)) : null),\r\n      el('td', { class: 'audit-target' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.target')), row.target || '\u2014'),\r\n      el('td', {}, el('button', { type: 'button', class: 'btn small ghost', onclick: () => details(row) }, t('audit.details'))),\r\n    )));\r\n    $('#audit-page').textContent = t('audit.page', Math.floor(offset / limit) + 1, Math.max(1, Math.ceil(total / limit)), total);\r\n    $('#audit-prev').disabled = offset === 0;\r\n    $('#audit-next').disabled = offset + limit >= total;\r\n  }\r\n  async function load() {\r\n    const ticket = ++request;\r\n    available = false;\r\n    $('#audit-error').hidden = true;\r\n    $('#audit-state').textContent = t('ad.loading');\r\n    $('#audit-page').textContent = '';\r\n    body.replaceChildren();\r\n    for (const id of ['audit-prev', 'audit-next', 'audit-export', 'audit-refresh']) $('#' + id).disabled = true;\r\n    try {\r\n      const params = new URLSearchParams({ ...filters, category, offset, limit });\r\n      const data = await api(`/api/admin/audit-logs?${params}`);\r\n      if (ticket !== request || view.hidden) return;\r\n      if (typeof data.enabled !== 'boolean' || !Array.isArray(data.rows) || !Number.isSafeInteger(data.total)) throw new Error(t('ad.loadFail'));\r\n      available = data.enabled;\r\n      rows = data.rows; total = data.total;\r\n      if (available && offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return load(); }\r\n      $('#audit-state').textContent = !available ? t('audit.disabled') : !total ? t('audit.empty') : '';\r\n      render();\r\n      $('#audit-export').disabled = !available || total === 0;\r\n    } catch (e) {\r\n      if (ticket !== request || view.hidden) return;\r\n      $('#audit-state').textContent = '';\r\n      $('#audit-error').textContent = e.message || t('ad.loadFail');\r\n      $('#audit-error').hidden = false;\r\n    } finally { if (ticket === request) $('#audit-refresh').disabled = false; }\r\n  }\r\n  function selectView(audit) {\r\n    view.hidden = !audit;\r\n    $('#admin-files-view').hidden = audit;\r\n    for (const [id, active] of [['admin-files-tab', !audit], ['admin-audit-tab', audit]]) {\r\n      $('#' + id).setAttribute('aria-pressed', String(active));\r\n    }\r\n    if (audit) load(); else { request++; close(); }\r\n  }\r\n  $('#admin-files-tab').addEventListener('click', () => selectView(false));\r\n  $('#admin-audit-tab').addEventListener('click', () => selectView(true));\r\n  $('#audit-filter').addEventListener('submit', e => {\r\n    e.preventDefault();\r\n    const from = $('#audit-from').value, to = $('#audit-to').value;\r\n    if (from && to && from > to) {\r\n      $('#audit-error').textContent = t('audit.dateError'); $('#audit-error').hidden = false; return;\r\n    }\r\n    filters = { result: $('#audit-result').value, q: $('#audit-q').value.trim() };\r\n    if (from) filters.from = new Date(`${from}T00:00:00`).getTime();\r\n    if (to) { const end = new Date(`${to}T00:00:00`); end.setDate(end.getDate() + 1); filters.to = end.getTime() - 1; }\r\n    offset = 0; load();\r\n  });\r\n  $('#audit-reset').addEventListener('click', () => { $('#audit-filter').reset(); filters = {}; offset = 0; load(); });\r\n  for (const button of document.querySelectorAll('.audit-categories button')) button.addEventListener('click', () => {\r\n    category = button.dataset.category; offset = 0;\r\n    for (const item of document.querySelectorAll('.audit-categories button')) item.setAttribute('aria-pressed', String(item === button));\r\n    load();\r\n  });\r\n  $('#audit-prev').addEventListener('click', async () => { offset = Math.max(0, offset - limit); await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\r\n  $('#audit-next').addEventListener('click', async () => { offset += limit; await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\r\n  $('#audit-refresh').addEventListener('click', load);\r\n  window.addEventListener('admin-page-size', event => {\r\n    if (event.detail.name !== 'audit') return;\r\n    limit = event.detail.value; offset = 0;\r\n    if (!view.hidden) load();\r\n  });\r\n  $('#audit-export').addEventListener('click', async () => {\r\n    $('#audit-export').disabled = true;\r\n    $('#audit-error').hidden = true;\r\n    const exportFilters = { ...filters, category };\r\n    try {\r\n      const params = new URLSearchParams({ ...exportFilters, offset: 0, limit: 1000 });\r\n      const data = await api(`/api/admin/audit-logs/export?${params}`);\r\n      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), filters: exportFilters, ...data }, null, 2)], { type: 'application/json' });\r\n      const url = URL.createObjectURL(blob);\r\n      const link = el('a', { href: url, download: `audit-${new Date().toISOString().slice(0, 10)}.json` });\r\n      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);\r\n    } catch (e) { $('#audit-error').textContent = e.message || t('ad.loadFail'); $('#audit-error').hidden = false; }\r\n    finally { $('#audit-export').disabled = !available || total === 0; }\r\n  });\r\n  $('#audit-close').addEventListener('click', close);\r\n  dialog.addEventListener('cancel', e => { e.preventDefault(); close(); });\r\n  window.addEventListener('audit-write-failed', () => { $('#audit-write-warning').hidden = false; });\r\n  onLangChange(() => { close(); if (!view.hidden) load(); });\r\n}\r\n", "js/admin-preferences.js": "import { $ } from './common.js';\nimport { t } from './i18n.js';\n\nconst options = { files: [10, 20, 40], audit: [20, 50, 100] };\nconst values = { files: 20, audit: 20 };\nfor (const name of Object.keys(values)) {\n  try {\n    const saved = Number(localStorage.getItem(`admin-page-size-${name}`));\n    if (options[name].includes(saved)) values[name] = saved;\n  } catch { /* Browser preferences are optional when persistent storage is blocked. */ }\n}\nexport function pageSize(name) { return values[name]; }\n\nexport function scrollToList(selector) {\n  const list = $(selector);\n  const top = list.querySelector('.table-wrap').getBoundingClientRect().top + window.scrollY\n    - list.querySelector('.list-toolbar').getBoundingClientRect().height - 20;\n  window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });\n}\n\nexport function initAdminPreferences() {\n  const dialog = $('#settings-dialog');\n  $('#admin-settings-btn').addEventListener('click', () => dialog.showModal());\n  $('#settings-close').addEventListener('click', () => dialog.close());\n  for (const name of Object.keys(values)) {\n    const select = $(`#${name}-page-size`);\n    select.value = String(values[name]);\n    select.addEventListener('change', () => {\n      const value = Number(select.value);\n      if (!options[name].includes(value)) return;\n      values[name] = value;\n      $('#preferences-error').hidden = true;\n      try { localStorage.setItem(`admin-page-size-${name}`, String(value)); }\n      catch {\n        $('#preferences-error').textContent = t('ad.preferenceNotSaved');\n        $('#preferences-error').hidden = false;\n      }\n      window.dispatchEvent(new CustomEvent('admin-page-size', { detail: { name, value } }));\n    });\n  }\n  window.addEventListener('audit-write-failed', () => { $('#settings-audit-warning').hidden = false; });\n}\n", "js/admin.js": "import { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el } from './common.js';\nimport { LANG, t, onLangChange, initI18n } from './i18n.js';\nimport { initAudit } from './admin-audit.js';\nimport { pageSize, scrollToList, initAdminPreferences } from './admin-preferences.js';\n\ninitTheme();\ninitI18n();\ninitDialogs();\ninitAdminPreferences();\ninitAudit();\n\nconst loginCard = $('#admin-login');\nconst panel = $('#admin-panel');\nconst loginError = $('#login-error');\nconst tokenInput = $('#admin-token');\nconst statsRow = $('#stats-row');\nconst tbody = $('#shares-body');\nconst btnPrev = $('#btn-prev');\nconst btnNext = $('#btn-next');\nconst btnRefresh = $('#btn-refresh');\nconst pageInfo = $('#page-info');\n\nlet limit = pageSize('files'); // Bounded to 40 to leave room for KV reads on the free plan.\nlet offset = 0;\nlet total = 0;\nlet listRequest = 0;\nlet listBusy = false;\n\n/* \u8BED\u8A00\u5207\u6362:\u9762\u677F\u53EF\u89C1\u65F6\u6309\u65B0\u8BED\u8A00\u91CD\u62C9\u6587\u6848 */\nonLangChange(() => {\n  if ($('#source-dialog').open) closeSource();\n  if ($('#file-dialog').open) closeFileDetails();\n  if (!panel.hidden) {\n    loadStats();\n    loadList();\n    loadLoginProtection();\n  }\n});\n\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\n(async () => {\n  try {\n    await api('/api/admin/stats');\n    showPanel();\n  } catch {\n    loginCard.hidden = false;\n    tokenInput.focus();\n  }\n})();\n\nasync function login() {\n  const token = tokenInput.value.trim();\n  if (!token || $('#btn-login').disabled) return;\n  $('#btn-login').disabled = true;\n  loginError.hidden = true;\n  try {\n    await api('/api/admin/login', { method: 'POST', body: { token } });\n    showPanel();\n  } catch (e) {\n    loginError.textContent = e.code === 'login_blocked' ? t('ad.loginBlocked')\n      : e.code === 'login_protection_unavailable' ? t('ad.guardUnavailable') : e.message || t('ad.badToken');\n    loginError.hidden = false;\n  } finally { $('#btn-login').disabled = false; }\n}\n$('#btn-login').addEventListener('click', login);\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\n\nfunction showPanel() {\n  loginCard.hidden = true;\n  panel.hidden = false;\n  $('#admin-navigation').hidden = false;\n  $('#admin-settings-btn').hidden = false;\n  loadStats();\n  loadList();\n  loadSettings();\n  loadGuestPolicy();\n  loadLoginProtection();\n}\n\n$('#btn-logout').addEventListener('click', async () => {\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\n  location.reload();\n});\n\n/* ---------- \u7EDF\u8BA1 ---------- */\nlet lastStats = null; // \u5220\u9664\u540E\u672C\u5730\u9012\u51CF\u7528,\u907F\u514D\u7ACB\u5373\u91CD\u62C9\u649E\u4E0A KV \u6700\u7EC8\u4E00\u81F4\u7A97\u53E3\n\nfunction renderStats(s) {\n  const counts = [\n    [s.total, 'ad.total'], [s.active, 'ad.active'], [s.files, 'ad.files'],\n    [s.texts, 'ad.texts'], [s.todayCreated, 'ad.today'],\n  ];\n  const capacity = s.fileBackend === 'r2' ? s.storage : null;\n  const storageCard = el('div', { class: 'stat-card storage-card' },\n    el('small', {}, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes')),\n    capacity\n      ? el('div', { class: 'storage-value' },\n          el('b', {}, fmtBytes(capacity.usedBytes)),\n          el('span', { class: 'storage-total' }, ` / ${fmtBytes(capacity.capacityBytes)}`))\n      : el('div', { class: 'storage-value' }, el('b', {}, s.fileBackend === 'r2'\n          ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),\n  );\n  if (capacity) {\n    const ratio = Math.min(1, Math.max(0, capacity.usedBytes / capacity.capacityBytes));\n    storageCard.append(\n      el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,\n        value: capacity.usedBytes, ariaLabel: t('ad.storage') }),\n      el('div', { class: 'storage-caption' },\n        el('small', {}, t('ad.storageReserved')), el('small', {}, `${Math.round(ratio * 100)}%`)),\n    );\n  }\n  statsRow.replaceChildren(\n    el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>\n      el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),\n    storageCard,\n  );\n}\n\nasync function loadStats() {\n  try {\n    lastStats = await api('/api/admin/stats');\n    renderStats(lastStats);\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\n}\n\n/** \u5220\u9664\u6210\u529F\u540E\u672C\u5730\u540C\u6B65\u7EDF\u8BA1(\u670D\u52A1\u7AEF KV \u7D22\u5F15\u6700\u957F 60s \u624D\u53CD\u6620\u5220\u9664,\u91CD\u62C9\u4F1A\u770B\u5230\u65E7\u6570) */\nasync function statsAfterDelete(r) {\n  if (!lastStats) return;\n  const s = { ...lastStats };\n  s.total = Math.max(0, s.total - 1);\n  if (r.kind === 'file') s.files = Math.max(0, s.files - 1);\n  else s.texts = Math.max(0, s.texts - 1);\n  s.totalBytes = Math.max(0, s.totalBytes - r.size);\n  if (r.status === 'active') s.active = Math.max(0, s.active - 1);\n  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);\n  if (r.created_at >= todayStart.getTime()) s.todayCreated = Math.max(0, s.todayCreated - 1);\n  lastStats = s;\n  renderStats(s);\n  if (s.fileBackend === 'r2') {\n    try { s.storage = (await api('/api/admin/stats')).storage; }\n    catch { s.storage = null; } // Do not present stale capacity as current after deletion.\n    if (lastStats === s) renderStats(s);\n  }\n}\n\n/* ---------- \u5217\u8868 ---------- */\nconst STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };\nconst KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };\n\nasync function loadList() {\n  const request = ++listRequest;\n  listBusy = true;\n  btnPrev.disabled = btnNext.disabled = btnRefresh.disabled = true;\n  pageInfo.textContent = t('ad.loading');\n  tbody.setAttribute('aria-busy', 'true');\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));\n  try {\n    const data = await api(`/api/admin/shares?limit=${limit}&offset=${offset}`);\n    if (request !== listRequest) return;\n    if (!Number.isSafeInteger(data.total) || data.total < 0 || !Array.isArray(data.rows)) throw new Error(t('ad.loadFail'));\n    total = data.total;\n    if (offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return loadList(); }\n    const rows = data.rows ?? [];\n    tbody.replaceChildren();\n    for (const r of rows) {\n      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n      tbody.append(\n        el('tr', {},\n          el('td', { class: 'mono' }, r.code),\n          el('td', { class: 'share-content-cell' },\n            el('div', { class: 'share-filename-line' },\n              r.kind === 'file'\n                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)\n                : el('span', { class: 'share-filename', title: content }, content),\n              el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),\n          sourceCell(r),\n          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),\n          el('td', {}, fmtDate(r.created_at)),\n          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),\n        ),\n      );\n    }\n    if (rows.length === 0) {\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));\n    }\n    listBusy = false;\n    updatePager();\n  } catch (e) {\n    if (request !== listRequest) return;\n    pageInfo.textContent = t('ad.loadFail');\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));\n  } finally {\n    if (request === listRequest) {\n      listBusy = false;\n      btnRefresh.disabled = false;\n      tbody.setAttribute('aria-busy', 'false');\n    }\n  }\n}\n\nfunction updatePager() {\n  const page = Math.floor(offset / limit) + 1;\n  const pages = Math.max(1, Math.ceil(total / limit));\n  pageInfo.textContent = t('ad.page', page, pages, total);\n  btnPrev.disabled = listBusy || offset <= 0;\n  btnNext.disabled = listBusy || offset + limit >= total;\n}\nbtnPrev.addEventListener('click', async () => { offset = Math.max(0, offset - limit); await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\nbtnNext.addEventListener('click', async () => { offset += limit; await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\nbtnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });\nwindow.addEventListener('admin-page-size', event => {\n  if (event.detail.name !== 'files') return;\n  limit = event.detail.value; offset = 0;\n  if (!panel.hidden) loadList();\n});\n\n/* ---------- \u5220\u9664:\u7968\u636E\u98CE\u786E\u8BA4\u5F39\u7A97 + \u672C\u5730\u540C\u6B65(KV \u6700\u7EC8\u4E00\u81F4,\u5220\u9664\u540E\u7ACB\u5373\u91CD\u62C9\u4F1A\u770B\u5230\u6B8B\u7559\u7D22\u5F15) ---------- */\nconst delMask = $('#del-mask');\nconst delTarget = $('#del-target');\nlet delResolve = null;\n\nfunction confirmDelete(r) {\n  const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n  delTarget.replaceChildren(\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.code')), el('b', { class: 'mono' }, r.code)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.content')), el('span', {}, content)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),\n      el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),\n  );\n  delMask.showModal();\n  $('#del-cancel').focus();\n  return new Promise((resolve) => { delResolve = resolve; });\n}\n\nfunction closeDelModal(v) {\n  if (!delResolve) return;\n  delMask.close();\n  const resolve = delResolve;\n  delResolve = null;\n  resolve(v);\n}\n$('#del-cancel').addEventListener('click', () => closeDelModal(false));\n$('#del-ok').addEventListener('click', () => closeDelModal(true));\ndelMask.addEventListener('click', (e) => e.target === delMask && closeDelModal(false));\ndelMask.addEventListener('cancel', e => { e.preventDefault(); closeDelModal(false); });\n\nasync function remove(r, tr) {\n  if (!(await confirmDelete(r))) return;\n  try {\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\n    toast(t('ad.deleted'), 'ok');\n    statsAfterDelete(r);\n    total = Math.max(0, total - 1);\n    tr?.remove();\n    // \u5F53\u524D\u9875\u5220\u7A7A\u4E14\u4E0D\u5728\u7B2C\u4E00\u9875:\u9000\u56DE\u4E0A\u4E00\u9875\u91CD\u62C9,\u907F\u514D\u505C\u5728\u7A7A\u9875\n    if (tbody.rows.length === 0 && offset > 0) {\n      offset = Math.max(0, offset - limit);\n      loadList();\n    } else {\n      updatePager();\n    }\n  } catch (e) {\n    toast(e.message || t('ad.deleteFail'), 'error');\n  }\n}\n\n/* Upload source details: source labels are text nodes, never interpolated HTML. */\nconst sourceDialog = $('#source-dialog');\nconst sourceForm = $('#source-form');\nconst sourceNote = $('#source-note');\nconst sourceSave = $('#source-save');\nconst sourceError = $('#source-error');\nconst noteOverrides = new Map(); // Read-your-write while KV propagation completes.\nlet sourceRequest = 0;\nlet activeSource = null;\nlet sourceReturnCode = null;\nlet sourceHistoryLoaded = false;\n\nfunction sourceField(label, value, className = '') {\n  return el('div', { class: `source-field ${className}` },\n    el('small', { class: 'muted' }, label), el('span', {}, value));\n}\nfunction browserLabel(ua) {\n  if (!ua) return t('ad.sourceUnrecorded');\n  const browser = /Edg\\//.test(ua) ? 'Edge' : /Firefox\\//.test(ua) ? 'Firefox'\n    : /Chrome\\//.test(ua) ? 'Chrome' : /Safari\\//.test(ua) ? 'Safari' : t('ad.sourceUnknown');\n  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS'\n    : /Windows/.test(ua) ? 'Windows' : /Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';\n  return [browser, os].filter(Boolean).join(' \xB7 ');\n}\n\nfunction visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }\nfunction sourceLabel(source) {\n  const override = noteOverrides.get(source.visitorId);\n  return (override !== undefined ? override : source.note) || visitorLabel(source.visitorId);\n}\nfunction locationLabel(source) {\n  let country = source.country;\n  if (country && /^[A-Z]{2}$/.test(country)) {\n    country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n  }\n  return [...new Set([country, source.region, source.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n}\nfunction sourceCell(row) {\n  if (!row.source) return el('td', { class: 'source-cell muted' }, t('ad.sourceUnrecorded'));\n  const button = el('button', { class: 'source-link', type: 'button', onclick: () => openSource(row) }, sourceLabel(row.source));\n  button.dataset.visitor = row.source.visitorId;\n  button.title = t('ad.source');\n  return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));\n}\nasync function openSource(row, returnCode = null) {\n  const request = ++sourceRequest;\n  activeSource = null;\n  sourceReturnCode = returnCode;\n  $('#source-back').hidden = !returnCode;\n  $('#source-history').hidden = true;\n  $('#source-history').open = false;\n  $('#source-history-list').replaceChildren();\n  sourceHistoryLoaded = false;\n  sourceForm.hidden = true;\n  sourceError.hidden = true;\n  sourceSave.disabled = false;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = `${t('ad.th.code')} ${row.code}`;\n  $('#source-detail').textContent = t('ad.loading');\n  sourceDialog.showModal();\n  try {\n    const { source } = await api(`/api/admin/shares/${row.code}/source`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }\n    activeSource = { code: row.code, visitorId: source.visitorId };\n    const ip = el('span', { class: 'source-ip' }, source.ip || t('ad.sourceUnknown'));\n    if (source.ip) ip.append(el('button', { class: 'btn small ghost', type: 'button',\n      onclick: async () => toast(t(await copyText(source.ip) ? 'ad.ipCopied' : 'ad.copyFailed')) }, t('ad.copyIP')));\n    $('#source-detail').replaceChildren(\n      sourceField(t('ad.visitorId'), source.visitorId, 'mono'),\n      ...(source.displayName ? [sourceField(t('ad.submittedName'), source.displayName)] : []),\n      sourceField(t('ad.requestIP'), ip),\n      sourceField(t('ad.sourceLocation'), locationLabel(source)),\n      ...(source.asn || source.organization ? [sourceField(t('ad.network'),\n        [source.organization, source.asn ? `AS${source.asn}` : null].filter(Boolean).join(' \xB7 '))] : []),\n      sourceField(t('ad.browserReported'), browserLabel(source.userAgent)),\n      sourceField(t('ad.sourceTime'), fmtDate(source.capturedAt)),\n      ...(source.userAgent ? [el('details', { class: 'source-agent' }, el('summary', {}, 'User-Agent'),\n        el('p', { class: 'mono' }, source.userAgent))] : []),\n    );\n    $('#source-history').hidden = false;\n    sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';\n    sourceForm.hidden = false;\n    sourceSave.hidden = false;\n  } catch (e) {\n    if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');\n  }\n}\nfunction closeSource() {\n  sourceRequest++;\n  activeSource = null;\n  sourceReturnCode = null;\n  $('#source-history').open = false;\n  $('#source-history').hidden = true;\n  $('#source-history-list').replaceChildren();\n  $('#source-back').hidden = true;\n  sourceNote.value = '';\n  sourceForm.hidden = true;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = '';\n  $('#source-detail').replaceChildren();\n  sourceDialog.close();\n}\nsourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });\n$('#source-close').addEventListener('click', closeSource);\n$('#source-back').addEventListener('click', () => {\n  const code = sourceReturnCode;\n  closeSource();\n  if (code) openFileDetails(code);\n});\n$('#source-history').addEventListener('toggle', async () => {\n  if (!$('#source-history').open || !activeSource || sourceHistoryLoaded) return;\n  sourceHistoryLoaded = true;\n  const request = sourceRequest;\n  const list = $('#source-history-list');\n  list.textContent = t('ad.loading');\n  try {\n    const { rows } = await api(`/api/admin/shares/${activeSource.code}/source/activity`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },\n      el('div', { class: 'activity-head' }, el('span', { title: row.filename || t('ad.textFallback') }, row.filename || t('ad.textFallback')),\n        el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),\n      el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} \xB7 ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} \xB7 ${row.code}`),\n      row.ip || row.country || row.region || row.city\n        ? el('small', { class: 'muted' }, [row.ip, row.country || row.region || row.city ? locationLabel(row) : null].filter(Boolean).join(' \xB7 ')) : null,\n    )));\n    if (!rows.length) list.textContent = t('ad.empty');\n  } catch (error) {\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    sourceHistoryLoaded = false;\n    list.replaceChildren(el('p', { class: 'error-box', role: 'alert' }, error.message || t('ad.loadFail')),\n      el('button', { type: 'button', class: 'btn small ghost', onclick: () => $('#source-history').dispatchEvent(new Event('toggle')) }, t('ad.retry')));\n  }\n});\nsourceForm.addEventListener('submit', async (e) => {\n  e.preventDefault();\n  if (!activeSource || sourceSave.disabled) return;\n  const { code } = activeSource;\n  const request = sourceRequest;\n  sourceSave.disabled = true;\n  sourceError.hidden = true;\n  try {\n    const result = await api(`/api/admin/shares/${code}/source`, { method: 'PUT', body: { note: sourceNote.value } });\n    noteOverrides.set(result.visitorId, result.note);\n    document.querySelectorAll('[data-visitor]').forEach((button) => {\n      if (button.dataset.visitor === result.visitorId) button.textContent = result.note || visitorLabel(result.visitorId);\n    });\n    if (request === sourceRequest) closeSource();\n    toast(t('ad.sourceSaved'));\n  } catch (error) {\n    if (request === sourceRequest) {\n      sourceError.textContent = error.message || t('ad.loadFail');\n      sourceError.hidden = false;\n    }\n  } finally {\n    if (request === sourceRequest) sourceSave.disabled = false;\n  }\n});\n\n/* File details use their own request generation so closed dialogs stay empty. */\nconst fileDialog = $('#file-dialog');\nconst fileDetail = $('#file-detail');\nconst fileDownload = $('#file-download');\nlet fileRequest = 0;\nfunction fileField(label, value, secondary) {\n  return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),\n    el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);\n}\n\nasync function openFileDetails(code) {\n  const request = ++fileRequest;\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  $('#file-context').textContent = `${t('ad.th.code')} ${code}`;\n  fileDetail.textContent = t('ad.loading');\n  fileDialog.showModal();\n  try {\n    const detail = await api(`/api/admin/shares/${code}`);\n    if (request !== fileRequest || !fileDialog.open) return;\n    const state = detail.storage?.state || 'unknown';\n    const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };\n    const source = detail.source;\n    const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',\n      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }, code); },\n    }, sourceLabel(source)) : t('ad.sourceUnrecorded');\n    if (source) sourceButton.dataset.visitor = source.visitorId;\n    fileDetail.replaceChildren(\n      el('div', { class: 'file-identity file-wide' },\n        el('strong', {}, detail.filename || t('ad.unnamed')),\n        el('div', { class: 'file-summary' },\n          el('span', { title: t('ad.exactBytes', detail.size.toLocaleString()) }, fmtBytes(detail.size)),\n          el('span', { class: `badge ${detail.status}`, title: t('ad.shareState') }, t(STATUS_KEY[detail.status])),\n          state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),\n      ...(detail.description ? [el('div', { class: 'file-description file-wide' },\n        el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),\n      ...(detail.displayName ? [fileField(t('ad.submittedName'), detail.displayName)] : []),\n      fileField(t('ad.source'), sourceButton),\n      fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '\u221E'}`),\n      fileField(t('ad.th.created'), fmtDate(detail.createdAt)),\n      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)),\n\n    );\n    fileDownload.href = `/api/admin/shares/${code}/download`;\n    fileDownload.download = detail.filename || 'file';\n    fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');\n    fileDownload.hidden = state === 'missing';\n  } catch (error) {\n    if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');\n  }\n}\nfunction closeFileDetails() {\n  fileRequest++;\n  fileDetail.replaceChildren();\n  $('#file-context').textContent = '';\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  fileDialog.close();\n}\n$('#file-close').addEventListener('click', closeFileDetails);\nfileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });\n\n/* Keep unsaved input local; only a validated save changes retention. */\nconst retentionInput = $('#retention-days');\nconst retentionSave = $('#retention-save');\nconst retentionError = $('#retention-error');\nasync function loadSettings() {\n  $('#retention-status').hidden = true;\n  retentionInput.disabled = true;\n  retentionSave.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-retry').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings');\n    if (!Number.isInteger(settings.expiredRetentionDays) || settings.expiredRetentionDays < 0 || settings.expiredRetentionDays > 3650) throw new Error(t('ad.loadFail'));\n    retentionInput.value = settings.expiredRetentionDays;\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n    $('#retention-retry').hidden = false;\n  }\n}\n$('#retention-retry').addEventListener('click', loadSettings);\nretentionInput.addEventListener('input', () => { $('#retention-status').hidden = true; });\n$('#retention-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (retentionSave.disabled || !retentionInput.reportValidity()) return;\n  retentionSave.disabled = true;\n  retentionInput.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-status').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });\n    retentionInput.value = settings.expiredRetentionDays;\n    $('#retention-status').textContent = t('ad.settingsSaved');\n    $('#retention-status').hidden = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n  } finally {\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  }\n});\n\nconst guestWeekly = $('#guest-weekly');\nconst guestSave = $('#guest-save');\nconst guestError = $('#guest-error');\nfunction guestBusy(busy) {\n  for (const control of [guestWeekly, guestSave]) control.disabled = busy;\n}\nasync function loadGuestPolicy() {\n  $('#guest-status').hidden = true;\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-retry').hidden = true;\n  try {\n    const policy = await api('/api/admin/upload-policy');\n    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000) throw new Error(t('ad.loadFail'));\n    guestWeekly.value = policy.weeklyFileLimit;\n    guestBusy(false);\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n    $('#guest-retry').hidden = false;\n  }\n}\n$('#guest-retry').addEventListener('click', loadGuestPolicy);\nguestWeekly.addEventListener('input', () => { $('#guest-status').hidden = true; });\n$('#guest-policy-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (guestSave.disabled || !e.target.reportValidity()) return;\n  const body = { weeklyFileLimit: Number(guestWeekly.value) };\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-status').hidden = true;\n  try {\n    await api('/api/admin/upload-policy', { method: 'PUT', body });\n    $('#guest-status').textContent = t('ad.guestSaved');\n    $('#guest-status').hidden = false;\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n  } finally { guestBusy(false); }\n});\n\nlet guardRequest = 0;\nasync function loadLoginProtection() {\n  const request = ++guardRequest;\n  const refresh = $('#login-guard-refresh');\n  const error = $('#login-guard-error');\n  refresh.disabled = true;\n  error.hidden = true;\n  $('#login-guard-bans').replaceChildren();\n  $('#login-guard-status').textContent = '';\n  try {\n    const data = await api('/api/admin/login-protection');\n    if (request !== guardRequest) return;\n    if (typeof data.enabled !== 'boolean' || !Array.isArray(data.bans) ||\n        ![data.maxFailures, data.windowSeconds, data.banSeconds].every(n => Number.isInteger(n) && n > 0)) throw new Error(t('ad.loadFail'));\n    $('#login-guard-status').textContent = data.enabled\n      ? t('ad.guardRule', data.windowSeconds / 60, data.maxFailures, data.banSeconds / 60) : t('ad.guardDisabled');\n    if (!data.enabled) return;\n    if (!data.bans.length) $('#login-guard-bans').append(el('small', { class: 'muted' }, t('ad.guardEmpty')));\n    for (const ban of data.bans) {\n      const button = el('button', { class: 'btn small ghost', type: 'button' }, t('ad.guardUnblock'));\n      button.addEventListener('click', async () => {\n        button.disabled = true;\n        error.hidden = true;\n        try {\n          await api('/api/admin/login-protection/unblock', { method: 'POST', body: { ip: ban.ip } });\n          toast(t('ad.guardUnblocked'), 'ok');\n          await loadLoginProtection();\n        } catch (e) {\n          error.textContent = e.message || t('ad.loadFail');\n          error.hidden = false;\n          button.disabled = false;\n        }\n      });\n      $('#login-guard-bans').append(el('div', { class: 'login-guard-row' },\n        el('div', { class: 'login-guard-info' },\n          el('b', {}, ban.ip === 'unknown' ? t('ad.guardUnknown') : ban.ip),\n          el('small', { class: 'muted' }, t('ad.guardFailures', ban.failures) + ' \xB7 ' + t('ad.guardUntil', fmtDate(ban.bannedUntil))),\n          el('small', { class: 'muted' }, t('ad.guardLast', fmtDate(ban.lastFailedAt)))), button));\n    }\n  } catch (e) {\n    if (request !== guardRequest) return;\n    error.textContent = e.message || t('ad.loadFail');\n    error.hidden = false;\n  } finally { if (request === guardRequest) refresh.disabled = false; }\n}\n$('#login-guard-refresh').addEventListener('click', loadLoginProtection);\n", "js/common.js": "import { t } from './i18n.js';\n\nexport const $ = (sel, el = document) => el.querySelector(sel);\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\n\n/** Keep Tab within modal content, including the wrap past the final button. */\nexport function initDialogs() {\n  for (const dialog of $$('dialog')) {\n    dialog.addEventListener('keydown', event => {\n      if (event.key !== 'Tab') return;\n      const controls = $$('button, a[href], input, select, textarea, summary, [tabindex]', dialog)\n        .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);\n      const first = controls[0];\n      const last = controls.at(-1);\n      if (!first) { event.preventDefault(); return; }\n      if (!controls.includes(document.activeElement) || (event.shiftKey && document.activeElement === first)) {\n        event.preventDefault(); (event.shiftKey ? last : first).focus();\n      } else if (!event.shiftKey && document.activeElement === last) {\n        event.preventDefault(); first.focus();\n      }\n    });\n  }\n}\n\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\nexport async function api(path, opts = {}) {\n  const res = await fetch(path, {\n    method: opts.method || 'GET',\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\n  });\n  if (res.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n  let data = null;\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\n  if (!res.ok) {\n    const e = new Error(data?.message || t('req.fail', res.status));\n    e.code = data?.error || 'unknown';\n    e.status = res.status;\n    e.remainingBytes = data?.remainingBytes;\n    throw e;\n  }\n  return data;\n}\n\nexport function fmtBytes(n) {\n  if (!Number.isFinite(n) || n < 0) return '-';\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\n  let i = 0;\n  while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 100) / 100;\n  return `${v} ${units[i]}`;\n}\n\n/** \u6C38\u4E45\u5206\u4EAB\u8FD4\u56DE null,\u7531\u8C03\u7528\u65B9\u6309\u8BED\u8A00\u6E32\u67D3\u300C\u6C38\u4E45 / Forever\u300D */\nexport function fmtDate(ms) {\n  if (ms === null || ms === undefined) return null;\n  const d = new Date(ms);\n  const p = (x) => String(x).padStart(2, '0');\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\n}\n\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6,\u5355\u4F4D\u8BCD\u968F\u8BED\u8A00 */\nexport function fmtDuration(sec) {\n  if (!Number.isFinite(sec) || sec < 0) return '-';\n  if (sec < 1) return t('dur.ms');\n  if (sec < 60) return t('dur.s', Math.round(sec));\n  if (sec < 3600) {\n    const m = Math.floor(sec / 60);\n    const s = Math.round(sec % 60);\n    return s ? t('dur.hm', m, s) : t('dur.h', m);\n  }\n  if (sec < 86400) {\n    const h = Math.floor(sec / 3600);\n    const m = Math.round((sec % 3600) / 60);\n    return m ? t('dur.hH', h, m) : t('dur.hH2', h);\n  }\n  return t('dur.d', Math.round(sec / 86400));\n}\n\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\nexport function iconFor(name = '', mime = '') {\n  const ext = (name.split('.').pop() || '').toLowerCase();\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\n  return '\u{1F4E6}';\n}\n\nexport async function copyText(text) {\n  try {\n    await navigator.clipboard.writeText(text);\n    return true;\n  } catch { /* \u8D70\u964D\u7EA7 */ }\n  try {\n    const ta = document.createElement('textarea');\n    ta.value = text;\n    ta.style.cssText = 'position:fixed;opacity:0';\n    document.body.appendChild(ta);\n    ta.select();\n    const ok = document.execCommand('copy');\n    ta.remove();\n    return ok;\n  } catch {\n    return false;\n  }\n}\n\nexport function toast(msg, type = 'info') {\n  let host = $('#toast-host');\n  if (!host) {\n    host = document.createElement('div');\n    host.id = 'toast-host';\n    document.body.appendChild(host);\n  }\n  const t = document.createElement('div');\n  t.className = `toast ${type}`;\n  t.textContent = msg;\n  host.appendChild(t);\n  requestAnimationFrame(() => t.classList.add('show'));\n  setTimeout(() => {\n    t.classList.remove('show');\n    setTimeout(() => t.remove(), 300);\n  }, 2400);\n}\n\nexport function initTheme() {\n  const btn = $('#theme-btn');\n  const meta = $('meta[name=\"theme-color\"]');\n  const sync = () => {\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\n  };\n  sync();\n  btn?.addEventListener('click', () => {\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\n    localStorage.setItem('theme', next);\n    document.documentElement.dataset.theme = next;\n    sync();\n  });\n}\n\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\nexport function el(tag, attrs = {}, ...children) {\n  const n = document.createElement(tag);\n  for (const [k, v] of Object.entries(attrs)) {\n    if (k === 'class') n.className = v;\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\n    else n[k] = v;\n  }\n  for (const c of children.flat(Infinity)) {\n    if (c == null || c === false) continue;\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\n  }\n  return n;\n}\n", "js/i18n.js": `/**
+ * \u8F7B\u91CF i18n:HTML \u9759\u6001\u6587\u6848\u7528 data-i18n / data-i18n-ph / data-i18n-title \u6807\u8BB0,
+ * JS \u52A8\u6001\u5B57\u7B26\u4E32\u7528 t('key', \u2026args);{n} \u5360\u4F4D\u3002
+ * \u8BED\u8A00\u4F18\u5148\u7EA7:localStorage('lang') > \u6D4F\u89C8\u5668\u8BED\u8A00(en \u5F00\u5934\u2192\u82F1\u6587)> \u4E2D\u6587\u3002
+ * \u5207\u6362\u540E\u8C03\u7528\u5DF2\u6CE8\u518C\u7684\u91CD\u6E32\u67D3\u94A9\u5B50(\u5404\u9875\u9762 setLang \u65F6\u767B\u8BB0)\u3002
+ * \u8BCD\u5178\u503C\u4E3A\u6570\u7EC4\u65F6\u968F\u673A\u53D6\u4E00\u6761(\u9875\u811A\u5F69\u86CB,\u6BCF\u6B21\u52A0\u8F7D/\u5207\u8BED\u8A00\u91CD\u6447)\u3002
+ */
+
+const DICT = {
+  zh: {
+    'ad.settings': '\u8BBE\u7F6E',
+    'ad.shareSettings': '\u5206\u4EAB\u89C4\u5219',
+    'ad.guestWeeklyFiles': '\u672A\u5907\u6CE8\u8BBF\u5BA2\u6BCF\u5468\u6587\u4EF6\u6570',
+    'ad.displaySettings': '\u5217\u8868\u663E\u793A',
+    'ad.filesPageSize': '\u6587\u4EF6\u6BCF\u9875\u6761\u6570',
+    'ad.auditPageSize': '\u65E5\u5FD7\u6BCF\u9875\u6761\u6570',
+    'ad.browserSettings': '\u7ACB\u5373\u751F\u6548\uFF0C\u4EC5\u4FDD\u5B58\u5728\u5F53\u524D\u6D4F\u89C8\u5668',
+    'ad.preferenceNotSaved': '\u672C\u6B21\u5DF2\u751F\u6548\uFF0C\u6D4F\u89C8\u5668\u672A\u80FD\u4FDD\u5B58\u6B64\u504F\u597D',
+    'ad.filesPagination': '\u6587\u4EF6\u5206\u9875',
+    'ad.auditPagination': '\u65E5\u5FD7\u5206\u9875',
+    'context.add': '\u8865\u5145\u4FE1\u606F\uFF08\u9009\u586B\uFF09',
+    'context.name': '\u600E\u4E48\u79F0\u547C\u4F60',
+    'context.description': '\u6587\u4EF6\u8BF4\u660E',
+    'context.namePh': '\u586B\u5199\u4F60\u5E38\u7528\u7684\u79F0\u547C',
+    'context.descriptionPh': '\u7B80\u8FF0\u6587\u4EF6\u5185\u5BB9\uFF0C\u540C\u6279\u6587\u4EF6\u5171\u7528',
+    'context.visibility': '\u8865\u5145\u4FE1\u606F\u4EC5\u7BA1\u7406\u5458\u53EF\u89C1',
+    'ad.retentionTitle': '\u81EA\u52A8\u6E05\u7406',
+    'ad.recentUploads': '\u8FD1\u671F\u4E0A\u4F20',
+    'ad.historyScope': '\u6700\u8FD1 10 \u6761\u73B0\u5B58\u5206\u4EAB',
+    'ad.backFile': '\u8FD4\u56DE\u6587\u4EF6',
+    'ad.submittedName': '\u81EA\u586B\u79F0\u547C',
+    'ad.requestIP': '\u8BF7\u6C42 IP',
+    'ad.network': '\u7F51\u7EDC\u7EC4\u7EC7',
+    'ad.browserReported': '\u6D4F\u89C8\u5668\uFF08\u81EA\u62A5\uFF09',
+    'ad.copyIP': '\u590D\u5236',
+    'ad.ipCopied': 'IP \u5DF2\u590D\u5236',
+    'ad.copyFailed': '\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u9009\u62E9',
+    'ad.fileDescription': '\u6587\u4EF6\u8BF4\u660E',
+    'audit.detail.filename': '\u6587\u4EF6\u540D',
+    'audit.detail.sizeBytes': '\u5927\u5C0F\uFF08\u5B57\u8282\uFF09',
+    'audit.navigation': "\u7BA1\u7406\u9875\u9762",
+    'audit.files': "\u6587\u4EF6\u7BA1\u7406",
+    'audit.title': "\u65E5\u5FD7\u5BA1\u8BA1",
+    'audit.retention': "\u6700\u8FD1 30 \u5929\uFF0C\u6700\u591A 1,000 \u6761\uFF1B\u65F6\u95F4\u6309\u672C\u5730\u65F6\u533A\u663E\u793A",
+    'audit.export': "\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C",
+    'audit.categories': "\u65E5\u5FD7\u5206\u7C7B",
+    'audit.all': "\u5168\u90E8\u65E5\u5FD7",
+    'audit.login': "\u767B\u5F55\u65E5\u5FD7",
+    'audit.operation': "\u64CD\u4F5C\u65E5\u5FD7",
+    'audit.security': "\u5B89\u5168\u4E8B\u4EF6",
+    'audit.result': "\u7ED3\u679C",
+    'audit.anyResult': "\u5168\u90E8\u7ED3\u679C",
+    'audit.success': "\u6210\u529F",
+    'audit.failed': "\u5931\u8D25",
+    'audit.blocked': "\u5DF2\u62E6\u622A",
+    'audit.from': "\u5F00\u59CB\u65E5\u671F",
+    'audit.to': "\u7ED3\u675F\u65E5\u671F",
+    'audit.keyword': "IP / \u64CD\u4F5C\u5BF9\u8C61",
+    'audit.search': "\u641C\u7D22 IP \u6216\u53D6\u4EF6\u7801",
+    'audit.filter': "\u7B5B\u9009",
+    'audit.reset': "\u91CD\u7F6E",
+    'audit.time': "\u65F6\u95F4",
+    'audit.action': "\u64CD\u4F5C",
+    'audit.actor': "\u64CD\u4F5C\u8EAB\u4EFD",
+    'audit.source': "\u6765\u6E90 IP / \u5C5E\u5730",
+    'audit.target': "\u64CD\u4F5C\u5BF9\u8C61",
+    'audit.details': "\u8BE6\u60C5",
+    'audit.empty': "\u6682\u65E0\u5339\u914D\u65E5\u5FD7\u3002\u65E5\u5FD7\u4ECE\u529F\u80FD\u4E0A\u7EBF\u540E\u5F00\u59CB\u8BB0\u5F55\u3002",
+    'audit.disabled': "\u672A\u542F\u7528\u65E5\u5FD7\u5BA1\u8BA1\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1\u3002",
+    'audit.page': "\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761",
+    'audit.dateError': "\u5F00\u59CB\u65E5\u671F\u4E0D\u80FD\u665A\u4E8E\u7ED3\u675F\u65E5\u671F",
+    'audit.http': "\u8BF7\u6C42 / \u72B6\u6001\u7801",
+    'audit.duration': "\u5904\u7406\u8017\u65F6",
+    'audit.id': "\u65E5\u5FD7\u7F16\u53F7",
+    'audit.agent': "\u6D4F\u89C8\u5668\u6807\u8BC6\uFF08\u5BA2\u6237\u7AEF\u63D0\u4F9B\uFF09",
+    'audit.yes': "\u662F",
+    'audit.no': "\u5426",
+    'audit.description': "\u8BF4\u660E",
+    'audit.downloadHint': "\u5DF2\u5F00\u59CB\u8FD4\u56DE\u6587\u4EF6\u6D41\uFF0C\u4E0D\u4EE3\u8868\u6D4F\u89C8\u5668\u5DF2\u5B8C\u6210\u4E0B\u8F7D\u3002",
+    'audit.writeFailed': "\u64CD\u4F5C\u5DF2\u5904\u7406\uFF0C\u4F46\u5BA1\u8BA1\u8BB0\u5F55\u672A\u4FDD\u5B58\uFF0C\u8BF7\u68C0\u67E5\u65E5\u5FD7\u5B58\u50A8\u3002",
+    'audit.action.login': "\u7BA1\u7406\u5458\u767B\u5F55",
+    'audit.action.logout': "\u9000\u51FA\u767B\u5F55",
+    'audit.action.retention': "\u4FEE\u6539\u8FC7\u671F\u4FDD\u7559\u5929\u6570",
+    'audit.action.uploadPolicy': "\u4FEE\u6539\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",
+    'audit.action.unblock': "\u624B\u52A8\u89E3\u5C01 IP",
+    'audit.action.cleanup': "\u6267\u884C\u8FC7\u671F\u6E05\u7406",
+    'audit.action.export': "\u5BFC\u51FA\u5BA1\u8BA1\u65E5\u5FD7",
+    'audit.action.ban': "\u89E6\u53D1\u767B\u5F55\u5C01\u7981",
+    'audit.action.delete': "\u5220\u9664\u5206\u4EAB",
+    'audit.action.note': "\u4FEE\u6539\u8BBF\u5BA2\u5907\u6CE8",
+    'audit.action.viewSource': "\u67E5\u770B\u6765\u6E90\u8BE6\u60C5",
+    'audit.action.download': "\u4E0B\u8F7D\u6587\u4EF6",
+    'audit.actor.admin': "\u7BA1\u7406\u5458",
+    'audit.actor.token': "\u5B9A\u65F6\u5668 / \u4EE4\u724C",
+    'audit.actor.anonymous': "\u672A\u8BA4\u8BC1",
+    'audit.detail.bannedUntil': "\u5C01\u7981\u622A\u6B62",
+    'audit.detail.expiredRetentionDays': "\u8FC7\u671F\u4FDD\u7559\u5929\u6570",
+    'audit.detail.weeklyFileLimit': "\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",
+    'audit.detail.notePresent': "\u8BBE\u7F6E\u5907\u6CE8",
+    'audit.detail.alreadyDeleted': "\u5206\u4EAB\u5DF2\u4E0D\u5B58\u5728",
+    'audit.detail.deletedShares': "\u5DF2\u6E05\u7406\u5206\u4EAB",
+    'audit.detail.abortedSessions': "\u5DF2\u53D6\u6D88\u4E0A\u4F20\u4F1A\u8BDD",
+
+    'ad.loginProtection': "\u767B\u5F55\u9632\u62A4",
+    'ad.guardRule': "{0} \u5206\u949F\u5185\u5931\u8D25 {1} \u6B21\uFF0C\u5C01\u7981\u767B\u5F55 {2} \u5206\u949F",
+    'ad.guardDisabled': "\u672A\u542F\u7528\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1",
+    'ad.guardEmpty': "\u5F53\u524D\u6CA1\u6709\u5C01\u7981 IP",
+    'ad.guardUnknown': "\u672A\u77E5\u6765\u6E90\uFF08\u5171\u7528\u9650\u5236\uFF09",
+    'ad.guardFailures': "\u5931\u8D25 {0} \u6B21",
+    'ad.guardUntil': "\u89E3\u5C01\u4E8E {0}",
+    'ad.guardLast': "\u6700\u8FD1\u5931\u8D25 {0}",
+    'ad.guardUnblock': "\u89E3\u5C01",
+    'ad.guardUnblocked': "\u5DF2\u89E3\u5C01",
+    'ad.loginBlocked': "\u767B\u5F55\u5931\u8D25\u6B21\u6570\u8FC7\u591A\uFF0C\u8BF7\u7B49\u5F85\u5C01\u7981\u5230\u671F\u540E\u91CD\u8BD5",
+    'ad.guardUnavailable': "\u767B\u5F55\u9632\u62A4\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5",
+
+    'ad.formatUnknown': "\u683C\u5F0F\u672A\u77E5",
+    'ad.format.archive': "\u538B\u7F29\u5305",
+    'ad.format.program': "\u5E94\u7528\u7A0B\u5E8F",
+    'ad.format.document': "\u6587\u6863",
+    'ad.format.image': "\u56FE\u7247",
+    'ad.format.video': "\u89C6\u9891",
+    'ad.format.audio': "\u97F3\u9891",
+    'ad.format.text': "\u6587\u672C / \u4EE3\u7801",
+    'ad.format.file': "\u6587\u4EF6",
+    'ad.uploader': "\u4E0A\u4F20\u8005",
+    'ad.shareState': "\u5206\u4EAB\u72B6\u6001",
+    'ad.fileAvailability': "\u6587\u4EF6\u72B6\u6001",
+    'ad.fileState.available': "\u53EF\u4E0B\u8F7D",
+    'ad.fileState.missing': "\u6587\u4EF6\u4E0D\u5B58\u5728",
+    'ad.fileState.unknown': "\u6682\u65F6\u65E0\u6CD5\u786E\u8BA4",
+    'ad.timeLeft': "\u5269\u4F59 {0}",
+    'ad.timeExpired': "\u5DF2\u8FC7\u671F {0}",
+    'ad.cleanupPermanent': "\u4E0D\u81EA\u52A8\u6E05\u7406",
+    'ad.cleanupActive': "\u8FC7\u671F\u540E\u4FDD\u7559 {0} \u5929",
+    'ad.cleanupRetained': "\u8FC7\u671F\u4FDD\u7559\u4E2D",
+    'ad.cleanupPending': "\u7B49\u5F85\u6E05\u7406\u4EFB\u52A1",
+    'ad.technical': "\u6280\u672F\u4FE1\u606F",
+    'ad.storedSize': "\u5B58\u50A8\u5927\u5C0F",
+    'ad.storedAt': "\u5165\u5E93\u65F6\u95F4",
+    'ad.exactBytes': "{0} \u5B57\u8282",
+    'ad.formatHint': "\u683C\u5F0F\u6309\u6587\u4EF6\u540D\u8BC6\u522B\uFF0C\u4E0D\u4EE3\u8868\u5185\u5BB9\u6821\u9A8C\u3002",
+    'ad.tryDownload': "\u5C1D\u8BD5\u4E0B\u8F7D",
+    'ad.guestLimits': "\u672A\u5907\u6CE8\u8BBF\u5BA2\u9650\u5236",
+    'ad.weeklyFiles': "\u6BCF\u5468\u6587\u4EF6\u6570",
+    'ad.guestRules': "\u5317\u4EAC\u65F6\u95F4\u5468\u4E00\u91CD\u7F6E\uFF1B\u5DF2\u63A5\u7EB3\u4E0A\u4F20\u8BA1\u6B21\uFF0C\u53D6\u6D88\u4E0D\u9000\u56DE\u3002\u672A\u5907\u6CE8\u8BBF\u5BA2\u4E0D\u80FD\u6C38\u4E45\u5206\u4EAB\u6216\u4E0D\u9650\u6B21\u53D6\u4EF6\u3002",
+    'ad.guestSaved': "\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u4E0A\u4F20",
+    'policy.expiry': "1 ~ 30 \u5929",
+    'policy.pickups': "1 \u6B21 \xB7 5 \u6B21",
+    'policy.remaining': "\u672C\u5468\u5269\u4F59 {0} / {1} \u4E2A\u6587\u4EF6 \xB7 {2} \u91CD\u7F6E",
+    'policy.unavailable': "\u6B63\u5728\u8BFB\u53D6\u4E0A\u4F20\u6743\u9650\uFF1B\u82E5\u957F\u65F6\u95F4\u672A\u6062\u590D\uFF0C\u8BF7\u5237\u65B0\u9875\u9762",
+    'policy.contact': "\u6682\u4E0D\u63A5\u53D7\u6587\u4EF6\u4E0A\u4F20\uFF0C\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458",
+    'ad.fileDetails': '\u6587\u4EF6\u8BE6\u60C5',
+    'ad.filename': '\u6587\u4EF6\u540D',
+    'ad.fileType': '\u6587\u4EF6\u7C7B\u578B',
+    'ad.cleanupAfter': '\u6700\u65E9\u6E05\u7406',
+    'ad.retentionDays': '\u8FC7\u671F\u540E\u4FDD\u7559',
+    'ad.days': '\u5929',
+    'ad.save': '\u4FDD\u5B58',
+    'ad.retry': '\u91CD\u8BD5',
+    'ad.settingsSaved': '\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u6E05\u7406',
+    'ad.source': '\u4E0A\u4F20\u6765\u6E90',
+    'ad.visitor': '\u8BBF\u5BA2 {0}',
+    'ad.visitorId': '\u8BBF\u5BA2\u6807\u8BC6',
+    'ad.sourceUnknown': '\u672A\u77E5',
+    'ad.sourceUnrecorded': '\u672A\u8BB0\u5F55',
+    'ad.sourceLocation': '\u51FA\u53E3\u5C5E\u5730',
+    'ad.sourceTime': '\u8BB0\u5F55\u65F6\u95F4',
+    'ad.sourceNote': '\u7BA1\u7406\u5458\u5907\u6CE8',
+    'ad.sourceSave': '\u4FDD\u5B58\u5907\u6CE8',
+    'ad.sourceClose': '\u5173\u95ED',
+    'ad.sourceSaved': '\u5907\u6CE8\u5DF2\u4FDD\u5B58',
+    'err.capacity': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6',
+    'err.capacityRemaining': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6\uFF0C\u5269\u4F59\u53EF\u7528\u7A7A\u95F4\u7EA6 {0} GB\uFF08{1} \u5B57\u8282\uFF09\u3002',
+    'doc.send': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001',
+    'doc.pickup': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D6\u4EF6',
+    'doc.admin': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u7BA1\u7406',
+    'doc.404': '404 - \u6587\u4EF6\u4E2D\u8F6C\u7AD9',
+
+    'brand.name': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9',
+    'brand.tagline': '\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u6587\u4EF6',
+    'brand.pickup': '\u53D6\u4EF6',
+    'brand.admin': '\u7BA1\u7406\u540E\u53F0',
+    'nav.pickup': '\u53D6\u4EF6',
+    'nav.send': '\u53D1\u9001',
+    'nav.theme': '\u5207\u6362\u4E3B\u9898',
+    'nav.lang': '\u5207\u6362\u8BED\u8A00',
+    'foot': [
+      '\u89C1\u5B57\u5982\u9762',
+      '\u7EB8\u77ED\u60C5\u957F',
+      '\u5C71\u9AD8\u6C34\u957F,\u540E\u4F1A\u6709\u671F',
+      '\u6B64\u4EF6\u5DF2\u7B7E\u6536,\u671B\u73CD\u91CD',
+      '\u98CE\u91CC\u96E8\u91CC,\u4E2D\u8F6C\u7AD9\u7B49\u4F60',
+      '\u6162\u4E00\u70B9,\u4E5F\u6CA1\u5173\u7CFB',
+    ],
+
+    'tab.file': '\u53D1\u6587\u4EF6',
+    'tab.text': '\u53D1\u6587\u672C',
+    'dz.click': '\u70B9\u51FB\u9009\u62E9\u6587\u4EF6',
+    'dz.drop': ',\u6216\u62D6\u62FD / \u7C98\u8D34\u5230\u6B64\u5904',
+    'dz.aria': '\u9009\u62E9\u6587\u4EF6',
+    'dz.hint': '\u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',
+    'dz.hintMax': '\u5355\u4E2A\u6587\u4EF6\u6700\u5927 {0} \xB7 \u652F\u6301\u591A\u9009,\u4E0A\u4F20\u540E\u751F\u6210\u53D6\u4EF6\u53E3\u4EE4',
+    'remove': '\u79FB\u9664',
+    'text.placeholder': '\u7C98\u8D34\u6216\u8F93\u5165\u8981\u5206\u4EAB\u7684\u6587\u672C\u2026',
+    'opt.expiry': '\u6709\u6548\u671F',
+    'opt.pickups': '\u53EF\u53D6\u6B21\u6570',
+    'seg.1d': '1 \u5929', 'seg.7d': '7 \u5929', 'seg.30d': '30 \u5929', 'seg.forever': '\u6C38\u4E45',
+    'seg.p1': '1 \u6B21', 'seg.p5': '5 \u6B21', 'seg.punlimited': '\u4E0D\u9650',
+    'btn.upload': '\u5F00\u59CB\u4E0A\u4F20',
+    'btn.genCode': '\u751F\u6210\u53E3\u4EE4',
+    'btn.cancel': '\u53D6\u6D88',
+    'btn.copyCode': '\u590D\u5236\u53E3\u4EE4',
+    'btn.copyLink': '\u590D\u5236\u94FE\u63A5',
+    'btn.copyAll': '\u590D\u5236\u5168\u90E8\u53E3\u4EE4',
+    'btn.again': '\u518D\u6765\u4E00\u4E2A',
+
+    'prog.preparing': '\u51C6\u5907\u4E2D\u2026',
+    'prog.uploading': '\u4E0A\u4F20\u4E2D\u2026',
+    'prog.init': '\u6B63\u5728\u68C0\u67E5\u53EF\u7528\u7A7A\u95F4\u2026',
+    'prog.merging': '\u6B63\u5728\u5B8C\u6210\u4E0A\u4F20\u2026',
+    'prog.file': '\u7B2C {0}/{1} \u4E2A',
+    'prog.part': '\u7B2C {0}/{1} \u7247',
+    'prog.eta': '\u5269\u4F59 {0}',
+    'prog.retry': '\u4E0A\u4F20\u5931\u8D25,\u91CD\u8BD5 {0}/3\u2026',
+
+    'result.ok': '\u2705 \u5206\u4EAB\u6210\u529F,\u628A\u53E3\u4EE4\u53D1\u7ED9\u5BF9\u65B9',
+    'result.okBatch': '\u2705 {0} \u4E2A\u6587\u4EF6\u5206\u4EAB\u6210\u529F',
+    'ticket.title': '\u53D6\u4EF6\u51ED\u8BC1',
+    'ticket.no': '\u2116 {0}',
+    'send.cap': '\u5206\u4EAB\u5185\u5BB9',
+    'receipt.cap': '\u5206\u4EAB\u7ED3\u679C',
+    'ph.title': '\u7B49\u5F85\u5206\u4EAB',
+    'ph.sub': '\u5206\u4EAB\u6210\u529F\u540E\uFF0C\u5728\u8FD9\u91CC\u590D\u5236\u53E3\u4EE4\u6216\u94FE\u63A5',
+
+    'flow.dropT': '\u5BC4\u4EF6',
+    'flow.dropS': '\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C',
+    'flow.tickT': '\u5206\u4EAB\u53E3\u4EE4',
+    'flow.tickS': '\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',
+    'flow.pickT': '\u53D6\u4EF6',
+    'flow.pickS': '\u8F93\u5165\u53E3\u4EE4\u5373\u53EF\u4E0B\u8F7D\u6216\u67E5\u770B',
+
+    'route.senderT': '\u5BC4\u4EF6\u4EBA \xB7 \u4F60',
+    'route.senderS': '\u9009\u62E9\u5185\u5BB9\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u548C\u53EF\u53D6\u6B21\u6570',
+    'route.relayT': '\u751F\u6210\u5206\u4EAB',
+    'route.relayS': '\u628A\u53D6\u4EF6\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9',
+    'route.takerT': '\u53D6\u4EF6\u4EBA \xB7 \u5BF9\u65B9',
+    'route.takerS': '\u8F93\u5165\u53E3\u4EE4\u6216\u6253\u5F00\u94FE\u63A5\uFF0C\u5373\u53EF\u53D6\u4EF6',
+    'route.fine': '\u53E3\u4EE4\u8BF7\u59A5\u5584\u4FDD\u7BA1\uFF0C\u4EC5\u5206\u4EAB\u7ED9\u9700\u8981\u7684\u4EBA',
+
+    'feat.splitT': '\u6587\u4EF6\u5206\u4EAB', 'feat.splitS': '\u5355\u6587\u4EF6\u6700\u5927 {0}',
+    'feat.ttlT': '\u81EA\u9009\u6709\u6548\u671F', 'feat.ttlS': '1 ~ 30 \u5929\u6216\u6C38\u4E45',
+    'feat.limitT': '\u9650\u6B21\u53D6\u4EF6', 'feat.limitS': '1 \u6B21 \xB7 5 \u6B21 \xB7 \u4E0D\u9650',
+    'feat.selfT': '\u4FBF\u6377\u53D6\u4EF6', 'feat.selfS': '\u652F\u6301\u53E3\u4EE4\u3001\u94FE\u63A5\u548C\u626B\u7801\u53D6\u4EF6',
+    'qr.hint': '\u626B\u7801\u76F4\u63A5\u53D6\u4EF6',
+    'label.code': '\u53E3\u4EE4',
+    'label.link': '\u94FE\u63A5',
+    'copied': '{0}\u5DF2\u590D\u5236',
+    'copy.fail': '\u590D\u5236\u5931\u8D25,\u8BF7\u624B\u52A8\u590D\u5236',
+    'copied.btn': '\u2713 \u5DF2\u590D\u5236',
+
+    'meta.after': '{0}\u540E\u8FC7\u671F({1})',
+    'meta.forever': '\u6C38\u4E45\u6709\u6548',
+    'meta.pickups': '\u53EF\u53D6 {0} \u6B21',
+    'meta.unlimited': '\u53D6\u4EF6\u6B21\u6570\u4E0D\u9650',
+    'files.count': '{0} \u4E2A\u6587\u4EF6 \xB7 \u5171 {1}',
+    'unknown.type': '\u672A\u77E5\u7C7B\u578B',
+    'text.counter': '{0} / {1}',
+
+    'err.oversize': '\u6587\u4EF6\u8D85\u8FC7 {0} \u4E0A\u9650({1})',
+    'err.empty': '\u7A7A\u6587\u4EF6\u4E0D\u80FD\u5206\u4EAB',
+    'err.tooMany': '\u4E00\u6B21\u6700\u591A\u5206\u4EAB {0} \u4E2A\u6587\u4EF6',
+    'err.upload': '\u4E0A\u4F20\u5931\u8D25,\u8BF7\u91CD\u8BD5',
+    'err.submit': '\u63D0\u4EA4\u5931\u8D25',
+    'req.fail': '\u8BF7\u6C42\u5931\u8D25 ({0})',
+    'toast.cancelled': '\u5DF2\u53D6\u6D88\u4E0A\u4F20',
+
+    'dur.s': '{0} \u79D2',
+    'dur.ms': '<1 \u79D2',
+    'dur.hm': '{0} \u5206 {1} \u79D2',
+    'dur.h': '{0} \u5206',
+    'dur.hH': '{0} \u65F6 {1} \u5206',
+    'dur.hH2': '{0} \u65F6',
+    'dur.d': '{0} \u5929',
+
+    'pk.title': '\u8F93\u5165\u53D6\u4EF6\u53E3\u4EE4',
+    'pk.sub': '\u8F93\u5165 6 \u4F4D\u6570\u5B57\u53E3\u4EE4,\u53D6\u51FA\u5206\u4EAB\u7684\u6587\u4EF6\u6216\u6587\u672C',
+    'pk.aria': '6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',
+    'pk.fail': '\u53D6\u4EF6\u5931\u8D25',
+    'pk.textChars': '\u6587\u672C \xB7 {0} \u5B57\u7B26',
+    'pk.copyAllText': '\u4E00\u952E\u590D\u5236\u5168\u6587',
+    'pk.download': '\u2B07 \u4E0B\u8F7D\u6587\u4EF6',
+    'pk.again': '\u91CD\u65B0\u8F93\u5165',
+    'pk.expireAt': '{0} \u8FC7\u671F',
+    'pk.left': '\u5269\u4F59\u53EF\u53D6 {0} \u6B21',
+    'pk.unnamed': '\u672A\u547D\u540D\u6587\u4EF6',
+    'copied.text': '\u5DF2\u590D\u5236\u5168\u6587',
+
+    'ad.loginTitle': '\u7BA1\u7406\u767B\u5F55',
+    'ad.loginSub': '\u4F7F\u7528\u7BA1\u7406\u4EE4\u724C\u767B\u5F55',
+    'ad.tokenPh': '\u7BA1\u7406\u4EE4\u724C',
+    'ad.login': '\u767B\u5F55',
+    'ad.badToken': '\u4EE4\u724C\u65E0\u6548',
+    'ad.total': '\u5206\u4EAB\u603B\u6570',
+    'ad.active': '\u5F53\u524D\u6709\u6548',
+    'ad.files': '\u6587\u4EF6',
+    'ad.texts': '\u6587\u672C',
+    'ad.storage': '\u5B58\u50A8\u7A7A\u95F4 \xB7 \u5DF2\u7528 / \u603B\u5BB9\u91CF',
+    'ad.storageReserved': '\u542B\u4E0A\u4F20\u9884\u7559\u7A7A\u95F4',
+    'ad.storageUnavailable': '\u6682\u4E0D\u53EF\u7528',
+    'ad.shareBytes': '\u5206\u4EAB\u5185\u5BB9\u5927\u5C0F',
+    'ad.today': '\u4ECA\u65E5\u65B0\u589E',
+    'ad.th.code': '\u53E3\u4EE4', 'ad.th.kind': '\u7C7B\u578B', 'ad.th.content': '\u5185\u5BB9',
+    'ad.th.size': '\u5927\u5C0F', 'ad.th.pickups': '\u5DF2\u53D6/\u4E0A\u9650', 'ad.th.expire': '\u8FC7\u671F\u65F6\u95F4',
+    'ad.th.status': '\u72B6\u6001', 'ad.th.created': '\u521B\u5EFA\u65F6\u95F4',
+    'ad.kind.file': '\u6587\u4EF6', 'ad.kind.text': '\u6587\u672C',
+    'ad.st.active': '\u6709\u6548', 'ad.st.expired': '\u5DF2\u8FC7\u671F', 'ad.st.exhausted': '\u5DF2\u53D6\u5B8C',
+    'ad.loading': '\u52A0\u8F7D\u4E2D\u2026',
+    'ad.empty': '\u6682\u65E0\u5206\u4EAB',
+    'ad.loadFail': '\u52A0\u8F7D\u5931\u8D25',
+    'ad.page': '\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761',
+    'ad.prev': '\u4E0A\u4E00\u9875', 'ad.next': '\u4E0B\u4E00\u9875',
+    'ad.refresh': '\u21BB \u5237\u65B0',
+    'ad.logout': '\u9000\u51FA\u767B\u5F55',
+    'ad.download': '\u4E0B\u8F7D',
+    'ad.delete': '\u5220\u9664',
+    'ad.deleted': '\u5DF2\u5220\u9664',
+    'ad.deleteFail': '\u5220\u9664\u5931\u8D25',
+    'ad.delTitle': '\u4F5C\u5E9F\u8FD9\u5F20\u53D6\u4EF6\u51ED\u8BC1?',
+    'ad.delWarn': '\u4F5C\u5E9F\u540E\u53E3\u4EE4\u7ACB\u5373\u5931\u6548,\u5BF9\u65B9\u5C06\u65E0\u6CD5\u53D6\u4EF6,\u4E14\u4E0D\u53EF\u6062\u590D\u3002',
+    'ad.delOk': '\u786E\u8BA4\u4F5C\u5E9F',
+    'ad.textFallback': '(\u6587\u672C)',
+    'ad.unnamed': '(\u672A\u547D\u540D)',
+    'ad.chars': '{0} \u5B57',
+    'ad.forever': '\u6C38\u4E45',
+
+    'nf.title': '\u9875\u9762\u4E0D\u5B58\u5728',
+    'nf.body': '\u4F60\u8981\u627E\u7684\u9875\u9762\u4E0D\u5728\u4E2D\u8F6C\u7AD9\u91CC',
+    'nf.send': '\u53BB\u53D1\u9001',
+    'nf.pickup': '\u53BB\u53D6\u4EF6',
+  },
+
+  en: {
+    'ad.settings': 'Settings',
+    'ad.shareSettings': 'Sharing rules',
+    'ad.guestWeeklyFiles': 'Unnoted guest files / week',
+    'ad.displaySettings': 'List display',
+    'ad.filesPageSize': 'Files per page',
+    'ad.auditPageSize': 'Logs per page',
+    'ad.browserSettings': 'Applied immediately, saved in this browser',
+    'ad.preferenceNotSaved': 'Applied for now; this browser could not save the preference',
+    'ad.filesPagination': 'File pagination',
+    'ad.auditPagination': 'Log pagination',
+    'context.add': 'Additional information (optional)',
+    'context.name': 'Your name',
+    'context.description': 'File description',
+    'context.namePh': 'Your name or nickname',
+    'context.descriptionPh': 'Describe the files; applies to this batch',
+    'context.visibility': 'Only visible to the administrator',
+    'ad.retentionTitle': 'Automatic cleanup',
+    'ad.recentUploads': 'Recent uploads',
+    'ad.historyScope': 'Latest 10 retained shares',
+    'ad.backFile': 'Back to file',
+    'ad.submittedName': 'Submitted name',
+    'ad.requestIP': 'Request IP',
+    'ad.network': 'Network',
+    'ad.browserReported': 'Browser (reported)',
+    'ad.copyIP': 'Copy',
+    'ad.ipCopied': 'IP copied',
+    'ad.copyFailed': 'Copy failed; select the IP manually',
+    'ad.fileDescription': 'Description',
+    'audit.detail.filename': 'Filename',
+    'audit.detail.sizeBytes': 'Size (bytes)',
+    'audit.navigation': "Admin pages",
+    'audit.files': "Files",
+    'audit.title': "Audit logs",
+    'audit.retention': "Last 30 days, up to 1,000 entries; times shown in your local timezone",
+    'audit.export': "Export results",
+    'audit.categories': "Log categories",
+    'audit.all': "All logs",
+    'audit.login': "Login logs",
+    'audit.operation': "Operations",
+    'audit.security': "Security",
+    'audit.result': "Result",
+    'audit.anyResult': "All results",
+    'audit.success': "Success",
+    'audit.failed': "Failed",
+    'audit.blocked': "Blocked",
+    'audit.from': "Start date",
+    'audit.to': "End date",
+    'audit.keyword': "IP / Target",
+    'audit.search': "Search IP or pickup code",
+    'audit.filter': "Filter",
+    'audit.reset': "Reset",
+    'audit.time': "Time",
+    'audit.action': "Action",
+    'audit.actor': "Actor",
+    'audit.source': "Source IP / Location",
+    'audit.target': "Target",
+    'audit.details': "Details",
+    'audit.empty': "No matching logs. Recording starts when this feature is deployed.",
+    'audit.disabled': "Audit logging is not enabled: bind R2 or D1.",
+    'audit.page': "Page {0} / {1} \xB7 {2} entries",
+    'audit.dateError': "Start date must not be after end date",
+    'audit.http': "Request / Status",
+    'audit.duration': "Processing time",
+    'audit.id': "Log ID",
+    'audit.agent': "Browser identifier (client supplied)",
+    'audit.yes': "Yes",
+    'audit.no': "No",
+    'audit.description': "Description",
+    'audit.downloadHint': "The file stream was opened; this does not confirm the browser finished downloading.",
+    'audit.writeFailed': "The operation was processed, but its audit record could not be saved. Check log storage.",
+    'audit.action.login': "Admin login",
+    'audit.action.logout': "Log out",
+    'audit.action.retention': "Change expired retention",
+    'audit.action.uploadPolicy': "Change weekly upload quota",
+    'audit.action.unblock': "Unblock IP",
+    'audit.action.cleanup': "Run expired cleanup",
+    'audit.action.export': "Export audit logs",
+    'audit.action.ban': "Trigger login ban",
+    'audit.action.delete': "Delete share",
+    'audit.action.note': "Change visitor note",
+    'audit.action.viewSource': "View source details",
+    'audit.action.download': "Download file",
+    'audit.actor.admin': "Administrator",
+    'audit.actor.token': "Scheduler / Token",
+    'audit.actor.anonymous': "Unauthenticated",
+    'audit.detail.bannedUntil': "Blocked until",
+    'audit.detail.expiredRetentionDays': "Expired retention days",
+    'audit.detail.weeklyFileLimit': "Weekly upload limit",
+    'audit.detail.notePresent': "Note set",
+    'audit.detail.alreadyDeleted': "Share already absent",
+    'audit.detail.deletedShares': "Shares deleted",
+    'audit.detail.abortedSessions': "Upload sessions aborted",
+
+    'ad.loginProtection': "Login protection",
+    'ad.guardRule': "{1} failures in {0} minutes block login for {2} minutes",
+    'ad.guardDisabled': "Not enabled: bind R2 or D1",
+    'ad.guardEmpty': "No blocked IPs",
+    'ad.guardUnknown': "Unknown source (shared limit)",
+    'ad.guardFailures': "{0} failures",
+    'ad.guardUntil': "Unblocks at {0}",
+    'ad.guardLast': "Last failure {0}",
+    'ad.guardUnblock': "Unblock",
+    'ad.guardUnblocked': "IP unblocked",
+    'ad.loginBlocked': "Too many failed logins. Wait until the block expires.",
+    'ad.guardUnavailable': "Login protection unavailable. Please try again later.",
+
+    'ad.formatUnknown': "Unknown format",
+    'ad.format.archive': "Archive",
+    'ad.format.program': "Application",
+    'ad.format.document': "Document",
+    'ad.format.image': "Image",
+    'ad.format.video': "Video",
+    'ad.format.audio': "Audio",
+    'ad.format.text': "Text / code",
+    'ad.format.file': "File",
+    'ad.uploader': "Uploaded by",
+    'ad.shareState': "Share status",
+    'ad.fileAvailability': "File status",
+    'ad.fileState.available': "Available",
+    'ad.fileState.missing': "File missing",
+    'ad.fileState.unknown': "Unable to verify",
+    'ad.timeLeft': "{0} left",
+    'ad.timeExpired': "Expired {0} ago",
+    'ad.cleanupPermanent': "No automatic cleanup",
+    'ad.cleanupActive': "Kept for {0} days after expiry",
+    'ad.cleanupRetained': "Retained after expiry",
+    'ad.cleanupPending': "Awaiting cleanup",
+    'ad.technical': "Technical details",
+    'ad.storedSize': "Stored size",
+    'ad.storedAt': "Stored at",
+    'ad.exactBytes': "{0} bytes",
+    'ad.formatHint': "Format is inferred from the filename; content has not been verified.",
+    'ad.tryDownload': "Try download",
+    'ad.guestLimits': "Unnoted visitor limits",
+    'ad.weeklyFiles': "Files per week",
+    'ad.guestRules': "Resets Monday, Beijing time. Accepted uploads count even if cancelled. Unnoted visitors cannot create permanent or unlimited-pickup shares.",
+    'ad.guestSaved': "Saved for subsequent uploads",
+    'policy.expiry': "1 to 30 days",
+    'policy.pickups': "1 or 5 pickups",
+    'policy.remaining': "{0} / {1} files left this week \xB7 resets {2}",
+    'policy.unavailable': "Loading upload permissions. Refresh if this persists.",
+    'policy.contact': "File uploads are unavailable. Contact the administrator.",
+    'ad.fileDetails': 'File details',
+    'ad.filename': 'Filename',
+    'ad.fileType': 'File type',
+    'ad.cleanupAfter': 'Cleanup after',
+    'ad.retentionDays': 'Keep after expiry',
+    'ad.days': 'days',
+    'ad.save': 'Save',
+    'ad.retry': 'Retry',
+    'ad.settingsSaved': 'Saved for subsequent cleanup runs',
+    'ad.source': 'Upload source',
+    'ad.visitor': 'Visitor {0}',
+    'ad.visitorId': 'Visitor ID',
+    'ad.sourceUnknown': 'Unknown',
+    'ad.sourceUnrecorded': 'Not recorded',
+    'ad.sourceLocation': 'Exit location',
+    'ad.sourceTime': 'Recorded at',
+    'ad.sourceNote': 'Admin note',
+    'ad.sourceSave': 'Save note',
+    'ad.sourceClose': 'Close',
+    'ad.sourceSaved': 'Note saved',
+    'err.capacity': 'Storage capacity exceeds the free quota.',
+    'err.capacityRemaining': 'Storage capacity exceeds the free quota. Available space: approximately {0} GB ({1} bytes).',
+    'doc.send': 'file-relay - Send',
+    'doc.pickup': 'file-relay - Pickup',
+    'doc.admin': 'file-relay - Admin',
+    'doc.404': '404 - file-relay',
+
+    'brand.name': 'file-relay',
+    'brand.tagline': 'Files, picked up like parcels',
+    'brand.pickup': 'Pickup',
+    'brand.admin': 'Admin',
+    'nav.pickup': 'Pick up',
+    'nav.send': 'Send',
+    'nav.theme': 'Toggle theme',
+    'nav.lang': 'Switch language',
+    'foot': [
+      'Yours, from afar',
+      'Words run short, feelings run long',
+      'See you down the road',
+      'Signed, sealed, delivered',
+      'Through wind and rain, the relay waits',
+      'Take care, until next time',
+    ],
+
+    'tab.file': 'Send file',
+    'tab.text': 'Send text',
+    'dz.click': 'Click to choose files',
+    'dz.drop': ', or drag & drop / paste here',
+    'dz.aria': 'Choose files',
+    'dz.hint': 'A 6-digit pickup code is generated after upload',
+    'dz.hintMax': 'Up to {0} per file \xB7 multiple selection supported',
+    'remove': 'Remove',
+    'text.placeholder': 'Paste or type the text to share\u2026',
+    'opt.expiry': 'Expires',
+    'opt.pickups': 'Pickup limit',
+    'seg.1d': '1 day', 'seg.7d': '7 days', 'seg.30d': '30 days', 'seg.forever': 'Forever',
+    'seg.p1': '1\xD7', 'seg.p5': '5\xD7', 'seg.punlimited': 'Unlimited',
+    'btn.upload': 'Start upload',
+    'btn.genCode': 'Generate code',
+    'btn.cancel': 'Cancel',
+    'btn.copyCode': 'Copy code',
+    'btn.copyLink': 'Copy link',
+    'btn.copyAll': 'Copy all codes',
+    'btn.again': 'New share',
+
+    'prog.preparing': 'Preparing\u2026',
+    'prog.uploading': 'Uploading\u2026',
+    'prog.init': 'Checking available space\u2026',
+    'prog.merging': 'Finishing upload\u2026',
+    'prog.file': 'file {0}/{1}',
+    'prog.part': 'part {0}/{1}',
+    'prog.eta': 'ETA {0}',
+    'prog.retry': 'Upload failed, retrying {0}/3\u2026',
+
+    'result.ok': '\u2705 Shared! Send the code to the recipient',
+    'result.okBatch': '\u2705 {0} files shared successfully',
+    'ticket.title': 'PICKUP TICKET',
+    'ticket.no': '\u2116 {0}',
+    'send.cap': 'SHARE CONTENT',
+    'receipt.cap': 'SHARE RESULTS',
+    'ph.title': 'READY TO SHARE',
+    'ph.sub': 'Copy your pickup code or link here after sharing',
+
+    'flow.dropT': 'Send',
+    'flow.dropS': 'Choose files or enter text',
+    'flow.tickT': 'Ticket',
+    'flow.tickS': 'A 6-digit pickup code is issued',
+    'flow.pickT': 'Pick up',
+    'flow.pickS': 'The recipient claims it with the code',
+
+    'route.senderT': 'Sender \xB7 you',
+    'route.senderS': 'Choose content, expiry and pickup limit',
+    'route.relayT': 'Create a share',
+    'route.relayS': 'Send the pickup code or link to the recipient',
+    'route.takerT': 'Recipient',
+    'route.takerS': 'Enter the code or open the link to pick up',
+    'route.fine': 'Keep the code private; share only with your recipients',
+
+    'feat.splitT': 'File sharing', 'feat.splitS': 'Up to {0} per file',
+    'feat.ttlT': 'You set the clock', 'feat.ttlS': '1-30 days, or forever',
+    'feat.limitT': 'Limited pickups', 'feat.limitS': '1\xD7 \xB7 5\xD7 \xB7 unlimited',
+    'feat.selfT': 'Easy pickup', 'feat.selfS': 'Use a code, link or QR code',
+    'qr.hint': 'Scan to pick up',
+    'label.code': 'code',
+    'label.link': 'link',
+    'copied': '{0} copied',
+    'copy.fail': 'Copy failed, please copy manually',
+    'copied.btn': '\u2713 Copied',
+
+    'meta.after': 'Expires in {0} ({1})',
+    'meta.forever': 'Never expires',
+    'meta.pickups': '{0} pickups allowed',
+    'meta.unlimited': 'Unlimited pickups',
+    'files.count': '{0} files \xB7 {1} total',
+    'unknown.type': 'unknown type',
+    'text.counter': '{0} / {1}',
+
+    'err.oversize': 'File exceeds the {0} limit ({1})',
+    'err.empty': 'Empty files cannot be shared',
+    'err.tooMany': 'Up to {0} files per batch',
+    'err.upload': 'Upload failed, please retry',
+    'err.submit': 'Submission failed',
+    'req.fail': 'Request failed ({0})',
+    'toast.cancelled': 'Upload cancelled',
+
+    'dur.s': '{0}s',
+    'dur.ms': '<1s',
+    'dur.hm': '{0}m {1}s',
+    'dur.h': '{0}m',
+    'dur.hH': '{0}h {1}m',
+    'dur.hH2': '{0}h',
+    'dur.d': '{0}d',
+
+    'pk.title': 'Enter pickup code',
+    'pk.sub': 'Enter the 6-digit code to retrieve the shared file or text',
+    'pk.aria': '6-digit pickup code',
+    'pk.fail': 'Pickup failed',
+    'pk.textChars': 'Text \xB7 {0} chars',
+    'pk.copyAllText': 'Copy all text',
+    'pk.download': '\u2B07 Download file',
+    'pk.again': 'Try another code',
+    'pk.expireAt': 'Expires {0}',
+    'pk.left': '{0} pickups left',
+    'pk.unnamed': 'Untitled file',
+    'copied.text': 'Full text copied',
+
+    'ad.loginTitle': 'Admin login',
+    'ad.loginSub': 'Sign in with your admin token',
+    'ad.tokenPh': 'Admin token',
+    'ad.login': 'Log in',
+    'ad.badToken': 'Invalid token',
+    'ad.total': 'Total shares',
+    'ad.active': 'Active',
+    'ad.files': 'Files',
+    'ad.texts': 'Texts',
+    'ad.storage': 'Storage \xB7 used / capacity',
+    'ad.storageReserved': 'Includes upload reservations',
+    'ad.storageUnavailable': 'Unavailable',
+    'ad.shareBytes': 'Shared content size',
+    'ad.today': 'New today',
+    'ad.th.code': 'Code', 'ad.th.kind': 'Type', 'ad.th.content': 'Content',
+    'ad.th.size': 'Size', 'ad.th.pickups': 'Picked/Limit', 'ad.th.expire': 'Expires',
+    'ad.th.status': 'Status', 'ad.th.created': 'Created',
+    'ad.kind.file': 'File', 'ad.kind.text': 'Text',
+    'ad.st.active': 'Active', 'ad.st.expired': 'Expired', 'ad.st.exhausted': 'Exhausted',
+    'ad.loading': 'Loading\u2026',
+    'ad.empty': 'No shares yet',
+    'ad.loadFail': 'Failed to load',
+    'ad.page': 'Page {0} / {1} \xB7 {2} total',
+    'ad.prev': 'Prev', 'ad.next': 'Next',
+    'ad.refresh': '\u21BB Refresh',
+    'ad.logout': 'Log out',
+    'ad.download': 'Download',
+    'ad.delete': 'Delete',
+    'ad.deleted': 'Deleted',
+    'ad.deleteFail': 'Delete failed',
+    'ad.delTitle': 'Void this ticket?',
+    'ad.delWarn': 'The code stops working immediately, the recipient can no longer pick it up, and this cannot be undone.',
+    'ad.delOk': 'Void it',
+    'ad.textFallback': '(text)',
+    'ad.unnamed': '(unnamed)',
+    'ad.chars': '{0} chars',
+    'ad.forever': 'Forever',
+
+    'nf.title': 'Page not found',
+    'nf.body': "The page you're looking for isn't in this relay",
+    'nf.send': 'Send files',
+    'nf.pickup': 'Pick up',
+  },
+};
+
+export let LANG =
+  localStorage.getItem('lang') ||
+  ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
+
+/** \u53D6\u8BCD:\u5F53\u524D\u8BED\u8A00 \u2192 \u4E2D\u6587\u515C\u5E95 \u2192 key \u672C\u8EAB;\u6570\u7EC4\u503C\u968F\u673A\u53D6\u4E00\u6761;{0}{1}\u2026 \u4F9D\u6B21\u66FF\u6362 */
+export function t(key, ...args) {
+  let s = (DICT[LANG] && DICT[LANG][key]) ?? DICT.zh[key] ?? key;
+  if (Array.isArray(s)) s = s[Math.floor(Math.random() * s.length)];
+  args.forEach((v, i) => { s = s.replaceAll(\`{\${i}}\`, String(v)); });
+  return s;
+}
+
+const rerenders = [];
+/** \u5404\u9875\u9762\u767B\u8BB0:\u8BED\u8A00\u5207\u6362\u540E\u91CD\u7B97\u52A8\u6001\u6587\u6848 */
+export function onLangChange(fn) { rerenders.push(fn); }
+
+function applyLang() {
+  document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';
+  document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = t(n.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach((n) => { n.placeholder = t(n.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-title]').forEach((n) => { n.title = t(n.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((n) => { n.setAttribute('aria-label', t(n.dataset.i18nAria)); });
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = LANG === 'en' ? '\u4E2D' : 'EN';
+}
+
+export function initI18n() {
+  applyLang();
+  document.getElementById('lang-btn')?.addEventListener('click', () => {
+    LANG = LANG === 'en' ? 'zh' : 'en';
+    localStorage.setItem('lang', LANG);
+    applyLang();
+    rerenders.forEach((fn) => fn());
+  });
+}
 `, "js/index.js": "import { $, $$, api, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme, el } from './common.js';\nimport { t, onLangChange, initI18n } from './i18n.js';\n\ninitTheme();\ninitI18n();\n\nconst els = {\n  dropzone: $('#dropzone'),\n  dzHint: $('#dz-hint'),\n  fileInput: $('#file-input'),\n  fileList: $('#file-list'),\n  textInput: $('#text-input'),\n  textCounter: $('#text-counter'),\n  btnUpload: $('#btn-upload'),\n  btnText: $('#btn-text'),\n  progress: $('#progress'),\n  progressFill: $('#progress-fill'),\n  progressText: $('#progress-text'),\n  btnCancel: $('#btn-cancel'),\n  results: $('#results'),\n  placeholder: $('#result-placeholder'),\n  capDate: $('#cap-date'),\n};\n\nconst MAX_SIZE_FALLBACK = 25 * 1024 * 1024;\nconst MAX_BATCH = 10;\nlet cfg = { fileBackend: 'kv', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config \u52A0\u8F7D\u540E\u8986\u76D6\nlet MAX_SIZE = MAX_SIZE_FALLBACK;\nlet policyReady = false;\n\nlet files = []; // \u5F85\u4E0A\u4F20\u961F\u5217(File[])\nlet queueUI = new Map(); // File \u2192 { row, bar, status }\nlet queueState = new Map(); // File \u2192 'idle' | { done: code } | 'fail'(\u8BED\u8A00\u5207\u6362\u540E\u91CD\u6E32\u67D3\u7528)\nlet session = null; // \u8FDB\u884C\u4E2D\u7684 R2 \u5206\u7247\u4F1A\u8BDD { uploadId, partSize, parts }\nlet currentXhr = null;\nlet cancelled = false;\nlet uploading = false;\nlet lastResults = [];\n\n/* \u670D\u52A1\u7AEF\u914D\u7F6E:\u51B3\u5B9A\u8D70\u5206\u7247\u4E0A\u4F20(R2 \u5927\u5B58\u50A8)\u8FD8\u662F\u5355\u8BF7\u6C42\u76F4\u4F20(KV \u5C0F\u5B58\u50A8) */\nfunction canUploadFiles() {\n  return policyReady && cfg.fileBackend !== 'none' && cfg.fileUploadAvailable !== false && cfg.uploadsRemaining !== 0;\n}\nfunction updateHint() {\n  els.dzHint.textContent = t('dz.hintMax', fmtBytes(MAX_SIZE));\n  const feature = $('[data-i18n=\"feat.splitS\"]');\n  if (feature) feature.textContent = t('feat.splitS', fmtBytes(MAX_SIZE));\n  for (const [id, value, allowed, fallback] of [\n    ['seg-expiry', 'forever', cfg.allowPermanent === true, '7d'],\n    ['seg-pickups', 'null', cfg.allowUnlimited === true, '5'],\n  ]) {\n    const button = $(`#${id} [data-v=\"${value}\"]`);\n    button.disabled = !allowed;\n    if (!allowed && button.classList.contains('active')) {\n      button.classList.remove('active');\n      $(`#${id} [data-v=\"${fallback}\"]`).classList.add('active');\n    }\n  }\n  $('[data-i18n=\"feat.ttlS\"]').textContent = t(cfg.allowPermanent ? 'feat.ttlS' : 'policy.expiry');\n  $('[data-i18n=\"feat.limitS\"]').textContent = t(cfg.allowUnlimited ? 'feat.limitS' : 'policy.pickups');\n  $('#upload-policy-hint').textContent = !policyReady ? t('policy.unavailable')\n    : cfg.fileUploadAvailable === false ? t('policy.contact')\n    : cfg.weeklyFileLimit !== null && cfg.weeklyFileLimit !== undefined\n      ? t('policy.remaining', cfg.uploadsRemaining, cfg.weeklyFileLimit, fmtDate(cfg.uploadsResetAt)) : '';\n  $$('.seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n}\nasync function refreshPolicy() {\n  try {\n    cfg = await api('/api/config');\n    if (!Number.isSafeInteger(cfg.maxFileSize) || (cfg.maxFileSize < 0 || (cfg.maxFileSize === 0 && cfg.fileBackend !== 'none'))) throw new Error('Invalid upload policy');\n    MAX_SIZE = cfg.maxFileSize;\n    policyReady = true;\n  } catch { policyReady = false; }\n  updateHint();\n  setBusy(uploading);\n}\nupdateHint();\nrefreshPolicy();\n\n/* \u5BC4\u4EF6\u5355\u62AC\u5934\u65E5\u671F(\u88C5\u9970) */\nif (els.capDate) els.capDate.textContent = fmtDate(Date.now()).split(' ')[0];\n\n/* \u8BED\u8A00\u5207\u6362:\u91CD\u7B97\u52A8\u6001\u6587\u6848\u4E0E\u7ED3\u679C\u5361\u7247 */\nonLangChange(() => {\n  if (cfg.maxFileSize) updateHint();\n  renderQueue();\n  if (lastResults.length) showResults(lastResults);\n});\n\n/* ---------- tabs ---------- */\n$$('.tab').forEach((tb) =>\n  tb.addEventListener('click', () => {\n    if (uploading) return; // \u4E0A\u4F20\u4E2D\u7981\u6B62\u5207\u6362\n    $$('.tab').forEach((x) => x.classList.toggle('active', x === tb));\n    const tab = tb.dataset.tab;\n    $('#panel-file').hidden = tab !== 'file';\n    $('#panel-text').hidden = tab !== 'text';\n    $('#upload-description-field').hidden = tab !== 'file';\n    $$('.tab').forEach(x => x.setAttribute('aria-pressed', String(x === tb)));\n    els.btnUpload.hidden = tab !== 'file';\n    els.btnText.hidden = tab !== 'text';\n    hideResult();\n  }),\n);\n\n/* ---------- segmented \u9009\u9879 ---------- */\nfor (const id of ['seg-expiry', 'seg-pickups']) {\n  $(`#${id}`).addEventListener('click', (e) => {\n    const b = e.target.closest('button');\n    if (!b || b.disabled) return;\n    $$('button', $(`#${id}`)).forEach((x) => {\n      x.classList.toggle('active', x === b);\n      x.setAttribute('aria-pressed', String(x === b));\n    });\n  });\n}\nfunction readOptions() {\n  const exp = $('#seg-expiry .active').dataset.v;\n  const pk = $('#seg-pickups .active').dataset.v;\n  return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk),\n    displayName: $('#upload-name').value.trim(),\n    description: $('#panel-file').hidden ? '' : $('#upload-description').value.trim() };\n}\n$$('.tab, .seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n$('#upload-description').addEventListener('input', e => {\n  $('#description-count').textContent = `${e.target.value.length} / 300`;\n});\n\n/* ---------- \u6587\u4EF6\u961F\u5217:\u70B9\u51FB / \u5168\u7A97\u53E3\u62D6\u62FD / \u667A\u80FD\u7C98\u8D34,\u518D\u9009\u5373\u6574\u4F53\u66FF\u6362 ---------- */\nels.dropzone.addEventListener('click', () => els.fileInput.click());\nels.dropzone.addEventListener('keydown', (e) => {\n  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); els.fileInput.click(); }\n});\nels.fileInput.addEventListener('change', () => {\n  setFiles([...els.fileInput.files]);\n  els.fileInput.value = '';\n});\n\nfunction showTab(name) {\n  const tb = $(`.tab[data-tab=\"${name}\"]`);\n  if (tb && !tb.classList.contains('active')) tb.click(); // \u4E0A\u4F20\u4E2D\u65F6 tab \u5904\u7406\u5668\u81EA\u5DF1\u4F1A\u62D2\u7EDD\n}\n\n/* \u62D6\u5230\u9875\u9762\u4EFB\u610F\u4F4D\u7F6E\u90FD\u9AD8\u4EAE\u5E76\u53EF\u653E\u4E0B(\u4E0D\u518D\u8981\u6C42\u7CBE\u786E\u547D\u4E2D\u62D6\u62FD\u533A) */\nlet dragDepth = 0;\nwindow.addEventListener('dragenter', (e) => {\n  if (![...(e.dataTransfer?.types || [])].includes('Files')) return;\n  dragDepth++;\n  if (!uploading) els.dropzone.classList.add('dragover');\n});\nwindow.addEventListener('dragleave', () => {\n  if (--dragDepth <= 0) { dragDepth = 0; els.dropzone.classList.remove('dragover'); }\n});\nwindow.addEventListener('dragover', (e) => e.preventDefault());\nwindow.addEventListener('drop', (e) => {\n  e.preventDefault();\n  dragDepth = 0;\n  els.dropzone.classList.remove('dragover');\n  if (e.dataTransfer?.files?.length) setFiles([...e.dataTransfer.files]);\n});\n\n/* \u7C98\u8D34\u667A\u80FD\u8DEF\u7531:\u7C98\u8D34\u6587\u4EF6\u2192\u6587\u4EF6\u9875;\u6587\u4EF6\u9875\u7C98\u8D34\u7EAF\u6587\u672C\u2192\u81EA\u52A8\u5207\u5230\u6587\u672C\u9875 */\ndocument.addEventListener('paste', (e) => {\n  if (e.target?.closest?.('textarea, input')) return; // \u8F93\u5165\u6846\u5185\u7C98\u8D34\u8D70\u9ED8\u8BA4\u884C\u4E3A\n  if (e.clipboardData?.files?.length) {\n    setFiles([...e.clipboardData.files]);\n    return;\n  }\n  const text = e.clipboardData?.getData('text/plain');\n  if (text && $('#panel-text').hidden) {\n    showTab('text');\n    els.textInput.value = text;\n    els.textInput.dispatchEvent(new Event('input'));\n  }\n});\n\nfunction setFiles(list) {\n  if (uploading) return;\n  const ok = [];\n  for (const f of list) {\n    if (f.size > MAX_SIZE) { toast(t('err.oversize', fmtBytes(MAX_SIZE), fmtBytes(f.size)), 'error'); continue; }\n    if (f.size < 1) { toast(t('err.empty'), 'error'); continue; }\n    ok.push(f);\n  }\n  if (ok.length > MAX_BATCH) {\n    toast(t('err.tooMany', MAX_BATCH), 'error');\n    ok.length = MAX_BATCH;\n  }\n  files = ok; // \u66FF\u6362\u8BED\u4E49:\u518D\u6B21\u9009\u62E9\u5373\u91CD\u7F6E\u961F\u5217\n  queueState = new Map(files.map((f) => [f, 'idle']));\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n  hideResult();\n}\n\nfunction statusText(f, st) {\n  if (st === 'fail') return '\u2717';\n  if (st && st.done) return `\u2713 ${st.done}`;\n  return fmtBytes(f.size);\n}\n\nfunction renderQueue() {\n  els.fileList.replaceChildren();\n  queueUI = new Map();\n  files.forEach((f) => {\n    const st = queueState.get(f) || 'idle';\n    const bar = el('div', { class: 'fr-bar' });\n    const status = el('small', { class: 'fr-status' }, statusText(f, st));\n    const row = el('div', {\n      class: `file-row${st === 'fail' ? ' fail' : ''}${st && st.done ? ' done' : ''}`,\n    });\n    row.replaceChildren(\n      el('span', { class: 'fr-icon' }, iconFor(f.name, f.type)),\n      el('div', { class: 'fr-meta' },\n        el('b', { title: f.name }, f.name),\n        el('small', {}, `${fmtBytes(f.size)} \xB7 ${f.type || t('unknown.type')}`),\n      ),\n      status,\n      el('button', { class: 'icon-btn fr-remove', title: t('remove'), type: 'button', onclick: () => removeFile(f) }, '\u2715'),\n      bar,\n    );\n    if (st && st.done) bar.style.width = '100%';\n    queueUI.set(f, { row, bar, status });\n    els.fileList.append(row);\n  });\n  els.fileList.hidden = files.length === 0;\n  els.dropzone.hidden = files.length > 0;\n}\n\nfunction removeFile(f) {\n  if (uploading) return;\n  files = files.filter((x) => x !== f);\n  queueState.delete(f);\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n}\n\n/* ---------- \u6587\u672C\u8F93\u5165 ---------- */\nels.textInput.addEventListener('input', () => {\n  els.textCounter.textContent = t('text.counter', els.textInput.value.length, 65536);\n  els.btnText.disabled = !policyReady || !els.textInput.value.trim();\n});\n\n/* ---------- \u4E0A\u4F20:\u961F\u5217\u987A\u5E8F\u9010\u4E2A,\u805A\u5408\u8FDB\u5EA6 + \u6BCF\u884C\u8FF7\u4F60\u8FDB\u5EA6 ---------- */\nels.btnUpload.addEventListener('click', startUpload);\nels.btnCancel.addEventListener('click', cancelUpload);\nels.btnText.addEventListener('click', submitText);\n\nfunction sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }\n\nfunction xhrPut(url, blob, onProgress) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open('PUT', url);\n    xhr.onload = () => {\n      let etag = null;\n      try {\n        const result = JSON.parse(xhr.responseText);\n        if (result.error === 'capacity_exceeded' || (xhr.status >= 400 && xhr.status < 500) || result.error?.startsWith('upload_policy')) {\n          const error = new Error(result.message);\n          error.code = result.error;\n          error.remainingBytes = result.remainingBytes;\n          reject(error);\n          return;\n        }\n        etag = result.etag;\n      } catch { /* ignore */ }\n      resolve(xhr.status >= 200 && xhr.status < 300 && etag ? etag : null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\n/** \u5355\u7247\u6700\u591A\u91CD\u8BD5 3 \u6B21,\u9000\u907F 1s/2s/4s */\nasync function putPartWithRetry(uploadId, n, blob, onProgress) {\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) return null;\n    const etag = await xhrPut(`/api/uploads/${uploadId}/parts/${n}`, blob, onProgress);\n    if (etag) return etag;\n    await sleep([1000, 2000, 4000][attempt] || 4000);\n  }\n  return null;\n}\n\nfunction xhrJson(method, url, blob, onProgress, context) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open(method, url);\n    if (context) xhr.setRequestHeader('X-Upload-Context', encodeURIComponent(JSON.stringify(context)));\n    xhr.onload = () => {\n      if (xhr.status >= 200 && xhr.status < 300) {\n        try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }\n      }\n      if (xhr.status >= 400 && xhr.status < 500) {\n        let data;\n        try { data = JSON.parse(xhr.responseText); } catch { /* Use status below. */ }\n        const error = new Error(data?.message || t('req.fail', xhr.status));\n        error.code = data?.error;\n        reject(error);\n        return;\n      }\n      resolve(null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\nlet speedState = { t: 0, loaded: 0, speed: 0 };\nlet curFileIdx = 0;\nlet curFileTotal = 1;\nfunction updateAggregate(loaded, total) {\n  const pct = Math.min(100, Math.floor((loaded / total) * 100));\n  els.progressFill.style.width = pct + '%';\n  const now = performance.now();\n  if (speedState.t && loaded > speedState.loaded) {\n    const inst = (loaded - speedState.loaded) / ((now - speedState.t) / 1000);\n    speedState.speed = speedState.speed ? speedState.speed * 0.7 + inst * 0.3 : inst;\n  }\n  speedState.t = now;\n  speedState.loaded = loaded;\n  let text = `${pct}% \xB7 ${fmtBytes(loaded)} / ${fmtBytes(total)} \xB7 ${fmtBytes(speedState.speed)}/s`;\n  if (speedState.speed > 1024 && loaded > 0 && loaded < total) {\n    text += ` \xB7 ${t('prog.eta', fmtDuration((total - loaded) / speedState.speed))}`;\n  }\n  if (curFileTotal > 1) text += ` \xB7 ${t('prog.file', curFileIdx, curFileTotal)}`;\n  els.progressText.textContent = text;\n}\n\n/** \u7B49\u5F85\u6001(\u521D\u59CB\u5316/\u91CD\u8BD5\u95F4\u9694/\u5408\u5E76\u5206\u7247):\u8FDB\u5EA6\u6761\u53E0\u52A0\u6D41\u5149\u52A8\u753B */\nfunction setPending(on) {\n  els.progressFill.classList.toggle('pending', on);\n}\n\nasync function startUpload() {\n  if (!files.length || uploading || !canUploadFiles()) return;\n  uploading = true;\n  cancelled = false;\n  speedState = { t: 0, loaded: 0, speed: 0 };\n  curFileIdx = 0;\n  curFileTotal = files.length;\n  const opts = readOptions();\n  const responses = [];\n  const totalBytes = files.reduce((s, f) => s + f.size, 0);\n  let baseBytes = 0;\n  setBusy(true);\n  els.progress.hidden = false;\n  els.progressFill.style.width = '0%';\n  setPending(false);\n  els.progressText.textContent = t('prog.preparing');\n\n  for (let i = 0; i < files.length; i++) {\n    if (cancelled) break;\n    const f = files[i];\n    const ui = queueUI.get(f);\n    curFileIdx = i + 1;\n    ui.row.classList.add('uploading');\n    els.progressText.textContent = t('prog.uploading');\n    const onProgress = (loaded) => {\n      ui.bar.style.width = Math.min(100, (loaded / f.size) * 100) + '%';\n      updateAggregate(baseBytes + loaded, totalBytes);\n    };\n    try {\n      const res = cfg.fileBackend === 'kv'\n        ? await directUpload(f, opts, onProgress)\n        : await multipartUpload(f, opts, onProgress);\n      responses.push(res);\n      baseBytes += f.size;\n      queueState.set(f, { done: res.code });\n      ui.bar.style.width = '100%';\n      ui.row.classList.add('done');\n      ui.status.textContent = `\u2713 ${res.code}`;\n    } catch (e) {\n      await abortUpload();\n      queueState.set(f, 'fail');\n      ui.row.classList.add('fail');\n      ui.status.textContent = '\u2717';\n      if (e.code === 'capacity_exceeded') {\n        window.alert(Number.isSafeInteger(e.remainingBytes) && e.remainingBytes >= 0\n          ? t('err.capacityRemaining', (e.remainingBytes / 1e9).toFixed(3), e.remainingBytes.toLocaleString())\n          : t('err.capacity'));\n      } else if (!cancelled) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');\n      break; // \u4E00\u4E2A\u5931\u8D25\u5373\u505C,\u4FDD\u7559\u961F\u5217\u4FBF\u4E8E\u5904\u7406\n    }\n  }\n\n  uploading = false;\n  els.progress.hidden = true;\n  setPending(false);\n  setBusy(false);\n  if (cancelled) toast(t('toast.cancelled'));\n  if (responses.length) showResults(responses);\n  await refreshPolicy();\n}\n\n/* ---------- \u5C0F\u5B58\u50A8\u6A21\u5F0F(KV):\u5355\u8BF7\u6C42\u76F4\u4F20,\u5931\u8D25\u6574\u6587\u4EF6\u91CD\u53D1 ---------- */\nasync function directUpload(f, opts, onProgress) {\n  const qs = new URLSearchParams({\n    filename: f.name,\n    mime: f.type || 'application/octet-stream',\n    expiry: opts.expiry,\n  });\n  if (opts.maxPickups !== null) qs.set('maxPickups', String(opts.maxPickups));\n\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) throw new Error('cancelled');\n    setPending(false);\n    const res = await xhrJson('POST', `/api/shares/file?${qs}`, f, onProgress,\n      { displayName: opts.displayName, description: opts.description });\n    if (res) return res;\n    if (cancelled) throw new Error('cancelled');\n    setPending(true);\n    els.progressText.textContent = t('prog.retry', attempt + 1);\n    await sleep([1000, 2000][attempt] || 4000);\n  }\n  throw new Error(t('err.upload'));\n}\n\n/* ---------- \u5927\u5B58\u50A8\u6A21\u5F0F(R2):\u5206\u7247\u4E0A\u4F20 ---------- */\nasync function multipartUpload(f, opts, onProgress) {\n  setPending(true);\n  els.progressText.textContent = t('prog.init');\n  const init = await api('/api/uploads/init', {\n    method: 'POST',\n    body: { filename: f.name, size: f.size, mime: f.type || 'application/octet-stream', ...opts },\n  });\n  session = init;\n  setPending(false);\n\n  const etags = [];\n  let doneBytes = 0;\n  for (let i = 1; i <= init.parts; i++) {\n    const blob = f.slice((i - 1) * init.partSize, Math.min(i * init.partSize, f.size));\n    const etag = await putPartWithRetry(init.uploadId, i, blob, (loaded) =>\n      onProgress(doneBytes + loaded),\n    );\n    if (!etag) {\n      const wasCancelled = cancelled;\n      await abortUpload();\n      throw new Error(wasCancelled ? 'cancelled' : t('err.upload'));\n    }\n    etags.push({ partNumber: i, etag });\n    doneBytes += blob.size;\n  }\n  if (cancelled) throw new Error('cancelled');\n\n  els.progressFill.style.width = '100%';\n  setPending(true);\n  els.progressText.textContent = t('prog.merging');\n  try {\n    const res = await api(`/api/uploads/${init.uploadId}/complete`, {\n      method: 'POST',\n      body: { parts: etags },\n    });\n    session = null;\n    return res;\n  } catch (e) {\n    await abortUpload();\n    throw e;\n  }\n}\n\nasync function cancelUpload() {\n  cancelled = true;\n  currentXhr?.abort();\n  await abortUpload();\n}\n\nasync function abortUpload() {\n  if (!session) return;\n  const id = session.uploadId;\n  session = null;\n  try { await api(`/api/uploads/${id}/abort`, { method: 'POST', body: {} }); } catch { /* ignore */ }\n}\n\nfunction setBusy(busy) {\n  for (const field of [$('#upload-name'), $('#upload-description')]) field.disabled = busy;\n  els.btnUpload.disabled = busy || files.length === 0 || !canUploadFiles();\n  els.btnText.disabled = busy || !policyReady || !els.textInput.value.trim();\n}\n\n/* \u5237\u65B0/\u5173\u9875\u65F6\u5C3D\u529B\u901A\u77E5\u670D\u52A1\u7AEF\u653E\u5F03(\u4E0D\u662F\u65AD\u70B9\u7EED\u4F20) */\nwindow.addEventListener('pagehide', () => {\n  if (session) navigator.sendBeacon(`/api/uploads/${session.uploadId}/abort`);\n});\n\n/* ---------- \u6587\u672C\u5206\u4EAB ---------- */\nasync function submitText() {\n  const text = els.textInput.value;\n  if (!text.trim() || !policyReady) return;\n  setBusy(true);\n  try {\n    const res = await api('/api/shares/text', { method: 'POST', body: { text, ...readOptions() } });\n    showResults([res]);\n  } catch (e) {\n    toast(e.message || t('err.submit'), 'error');\n  } finally {\n    setBusy(false);\n  }\n}\n\n/* ---------- \u7ED3\u679C\u5361\u7247(\u591A\u6587\u4EF6\u65F6\u9010\u5F20\u5806\u53E0 + \u6279\u91CF\u5934\u90E8) ---------- */\nfunction qrSvgFor(url) {\n  /* vendored qrcode-generator:\u5168\u5C40 window.qrcode(classic script \u5148\u4E8E\u672C\u6A21\u5757\u52A0\u8F7D) */\n  try {\n    const qr = window.qrcode(0, 'M');\n    qr.addData(url);\n    qr.make();\n    const holder = document.createElement('div');\n    holder.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true, alt: t('qr.hint') });\n    return holder.firstElementChild;\n  } catch { return null; }\n}\n\nfunction metaText(r) {\n  const parts = [];\n  parts.push(r.expireAt\n    ? t('meta.after', fmtDuration((r.expireAt - Date.now()) / 1000), fmtDate(r.expireAt))\n    : t('meta.forever'));\n  parts.push(r.maxPickups === null || r.maxPickups === undefined ? t('meta.unlimited') : t('meta.pickups', r.maxPickups));\n  if (r.kind === 'file' && r.size) parts.push(fmtBytes(r.size));\n  return parts.join(' \xB7 ');\n}\n\n/* \u7ED3\u679C\u5361\u7247 = \u53D6\u4EF6\u51ED\u8BC1\u7968\u636E:\u7968\u5934(\u6807\u9898+\u2116) \u2192 \u7968\u8EAB(\u53E3\u4EE4+\u4E8C\u7EF4\u7801) \u2192 \u6495\u7968\u7EBF \u2192 \u7968\u811A(\u64CD\u4F5C) */\nfunction buildResultCard(r, compact) {\n  const link = `${location.origin}/pickup?code=${r.code}`;\n  const qr = qrSvgFor(link);\n  const col = el('div', { class: 'result-col' },\n    compact && r.kind === 'file' && r.filename ? el('div', { class: 'result-file-name' }, r.filename) : null,\n    el('div', { class: 'code' }, ...r.code.split('').map((d) => el('span', {}, d))),\n    el('div', { class: 'result-link' }, link),\n    el('div', { class: 'result-meta' }, metaText(r)),\n  );\n  const main = el('div', { class: 'result-main' },\n    qr ? el('div', { class: 'qr-wrap', title: t('qr.hint') }, qr, el('div', { class: 'qr-hint' }, t('qr.hint'))) : null,\n    col,\n  );\n  return el('div', { class: 'result' },\n    el('div', { class: 'tk-head' },\n      el('span', {}, t('ticket.title')),\n      el('span', { class: 'tk-no' }, t('ticket.no', r.code)),\n    ),\n    el('div', { class: 'tk-body' },\n      compact ? null : el('p', { class: 'result-title' }, t('result.ok')),\n      main,\n    ),\n    el('div', { class: 'tk-tear' }),\n    el('div', { class: 'tk-foot' },\n      el('button', { class: 'btn primary', type: 'button', onclick: (e) => copyBtn(e.currentTarget, r.code, t('label.code')) }, t('btn.copyCode')),\n      el('button', { class: 'btn', type: 'button', onclick: (e) => copyBtn(e.currentTarget, link, t('label.link')) }, t('btn.copyLink')),\n      compact ? null : el('button', { class: 'btn ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n    ),\n  );\n}\n\nfunction showResults(list) {\n  lastResults = list;\n  if (els.placeholder) els.placeholder.hidden = true;\n  els.results.replaceChildren();\n  if (list.length > 1) {\n    els.results.append(\n      el('div', { class: 'result-batch-head' },\n        el('p', { class: 'result-title batch' }, t('result.okBatch', list.length)),\n        el('div', { class: 'btn-row' },\n          el('button', {\n            class: 'btn small', type: 'button',\n            onclick: async (e) => {\n              const ok = await copyText(list.map((r) => r.code).join('\\n'));\n              toast(ok ? t('copied', t('label.code')) : t('copy.fail'), ok ? 'ok' : 'error');\n            },\n          }, t('btn.copyAll')),\n          el('button', { class: 'btn small ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n        ),\n      ),\n    );\n  }\n  for (const r of list) els.results.append(buildResultCard(r, list.length > 1));\n  els.results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });\n}\n\nfunction resetAll() {\n  files = [];\n  queueState = new Map();\n  renderQueue();\n  els.btnUpload.disabled = true;\n  els.textInput.value = '';\n  els.textCounter.textContent = t('text.counter', 0, 65536);\n  els.btnText.disabled = true;\n  hideResult();\n}\n\n/** \u590D\u5236\u6210\u529F\u540E\u6309\u94AE\u77ED\u6682\u53D8\u6210\"\u2713 \u5DF2\u590D\u5236\" */\nasync function copyBtn(btn, text, label) {\n  const ok = await copyText(text);\n  toast(ok ? t('copied', label) : t('copy.fail'), ok ? 'ok' : 'error');\n  if (!ok) return;\n  btn.textContent = t('copied.btn');\n  btn.disabled = true;\n  setTimeout(() => { btn.textContent = label === t('label.code') ? t('btn.copyCode') : t('btn.copyLink'); btn.disabled = false; }, 1500);\n}\n\nfunction hideResult() {\n  lastResults = [];\n  if (els.placeholder) els.placeholder.hidden = false;\n  els.results.replaceChildren();\n}\n", "js/pickup.js": "import { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js';\nimport { t, onLangChange, initI18n } from './i18n.js';\n\ninitTheme();\ninitI18n();\n\nconst boxes = $$('.otp-box');\nconst row = $('#otp-row');\nconst errorBox = $('#pickup-error');\nconst resultCard = $('#pickup-result');\nlet querying = false;\nlet last = null; // { res, code } \u8BED\u8A00\u5207\u6362\u65F6\u91CD\u6E32\u67D3\n\nonLangChange(() => {\n  if (last && !resultCard.hidden) render(last.res, last.code);\n});\n\nfunction value() {\n  return boxes.map((b) => b.value).join('');\n}\n\n/* \u586B\u5165 1-6 \u4F4D\u6570\u5B57:\u591F 6 \u4F4D\u81EA\u52A8\u63D0\u4EA4,\u5426\u5219\u805A\u7126\u5230\u4E0B\u4E00\u4E2A\u7A7A\u683C */\nfunction fill(digits) {\n  boxes.forEach((b, i) => { b.value = digits[i] || ''; });\n  hideError();\n  if (digits.length === 6) {\n    boxes[5].focus();\n    if (!querying) submit();\n  } else {\n    boxes[Math.min(digits.length, 5)].focus();\n  }\n}\n\nboxes.forEach((box, i) => {\n  box.addEventListener('input', () => {\n    box.value = box.value.replace(/\\D/g, '').slice(0, 1);\n    hideError();\n    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();\n    if (value().length === 6 && !querying) submit();\n  });\n  box.addEventListener('keydown', (e) => {\n    if (e.key === 'Backspace' && !box.value && i > 0) {\n      e.preventDefault();\n      boxes[i - 1].value = '';\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowLeft' && i > 0) {\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {\n      boxes[i + 1].focus();\n    } else if (e.key === 'Enter' && value().length === 6 && !querying) {\n      submit();\n    }\n  });\n  box.addEventListener('paste', (e) => {\n    e.preventDefault();\n    const digits = (e.clipboardData.getData('text') || '').replace(/\\D/g, '').slice(0, 6);\n    if (digits) fill(digits);\n  });\n  box.addEventListener('focus', () => box.select());\n});\n\nfunction showError(msg) {\n  errorBox.textContent = msg;\n  errorBox.hidden = false;\n  row.classList.remove('shake');\n  void row.offsetWidth; /* \u5F3A\u5236 reflow,\u91CD\u542F\u52A8\u753B */\n  row.classList.add('shake');\n}\nfunction hideError() {\n  errorBox.hidden = true;\n}\n\nasync function submit() {\n  const code = value();\n  querying = true;\n  hideError();\n  resultCard.hidden = true;\n  try {\n    const res = await api('/api/pickup', { method: 'POST', body: { code } });\n    render(res, code);\n  } catch (e) {\n    showError(e.message || t('pk.fail'));\n  } finally {\n    querying = false;\n  }\n}\n\nfunction metaLine(res) {\n  const parts = [];\n  parts.push(res.expireAt ? t('pk.expireAt', fmtDate(res.expireAt)) : t('meta.forever'));\n  parts.push(res.pickupsLeft === null || res.pickupsLeft === undefined ? t('meta.unlimited') : t('pk.left', res.pickupsLeft));\n  return parts.join(' \xB7 ');\n}\n\nfunction render(res, code) {\n  last = { res, code };\n  resultCard.replaceChildren();\n\n  if (res.kind === 'text') {\n    const pre = el('pre', { class: 'text-body' });\n    pre.textContent = res.text ?? '';\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, '\u{1F4DD}'),\n        el('div', { class: 'sc-meta' }, el('b', {}, t('pk.textChars', res.size))),\n      ),\n      pre,\n      el('div', { class: 'btn-row' },\n        el('button', { class: 'btn primary', onclick: async () => {\n          (await copyText(res.text)) ? toast(t('copied.text'), 'ok') : toast(t('copy.fail'), 'error');\n        } }, t('pk.copyAllText')),\n      ),\n    );\n  } else {\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, iconFor(res.filename, res.mime)),\n        el('div', { class: 'sc-meta' },\n          el('b', {}, res.filename || t('pk.unnamed')),\n          el('small', {}, `${fmtBytes(res.size)} \xB7 ${res.mime || t('unknown.type')}`),\n        ),\n      ),\n      el('a', {\n        class: 'btn primary block',\n        href: `/api/pickup/${code}/download`,\n        download: res.filename || 'file',\n      }, t('pk.download')),\n    );\n  }\n\n  resultCard.append(\n    el('div', { class: 'meta-line' }, metaLine(res)),\n    el('div', { class: 'btn-row' },\n      el('button', { class: 'btn ghost', onclick: reset }, t('pk.again')),\n    ),\n  );\n  resultCard.hidden = false;\n}\n\nfunction reset() {\n  last = null;\n  resultCard.hidden = true;\n  boxes.forEach((b) => { b.value = ''; });\n  hideError();\n  boxes[0].focus();\n}\n\n/* \u652F\u6301 /pickup?code=xxxxxx \u5E26\u53C2\u8FDB\u5165 */\nconst fromUrl = new URLSearchParams(location.search).get('code');\nif (fromUrl && /^\\d{1,6}$/.test(fromUrl)) {\n  fill(fromUrl.slice(0, 6));\n} else {\n  boxes[0].focus();\n}\n", "js/vendor/qrcode.js": `//---------------------------------------------------------------------
 //
 // QR Code Generator for JavaScript
@@ -4646,11 +4646,14 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
   .upload-context summary, .source-history summary { min-height: 40px; padding-block: 8px; }\r
 }\r
 /* Primary navigation belongs in the header; paging stays with its list. */\r
-.admin-topbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; padding-block: 12px; margin-bottom: 12px; background: var(--paper); }\r
+.admin-topbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 24px; padding-block: 12px; margin-bottom: 12px; background: var(--paper); }\r
 .admin-topbar .brand { min-width: 0; }\r
 .admin-topbar .brand b { white-space: nowrap; }\r
 .admin-topbar .actions { grid-column: 3; }\r
-#admin-navigation { min-width: 0; justify-self: center; margin: 0; }\r
+#admin-navigation { min-width: 0; justify-self: start; flex-wrap: nowrap; gap: 8px; margin: 0; }\r
+.admin-nav-link { min-height: 44px; padding: 10px 12px 7px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; color: var(--muted); font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; }\r
+.admin-nav-link:hover { color: var(--ink); background: var(--rowbg); }\r
+.admin-nav-link[aria-pressed='true'] { color: var(--ink); border-bottom-color: var(--stamp); }\r
 .list-toolbar { position: sticky; top: 8px; z-index: 5; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 10px; padding: 10px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: 0 3px 8px var(--hard-soft); }\r
 .page-summary { color: var(--ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }\r
 .list-toolbar .pager-btns { flex-wrap: wrap; gap: 6px; }\r
@@ -4676,7 +4679,7 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
 @media (max-width: 900px) {\r
   .admin-topbar { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }\r
   .admin-topbar .actions { grid-column: 2; }\r
-  #admin-navigation { grid-column: 1 / -1; grid-row: 2; justify-self: start; }\r
+  #admin-navigation { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }\r
   .list-toolbar { justify-content: space-between; }\r
 }\r
 @media (max-width: 600px) {\r
@@ -4689,8 +4692,6 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
   .list-toolbar .page-summary { width: 100%; }\r
   .list-toolbar .pager-btns { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }\r
   .list-toolbar .btn { padding-inline: 5px; }\r
-  .admin-nav { gap: 6px; }\r
-  .admin-nav .btn { padding-inline: 8px; }\r
   .preference-row select { min-height: 44px; font-size: 16px; }\r
   .display-options { grid-template-columns: minmax(0, 1fr); gap: 0; }\r
   .preference-row { grid-template-columns: minmax(0, 1fr) 110px; }\r

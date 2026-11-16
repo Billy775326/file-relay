@@ -121,17 +121,33 @@ with sync_playwright() as p:
         if lang == 'en': page.click('#lang-btn')
         for theme in ['light', 'dark']:
             page.evaluate('(t)=>document.documentElement.dataset.theme=t', theme)
-            for width in [320, 390, 1135]:
+            for width in [320, 390, 900, 901, 1135]:
                 page.set_viewport_size({'width': width, 'height': 844})
                 page.evaluate('window.scrollTo(0, 0)')
                 nav = page.locator('#admin-navigation')
                 assert nav.evaluate('(e)=>e.closest("header")!==null')
-                if width == 1135:
-                    brand, navigation = page.locator('.brand').bounding_box(), nav.bounding_box()
+                brand, navigation = page.locator('.brand').bounding_box(), nav.bounding_box()
+                actions = page.locator('.admin-topbar .actions').bounding_box()
+                if width > 900:
                     assert abs(brand['y'] + brand['height']/2 - navigation['y'] - navigation['height']/2) < 2
+                    assert 20 <= navigation['x'] - brand['x'] - brand['width'] <= 28
+                    assert navigation['x'] + navigation['width'] <= actions['x']
+                else:
+                    assert navigation['y'] >= max(brand['y'] + brand['height'], actions['y'] + actions['height'])
+                    a, b = page.locator('#admin-files-tab').bounding_box(), page.locator('#admin-audit-tab').bounding_box()
+                    assert abs(a['width'] - b['width']) <= 1
+                    assert min(a['height'], b['height']) >= 44
                 for tab, pager, table in [('admin-files-tab', 'files-pager', 'shares-body'), ('admin-audit-tab', 'audit-pager', 'audit-body')]:
                     page.click('#' + tab)
                     page.locator('#' + table + ' tr').first.wait_for()
+                    expect(page.locator('#' + tab)).to_have_attribute('aria-pressed', 'true')
+                    active = page.locator('#' + tab).evaluate('(e)=>{const s=getComputedStyle(e);return [s.borderBottomWidth,s.borderBottomColor,s.borderTopWidth]}')
+                    assert active[0] == '3px' and active[1] != 'rgba(0, 0, 0, 0)' and active[2] == '0px', active
+                    inactive = 'admin-audit-tab' if tab == 'admin-files-tab' else 'admin-files-tab'
+                    expect(page.locator('#' + inactive)).to_have_attribute('aria-pressed', 'false')
+                    if lang == 'zh' and theme == 'dark' and width in [390, 1135]:
+                        page.evaluate('window.scrollTo(0, 0)')
+                        page.screenshot(path=f'.wrangler/brand-nav-{tab}-{width}.png', animations='disabled')
                     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                     bar = page.locator('#' + pager)
                     assert bar.bounding_box()['y'] < page.locator('#' + table).bounding_box()['y']

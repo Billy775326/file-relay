@@ -1110,11 +1110,14 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
   .upload-context summary, .source-history summary { min-height: 40px; padding-block: 8px; }
 }
 /* Primary navigation belongs in the header; paging stays with its list. */
-.admin-topbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; padding-block: 12px; margin-bottom: 12px; background: var(--paper); }
+.admin-topbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 24px; padding-block: 12px; margin-bottom: 12px; background: var(--paper); }
 .admin-topbar .brand { min-width: 0; }
 .admin-topbar .brand b { white-space: nowrap; }
 .admin-topbar .actions { grid-column: 3; }
-#admin-navigation { min-width: 0; justify-self: center; margin: 0; }
+#admin-navigation { min-width: 0; justify-self: start; flex-wrap: nowrap; gap: 8px; margin: 0; }
+.admin-nav-link { min-height: 44px; padding: 10px 12px 7px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; color: var(--muted); font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.admin-nav-link:hover { color: var(--ink); background: var(--rowbg); }
+.admin-nav-link[aria-pressed='true'] { color: var(--ink); border-bottom-color: var(--stamp); }
 .list-toolbar { position: sticky; top: 8px; z-index: 5; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin: 0 0 10px; padding: 10px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: 0 3px 8px var(--hard-soft); }
 .page-summary { color: var(--ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .list-toolbar .pager-btns { flex-wrap: wrap; gap: 6px; }
@@ -1140,7 +1143,7 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
 @media (max-width: 900px) {
   .admin-topbar { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
   .admin-topbar .actions { grid-column: 2; }
-  #admin-navigation { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+  #admin-navigation { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .list-toolbar { justify-content: space-between; }
 }
 @media (max-width: 600px) {
@@ -1153,8 +1156,6 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
   .list-toolbar .page-summary { width: 100%; }
   .list-toolbar .pager-btns { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .list-toolbar .btn { padding-inline: 5px; }
-  .admin-nav { gap: 6px; }
-  .admin-nav .btn { padding-inline: 8px; }
   .preference-row select { min-height: 44px; font-size: 16px; }
   .display-options { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .preference-row { grid-template-columns: minmax(0, 1fr) 110px; }

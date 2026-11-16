@@ -81,7 +81,6 @@ export function initAudit() {
     $('#admin-files-view').hidden = audit;
     for (const [id, active] of [['admin-files-tab', !audit], ['admin-audit-tab', audit]]) {
       $('#' + id).setAttribute('aria-pressed', String(active));
-      $('#' + id).classList.toggle('ghost', !active);
     }
     if (audit) load(); else { request++; close(); }
   }
