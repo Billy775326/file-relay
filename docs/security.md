@@ -44,7 +44,13 @@
 
 ## 接口与验证
 
-所有安全接口需要管理员 Cookie，写操作要求同源和 JSON。
+上传与取件被拦截后保留当前文件、文本及口令，并显示持续提示。临时限制按服务端时间显示剩余等待时间，倒计时结束后由用户手动重试；手动封禁或地区限制没有到期时间时不显示倒计时。重试仍会重新校验规则，不保证到期后一定放行。分片请求遇到 `security_blocked` 或 `security_unavailable` 时立即停止自动重试，并尝试取消已创建的会话。
+
+提示中的“联系站长”通过 `mailto:iblykk@gmail.com` 打开邮件草稿，也可复制邮箱和反馈信息。草稿仅包含操作、公开限制类型、时间和请求编号，不自动发送，不包含口令、文件名或 IP。请求编号可在 Worker 日志的 `security_rejection` 中关联，是否可查询取决于部署的日志启用及保留设置；不会为每次重复拦截新增持久审计记录。
+
+公开安全错误保留原有 HTTP 状态码与 `error`、`message`，增加 `reason`（`rate_limit`、`access_rule`、`region`、`service_unavailable`）、`requestId`、`serverTime`，有期限时包含 `retryAt`（Unix 毫秒）和 `Retry-After`（秒）。浏览器访问下载链接且接受 HTML 时返回同状态的提示页面，API 请求仍返回 JSON；下载成功继续使用服务端的附件响应。这些提示只覆盖站点自身防护，不覆盖 Cloudflare 在 Worker 前返回的拦截页面。
+
+下列后台安全接口需要管理员 Cookie，写操作要求同源和 JSON。
 
 | 接口 | 行为 |
 |---|---|

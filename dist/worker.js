@@ -484,776 +484,776 @@ setInlineAssets({ "404.html": `<!doctype html>
 <script type="module" src="/js/index.js"><\/script>
 </body>
 </html>
-`, "js/admin-audit.js": "import { $, api, el, fmtDate } from './common.js';\nimport { t, LANG, onLangChange } from './i18n.js';\nimport { pageSize, scrollToList } from './admin-preferences.js';\n\nexport function initAudit() {\n  const view = $('#admin-audit-view');\n  const body = $('#audit-body');\n  const dialog = $('#audit-dialog');\n  let category = 'all', offset = 0, total = 0, request = 0;\n  let filters = {}, rows = [], available = false;\n  let limit = pageSize('audit');\n  const action = row => t(`audit.action.${row.action}`);\n  const actor = row => t(`audit.actor.${row.actor}`);\n  const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;\n  function shareRules(value) {\n    try {\n      const rules = JSON.parse(value);\n      if (!Number.isSafeInteger(rules?.pickupCount) || !(rules.maxPickups === null || Number.isSafeInteger(rules.maxPickups)) ||\n          !(rules.expireAt === null || Number.isSafeInteger(rules.expireAt))) return String(value);\n      return `${t('ad.th.pickups')} ${rules.pickupCount} / ${rules.maxPickups ?? '\u221E'} \xB7 ${t('ad.th.expire')} ${rules.expireAt === null ? t('ad.forever') : fmtDate(rules.expireAt)}`;\n    } catch { return String(value); } // Older/external records may not contain a rule snapshot.\n  }\n  function place(row) {\n    let country = row.country;\n    if (/^[A-Z]{2}$/.test(country)) country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n    return [...new Set([country, row.region, row.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n  }\n  function close() { dialog.close(); $('#audit-detail').replaceChildren(); }\n  function details(row) {\n    const fields = [\n      [t('audit.time'), fmtDate(row.at)], [t('audit.action'), action(row)],\n      [t('audit.result'), t(`audit.${row.result}`)], [t('audit.actor'), actor(row)],\n      ['IP', ip(row)], [t('ad.sourceLocation'), place(row)],\n      [t('audit.target'), row.target || '\u2014'], [t('audit.http'), `${row.method} \xB7 ${row.status}`],\n      [t('audit.duration'), `${row.durationMs} ms`], [t('audit.id'), row.id],\n      [t('audit.agent'), row.agent || '\u2014'],\n    ];\n    for (const [key, value] of Object.entries(row.detail)) {\n      fields.push([t(`audit.detail.${key}`), ['beforeRules','afterRules'].includes(key) ? shareRules(value) : key === 'bannedUntil' ? fmtDate(value)\n        : typeof value === 'boolean' ? t(value ? 'audit.yes' : 'audit.no') : String(value)]);\n    }\n    if (row.action === 'download') fields.push([t('audit.description'), t('audit.downloadHint')]);\n    $('#audit-detail').replaceChildren(...fields.map(([label, value]) => el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));\n    dialog.showModal();\n  }\n  function render() {\n    body.replaceChildren(...rows.map(row => el('tr', {},\n      el('td', {}, fmtDate(row.at)),\n      el('td', {}, el('span', {}, action(row)), el('small', { class: 'muted' }, t(`audit.${row.category}`))),\n      el('td', {}, el('span', { class: `audit-result audit-${row.result}` }, t(`audit.${row.result}`))),\n      el('td', { class: 'audit-actor' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.actor')), actor(row)),\n      el('td', { class: 'audit-source' }, el('span', { class: 'mono' }, ip(row)),\n        row.country || row.region || row.city ? el('small', { class: 'muted' }, place(row)) : null),\n      el('td', { class: 'audit-target' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.target')), row.target || '\u2014'),\n      el('td', {}, el('button', { type: 'button', class: 'btn small ghost', onclick: () => details(row) }, t('audit.details'))),\n    )));\n    $('#audit-page').textContent = t('audit.page', Math.floor(offset / limit) + 1, Math.max(1, Math.ceil(total / limit)), total);\n    $('#audit-prev').disabled = offset === 0;\n    $('#audit-next').disabled = offset + limit >= total;\n  }\n  async function load() {\n    const ticket = ++request;\n    available = false;\n    $('#audit-error').hidden = true;\n    $('#audit-state').textContent = t('ad.loading');\n    $('#audit-page').textContent = '';\n    body.replaceChildren();\n    for (const id of ['audit-prev', 'audit-next', 'audit-export', 'audit-refresh']) $('#' + id).disabled = true;\n    try {\n      const params = new URLSearchParams({ ...filters, category, offset, limit });\n      const data = await api(`/api/admin/audit-logs?${params}`);\n      if (ticket !== request || view.hidden) return;\n      if (typeof data.enabled !== 'boolean' || !Array.isArray(data.rows) || !Number.isSafeInteger(data.total)) throw new Error(t('ad.loadFail'));\n      available = data.enabled;\n      rows = data.rows; total = data.total;\n      if (available && offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return load(); }\n      $('#audit-state').textContent = !available ? t('audit.disabled') : !total ? t('audit.empty') : '';\n      render();\n      $('#audit-export').disabled = !available || total === 0;\n    } catch (e) {\n      if (ticket !== request || view.hidden) return;\n      $('#audit-state').textContent = '';\n      $('#audit-error').textContent = e.message || t('ad.loadFail');\n      $('#audit-error').hidden = false;\n    } finally { if (ticket === request) $('#audit-refresh').disabled = false; }\n  }\n  function selectView(audit) {\n    view.hidden = !audit;\n    $('#admin-files-view').hidden = audit;\n    for (const [id, active] of [['admin-files-tab', !audit], ['admin-audit-tab', audit]]) {\n      $('#' + id).setAttribute('aria-pressed', String(active));\n    }\n    if (audit) load(); else { request++; close(); }\n  }\n  $('#admin-files-tab').addEventListener('click', () => selectView(false));\n  $('#admin-audit-tab').addEventListener('click', () => selectView(true));\n  $('#audit-filter').addEventListener('submit', e => {\n    e.preventDefault();\n    const from = $('#audit-from').value, to = $('#audit-to').value;\n    if (from && to && from > to) {\n      $('#audit-error').textContent = t('audit.dateError'); $('#audit-error').hidden = false; return;\n    }\n    filters = { result: $('#audit-result').value, q: $('#audit-q').value.trim() };\n    if (from) filters.from = new Date(`${from}T00:00:00`).getTime();\n    if (to) { const end = new Date(`${to}T00:00:00`); end.setDate(end.getDate() + 1); filters.to = end.getTime() - 1; }\n    offset = 0; load();\n  });\n  $('#audit-reset').addEventListener('click', () => { $('#audit-filter').reset(); filters = {}; offset = 0; load(); });\n  for (const button of document.querySelectorAll('.audit-categories button')) button.addEventListener('click', () => {\n    category = button.dataset.category; offset = 0;\n    for (const item of document.querySelectorAll('.audit-categories button')) item.setAttribute('aria-pressed', String(item === button));\n    load();\n  });\n  $('#audit-prev').addEventListener('click', async () => { offset = Math.max(0, offset - limit); await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\n  $('#audit-next').addEventListener('click', async () => { offset += limit; await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\n  $('#audit-refresh').addEventListener('click', load);\n  window.addEventListener('admin-page-size', event => {\n    if (event.detail.name !== 'audit') return;\n    limit = event.detail.value; offset = 0;\n    if (!view.hidden) load();\n  });\n  $('#audit-export').addEventListener('click', async () => {\n    $('#audit-export').disabled = true;\n    $('#audit-error').hidden = true;\n    const exportFilters = { ...filters, category };\n    try {\n      const params = new URLSearchParams({ ...exportFilters, offset: 0, limit: 1000 });\n      const data = await api(`/api/admin/audit-logs/export?${params}`);\n      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), filters: exportFilters, ...data }, null, 2)], { type: 'application/json' });\n      const url = URL.createObjectURL(blob);\n      const link = el('a', { href: url, download: `audit-${new Date().toISOString().slice(0, 10)}.json` });\n      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);\n    } catch (e) { $('#audit-error').textContent = e.message || t('ad.loadFail'); $('#audit-error').hidden = false; }\n    finally { $('#audit-export').disabled = !available || total === 0; }\n  });\n  $('#audit-close').addEventListener('click', close);\n  dialog.addEventListener('cancel', e => { e.preventDefault(); close(); });\n  window.addEventListener('audit-write-failed', () => { $('#audit-write-warning').hidden = false; });\n  onLangChange(() => { close(); if (!view.hidden) load(); });\n}\n", "js/admin-preferences.js": "import { $ } from './common.js';\nimport { t } from './i18n.js';\n\nconst options = { files: [10, 20, 40], audit: [20, 50, 100] };\nconst values = { files: 20, audit: 20 };\nfor (const name of Object.keys(values)) {\n  try {\n    const saved = Number(localStorage.getItem(`admin-page-size-${name}`));\n    if (options[name].includes(saved)) values[name] = saved;\n  } catch { /* Browser preferences are optional when persistent storage is blocked. */ }\n}\nexport function pageSize(name) { return values[name]; }\n\nexport function scrollToList(selector) {\n  const list = $(selector);\n  const top = list.querySelector('.table-wrap').getBoundingClientRect().top + window.scrollY\n    - list.querySelector('.list-toolbar').getBoundingClientRect().height - 20;\n  window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });\n}\n\nexport function initAdminPreferences() {\n  const dialog = $('#settings-dialog');\n  $('#admin-settings-btn').addEventListener('click', () => dialog.showModal());\n  $('#settings-close').addEventListener('click', () => dialog.close());\n  for (const name of Object.keys(values)) {\n    const select = $(`#${name}-page-size`);\n    select.value = String(values[name]);\n    select.addEventListener('change', () => {\n      const value = Number(select.value);\n      if (!options[name].includes(value)) return;\n      values[name] = value;\n      $('#preferences-error').hidden = true;\n      try { localStorage.setItem(`admin-page-size-${name}`, String(value)); }\n      catch {\n        $('#preferences-error').textContent = t('ad.preferenceNotSaved');\n        $('#preferences-error').hidden = false;\n      }\n      window.dispatchEvent(new CustomEvent('admin-page-size', { detail: { name, value } }));\n    });\n  }\n  window.addEventListener('audit-write-failed', () => { $('#settings-audit-warning').hidden = false; });\n}\n", "js/admin-preview.js": "import { el } from './common.js';\nimport { t } from './i18n.js';\n\n/** CSV excerpt, preserving quoted commas/newlines and omitting an incomplete last record. */\nexport function csvExcerpt(text, truncated) {\n  const rows = []; let row = [], cell = '', quoted = false, afterQuote = false, clipped = truncated;\n  const pushCell = () => { row.push(cell); cell = ''; afterQuote = false; };\n  const pushRow = () => { pushCell(); rows.push(row.slice(0, 20)); if (row.length > 20) clipped = true; row = []; };\n  for (let i = 0; i < text.length; i++) {\n    const c = text[i];\n    if (quoted) {\n      if (c === '\"') { if (text[i + 1] === '\"') { cell += '\"'; i++; } else { quoted = false; afterQuote = true; } }\n      else cell += c;\n    } else if (c === ',' || c === '\\n' || c === '\\r') {\n      if (c === ',') pushCell();\n      else { if (c === '\\r' && text[i + 1] === '\\n') i++; pushRow(); }\n    } else if (c === '\"' && !cell && !afterQuote) quoted = true;\n    else { if (afterQuote || c === '\"') return null; cell += c; }\n    if (rows.length >= 50) { clipped ||= i < text.length - 1; return { rows, clipped }; }\n  }\n  if (!truncated) {\n    if (quoted) return null;\n    if (cell || row.length || afterQuote) pushRow();\n  }\n  return { rows, clipped };\n}\n\nexport function createFilePreview(code, filename) {\n  const scope = el('small', { class: 'muted' });\n  const body = el('div', { class: 'file-preview-body' });\n  const element = el('section', { class: 'file-preview file-wide', 'aria-label': t('preview.title') },\n    el('div', { class: 'file-preview-heading' }, el('b', {}, t('preview.title')), scope), body);\n  let controller, objectUrl, closed = false;\n  function release() { if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null; }\n  async function load() {\n    controller?.abort(); release();\n    const current = new AbortController(); controller = current;\n    const timeout = setTimeout(() => current.abort(), 15000);\n    body.textContent = t('ad.loading'); scope.textContent = '';\n    try {\n      const response = await fetch(`/api/admin/shares/${code}/preview`, { signal: current.signal });\n      if (response.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n      if (!response.ok) throw new Error(t(response.status === 410 || response.status === 404 ? 'ad.fileState.missing' : 'ad.loadFail'));\n      if (response.headers.get('Content-Type')?.startsWith('image/')) {\n        const blob = await response.blob();\n        if (closed || controller !== current) return;\n        if (blob.size > 2 * 1024 * 1024) throw new Error(t('preview.size'));\n        objectUrl = URL.createObjectURL(blob);\n        const img = el('img', { src: objectUrl, alt: filename, class: 'file-preview-image' });\n        img.addEventListener('error', () => { if (!closed && controller === current) { release(); body.textContent = t('preview.image'); } });\n        body.replaceChildren(img);\n        scope.textContent = `${response.headers.get('X-Preview-Width')} \xD7 ${response.headers.get('X-Preview-Height')}`;\n      } else {\n        const data = await response.json();\n        if (closed || controller !== current) return;\n        if (data.kind === 'unsupported') {\n          body.textContent = t(['type', 'size', 'encoding', 'image'].includes(data.reason) ? `preview.${data.reason}` : 'preview.type');\n        } else {\n          if (!['text', 'csv'].includes(data.kind) || typeof data.text !== 'string' || data.text.length > 65536) throw new Error(t('ad.loadFail'));\n          const csv = data.kind === 'csv' ? csvExcerpt(data.text, data.truncated) : null;\n          scope.textContent = t(data.truncated || csv?.clipped ? 'preview.partial' : 'preview.complete');\n          if (csv?.rows.length) {\n            const table = el('table', { class: 'file-preview-table', 'aria-label': t('preview.title') });\n            table.append(el('tbody', {}, ...csv.rows.map(row => el('tr', {}, ...row.map(cell => el('td', {}, cell))))));\n            body.replaceChildren(table);\n          } else body.replaceChildren(el('pre', {}, data.text || t('preview.empty')));\n        }\n      }\n    } catch (error) {\n      if (!closed && controller === current) body.replaceChildren(\n        el('span', { role: 'alert' }, current.signal.aborted ? t('preview.timeout') : error.message || t('ad.loadFail')),\n        el('button', { type: 'button', class: 'btn small ghost', onclick: load }, t('ad.retry')));\n    } finally { clearTimeout(timeout); }\n  }\n  load();\n  return { element, dispose() { closed = true; controller?.abort(); release(); body.replaceChildren(); } };\n}\n", "js/admin-security.js": "import { api } from './common.js';\nexport function initSecurity() {\n    /* Security workspace backed by authenticated, persistent server actions. */\n    (() => {\n        if (!document.querySelector('#admin-panel'))\n            return;\n        const $ = s => document.querySelector(s), nav = $('#admin-navigation');\n        const t = (zh, en) => document.documentElement.lang === 'en' ? en : zh;\n        const el = (tag, attrs = {}, ...children) => { const n = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) {\n            if (k === 'class')\n                n.className = v;\n            else if (k === 'click')\n                n.addEventListener('click', v);\n            else\n                n.setAttribute(k, v);\n        } for (const c of children.flat())\n            if (c != null)\n                n.append(c instanceof Node ? c : document.createTextNode(String(c))); return n; };\n        let pendingAction = false;\n        const btn = (zh, en, fn, cls = 'btn small ghost') => el('button', { type: 'button', class: cls, click: async (event) => {\n                const button = event.currentTarget;\n                if (button.disabled)\n                    return;\n                let controls = [];\n                try {\n                    const result = fn();\n                    if (result && typeof result.then === 'function') {\n                        controls = [...dialog.querySelectorAll('button,input,select')].map(n => [n, n.disabled]);\n                        for (const [n] of controls)\n                            n.disabled = true;\n                        button.disabled = true;\n                        pendingAction = true;\n                        await result;\n                    }\n                }\n                catch (error) {\n                    if (dialog.open)\n                        fail($('#sec-form-error'), error.message);\n                    else {\n                        toast(error.message);\n                        feedback.classList.add('sec-feedback-error');\n                    }\n                }\n                finally {\n                    pendingAction = false;\n                    if (button.isConnected)\n                        button.disabled = false;\n                    for (const [n, disabled] of controls)\n                        if (n.isConnected)\n                            n.disabled = disabled;\n                }\n            } }, t(zh, en));\n        const input = (id, value = '', attrs = {}) => el('input', { id, value, ...attrs });\n        const field = (zh, en, node) => el('label', { class: 'sec-field', for: node.id }, el('span', {}, t(zh, en)), node.type === 'number' ? numberControl(node, t(zh, en)) : node);\n        const numberControl = (node, label) => window.numberControl(node, label);\n        const date = n => new Intl.DateTimeFormat(document.documentElement.lang === 'en' ? 'en-GB' : 'zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(n);\n        const liveBans = () => store.bans.filter(b => b.until === null || b.until > Date.now());\n        const scopes = [['login', '\u540E\u53F0\u767B\u5F55', 'Admin login'], ['upload', '\u4E0A\u4F20', 'Upload'], ['pickup', '\u53D6\u4EF6', 'Pickup']];\n        const scopeName = key => { const s = scopes.find(s => s[0] === key); return t(s[1], s[2]); };\n        const scopeText = list => list.map(scopeName).join(' / ');\n        const scopeBadges = (list, sup = false) => el(sup ? 'sup' : 'div', { class: 'sec-scope-badges' + (sup ? ' sec-scope-sup' : '') }, ...list.map(s => el('span', { 'data-tone': { login: 'blue', upload: 'orange', pickup: 'teal' }[s] }, scopeName(s))));\n        const ipLine = row => el('div', { class: 'sec-ip-line' }, el('b', { class: 'mono' }, row.ip), scopeBadges(row.scopes, true));\n        function scopePicker(values = ['login'], prefix = 'sec-scope', disabled = []) {\n            const checks = scopes.map(([key, zh, en]) => { const n = input(prefix + '-' + key, '', { type: 'checkbox' }); n.disabled = disabled.includes(key); n.checked = !n.disabled && values.includes(key); return { key, n, label: el('label', { class: 'sec-check' }, n, t(zh, en)) }; });\n            return { node: el('fieldset', { class: 'sec-scope-picker' }, el('legend', {}, t('\u4FDD\u62A4\u8303\u56F4', 'Protected actions')), ...checks.map(c => c.label)), values: () => checks.filter(c => c.n.checked && !c.n.disabled && !disabled.includes(c.key)).map(c => c.key) };\n        }\n        const geography = { CN: { label: ['\u4E2D\u56FD', 'China'], regions: { ZJ: ['\u6D59\u6C5F', 'Zhejiang'], GX: ['\u5E7F\u897F', 'Guangxi'], GD: ['\u5E7F\u4E1C', 'Guangdong'], SH: ['\u4E0A\u6D77', 'Shanghai'], BJ: ['\u5317\u4EAC', 'Beijing'] } }, US: { label: ['\u7F8E\u56FD', 'United States'], regions: { CA: ['\u52A0\u5229\u798F\u5C3C\u4E9A', 'California'], NY: ['\u7EBD\u7EA6\u5DDE', 'New York'] } }, SG: { label: ['\u65B0\u52A0\u5761', 'Singapore'], regions: {} }, JP: { label: ['\u65E5\u672C', 'Japan'], regions: { '13': ['\u4E1C\u4EAC\u90FD', 'Tokyo'] } }, DE: { label: ['\u5FB7\u56FD', 'Germany'], regions: {} } };\n        const regionName = r => [geography[r.country] ? t(...geography[r.country].label) : r.country, r.region ? (geography[r.country]?.regions[r.region] ? t(...geography[r.country].regions[r.region]) : r.region) : t('\u5168\u90E8\u5730\u533A', 'All regions')].join(' \xB7 ');\n        const activeRegions = () => store.regions.filter(r => r.enabled && (r.until === null || r.until > Date.now()));\n        const overlaps = (a, b) => a.some(s => b.includes(s));\n        function geoPicker(country = 'CN', region = '', unknown = false) {\n            const countryInput = input('sec-country', country, { list: 'sec-country-options', maxlength: 2, placeholder: unknown ? t('\u7559\u7A7A\u8868\u793A\u672A\u77E5', 'Blank for unknown') : 'CN', autocomplete: 'off' });\n            const countries = el('datalist', { id: 'sec-country-options' }, ...Object.entries(geography).map(([key, g]) => el('option', { value: key }, t(...g.label))));\n            const regionInput = input('sec-region', region, { list: 'sec-region-options', maxlength: 10, placeholder: t('\u5168\u90E8\u7701\u5DDE\uFF08\u53EF\u586B\u4EE3\u7801\uFF09', 'All subdivisions (or enter code)'), autocomplete: 'off' }), regions = el('datalist', { id: 'sec-region-options' });\n            const update = () => { countryInput.value = countryInput.value.toUpperCase(); regions.replaceChildren(...Object.entries(geography[countryInput.value]?.regions || {}).map(([key, label]) => el('option', { value: key }, t(...label)))); };\n            countryInput.addEventListener('input', () => { regionInput.value = ''; update(); });\n            regionInput.addEventListener('input', () => { regionInput.value = regionInput.value.toUpperCase(); });\n            update();\n            const node = el('div', { class: 'sec-form-grid' }, field('\u56FD\u5BB6 / \u5730\u533A\u4EE3\u7801', 'Country code', countryInput), field('\u7701 / \u5DDE\u4EE3\u7801', 'Subdivision code', regionInput), countries, regions);\n            window.attachHelp(node.querySelector('label > span'), el('span', {}, t('\u4F7F\u7528 Cloudflare \u7684\u56FD\u5BB6\u4E0E\u7701\u5DDE\u4EE3\u7801\uFF0C\u5982 CN / ZJ\u3001US / TX\u3002\u7701\u5DDE\u7559\u7A7A\u8868\u793A\u6574\u4E2A\u56FD\u5BB6\uFF1B\u53EF\u9009\u62E9\u5E38\u7528\u4EE3\u7801\u6216\u81EA\u884C\u8F93\u5165\u3002', 'Use Cloudflare country/subdivision codes, e.g. CN / ZJ or US / TX. A blank subdivision covers the country. Select a suggestion or enter a code.')));\n            return { country: countryInput, region: regionInput, node };\n        }\n        const durationSelect = id => el('select', { id }, ...[['30', '30 \u5206\u949F', '30 minutes'], ['60', '1 \u5C0F\u65F6', '1 hour'], ['1440', '24 \u5C0F\u65F6', '24 hours'], ['0', '\u6C38\u4E45', 'Permanent']].map(([v, zh, en]) => el('option', { value: v }, t(zh, en))));\n        let store = { enabled: false, configRevision: '', rules: { login: { enabled: true, limit: 5, window: 10, duration: 30 }, upload: { enabled: true, limit: 20, window: 10, duration: 30 }, pickup: { enabled: true, limit: 10, window: 10, duration: 30 } }, bans: [], allow: [], regions: [] };\n        const selected = new Set();\n        let tab = 'bans', query = '', kind = 'all', scopeFilter = 'all', page = 1, open = false, failed = false, empty = false, lastFocus = null, loaded = false, loading = false;\n        function validateState(data) {\n            if (!data || typeof data.enabled !== 'boolean' || typeof data.configRevision !== 'string' || !scopes.every(([k]) => data.rules?.[k] && typeof data.rules[k].enabled === 'boolean' && ['limit', 'window', 'duration'].every(n => Number.isInteger(data.rules[k][n]) && data.rules[k][n] > 0)) || !['bans', 'allow', 'regions'].every(k => Array.isArray(data[k]) && data[k].every(r => r && Array.isArray(r.scopes) && r.scopes.every(v => scopes.some(([s]) => s === v)))))\n                throw new Error(t('\u9632\u62A4\u72B6\u6001\u683C\u5F0F\u65E0\u6548', 'Invalid protection response'));\n            return data;\n        }\n        async function refresh() { if (loading)\n            return; loading = true; render(); try {\n            store = validateState(await api('/api/admin/security'));\n            loaded = true;\n            failed = false;\n        }\n        catch (error) {\n            failed = true;\n            throw error;\n        }\n        finally {\n            loading = false;\n            render();\n        } }\n        async function mutate(action, data = {}) { await api('/api/admin/security', { method: 'POST', body: { action, configRevision: store.configRevision, ...data } }); try {\n            store = validateState(await api('/api/admin/security'));\n            failed = false;\n        }\n        catch {\n            failed = true;\n            throw new Error(t('\u64CD\u4F5C\u5DF2\u4FDD\u5B58\uFF0C\u4F46\u72B6\u6001\u5237\u65B0\u5931\u8D25\u3002\u8BF7\u5173\u95ED\u5F39\u7A97\u5E76\u5237\u65B0\uFF0C\u52FF\u91CD\u590D\u63D0\u4EA4\u3002', 'Saved, but refresh failed. Close and refresh without submitting again.'));\n        } }\n        const view = el('section', { id: 'security-view', hidden: '', 'aria-labelledby': 'security-title' });\n        $('#admin-panel').append(view);\n        const navButton = btn('\u5B89\u5168\u9632\u62A4', 'Security', () => show(), 'admin-nav-link');\n        navButton.id = 'admin-security-tab';\n        navButton.setAttribute('aria-controls', 'security-view');\n        navButton.setAttribute('aria-pressed', 'false');\n        nav.append(navButton);\n        const dialog = el('dialog', { id: 'security-dialog', class: 'source-dialog sec-dialog', 'aria-labelledby': 'security-dialog-title' });\n        document.body.append(dialog);\n        const old = $('#login-protection');\n        old.hidden = true;\n        const shortcut = el('section', { class: 'settings-section sec-setting-entry' }, el('h4', {}, t('\u5B89\u5168\u9632\u62A4', 'Security')), btn('\u7BA1\u7406\u8BBF\u95EE\u89C4\u5219\u4E0E\u5C01\u7981 \u2192', 'Manage access rules and bans \u2192', () => { $('#settings-dialog').close(); show(); }));\n        old.before(shortcut);\n        const auditEntry = $('.ui-guard-entry');\n        if (auditEntry) {\n            auditEntry.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            auditEntry.onclick = () => show();\n        }\n        function show() { open = true; $('#admin-files-view').hidden = true; $('#admin-audit-view').hidden = true; view.hidden = false; for (const n of nav.querySelectorAll('button'))\n            n.setAttribute('aria-pressed', String(n === navButton)); render(); if (!loaded && !loading)\n            refresh().catch(error => toast(error.message)); }\n        for (const id of ['#admin-files-tab', '#admin-audit-tab'])\n            $(id).addEventListener('click', () => { open = false; view.hidden = true; navButton.setAttribute('aria-pressed', 'false'); });\n        const feedback = el('div', { id: 'sec-feedback', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });\n        document.body.append(feedback);\n        let feedbackTimer;\n        function clearFeedback() { clearTimeout(feedbackTimer); feedback.textContent = ''; feedback.classList.remove('sec-feedback-error'); }\n        function toast(msg) { clearFeedback(); feedback.textContent = msg; feedbackTimer = setTimeout(clearFeedback, 4000); }\n        for (const id of ['#admin-files-tab', '#admin-audit-tab'])\n            $(id).addEventListener('click', clearFeedback);\n        dialog.addEventListener('close', () => { if (!open)\n            clearFeedback(); });\n        const auditLabels = { manualBan: ['\u624B\u52A8\u5C01\u7981 IP', 'Manually ban IP'], allowIP: ['\u6DFB\u52A0\u5141\u8BB8 IP', 'Allow IP'], removeAllow: ['\u79FB\u9664\u5141\u8BB8 IP', 'Remove allowed IP'], securityRules: ['\u4FEE\u6539\u9632\u62A4\u89C4\u5219', 'Change protection rules'], regionAdd: ['\u6DFB\u52A0\u5730\u533A\u5C01\u7981', 'Add region ban'], regionEdit: ['\u4FEE\u6539\u5730\u533A\u5C01\u7981', 'Edit region ban'], regionToggle: ['\u5207\u6362\u5730\u533A\u89C4\u5219\u72B6\u6001', 'Toggle region rule'], regionRemove: ['\u79FB\u9664\u5730\u533A\u5C01\u7981', 'Remove region ban'] };\n        function translateAudit() { for (const host of [$('#audit-body'), $('#audit-detail')]) {\n            const walker = document.createTreeWalker(host, NodeFilter.SHOW_TEXT);\n            let n;\n            while (n = walker.nextNode()) {\n                const label = auditLabels[n.textContent.replace('audit.action.', '')];\n                if (label && n.textContent.startsWith('audit.action.'))\n                    n.textContent = t(...label);\n            }\n        } }\n        for (const host of [$('#audit-body'), $('#audit-detail')])\n            new MutationObserver(translateAudit).observe(host, { childList: true, subtree: true });\n        function close() { dialog.close(); if (lastFocus?.isConnected)\n            lastFocus.focus(); }\n        dialog.addEventListener('cancel', e => { e.preventDefault(); if (!pendingAction)\n            close(); });\n        dialog.addEventListener('keydown', e => { if (e.key !== 'Tab')\n            return; const a = [...dialog.querySelectorAll('button,input,select,textarea')].filter(n => !n.disabled && n.getClientRects().length); if (!a.length)\n            return; const first = a[0], last = a.at(-1); if (e.shiftKey && document.activeElement === first) {\n            e.preventDefault();\n            last.focus();\n        }\n        else if (!e.shiftKey && document.activeElement === last) {\n            e.preventDefault();\n            first.focus();\n        } });\n        function modal(zh, en) { clearFeedback(); lastFocus = document.activeElement; dialog.classList.remove('sec-rules-dialog'); dialog.replaceChildren(); const head = el('div', { class: 'source-heading' }, el('h3', { id: 'security-dialog-title' }, t(zh, en)), btn('\u5173\u95ED', 'Close', close)); const body = el('div', { class: 'source-body sec-dialog-body' }), error = el('p', { id: 'sec-form-error', class: 'error-box', hidden: '', role: 'alert' }), foot = el('div', { class: 'source-footer' }); body.append(error); dialog.append(head, body, foot); dialog.showModal(); return { body, foot, error }; }\n        function fail(node, msg) { node.textContent = msg; node.hidden = false; }\n        function canonical(value) { const s = value.trim(); if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(s) && s.split('.').every(x => Number(x) <= 255 && !/^0\\d/.test(x)))\n            return s; if (s.includes(':') && !/[\\s/%\\[\\]]/.test(s)) {\n            try {\n                return new URL('http://[' + s + ']/').hostname.slice(1, -1).toLowerCase();\n            }\n            catch { }\n        } return null; }\n        function logLink(ip) { $('#admin-audit-tab').click(); $('#audit-reset').click(); $('#audit-q').value = ip; $('#audit-filter').requestSubmit(); }\n        function confirmUnban(ips) { const current = liveBans().filter(b => ips.includes(b.ip)); if (!current.length)\n            return; const m = modal('\u89E3\u9664 IP \u5C01\u7981', 'Unban IPs'); m.body.prepend(el('p', {}, t(`\u89E3\u9664 ${current.length} \u4E2A IP \u7684\u5C01\u7981\uFF1F`, `Remove bans for ${current.length} IP addresses?`)), ...current.map(b => el('div', {}, el('b', { class: 'mono' }, b.ip), scopeBadges(b.scopes))), el('small', { class: 'muted' }, t('\u5730\u533A\u5C01\u7981\u53CA\u5176\u4ED6\u8BBF\u95EE\u9650\u5236\u4ECD\u7136\u751F\u6548\u3002', 'Region bans and other access restrictions still apply.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u786E\u8BA4\u89E3\u5C01', 'Unban', async () => { await mutate('unban', { ips }); selected.clear(); close(); render(); toast(t('\u5DF2\u89E3\u9664\u5C01\u7981', 'Bans removed')); }, 'btn primary')); }\n        function openAdd(allow = false) {\n            const m = modal(allow ? '\u6DFB\u52A0\u5141\u8BB8 IP' : '\u624B\u52A8\u5C01\u7981 IP', allow ? 'Allow IP' : 'Ban IP');\n            const ip = input('sec-ip', '', { placeholder: '203.0.113.20 / 2001:db8::1', autocomplete: 'off' }), note = input('sec-note', '', { maxlength: 120, placeholder: t('\u7528\u9014\u6216\u539F\u56E0', 'Purpose or reason') });\n            const duration = durationSelect('sec-duration'), scope = scopePicker(allow ? ['login'] : ['login', 'upload', 'pickup']);\n            m.body.prepend(field('IP \u5730\u5740', 'IP address', ip), scope.node, ...(allow ? [] : [field('\u5C01\u7981\u65F6\u957F', 'Ban duration', duration)]), field(allow ? '\u5907\u6CE8' : '\u5C01\u7981\u539F\u56E0', allow ? 'Note' : 'Ban reason', note), el('small', { class: 'muted' }, t(allow ? '\u4EC5\u8C41\u514D\u6240\u9009\u8303\u56F4\u7684\u81EA\u52A8\u5C01\u7981\uFF0C\u4E0D\u7ED5\u8FC7\u624B\u52A8\u5C01\u7981\u3001\u5730\u533A\u89C4\u5219\u6216\u8EAB\u4EFD\u6821\u9A8C\u3002' : '\u5728\u6240\u9009\u8303\u56F4\u62E6\u622A\u540E\u7EED\u8BF7\u6C42\uFF1B\u540E\u53F0\u767B\u5F55\u8303\u56F4\u4E0D\u64A4\u9500\u5DF2\u767B\u5F55\u4F1A\u8BDD\u3002', allow ? 'Exempts automatic bans in selected scopes, never manual bans, region rules or authentication.' : 'Blocks subsequent requests in selected scopes; login bans do not revoke existing sessions.')));\n            window.attachHelp($('#security-dialog-title'), m.body.querySelector(':scope > small'));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn(allow ? '\u6DFB\u52A0\u5141\u8BB8 IP' : '\u786E\u8BA4\u5C01\u7981', allow ? 'Allow IP' : 'Ban IP', async () => {\n                const value = canonical(ip.value), chosen = scope.values();\n                if (!value)\n                    return fail(m.error, t('\u8BF7\u8F93\u5165\u5355\u4E2A\u6709\u6548 IPv4 \u6216 IPv6 \u5730\u5740\u3002', 'Enter one valid IPv4 or IPv6 address.'));\n                if (!chosen.length)\n                    return fail(m.error, t('\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u4FDD\u62A4\u8303\u56F4\u3002', 'Select at least one protected action.'));\n                if ((allow ? store.allow : liveBans()).some(b => b.ip === value))\n                    return fail(m.error, t('\u8BE5\u540D\u5355\u5DF2\u6709\u6B64 IP\uFF0C\u8BF7\u5148\u79FB\u9664\u539F\u8BB0\u5F55\u518D\u8C03\u6574\u8303\u56F4\u3002', 'This list already contains the IP. Remove the existing entry to change its scope.'));\n                if (!note.value.trim())\n                    return fail(m.error, t('\u8BF7\u586B\u5199\u5907\u6CE8\u6216\u539F\u56E0\uFF0C\u4FBF\u4E8E\u540E\u7EED\u5BA1\u8BA1\u3002', 'Enter a note or reason for the audit trail.'));\n                await mutate(allow ? 'allow' : 'ban', { ip: value, scopes: chosen, note: note.value.trim(), minutes: Number(duration.value) });\n                tab = allow ? 'allow' : 'bans';\n                query = '';\n                kind = 'all';\n                scopeFilter = 'all';\n                page = 1;\n                empty = false;\n                close();\n                render();\n                toast(t('\u8BB0\u5F55\u5DF2\u6DFB\u52A0', 'Entry added'));\n            }, 'btn primary'));\n            ip.focus();\n        }\n        function removeAllow(row) { const m = modal('\u79FB\u9664\u5141\u8BB8 IP', 'Remove allowed IP'); m.body.prepend(el('p', { class: 'mono' }, row.ip), scopeBadges(row.scopes), el('p', {}, t('\u79FB\u9664\u540E\uFF0C\u8BE5 IP \u5C06\u91CD\u65B0\u9002\u7528\u6240\u9009\u8303\u56F4\u7684\u81EA\u52A8\u5C01\u7981\u89C4\u5219\u3002', 'Automatic ban rules will apply again in these scopes.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u79FB\u9664', 'Remove', async () => { await mutate('removeAllow', { ip: row.ip }); close(); render(); toast(t('\u5DF2\u79FB\u9664\u5141\u8BB8 IP', 'Allow entry removed')); }, 'btn primary')); }\n        function editRules() {\n            const m = modal('\u81EA\u52A8\u9632\u62A4\u89C4\u5219', 'Automatic protection rules'), controls = [];\n            dialog.classList.add('sec-rules-dialog');\n            m.body.prepend(el('div', { class: 'sec-rules-columns', 'aria-hidden': 'true' },\n                el('span', {}, t('\u4FDD\u62A4\u8303\u56F4', 'Protection')),\n                el('span', {}, t('\u7EDF\u8BA1\u7A97\u53E3 / \u5206\u949F', 'Window / min')),\n                el('span', {}, t('\u89E6\u53D1\u6B21\u6570', 'Threshold')),\n                el('span', {}, t('\u5C01\u7981\u65F6\u957F / \u5206\u949F', 'Ban / min'))));\n            for (const [key, zh, en] of scopes) {\n                const rule = store.rules[key], suffix = key === 'login' ? '' : '-' + key;\n                const enabled = input('sec-enabled' + suffix, '', { type: 'checkbox' });\n                enabled.checked = rule.enabled;\n                const limit = input('sec-threshold' + suffix, rule.limit, { type: 'number', min: 1, max: 10000, step: 1 }), minutes = input('sec-window' + suffix, rule.window, { type: 'number', min: 1, max: 1440, step: 1 }), duration = input('sec-ban-minutes' + suffix, rule.duration, { type: 'number', min: 1, max: 10080, step: 1 });\n                const toggle = () => { for (const n of [limit, minutes, duration])\n                    n.disabled = !enabled.checked; };\n                enabled.onchange = toggle;\n                toggle();\n                const descriptions = { login: ['\u7BA1\u7406\u4EE4\u724C\u6821\u9A8C\u5931\u8D25\u6B21\u6570', 'Failed admin-token checks'], upload: ['\u53D1\u8D77\u5206\u4EAB\u6B21\u6570\uFF1B\u6587\u4EF6\u548C\u6587\u672C\u5747\u8BA1\u5165\uFF0C\u5206\u7247\u4E0D\u91CD\u590D\u8BA1\u6570', 'Share creation attempts; files and text count, chunks do not'], pickup: ['\u65E0\u6548\u53D6\u4EF6\u53E3\u4EE4\u6B21\u6570\uFF1B\u6210\u529F\u53D6\u4EF6\u4E0D\u8BA1\u5165', 'Invalid pickup-code attempts; successful pickups do not count'] };\n                m.body.append(el('section', { class: 'sec-rule-section', 'aria-labelledby': 'sec-rule-label-' + key }, el('label', { class: 'sec-check', id: 'sec-rule-label-' + key }, enabled, el('b', {}, t(zh, en))), el('small', { class: 'muted' }, t(...descriptions[key])), el('div', { class: 'sec-rule-fields' }, field('\u7A97\u53E3\uFF08\u5206\u949F\uFF09', 'Window (min)', minutes), field('\u89E6\u53D1\u6B21\u6570', 'Threshold', limit), field('\u5C01\u7981\uFF08\u5206\u949F\uFF09', 'Ban (min)', duration))));\n                controls.push({ key, enabled, limit, minutes, duration });\n                const section = m.body.lastElementChild;\n                window.attachHelp(section.querySelector('.sec-check'), section.querySelector(':scope > small'));\n            }\n            m.body.append(el('small', { class: 'muted' }, t('\u6309 IP \u72EC\u7ACB\u8BA1\u6570\uFF0C\u4EC5\u5C01\u7981\u89E6\u53D1\u7684\u8303\u56F4\u3002\u505C\u7528\u89C4\u5219\u4E0D\u4F1A\u89E3\u9664\u5DF2\u6709\u5C01\u7981\u3002', 'Counters are per IP and scope. Pausing a rule does not remove existing bans.')));\n            window.attachHelp($('#security-dialog-title'), m.body.lastElementChild);\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u4FDD\u5B58\u89C4\u5219', 'Save rules', async () => { if (controls.some(c => c.enabled.checked && [c.limit, c.minutes, c.duration].some(n => !n.value || !n.reportValidity())))\n                return; const rules = structuredClone(store.rules); for (const c of controls)\n                rules[c.key] = { ...rules[c.key], enabled: c.enabled.checked, ...(c.enabled.checked ? { limit: Number(c.limit.value), window: Number(c.minutes.value), duration: Number(c.duration.value) } : {}) }; await mutate('rules', { rules }); close(); render(); toast(t('\u89C4\u5219\u5DF2\u4FDD\u5B58', 'Rules saved')); }, 'btn primary'));\n        }\n        function editRegion(row = null) {\n            const m = modal(row ? '\u7F16\u8F91\u5730\u533A\u5C01\u7981' : '\u6DFB\u52A0\u5730\u533A\u5C01\u7981', row ? 'Edit region ban' : 'Add region ban');\n            const geo = geoPicker(row?.country || 'CN', row?.region || ''), scope = scopePicker(row?.scopes || ['upload', 'pickup'], 'sec-scope', ['login']), reason = input('sec-region-reason', row?.reason || '', { maxlength: 120, placeholder: t('\u586B\u5199\u5C01\u7981\u539F\u56E0', 'Reason for blocking') });\n            const duration = durationSelect('sec-region-duration');\n            duration.value = '0';\n            if (row) {\n                duration.prepend(el('option', { value: 'keep' }, t('\u4FDD\u6301\u539F\u5230\u671F\u65F6\u95F4', 'Keep current expiry')));\n                duration.value = 'keep';\n            }\n            const enabled = input('sec-region-enabled', '', { type: 'checkbox' });\n            enabled.checked = row?.enabled ?? true;\n            m.body.prepend(geo.node, scope.node, el('div', { class: 'sec-form-grid' }, field('\u5C01\u7981\u65F6\u957F', 'Duration', duration), el('label', { class: 'sec-check' }, enabled, t('\u542F\u7528\u89C4\u5219', 'Enable rule'))), field('\u539F\u56E0', 'Reason', reason));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u4FDD\u5B58\u89C4\u5219', 'Save rule', async () => {\n                const chosen = scope.values();\n                if (!chosen.length)\n                    return fail(m.error, t('\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u4FDD\u62A4\u8303\u56F4\u3002', 'Select at least one protected action.'));\n                if (!reason.value.trim())\n                    return fail(m.error, t('\u8BF7\u586B\u5199\u5C01\u7981\u539F\u56E0\u3002', 'Enter a reason.'));\n                const until = duration.value === 'keep' ? row.until : Number(duration.value) ? Date.now() + Number(duration.value) * 60000 : null;\n                if (enabled.checked && until !== null && until <= Date.now())\n                    return fail(m.error, t('\u539F\u89C4\u5219\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u5C01\u7981\u65F6\u957F\u3002', 'This rule expired; choose a new duration.'));\n                const candidate = { country: geo.country.value, region: geo.region.value, scopes: chosen, enabled: enabled.checked, reason: reason.value.trim(), until };\n                if (store.regions.some(r => r !== row && r.country === candidate.country && r.region === candidate.region && overlaps(r.scopes, chosen)))\n                    return fail(m.error, t('\u8BE5\u5730\u533A\u5DF2\u6709\u91CD\u53E0\u8303\u56F4\u7684\u89C4\u5219\uFF0C\u8BF7\u7F16\u8F91\u73B0\u6709\u89C4\u5219\u3002', 'This region has an overlapping rule. Edit that rule instead.'));\n                await mutate('region', { id: row?.id, rule: candidate });\n                tab = 'regions';\n                query = '';\n                scopeFilter = 'all';\n                page = 1;\n                empty = false;\n                close();\n                render();\n                toast(t('\u5730\u533A\u89C4\u5219\u5DF2\u4FDD\u5B58', 'Region rule saved'));\n            }, 'btn primary'));\n        }\n        function toggleRegion(row) {\n            if (row.until !== null && row.until <= Date.now()) {\n                editRegion(row);\n                $('#sec-region-enabled').checked = true;\n                return;\n            }\n            const m = modal(row.enabled ? '\u505C\u7528\u5730\u533A\u89C4\u5219' : '\u542F\u7528\u5730\u533A\u89C4\u5219', row.enabled ? 'Pause region rule' : 'Enable region rule');\n            m.body.prepend(el('b', {}, regionName(row)), scopeBadges(row.scopes), el('p', {}, t(row.enabled ? '\u505C\u7528\u540E\uFF0C\u8BE5\u5730\u533A\u4E0D\u518D\u53D7\u6B64\u89C4\u5219\u9650\u5236\u3002' : '\u542F\u7528\u540E\uFF0C\u5C06\u62E6\u622A\u6B64\u5730\u533A\u5728\u6240\u9009\u8303\u56F4\u7684\u8BF7\u6C42\u3002', row.enabled ? 'This rule will stop blocking the region.' : 'Requests from this region will be blocked in selected scopes.')));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u786E\u8BA4', 'Confirm', async () => { await mutate('region', { id: row.id, rule: { ...row, enabled: !row.enabled } }); close(); render(); toast(t('\u89C4\u5219\u72B6\u6001\u5DF2\u66F4\u65B0', 'Rule status updated')); }, 'btn primary'));\n        }\n        function removeRegion(row) { const m = modal('\u79FB\u9664\u5730\u533A\u89C4\u5219', 'Remove region rule'); m.body.prepend(el('b', {}, regionName(row)), scopeBadges(row.scopes), el('p', {}, t('\u79FB\u9664\u540E\u4E0D\u518D\u6309\u6B64\u89C4\u5219\u62E6\u622A\uFF1B\u5176\u4ED6\u89C4\u5219\u4ECD\u751F\u6548\u3002', 'This rule will be removed; other rules remain active.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u79FB\u9664', 'Remove', async () => { await mutate('removeRegion', { id: row.id }); close(); render(); toast(t('\u5730\u533A\u89C4\u5219\u5DF2\u79FB\u9664', 'Region rule removed')); }, 'btn primary')); }\n        function testRules() {\n            const m = modal('\u89C4\u5219\u6D4B\u8BD5', 'Test rules'), ip = input('sec-test-ip', '203.0.113.20', { autocomplete: 'off' }), geo = geoPicker('US', '', true), scope = el('select', { id: 'sec-test-scope' }, ...scopes.map(([key, zh, en]) => el('option', { value: key }, t(zh, en))));\n            const count = input('sec-test-count', '0', { type: 'number', min: 0, max: 100000, step: 1 }), hint = el('small', { class: 'muted' }), result = el('div', { id: 'sec-test-result', role: 'status', 'aria-live': 'polite', hidden: '' });\n            const update = () => { const key = scope.value, r = store.rules[key]; hint.textContent = t(`\u586B\u5165\u8BE5 IP \u6700\u8FD1 ${r.window} \u5206\u949F\u7684${key === 'upload' ? '\u53D1\u8D77\u5206\u4EAB' : '\u6821\u9A8C\u5931\u8D25'}\u603B\u6B21\u6570\uFF08\u542B\u672C\u6B21\uFF09\uFF1B\u6D4B\u8BD5\u4E0D\u4F1A\u5199\u5165\u5C01\u7981\u3002`, `Enter ${key === 'upload' ? 'share attempts' : 'failed checks'} in the last ${r.window} min, including this request. Testing does not create a ban.`); result.hidden = true; };\n            scope.onchange = update;\n            update();\n            m.body.prepend(el('div', { class: 'sec-form-grid' }, field('\u6A21\u62DF\u8BF7\u6C42 IP', 'Simulated request IP', ip), field('\u8BF7\u6C42\u8303\u56F4', 'Request scope', scope)), geo.node, field('\u7A97\u53E3\u5185\u6B21\u6570\uFF08\u542B\u672C\u6B21\uFF09', 'Count in window (including this request)', count), hint, el('small', { class: 'muted' }, t('\u5C5E\u5730\u7531\u4F60\u624B\u52A8\u6307\u5B9A\uFF0C\u4E0D\u67E5\u8BE2\u6B64 IP \u7684\u5B9E\u9645\u4F4D\u7F6E\u3002\u653E\u884C\u4EC5\u4EE3\u8868\u901A\u8FC7\u9632\u62A4\uFF0C\u4ECD\u9700\u6EE1\u8DB3\u767B\u5F55\u3001\u5206\u4EAB\u53CA\u53D6\u4EF6\u6821\u9A8C\u3002', 'Location is entered manually, not looked up. Passing protection does not bypass authentication or share permissions.')), result);\n            window.attachHelp(m.body.querySelector('label[for=\"sec-test-count\"] > span'), hint);\n            window.attachHelp($('#security-dialog-title'), m.body.querySelector(':scope > small'));\n            for (const n of [ip, geo.country, geo.region, count])\n                n.addEventListener('input', () => { result.hidden = true; });\n            m.foot.append(btn('\u5173\u95ED', 'Close', close), btn('\u6D4B\u8BD5\u89C4\u5219', 'Test rules', async () => {\n                result.hidden = true;\n                const address = canonical(ip.value);\n                if (!address)\n                    return fail(m.error, t('\u8BF7\u8F93\u5165\u6709\u6548 IP \u5730\u5740\u3002', 'Enter a valid IP address.'));\n                if (!count.value || !count.reportValidity())\n                    return;\n                m.error.hidden = true;\n                const key = scope.value;\n                const { blocked, reason } = await api('/api/admin/security/test', { method: 'POST', body: { ip: address, scope: key, country: geo.country.value, region: geo.region.value, count: Number(count.value) } });\n                result.className = 'sec-test-result ' + (blocked ? 'sec-test-blocked' : 'sec-test-pass');\n                result.replaceChildren(el('b', {}, t(blocked ? '\u62E6\u622A' : '\u9632\u62A4\u653E\u884C', blocked ? 'Blocked' : 'Passes protection') + ' \xB7 ' + scopeName(key)), el('p', {}, reason), ...(!geo.country.value ? [el('small', { class: 'muted' }, t('\u5C5E\u5730\u672A\u77E5\uFF0C\u672A\u5339\u914D\u5730\u533A\u89C4\u5219\uFF1BIP \u4E0E\u81EA\u52A8\u9632\u62A4\u4ECD\u53C2\u4E0E\u5224\u65AD\u3002', 'Unknown location: region rules skipped; IP and automatic rules still apply.'))] : []));\n                result.hidden = false;\n            }, 'btn primary'));\n        }\n        function details(row) { const m = modal('\u5C01\u7981\u8BE6\u60C5', 'Ban details'); const pairs = [[t('IP \u5730\u5740', 'IP address'), row.ip], [t('\u4FDD\u62A4\u8303\u56F4', 'Scope'), scopeText(row.scopes)], [t('\u65B9\u5F0F', 'Type'), row.kind === 'auto' ? t('\u81EA\u52A8\u5C01\u7981', 'Automatic') : t('\u624B\u52A8\u5C01\u7981', 'Manual')], [t('\u539F\u56E0', 'Reason'), row.reason], [t('\u89E6\u53D1\u6B21\u6570', 'Trigger count'), row.kind === 'auto' ? row.failures : '\u2014'], [t('\u5C01\u7981\u65F6\u95F4', 'Banned at'), date(row.at)], [t('\u89E3\u5C01\u65F6\u95F4', 'Expires'), row.until === null ? t('\u6C38\u4E45', 'Never') : date(row.until)]]; m.body.prepend(el('dl', { class: 'sec-details' }, ...pairs.map(([k, v]) => el('div', {}, el('dt', { class: 'muted' }, k), el('dd', {}, v))))); m.foot.append(btn('\u67E5\u770B\u65E5\u5FD7', 'View logs', () => { close(); logLink(row.ip); }), btn('\u5173\u95ED', 'Close', close), btn('\u89E3\u5C01', 'Unban', () => { close(); confirmUnban([row.ip]); }, 'btn primary')); }\n        function rows() { if (empty)\n            return []; return (tab === 'bans' ? liveBans() : tab === 'regions' ? store.regions : store.allow).filter(b => (tab !== 'bans' || kind === 'all' || b.kind === kind) && (scopeFilter === 'all' || b.scopes.includes(scopeFilter)) && (!query || [b.ip, b.note || b.reason, b.country ? regionName(b) : '', scopeText(b.scopes)].join(' ').toLowerCase().includes(query.toLowerCase()))); }\n        function exportRows() { if (failed || loading || !store.enabled || filtersDirty())\n            return; const items = rows(), data = tab === 'regions' ? [['Country', 'Subdivision', 'Scope', 'Enabled', 'Reason', 'Expires'], ...items.map(r => [r.country, r.region, r.scopes.join('|'), r.enabled, r.reason, r.until === null ? 'Never' : new Date(r.until).toISOString()])] : [['IP', 'Scope', tab === 'bans' ? 'Type' : 'Note', tab === 'bans' ? 'Reason' : 'Created', ...(tab === 'bans' ? ['Expires'] : [])], ...items.map(b => tab === 'bans' ? [b.ip, b.scopes.join('|'), b.kind, b.reason, b.until === null ? 'Never' : new Date(b.until).toISOString()] : [b.ip, b.scopes.join('|'), b.note, new Date(b.created).toISOString()])]; const csv = '\\uFEFF' + data.map(r => r.map(v => '\"' + String(v).replace(/^[=+\\-@]/, \"'$&\").replaceAll('\"', '\"\"') + '\"').join(',')).join('\\r\\n'); const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); const a = el('a', { href: url, download: 'security-' + tab + '.csv' }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast(t('\u5DF2\u5BFC\u51FA\u5168\u90E8\u5339\u914D\u8BB0\u5F55', 'All matching records exported')); }\n        function filtersDirty() { return $('#sec-search') && ($('#sec-search').value.trim() !== query || ($('#sec-kind')?.value || 'all') !== kind || $('#sec-scope-filter').value !== scopeFilter); }\n        function syncExport() {\n            const dirty = filtersDirty(), exportButton = $('#sec-export'), pending = $('#sec-filter-pending');\n            if (exportButton)\n                exportButton.disabled = failed || loading || !store.enabled || dirty || !rows().length;\n            if (pending)\n                pending.hidden = !dirty;\n        }\n        function render() {\n            const focusId = view.contains(document.activeElement) ? document.activeElement.id : null;\n            clearFeedback();\n            const active = liveBans();\n            for (const ip of selected)\n                if (!active.some(b => b.ip === ip))\n                    selected.delete(ip);\n            navButton.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            view.replaceChildren();\n            const actions = el('div', { class: 'sec-actions' }, btn('\u9632\u62A4\u89C4\u5219', 'Rules', editRules), btn('\u89C4\u5219\u6D4B\u8BD5', 'Test rules', testRules));\n            actions.children[0].id = 'sec-rules';\n            actions.children[1].id = 'sec-test';\n            if (failed || loading || !store.enabled)\n                for (const n of actions.children)\n                    n.disabled = true;\n            const title = el('h2', { id: 'security-title' }, t('\u5B89\u5168\u9632\u62A4', 'Security'));\n            view.append(el('div', { class: 'sec-heading' }, title, actions));\n            window.attachHelp(title, el('span', {}, t('\u4FDD\u62A4\u540E\u53F0\u767B\u5F55\u3001\u4E0A\u4F20\u548C\u53D6\u4EF6\u3002\u5730\u533A\u5C01\u7981\u4EC5\u4F5C\u7528\u4E8E\u4E0A\u4F20\u548C\u53D6\u4EF6\uFF1B\u5141\u8BB8\u540D\u5355\u53EA\u8C41\u514D\u81EA\u52A8\u5C01\u7981\u3002', 'Protects admin login, uploads and pickups. Region bans apply only to uploads and pickups; allowed IPs bypass automatic bans only.')));\n            const enabled = (!failed && !loading && store.enabled) ? Object.values(store.rules).filter(r => r.enabled).length : 0;\n            const summary = el('div', { class: 'sec-summary' }, el('div', { class: 'sec-auto-summary' }, el('b', { class: failed ? 'sec-warning' : enabled ? 'sec-enabled' : 'muted' }, failed || loading || !store.enabled ? t(loading ? '\u6B63\u5728\u8BFB\u53D6' : failed ? '\u72B6\u6001\u672A\u77E5' : '\u672A\u542F\u7528', loading ? 'Loading' : failed ? 'Status unknown' : 'Unavailable') : enabled ? t(`\u81EA\u52A8\u9632\u62A4 ${enabled} / 3 \u5DF2\u542F\u7528`, `${enabled} / 3 automatic rules enabled`) : t('\u81EA\u52A8\u9632\u62A4\u5DF2\u6682\u505C', 'Automatic protection paused'))), el('div', { class: 'sec-metric' }, el('b', { id: 'sec-ip-total' }, failed || loading || !store.enabled ? '\u2014' : empty ? 0 : active.length), el('small', { class: 'muted' }, t('\u5F53\u524D\u5C01\u7981 IP', 'Active IP bans'))), el('div', { class: 'sec-metric' }, el('b', { id: 'sec-region-total' }, failed || loading || !store.enabled ? '\u2014' : empty ? 0 : activeRegions().length), el('small', { class: 'muted' }, t('\u751F\u6548\u5730\u533A\u89C4\u5219', 'Active region rules'))));\n            const ruleGrid = el('div', { class: 'sec-rule-grid' }), triggers = { login: ['\u4EE4\u724C\u6821\u9A8C\u5931\u8D25', 'Failed token checks'], upload: ['\u53D1\u8D77\u6587\u4EF6\u6216\u6587\u672C\u5206\u4EAB\uFF0C\u5206\u7247\u4E0D\u91CD\u590D\u8BA1\u6570', 'File or text share attempts; chunks do not count'], pickup: ['\u65E0\u6548\u53E3\u4EE4\uFF0C\u6210\u529F\u53D6\u4EF6\u4E0D\u8BA1\u5165', 'Invalid codes; successful pickups do not count'] };\n            if (failed || loading || !store.enabled)\n                summary.firstChild.append(el('small', { class: 'muted' }, t('\u65E0\u6CD5\u8BFB\u53D6\u9632\u62A4\u72B6\u6001\uFF0C\u8BF7\u5237\u65B0\u91CD\u8BD5', 'Unable to read protection status; refresh to retry')));\n            else {\n                for (const [key] of scopes) {\n                    const r = store.rules[key], name = el('b', {}, scopeName(key));\n                    const rule = el('div', { class: 'sec-rule-summary' }, name, el('small', { class: 'muted' }, r.enabled ? t(`${r.window} \u5206\u949F ${r.limit} \u6B21`, `${r.limit} in ${r.window} min`) : t('\u5DF2\u6682\u505C', 'Paused')), el('small', { class: r.enabled ? 'muted' : 'sec-rule-inactive' }, r.enabled ? t(`\u5C01\u7981 ${r.duration} \u5206\u949F`, `${r.duration} min ban`) : t('\u4E0D\u89E6\u53D1\u81EA\u52A8\u5C01\u7981', 'No automatic ban')));\n                    ruleGrid.append(rule);\n                    window.attachHelp(name, el('span', {}, t(...triggers[key])));\n                }\n                summary.firstChild.append(ruleGrid);\n            }\n            view.append(summary);\n            const tabs = el('div', { class: 'sec-tabs', role: 'group', 'aria-label': t('\u9632\u62A4\u540D\u5355', 'Protection lists') });\n            for (const [key, zh, en] of [['bans', '\u5C01\u7981 IP', 'Banned IPs'], ['regions', '\u5730\u533A\u5C01\u7981', 'Region bans'], ['allow', '\u5141\u8BB8\u540D\u5355', 'Allowed IPs']]) {\n                const b = btn(zh, en, () => { tab = key; page = 1; query = ''; kind = 'all'; scopeFilter = 'all'; selected.clear(); render(); });\n                b.setAttribute('aria-pressed', String(tab === key));\n                b.dataset.secTab = key;\n                tabs.append(b);\n            }\n            const add = tab === 'bans' ? btn('\u624B\u52A8\u5C01\u7981', 'Ban IP', () => openAdd(false), 'btn small primary') : tab === 'regions' ? btn('\u6DFB\u52A0\u5730\u533A', 'Add region', () => editRegion(), 'btn small primary') : btn('\u6DFB\u52A0\u5141\u8BB8 IP', 'Allow IP', () => openAdd(true), 'btn small primary');\n            add.id = 'sec-add';\n            add.disabled = failed || loading || !store.enabled;\n            view.append(el('div', { class: 'sec-list-heading' }, tabs, add));\n            const search = input('sec-search', query, { type: 'search', placeholder: t(tab === 'regions' ? '\u641C\u7D22\u5730\u533A / \u539F\u56E0' : tab === 'allow' ? '\u641C\u7D22 IP / \u5907\u6CE8' : '\u641C\u7D22 IP / \u539F\u56E0', tab === 'regions' ? 'Search region / reason' : tab === 'allow' ? 'Search IP / note' : 'Search IP / reason'), 'aria-label': t('\u641C\u7D22\u540D\u5355', 'Search list') });\n            const filter = el('select', { id: 'sec-kind', 'aria-label': t('\u5C01\u7981\u65B9\u5F0F', 'Ban type') }, el('option', { value: 'all' }, t('\u5168\u90E8\u65B9\u5F0F', 'All types')), el('option', { value: 'auto' }, t('\u81EA\u52A8\u5C01\u7981', 'Automatic')), el('option', { value: 'manual' }, t('\u624B\u52A8\u5C01\u7981', 'Manual')));\n            filter.value = kind;\n            const scope = el('select', { id: 'sec-scope-filter', 'aria-label': t('\u4FDD\u62A4\u8303\u56F4', 'Protected action') }, el('option', { value: 'all' }, t('\u5168\u90E8\u8303\u56F4', 'All scopes')), ...scopes.filter(([key]) => tab !== 'regions' || key !== 'login').map(([key, zh, en]) => el('option', { value: key }, t(zh, en))));\n            scope.value = scopeFilter;\n            const apply = () => { query = search.value.trim(); kind = filter.value; scopeFilter = scope.value; page = 1; selected.clear(); draw(); };\n            search.addEventListener('input', syncExport);\n            filter.onchange = syncExport;\n            scope.onchange = syncExport;\n            const exportButton = btn('\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C', 'Export results', exportRows);\n            exportButton.id = 'sec-export';\n            exportButton.title = t('\u5BFC\u51FA\u5F53\u524D\u7C7B\u522B\u548C\u7B5B\u9009\u6761\u4EF6\u4E0B\u7684\u5168\u90E8\u8BB0\u5F55\uFF0C\u5305\u542B\u6240\u6709\u5206\u9875\u3002', 'Export all matching records in this category across pages.');\n            const submit = btn('\u7B5B\u9009', 'Filter', () => { });\n            submit.type = 'submit';\n            const form = el('form', { class: 'sec-toolbar', id: 'sec-filter' }, el('div', { class: 'sec-actions sec-filters' }, search, scope, ...(tab === 'bans' ? [filter] : [])), el('div', { class: 'sec-actions sec-filter-actions' }, submit, btn('\u91CD\u7F6E', 'Reset', () => { query = ''; kind = 'all'; scopeFilter = 'all'; page = 1; selected.clear(); render(); }), exportButton));\n            form.onsubmit = e => { e.preventDefault(); apply(); };\n            view.append(form, el('small', { id: 'sec-filter-pending', class: 'sec-filter-pending', role: 'status', hidden: '' }, t('\u7B5B\u9009\u6761\u4EF6\u5DF2\u66F4\u6539\uFF0C\u8BF7\u5148\u70B9\u51FB\u201C\u7B5B\u9009\u201D\u3002', 'Filters changed. Apply them before exporting.')), el('div', { id: 'sec-list' }));\n            draw();\n            if (focusId)\n                document.getElementById(focusId)?.focus();\n        }\n        function draw() {\n            const host = $('#sec-list');\n            if (!host)\n                return;\n            if (loading || (!store.enabled && !failed)) {\n                host.replaceChildren(el('div', { class: 'sec-empty', role: 'status' }, loading ? t('\u6B63\u5728\u8BFB\u53D6\u9632\u62A4\u72B6\u6001\u2026', 'Loading protection\u2026') : t('\u5B89\u5168\u9632\u62A4\u672A\u542F\u7528\uFF0C\u9700\u8981\u7ED1\u5B9A R2 \u6216 D1\u3002', 'Protection unavailable. Bind R2 or D1.')));\n                syncExport();\n                return;\n            }\n            const focusId = document.activeElement?.id;\n            host.replaceChildren();\n            if (failed) {\n                syncExport();\n                host.append(el('div', { class: 'sec-empty', role: 'alert' }, t('\u9632\u62A4\u6570\u636E\u52A0\u8F7D\u5931\u8D25', 'Failed to load protection data'), btn('\u91CD\u8BD5', 'Retry', () => refresh())));\n                return;\n            }\n            $('#sec-ip-total').textContent = empty ? 0 : liveBans().length;\n            $('#sec-region-total').textContent = empty ? 0 : activeRegions().length;\n            for (const ip of selected)\n                if (!liveBans().some(b => b.ip === ip))\n                    selected.delete(ip);\n            const items = rows(), max = Math.max(1, Math.ceil(items.length / 5));\n            page = Math.min(page, max);\n            const visible = items.slice((page - 1) * 5, page * 5);\n            const prev = btn('\u4E0A\u4E00\u9875', 'Previous', () => { page--; draw(); }), next = btn('\u4E0B\u4E00\u9875', 'Next', () => { page++; draw(); });\n            prev.disabled = page <= 1;\n            next.disabled = page >= max;\n            const bulk = btn(t(`\u89E3\u5C01\u6240\u9009\uFF08${selected.size}\uFF09`, `Unban selected (${selected.size})`), `Unban selected (${selected.size})`, () => confirmUnban([...selected]));\n            bulk.id = 'sec-bulk';\n            bulk.disabled = !selected.size;\n            host.append(el('div', { class: 'sec-pagination' }, el('div', { class: 'sec-actions' }, el('small', { class: 'muted' }, t(`\u5171 ${items.length} \u6761 \xB7 \u7B2C ${page} / ${max} \u9875`, `${items.length} entries \xB7 Page ${page} / ${max}`)), ...(tab === 'bans' && selected.size ? [el('span', { class: 'sec-selection-count' }, t(`\u5DF2\u9009 ${selected.size} \u9879`, `Selected ${selected.size}`)), bulk, btn('\u53D6\u6D88\u9009\u62E9', 'Clear selection', () => { selected.clear(); draw(); })] : [])), el('div', { class: 'sec-actions' }, prev, next, btn('\u5237\u65B0', 'Refresh', async () => { await refresh(); toast(t('\u5DF2\u5237\u65B0', 'Refreshed')); }))));\n            syncExport();\n            if (!items.length) {\n                host.append(el('div', { class: 'sec-empty' }, query ? t('\u6CA1\u6709\u5339\u914D\u7684\u8BB0\u5F55', 'No matching records') : tab === 'bans' ? t('\u5F53\u524D\u6CA1\u6709\u5C01\u7981 IP', 'No active bans') : tab === 'regions' ? t('\u5C1A\u672A\u6DFB\u52A0\u5730\u533A\u89C4\u5219', 'No region rules') : t('\u5C1A\u672A\u6DFB\u52A0\u5141\u8BB8 IP', 'No allowed IPs')));\n                return;\n            }\n            if (tab === 'regions') {\n                drawRegions(host, visible);\n                return;\n            }\n            const table = el('table', { class: 'sec-table', 'aria-label': t(tab === 'bans' ? '\u5C01\u7981\u5217\u8868' : '\u5141\u8BB8\u540D\u5355', tab === 'bans' ? 'Banned IPs' : 'Allowed IPs') });\n            const header = el('tr');\n            if (tab === 'bans') {\n                const all = input('sec-select-page', '', { type: 'checkbox', 'aria-label': t('\u9009\u62E9\u672C\u9875', 'Select this page') });\n                all.checked = visible.every(r => selected.has(r.ip));\n                all.indeterminate = !all.checked && visible.some(r => selected.has(r.ip));\n                all.onchange = () => { for (const r of visible)\n                    all.checked ? selected.add(r.ip) : selected.delete(r.ip); draw(); };\n                header.append(el('th', {}, all));\n            }\n            const cols = tab === 'bans' ? [[\"IP / \u4FDD\u62A4\u8303\u56F4\", \"IP / scope\"], [\"\u539F\u56E0\", \"Reason\"], [\"\u89E6\u53D1\u6B21\u6570\", \"Count\"], [\"\u5C01\u7981\u65F6\u95F4\", \"Banned at\"], [\"\u81EA\u52A8\u89E3\u5C01\", \"Expires\"], [\"\u64CD\u4F5C\", \"Actions\"]] : [[\"IP / \u8C41\u514D\u8303\u56F4\", \"IP / exempt scope\"], [\"\u5907\u6CE8\", \"Note\"], [\"\u6DFB\u52A0\u65F6\u95F4\", \"Added\"], [\"\u64CD\u4F5C\", \"Actions\"]];\n            for (const [zh, en] of cols)\n                header.append(el('th', {}, t(zh, en)));\n            table.append(el('thead', {}, header));\n            const body = el('tbody');\n            for (const r of visible) {\n                const row = el('tr');\n                if (tab === 'bans') {\n                    const check = input('sec-select-' + r.ip, '', { type: 'checkbox', 'aria-label': t('\u9009\u62E9 ' + r.ip, 'Select ' + r.ip) });\n                    check.checked = selected.has(r.ip);\n                    check.onchange = () => { check.checked ? selected.add(r.ip) : selected.delete(r.ip); draw(); };\n                    row.append(el('td', { class: 'sec-select' }, check));\n                    const remaining = r.until === null ? t('\u6C38\u4E45', 'Permanent') : t(`\u5269\u4F59 ${Math.max(1, Math.ceil((r.until - Date.now()) / 60000))} \u5206\u949F`, `${Math.max(1, Math.ceil((r.until - Date.now()) / 60000))} min left`);\n                    row.append(el('td', { 'data-label': 'IP', class: 'sec-address' }, ipLine(r)), el('td', { 'data-label': t('\u539F\u56E0', 'Reason') }, el('div', { class: 'ui-record-line' }, el('span', {}, r.reason), el('sup', { class: 'ui-record-sup', 'data-tone': r.kind === 'auto' ? 'violet' : 'slate' }, r.kind === 'auto' ? t('\u81EA\u52A8\u5C01\u7981', 'Automatic') : t('\u624B\u52A8\u5C01\u7981', 'Manual')))), el('td', { 'data-label': t('\u89E6\u53D1\u6B21\u6570', 'Count') }, r.kind === 'auto' ? r.failures : '\u2014'), el('td', { 'data-label': t('\u5C01\u7981\u65F6\u95F4', 'Banned at') }, date(r.at)), el('td', { 'data-label': t('\u81EA\u52A8\u89E3\u5C01', 'Expires') }, remaining, ...(r.until === null ? [] : [el('small', { class: 'muted' }, date(r.until))])), el('td', { class: 'sec-row-actions' }, btn('\u8BE6\u60C5', 'Details', () => details(r)), btn('\u65E5\u5FD7', 'Logs', () => logLink(r.ip)), btn('\u89E3\u5C01', 'Unban', () => confirmUnban([r.ip]))));\n                }\n                else\n                    row.append(el('td', { 'data-label': 'IP', class: 'sec-address' }, ipLine(r)), el('td', { 'data-label': t('\u5907\u6CE8', 'Note') }, r.note), el('td', { 'data-label': t('\u6DFB\u52A0\u65F6\u95F4', 'Added') }, date(r.created)), el('td', { class: 'sec-row-actions' }, btn('\u65E5\u5FD7', 'Logs', () => logLink(r.ip)), btn('\u79FB\u9664', 'Remove', () => removeAllow(r))));\n                body.append(row);\n            }\n            table.append(body);\n            host.append(el('div', { class: 'sec-table-wrap' }, table));\n            if (focusId?.startsWith('sec-select'))\n                document.getElementById(focusId)?.focus();\n        }\n        function drawRegions(host, items) {\n            const table = el('table', { class: 'sec-table sec-region-table', 'aria-label': t('\u5730\u533A\u5C01\u7981\u89C4\u5219', 'Region ban rules') }), head = el('tr');\n            for (const [zh, en] of [['\u5730\u533A / \u8303\u56F4', 'Region / scope'], ['\u539F\u56E0', 'Reason'], ['\u72B6\u6001', 'Status'], ['\u5230\u671F\u65F6\u95F4', 'Expires'], ['\u64CD\u4F5C', 'Actions']])\n                head.append(el('th', {}, t(zh, en)));\n            table.append(el('thead', {}, head));\n            const body = el('tbody');\n            for (const r of items) {\n                const expired = r.until !== null && r.until <= Date.now(), active = r.enabled && !expired;\n                body.append(el('tr', {}, el('td', { class: 'sec-address' }, el('div', { class: 'sec-ip-line' }, el('b', {}, regionName(r)), scopeBadges(r.scopes, true))), el('td', { 'data-label': t('\u539F\u56E0', 'Reason') }, r.reason), el('td', { 'data-label': t('\u72B6\u6001', 'Status') }, el('span', { class: active ? 'sec-enabled' : 'muted' }, expired ? t('\u5DF2\u8FC7\u671F', 'Expired') : r.enabled ? t('\u751F\u6548\u4E2D', 'Active') : t('\u5DF2\u505C\u7528', 'Paused'))), el('td', { 'data-label': t('\u5230\u671F\u65F6\u95F4', 'Expires') }, r.until === null ? t('\u6C38\u4E45', 'Never') : date(r.until)), el('td', { class: 'sec-row-actions' }, btn('\u7F16\u8F91', 'Edit', () => editRegion(r)), btn(r.enabled && !expired ? '\u505C\u7528' : '\u542F\u7528', r.enabled && !expired ? 'Pause' : 'Enable', () => toggleRegion(r)), btn('\u65E5\u5FD7', 'Logs', () => logLink(r.id)), btn('\u79FB\u9664', 'Remove', () => removeRegion(r)))));\n            }\n            table.append(body);\n            host.append(el('div', { class: 'sec-table-wrap' }, table));\n        }\n        $('#lang-btn').addEventListener('click', () => { navButton.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            shortcut.querySelector('h4').textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            shortcut.querySelector('button').textContent = t('\u7BA1\u7406\u8BBF\u95EE\u89C4\u5219\u4E0E\u5C01\u7981 \u2192', 'Manage access rules and bans \u2192'); if (open)\n            render(); });\n        setInterval(() => { if (open && !document.hidden && !dialog.open && !loading && $('#sec-list') && !filtersDirty())\n            refresh().catch(error => toast(error.message)); }, 60000);\n    })();\n}\n", "js/admin-share-editor.js": "import { api, el, fmtDate } from './common.js';\nimport { t } from './i18n.js';\n\nconst MAX_COUNT = 2147483647;\nconst WEEK = 7 * 86400000;\nexport function ruleStatus(rules, now = Date.now()) {\n  if (rules.expireAt !== null && rules.expireAt <= now) return 'expired';\n  if (rules.maxPickups !== null && rules.pickupCount >= rules.maxPickups) return 'exhausted';\n  return 'active';\n}\n/** Selecting a status changes visible values; the server still derives the saved status. */\nexport function linkStatus(rules, status, now = Date.now()) {\n  const next = { ...rules };\n  if (status === 'expired') next.expireAt = now;\n  else {\n    if (next.expireAt !== null && next.expireAt <= now) next.expireAt = now + WEEK;\n    if (status === 'active' && next.maxPickups !== null && next.pickupCount >= next.maxPickups)\n      next.maxPickups = next.pickupCount < MAX_COUNT ? next.pickupCount + 1 : null;\n    if (status === 'exhausted') {\n      next.maxPickups ??= Math.max(1, next.pickupCount);\n      next.pickupCount = Math.max(next.pickupCount, next.maxPickups);\n    }\n  }\n  return next;\n}\nfunction localDateTime(value) {\n  const date = new Date(value);\n  const pad = n => String(n).padStart(2, '0');\n  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;\n}\n\nexport function createShareEditor(detail, { onSaved, onCancel, onBusy }) {\n  const form = el('form', { id: 'share-edit-form', class: 'share-edit-form' });\n  const number = (id, value, min) => el('input', { id, type: 'number', value, min, max: MAX_COUNT, step: 1, required: true });\n  const count = number('share-edit-count', detail.pickupCount, 0);\n  const limit = number('share-edit-limit', detail.maxPickups ?? Math.max(1, detail.pickupCount+1), 1);\n  const unlimited = el('input', { id: 'share-edit-unlimited', type: 'checkbox' });\n  unlimited.checked = detail.maxPickups === null;\n  const permanent = el('input', { id: 'share-edit-permanent', type: 'checkbox' });\n  permanent.checked = detail.expireAt === null;\n  const expiry = el('input', { id: 'share-edit-expiry', type: 'datetime-local', step: 60, min: '1970-01-01T00:00', max: '9999-12-31T23:59', required: true });\n  let exactExpiry = detail.expireAt;\n  let displayedExpiry = localDateTime(exactExpiry ?? Date.now()+WEEK);\n  expiry.value = displayedExpiry;\n  const status = el('select', { id: 'share-edit-status' }, ...['active','expired','exhausted'].map(value => el('option', { value }, t('ad.st.'+value))));\n  status.value = detail.status;\n  const field = (label, control) => el('div', { class: 'share-edit-field' }, el('label', { htmlFor: control.id }, label), control);\n  const check = (label, control) => el('label', { class: 'share-edit-check' }, control, label);\n  const limitField = field(t('ad.editLimit'), limit);\n  limitField.append(check(t('ad.editUnlimited'), unlimited));\n  const expiryField = field(t('ad.th.expire'), expiry);\n  expiryField.classList.add('share-edit-expiry');\n  expiryField.append(check(t('ad.forever'), permanent));\n  const linked = el('p', { class: 'share-edit-linked muted', role: 'status', hidden: true });\n  const error = el('p', { id: 'share-edit-error', class: 'error-box', role: 'alert', hidden: true });\n  const reload = el('button', { type: 'button', class: 'btn small ghost', hidden: true, onclick: onCancel }, t('ad.editReload'));\n  const save = el('button', { type: 'submit', class: 'btn primary' }, t('ad.editSave'));\n  const cancel = el('button', { type: 'button', class: 'btn ghost', onclick: onCancel }, t('ad.editCancel'));\n  form.append(el('strong', { class: 'share-edit-filename', title: detail.filename || '' }, detail.filename || t('ad.unnamed')),\n    el('div', { class: 'share-edit-grid' }, field(t('ad.editCount'), count), limitField, field(t('ad.th.status'), status), expiryField),\n    linked, error, reload, el('div', { class: 'share-edit-actions' }, cancel, save));\n  function values() {\n    return { pickupCount: count.valueAsNumber, maxPickups: unlimited.checked ? null : limit.valueAsNumber,\n      expireAt: permanent.checked ? null : expiry.value === displayedExpiry && exactExpiry !== null ? exactExpiry : new Date(expiry.value).getTime() };\n  }\n  function sync() { limit.disabled = unlimited.checked; expiry.disabled = permanent.checked; }\n  const valid = rules => Number.isSafeInteger(rules.pickupCount) && rules.pickupCount >= 0 && rules.pickupCount <= MAX_COUNT &&\n    (rules.maxPickups === null || (Number.isSafeInteger(rules.maxPickups) && rules.maxPickups >= 1 && rules.maxPickups <= MAX_COUNT)) &&\n    (rules.expireAt === null || Number.isFinite(rules.expireAt));\n  for (const control of [count, limit, unlimited, expiry, permanent]) {\n    control.addEventListener('input', () => { sync(); linked.hidden = true; const rules = values(); if (valid(rules)) status.value = ruleStatus(rules); });\n  }\n  status.addEventListener('change', () => {\n    const before = values();\n    if (!valid(before)) { error.textContent = t('ad.editInvalid'); error.hidden = false; return; }\n    const next = linkStatus(before, status.value), changes = [];\n    if (before.pickupCount !== next.pickupCount) changes.push(`${t('ad.editCount')} \u2192 ${next.pickupCount}`);\n    if (before.maxPickups !== next.maxPickups) changes.push(`${t('ad.editLimit')} \u2192 ${next.maxPickups ?? '\u221E'}`);\n    if (before.expireAt !== next.expireAt) changes.push(`${t('ad.th.expire')} \u2192 ${fmtDate(next.expireAt)}`);\n    count.value = next.pickupCount; unlimited.checked = next.maxPickups === null;\n    if (next.maxPickups !== null) limit.value = next.maxPickups;\n    permanent.checked = next.expireAt === null;\n    exactExpiry = next.expireAt;\n    displayedExpiry = localDateTime(next.expireAt ?? Date.now()+WEEK); expiry.value = displayedExpiry;\n    sync(); linked.textContent = changes.join('\uFF1B'); linked.hidden = !changes.length;\n  });\n  let busy = false;\n  form.addEventListener('submit', async event => {\n    event.preventDefault();\n    if (busy || !form.reportValidity()) return;\n    const rules = values();\n    if (!valid(rules)) { error.textContent = t('ad.editInvalid'); error.hidden = false; return; }\n    if (status.value !== ruleStatus(rules)) { status.value = ruleStatus(rules); error.textContent = t('ad.editTimeChanged'); error.hidden = false; return; }\n    busy = true; onBusy(true); error.hidden = reload.hidden = true;\n    const controls = [...form.querySelectorAll('input,button,select')].map(node => [node,node.disabled]);\n    for (const [node] of controls) node.disabled = true;\n    let saved = false;\n    try {\n      await api(`/api/admin/shares/${detail.code}`, { method: 'PUT', body: { expected: {\n        id: detail.id, pickupCount: detail.pickupCount, maxPickups: detail.maxPickups, expireAt: detail.expireAt,\n      }, rules: { ...rules, status: status.value } } });\n      saved = true;\n    } catch (e) {\n      error.textContent = e.message; error.hidden = false; reload.hidden = e.code !== 'share_conflict';\n    } finally {\n      busy = false; onBusy(false);\n      for (const [node,disabled] of controls) node.disabled = disabled;\n    }\n    if (saved) onSaved();\n  });\n  sync();\n  return { element: form, enhance() {\n    const help = el('span', {}, t('ad.editHint', Intl.DateTimeFormat().resolvedOptions().timeZone));\n    window.attachHelp(expiryField.querySelector('label'), help);\n    window.attachHelp(form.querySelector('label[for=\"share-edit-status\"]'), el('span', {}, t('ad.editStatusHint')));\n    count.focus();\n  } };\n}\n", "js/admin.js": "import { initUi } from './ui.js';\nimport { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el } from './common.js';\nimport { LANG, t, onLangChange, initI18n } from './i18n.js';\nimport { initAudit } from './admin-audit.js';\nimport { createFilePreview } from './admin-preview.js';\nimport { createShareEditor } from './admin-share-editor.js';\nimport { pageSize, scrollToList, initAdminPreferences } from './admin-preferences.js';\n\ninitTheme();\ninitI18n();\ninitDialogs();\ninitAdminPreferences();\ninitAudit();\n\nconst loginCard = $('#admin-login');\nconst panel = $('#admin-panel');\nconst loginError = $('#login-error');\nconst tokenInput = $('#admin-token');\nconst statsRow = $('#stats-row');\nconst tbody = $('#shares-body');\nconst btnPrev = $('#btn-prev');\nconst btnNext = $('#btn-next');\nconst btnRefresh = $('#btn-refresh');\nconst pageInfo = $('#page-info');\n\nlet limit = pageSize('files'); // Bounded to 40 to leave room for KV reads on the free plan.\nlet offset = 0;\nlet total = 0;\nlet listRequest = 0;\nlet listBusy = false;\n\n/* \u8BED\u8A00\u5207\u6362:\u9762\u677F\u53EF\u89C1\u65F6\u6309\u65B0\u8BED\u8A00\u91CD\u62C9\u6587\u6848 */\nonLangChange(() => {\n  if ($('#source-dialog').open) closeSource();\n  if ($('#file-dialog').open) closeFileDetails();\n  if (!panel.hidden) {\n    loadStats();\n    loadList();\n    loadLoginProtection();\n  }\n});\n\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\n(async () => {\n  try {\n    await api('/api/admin/stats');\n    showPanel();\n  } catch {\n    loginCard.hidden = false;\n    tokenInput.focus();\n  }\n})();\n\nasync function login() {\n  const token = tokenInput.value.trim();\n  if (!token || $('#btn-login').disabled) return;\n  $('#btn-login').disabled = true;\n  loginError.hidden = true;\n  try {\n    await api('/api/admin/login', { method: 'POST', body: { token } });\n    showPanel();\n  } catch (e) {\n    loginError.textContent = e.code === 'login_blocked' ? t('ad.loginBlocked')\n      : e.code === 'login_protection_unavailable' ? t('ad.guardUnavailable') : e.message || t('ad.badToken');\n    loginError.hidden = false;\n  } finally { $('#btn-login').disabled = false; }\n}\n$('#btn-login').addEventListener('click', login);\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\n\nfunction showPanel() {\n  loginCard.hidden = true;\n  panel.hidden = false;\n  $('#admin-navigation').hidden = false;\n  $('#admin-settings-btn').hidden = false;\n  loadStats();\n  loadList();\n  loadSettings();\n  loadGuestPolicy();\n  loadLoginProtection();\n}\n\n$('#btn-logout').addEventListener('click', async () => {\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\n  location.reload();\n});\n\n/* ---------- \u7EDF\u8BA1 ---------- */\nlet lastStats = null; // \u5220\u9664\u540E\u672C\u5730\u9012\u51CF\u7528,\u907F\u514D\u7ACB\u5373\u91CD\u62C9\u649E\u4E0A KV \u6700\u7EC8\u4E00\u81F4\u7A97\u53E3\n\nfunction renderStats(s) {\n  const counts = [\n    [s.total, 'ad.total'], [s.active, 'ad.active'], [s.files, 'ad.files'],\n    [s.texts, 'ad.texts'], [s.todayCreated, 'ad.today'],\n  ];\n  const capacity = s.fileBackend === 'r2' ? s.storage : null;\n  const storageCard = el('div', { class: 'stat-card storage-card' },\n    el('small', {}, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes')),\n    capacity\n      ? el('div', { class: 'storage-value' },\n          el('b', {}, fmtBytes(capacity.usedBytes)),\n          el('span', { class: 'storage-total' }, ` / ${fmtBytes(capacity.capacityBytes)}`))\n      : el('div', { class: 'storage-value' }, el('b', {}, s.fileBackend === 'r2'\n          ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),\n  );\n  if (capacity) {\n    const ratio = Math.min(1, Math.max(0, capacity.usedBytes / capacity.capacityBytes));\n    storageCard.append(\n      el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,\n        value: capacity.usedBytes, ariaLabel: t('ad.storage') }),\n      el('div', { class: 'storage-caption' },\n        el('small', {}, t('ad.storageReserved')), el('small', {}, `${Math.round(ratio * 100)}%`)),\n    );\n  }\n  statsRow.replaceChildren(\n    el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>\n      el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),\n    storageCard,\n  );\n}\n\nasync function loadStats() {\n  try {\n    lastStats = await api('/api/admin/stats');\n    renderStats(lastStats);\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\n}\n\n/** \u5220\u9664\u6210\u529F\u540E\u672C\u5730\u540C\u6B65\u7EDF\u8BA1(\u670D\u52A1\u7AEF KV \u7D22\u5F15\u6700\u957F 60s \u624D\u53CD\u6620\u5220\u9664,\u91CD\u62C9\u4F1A\u770B\u5230\u65E7\u6570) */\nasync function statsAfterDelete(r) {\n  if (!lastStats) return;\n  const s = { ...lastStats };\n  s.total = Math.max(0, s.total - 1);\n  if (r.kind === 'file') s.files = Math.max(0, s.files - 1);\n  else s.texts = Math.max(0, s.texts - 1);\n  s.totalBytes = Math.max(0, s.totalBytes - r.size);\n  if (r.status === 'active') s.active = Math.max(0, s.active - 1);\n  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);\n  if (r.created_at >= todayStart.getTime()) s.todayCreated = Math.max(0, s.todayCreated - 1);\n  lastStats = s;\n  renderStats(s);\n  if (s.fileBackend === 'r2') {\n    try { s.storage = (await api('/api/admin/stats')).storage; }\n    catch { s.storage = null; } // Do not present stale capacity as current after deletion.\n    if (lastStats === s) renderStats(s);\n  }\n}\n\n/* ---------- \u5217\u8868 ---------- */\nconst STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };\nconst KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };\n\nasync function loadList() {\n  const request = ++listRequest;\n  listBusy = true;\n  btnPrev.disabled = btnNext.disabled = btnRefresh.disabled = true;\n  pageInfo.textContent = t('ad.loading');\n  tbody.setAttribute('aria-busy', 'true');\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));\n  try {\n    const data = await api(`/api/admin/shares?limit=${limit}&offset=${offset}`);\n    if (request !== listRequest) return;\n    if (!Number.isSafeInteger(data.total) || data.total < 0 || !Array.isArray(data.rows)) throw new Error(t('ad.loadFail'));\n    total = data.total;\n    if (offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return loadList(); }\n    const rows = data.rows ?? [];\n    tbody.replaceChildren();\n    for (const r of rows) {\n      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n      tbody.append(\n        el('tr', {},\n          el('td', { class: 'mono' }, r.code),\n          el('td', { class: 'share-content-cell' },\n            el('div', { class: 'share-filename-line' },\n              r.kind === 'file'\n                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)\n                : el('span', { class: 'share-filename', title: content }, content),\n              el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),\n          sourceCell(r),\n          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),\n          el('td', {}, fmtDate(r.created_at)),\n          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),\n        ),\n      );\n    }\n    if (rows.length === 0) {\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));\n    }\n    listBusy = false;\n    updatePager();\n  } catch (e) {\n    if (request !== listRequest) return;\n    pageInfo.textContent = t('ad.loadFail');\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));\n  } finally {\n    if (request === listRequest) {\n      listBusy = false;\n      btnRefresh.disabled = false;\n      tbody.setAttribute('aria-busy', 'false');\n    }\n  }\n}\n\nfunction updatePager() {\n  const page = Math.floor(offset / limit) + 1;\n  const pages = Math.max(1, Math.ceil(total / limit));\n  pageInfo.textContent = t('ad.page', page, pages, total);\n  btnPrev.disabled = listBusy || offset <= 0;\n  btnNext.disabled = listBusy || offset + limit >= total;\n}\nbtnPrev.addEventListener('click', async () => { offset = Math.max(0, offset - limit); await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\nbtnNext.addEventListener('click', async () => { offset += limit; await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\nbtnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });\nwindow.addEventListener('admin-page-size', event => {\n  if (event.detail.name !== 'files') return;\n  limit = event.detail.value; offset = 0;\n  if (!panel.hidden) loadList();\n});\n\n/* ---------- \u5220\u9664:\u7968\u636E\u98CE\u786E\u8BA4\u5F39\u7A97 + \u672C\u5730\u540C\u6B65(KV \u6700\u7EC8\u4E00\u81F4,\u5220\u9664\u540E\u7ACB\u5373\u91CD\u62C9\u4F1A\u770B\u5230\u6B8B\u7559\u7D22\u5F15) ---------- */\nconst delMask = $('#del-mask');\nconst delTarget = $('#del-target');\nlet delResolve = null;\n\nfunction confirmDelete(r) {\n  const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n  delTarget.replaceChildren(\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.code')), el('b', { class: 'mono' }, r.code)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.content')), el('span', {}, content)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),\n      el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),\n  );\n  delMask.showModal();\n  $('#del-cancel').focus();\n  return new Promise((resolve) => { delResolve = resolve; });\n}\n\nfunction closeDelModal(v) {\n  if (!delResolve) return;\n  delMask.close();\n  const resolve = delResolve;\n  delResolve = null;\n  resolve(v);\n}\n$('#del-cancel').addEventListener('click', () => closeDelModal(false));\n$('#del-ok').addEventListener('click', () => closeDelModal(true));\ndelMask.addEventListener('click', (e) => e.target === delMask && closeDelModal(false));\ndelMask.addEventListener('cancel', e => { e.preventDefault(); closeDelModal(false); });\n\nasync function remove(r, tr) {\n  if (!(await confirmDelete(r))) return;\n  try {\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\n    toast(t('ad.deleted'), 'ok');\n    statsAfterDelete(r);\n    total = Math.max(0, total - 1);\n    tr?.remove();\n    // \u5F53\u524D\u9875\u5220\u7A7A\u4E14\u4E0D\u5728\u7B2C\u4E00\u9875:\u9000\u56DE\u4E0A\u4E00\u9875\u91CD\u62C9,\u907F\u514D\u505C\u5728\u7A7A\u9875\n    if (tbody.rows.length === 0 && offset > 0) {\n      offset = Math.max(0, offset - limit);\n      loadList();\n    } else {\n      updatePager();\n    }\n  } catch (e) {\n    toast(e.message || t('ad.deleteFail'), 'error');\n  }\n}\n\n/* Upload source details: source labels are text nodes, never interpolated HTML. */\nconst sourceDialog = $('#source-dialog');\nconst sourceForm = $('#source-form');\nconst sourceNote = $('#source-note');\nconst sourceSave = $('#source-save');\nconst sourceError = $('#source-error');\nconst noteOverrides = new Map(); // Read-your-write while KV propagation completes.\nlet sourceRequest = 0;\nlet activeSource = null;\nlet sourceReturnCode = null;\nlet sourceHistoryLoaded = false;\n\nfunction sourceField(label, value, className = '', hint = '') {\n  return el('div', { class: `source-field ${className}` },\n    el('small', { class: 'muted', ...(hint ? { title: hint } : {}) }, label), el('span', {}, value));\n}\nfunction browserLabel(ua) {\n  if (!ua) return t('ad.sourceUnrecorded');\n  const browser = /Edg\\//.test(ua) ? 'Edge' : /Firefox\\//.test(ua) ? 'Firefox'\n    : /Chrome\\//.test(ua) ? 'Chrome' : /Safari\\//.test(ua) ? 'Safari' : t('ad.sourceUnknown');\n  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS'\n    : /Windows/.test(ua) ? 'Windows' : /Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';\n  return [browser, os].filter(Boolean).join(' \xB7 ');\n}\n\nfunction visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }\nfunction sourceLabel(source) {\n  const override = noteOverrides.get(source.visitorId);\n  return (override !== undefined ? override : source.note) || visitorLabel(source.visitorId);\n}\nfunction locationLabel(source) {\n  let country = source.country;\n  if (country && /^[A-Z]{2}$/.test(country)) {\n    country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n  }\n  return [...new Set([country, source.region, source.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n}\nfunction sourceCell(row) {\n  if (!row.source) return el('td', { class: 'source-cell muted' }, t('ad.sourceUnrecorded'));\n  const button = el('button', { class: 'source-link', type: 'button', onclick: () => openSource(row) }, sourceLabel(row.source));\n  button.dataset.visitor = row.source.visitorId;\n  button.title = t('ad.source');\n  return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));\n}\nasync function openSource(row, returnCode = null) {\n  const request = ++sourceRequest;\n  activeSource = null;\n  sourceReturnCode = returnCode;\n  $('#source-back').hidden = !returnCode;\n  $('#source-history').hidden = true;\n  $('#source-history-list').replaceChildren();\n  sourceHistoryLoaded = false;\n  sourceForm.hidden = true;\n  $('#source-identity').hidden = true;\n  $('#source-visitor-id').textContent = '';\n  sourceError.hidden = true;\n  sourceSave.disabled = false;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = `${t('ad.th.code')} ${row.code}`;\n  $('#source-detail').textContent = t('ad.loading');\n  sourceDialog.showModal();\n  try {\n    const { source } = await api(`/api/admin/shares/${row.code}/source`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }\n    activeSource = { code: row.code, visitorId: source.visitorId };\n    $('#source-visitor-id').textContent = source.visitorId;\n    const ip = el('span', { class: 'source-ip' }, source.ip || t('ad.sourceUnknown'));\n    if (source.ip) ip.append(el('button', { class: 'btn small ghost', type: 'button',\n      onclick: async () => toast(t(await copyText(source.ip) ? 'ad.ipCopied' : 'ad.copyFailed')) }, t('ad.copyIP')));\n    $('#source-detail').replaceChildren(\n      ...(source.displayName ? [sourceField(t('ad.submittedName'), source.displayName)] : []),\n      sourceField(t('ad.requestIP'), ip),\n      sourceField(t('ad.sourceLocation'), locationLabel(source)),\n      ...(source.asn || source.organization ? [sourceField(t('ad.network'),\n        [source.organization, source.asn ? `AS${source.asn}` : null].filter(Boolean).join(' \xB7 '))] : []),\n      sourceField(t('ad.browserReported'), browserLabel(source.userAgent), '', t('ad.browserHint')),\n      sourceField(t('ad.sourceTime'), fmtDate(source.capturedAt)),\n      ...(source.userAgent ? [el('div', { class: 'source-agent source-field-wide' }, el('small', { class: 'muted' }, 'User-Agent'),\n        el('p', { class: 'mono', title: source.userAgent, tabIndex: 0 }, source.userAgent))] : []),\n    );\n    $('#source-history').hidden = false;\n    sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';\n    sourceForm.hidden = false;\n    $('#source-identity').hidden = false;\n    sourceSave.hidden = false;\n    loadSourceHistory();\n  } catch (e) {\n    if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');\n  }\n}\nfunction closeSource() {\n  sourceRequest++;\n  activeSource = null;\n  sourceReturnCode = null;\n  $('#source-history').hidden = true;\n  $('#source-history-list').replaceChildren();\n  $('#source-back').hidden = true;\n  sourceNote.value = '';\n  $('#source-identity').hidden = true;\n  $('#source-visitor-id').textContent = '';\n  sourceForm.hidden = true;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = '';\n  $('#source-detail').replaceChildren();\n  sourceDialog.close();\n}\nsourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });\n$('#source-close').addEventListener('click', closeSource);\n$('#source-back').addEventListener('click', () => {\n  const code = sourceReturnCode;\n  closeSource();\n  if (code) openFileDetails(code);\n});\nasync function loadSourceHistory() {\n  if (!activeSource || sourceHistoryLoaded) return;\n  sourceHistoryLoaded = true;\n  const request = sourceRequest;\n  const list = $('#source-history-list');\n  list.textContent = t('ad.loading');\n  try {\n    const { rows } = await api(`/api/admin/shares/${activeSource.code}/source/activity`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },\n      el('div', { class: 'activity-head' }, row.kind === 'file'\n        ? el('button', { type: 'button', class: 'source-link', title: row.filename || t('ad.unnamed'),\n          onclick: () => { closeSource(); openFileDetails(row.code); } }, row.filename || t('ad.unnamed'))\n        : el('span', {}, t('ad.textFallback')),\n        el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),\n      el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} \xB7 ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} \xB7 ${row.code}`),\n      row.ip || row.country || row.region || row.city\n        ? el('small', { class: 'muted' }, [row.ip, row.country || row.region || row.city ? locationLabel(row) : null].filter(Boolean).join(' \xB7 ')) : null,\n    )));\n    if (!rows.length) list.textContent = t('ad.empty');\n  } catch (error) {\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    sourceHistoryLoaded = false;\n    list.replaceChildren(el('p', { class: 'error-box', role: 'alert' }, error.message || t('ad.loadFail')),\n      el('button', { type: 'button', class: 'btn small ghost', onclick: loadSourceHistory }, t('ad.retry')));\n  }\n}\nsourceForm.addEventListener('submit', async (e) => {\n  e.preventDefault();\n  if (!activeSource || sourceSave.disabled) return;\n  const { code } = activeSource;\n  const request = sourceRequest;\n  sourceSave.disabled = true;\n  sourceError.hidden = true;\n  try {\n    const result = await api(`/api/admin/shares/${code}/source`, { method: 'PUT', body: { note: sourceNote.value } });\n    noteOverrides.set(result.visitorId, result.note);\n    document.querySelectorAll('[data-visitor]').forEach((button) => {\n      if (button.dataset.visitor === result.visitorId) button.textContent = result.note || visitorLabel(result.visitorId);\n    });\n    if (request === sourceRequest) closeSource();\n    toast(t('ad.sourceSaved'));\n  } catch (error) {\n    if (request === sourceRequest) {\n      sourceError.textContent = error.message || t('ad.loadFail');\n      sourceError.hidden = false;\n    }\n  } finally {\n    if (request === sourceRequest) sourceSave.disabled = false;\n  }\n});\n\n/* File details use their own request generation so closed dialogs stay empty. */\nconst fileDialog = $('#file-dialog');\nconst fileDetail = $('#file-detail');\nconst fileDownload = $('#file-download');\nlet fileRequest = 0;\nlet activePreview = null;\nlet activeFileDetail = null;\nlet shareEditBusy = false;\nfunction resetShareEditor() {\n  $('#file-editor').hidden = true;\n  $('#file-editor').replaceChildren();\n  fileDetail.hidden = false;\n  fileDialog.querySelector('.source-footer').hidden = false;\n  $('#file-title').textContent = t('ad.fileDetails');\n}\nfunction fileField(label, value, secondary) {\n  return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),\n    el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);\n}\n\nasync function openFileDetails(code) {\n  if (shareEditBusy) return;\n  activeFileDetail = null;\n  resetShareEditor();\n  $('#file-edit').hidden = true;\n  activePreview?.dispose(); activePreview = null;\n  const request = ++fileRequest;\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  $('#file-context').textContent = `${t('ad.th.code')} ${code}`;\n  fileDetail.textContent = t('ad.loading');\n  fileDialog.showModal();\n  try {\n    const detail = await api(`/api/admin/shares/${code}`);\n    if (request !== fileRequest || !fileDialog.open) return;\n    activeFileDetail = detail;\n    const state = detail.storage?.state || 'unknown';\n    const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };\n    const source = detail.source;\n    const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',\n      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }, code); },\n    }, sourceLabel(source)) : t('ad.sourceUnrecorded');\n    if (source) sourceButton.dataset.visitor = source.visitorId;\n    fileDetail.replaceChildren(\n      el('div', { class: 'file-identity file-wide' },\n        el('strong', {}, detail.filename || t('ad.unnamed')),\n        el('div', { class: 'file-summary' },\n          el('span', { title: t('ad.exactBytes', detail.size.toLocaleString()) }, fmtBytes(detail.size)),\n          el('span', { class: `badge ${detail.status}`, title: t('ad.shareState') }, t(STATUS_KEY[detail.status])),\n          state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),\n      ...(detail.description ? [el('div', { class: 'file-description file-wide' },\n        el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),\n      ...(state === 'available' ? [(activePreview = createFilePreview(code, detail.filename || '')).element] : []),\n      fileField(t('ad.source'), sourceButton),\n      fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '\u221E'}`),\n      fileField(t('ad.th.created'), fmtDate(detail.createdAt)),\n      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)),\n\n    );\n    fileDownload.href = `/api/admin/shares/${code}/download`;\n    fileDownload.download = detail.filename || 'file';\n    fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');\n    fileDownload.hidden = state === 'missing';\n    $('#file-edit').hidden = state !== 'available';\n    $('#file-edit').disabled = detail.cleanupStatus === 'pending';\n    $('#file-edit').title = detail.cleanupStatus === 'pending' ? t('ad.editCleanupPending') : '';\n  } catch (error) {\n    if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');\n  }\n}\nfunction closeFileDetails() {\n  if (shareEditBusy) return;\n  activeFileDetail = null;\n  resetShareEditor();\n  $('#file-edit').hidden = true;\n  activePreview?.dispose(); activePreview = null;\n  fileRequest++;\n  fileDetail.replaceChildren();\n  $('#file-context').textContent = '';\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  fileDialog.close();\n}\n$('#file-close').addEventListener('click', closeFileDetails);\n$('#file-edit').addEventListener('click', () => {\n  if (!activeFileDetail || shareEditBusy) return;\n  const detail = activeFileDetail;\n  const editor = createShareEditor(detail, {\n    onBusy(value) { shareEditBusy = value; $('#lang-btn').disabled = value; },\n    onCancel() { openFileDetails(detail.code); },\n    onSaved() {\n      toast(t('ad.editSaved'));\n      openFileDetails(detail.code);\n      loadList(); loadStats();\n    },\n  });\n  fileDetail.hidden = true;\n  fileDialog.querySelector('.source-footer').hidden = true;\n  $('#file-title').textContent = t('ad.editShare');\n  $('#file-editor').replaceChildren(editor.element);\n  $('#file-editor').hidden = false;\n  editor.enhance();\n});\nfileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });\n\n/* Keep unsaved input local; only a validated save changes retention. */\nconst retentionInput = $('#retention-days');\nconst retentionSave = $('#retention-save');\nconst retentionError = $('#retention-error');\nasync function loadSettings() {\n  $('#retention-status').hidden = true;\n  retentionInput.disabled = true;\n  retentionSave.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-retry').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings');\n    if (!Number.isInteger(settings.expiredRetentionDays) || settings.expiredRetentionDays < 0 || settings.expiredRetentionDays > 3650) throw new Error(t('ad.loadFail'));\n    retentionInput.value = settings.expiredRetentionDays;\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n    $('#retention-retry').hidden = false;\n  }\n}\n$('#retention-retry').addEventListener('click', loadSettings);\nretentionInput.addEventListener('input', () => { $('#retention-status').hidden = true; });\n$('#retention-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (retentionSave.disabled || !retentionInput.reportValidity()) return;\n  retentionSave.disabled = true;\n  retentionInput.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-status').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });\n    retentionInput.value = settings.expiredRetentionDays;\n    $('#retention-status').textContent = t('ad.settingsSaved');\n    $('#retention-status').hidden = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n  } finally {\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  }\n});\n\nconst guestWeekly = $('#guest-weekly');\nconst guestSave = $('#guest-save');\nconst guestError = $('#guest-error');\nfunction guestBusy(busy) {\n  for (const control of [guestWeekly, guestSave]) control.disabled = busy;\n}\nasync function loadGuestPolicy() {\n  $('#guest-status').hidden = true;\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-retry').hidden = true;\n  try {\n    const policy = await api('/api/admin/upload-policy');\n    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000) throw new Error(t('ad.loadFail'));\n    guestWeekly.value = policy.weeklyFileLimit;\n    guestBusy(false);\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n    $('#guest-retry').hidden = false;\n  }\n}\n$('#guest-retry').addEventListener('click', loadGuestPolicy);\nguestWeekly.addEventListener('input', () => { $('#guest-status').hidden = true; });\n$('#guest-policy-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (guestSave.disabled || !e.target.reportValidity()) return;\n  const body = { weeklyFileLimit: Number(guestWeekly.value) };\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-status').hidden = true;\n  try {\n    await api('/api/admin/upload-policy', { method: 'PUT', body });\n    $('#guest-status').textContent = t('ad.guestSaved');\n    $('#guest-status').hidden = false;\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n  } finally { guestBusy(false); }\n});\n\nlet guardRequest = 0;\nasync function loadLoginProtection() {\n  const request = ++guardRequest;\n  const refresh = $('#login-guard-refresh');\n  const error = $('#login-guard-error');\n  refresh.disabled = true;\n  error.hidden = true;\n  $('#login-guard-bans').replaceChildren();\n  $('#login-guard-status').textContent = '';\n  try {\n    const data = await api('/api/admin/login-protection');\n    if (request !== guardRequest) return;\n    if (typeof data.enabled !== 'boolean' || !Array.isArray(data.bans) ||\n        ![data.maxFailures, data.windowSeconds, data.banSeconds].every(n => Number.isInteger(n) && n > 0)) throw new Error(t('ad.loadFail'));\n    $('#login-guard-status').textContent = data.enabled\n      ? t('ad.guardRule', data.windowSeconds / 60, data.maxFailures, data.banSeconds / 60) : t('ad.guardDisabled');\n    if (!data.enabled) return;\n    if (!data.bans.length) $('#login-guard-bans').append(el('small', { class: 'muted' }, t('ad.guardEmpty')));\n    for (const ban of data.bans) {\n      const button = el('button', { class: 'btn small ghost', type: 'button' }, t('ad.guardUnblock'));\n      button.addEventListener('click', async () => {\n        button.disabled = true;\n        error.hidden = true;\n        try {\n          await api('/api/admin/login-protection/unblock', { method: 'POST', body: { ip: ban.ip } });\n          toast(t('ad.guardUnblocked'), 'ok');\n          await loadLoginProtection();\n        } catch (e) {\n          error.textContent = e.message || t('ad.loadFail');\n          error.hidden = false;\n          button.disabled = false;\n        }\n      });\n      $('#login-guard-bans').append(el('div', { class: 'login-guard-row' },\n        el('div', { class: 'login-guard-info' },\n          el('b', {}, ban.ip === 'unknown' ? t('ad.guardUnknown') : ban.ip),\n          el('small', { class: 'muted' }, t('ad.guardFailures', ban.failures) + ' \xB7 ' + t('ad.guardUntil', fmtDate(ban.bannedUntil))),\n          el('small', { class: 'muted' }, t('ad.guardLast', fmtDate(ban.lastFailedAt)))), button));\n    }\n  } catch (e) {\n    if (request !== guardRequest) return;\n    error.textContent = e.message || t('ad.loadFail');\n    error.hidden = false;\n  } finally { if (request === guardRequest) refresh.disabled = false; }\n}\n$('#login-guard-refresh').addEventListener('click', loadLoginProtection);\n\ninitUi('admin');\n", "js/common.js": "import { t } from './i18n.js';\n\nexport const $ = (sel, el = document) => el.querySelector(sel);\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\n\n/** Keep Tab within modal content, including the wrap past the final button. */\nexport function initDialogs() {\n  for (const dialog of $$('dialog')) {\n    dialog.addEventListener('keydown', event => {\n      if (event.key !== 'Tab') return;\n      const controls = $$('button, a[href], input, select, textarea, summary, [tabindex]', dialog)\n        .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);\n      const first = controls[0];\n      const last = controls.at(-1);\n      if (!first) { event.preventDefault(); return; }\n      if (!controls.includes(document.activeElement) || (event.shiftKey && document.activeElement === first)) {\n        event.preventDefault(); (event.shiftKey ? last : first).focus();\n      } else if (!event.shiftKey && document.activeElement === last) {\n        event.preventDefault(); first.focus();\n      }\n    });\n  }\n}\n\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\nexport async function api(path, opts = {}) {\n  const res = await fetch(path, {\n    method: opts.method || 'GET',\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\n  });\n  if (res.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n  let data = null;\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\n  if (!res.ok) {\n    const e = new Error(data?.message || t('req.fail', res.status));\n    e.code = data?.error || 'unknown';\n    e.status = res.status;\n    e.remainingBytes = data?.remainingBytes;\n    throw e;\n  }\n  return data;\n}\n\nexport function fmtBytes(n) {\n  if (!Number.isFinite(n) || n < 0) return '-';\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\n  let i = 0;\n  while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 100) / 100;\n  return `${v} ${units[i]}`;\n}\n\n/** \u6C38\u4E45\u5206\u4EAB\u8FD4\u56DE null,\u7531\u8C03\u7528\u65B9\u6309\u8BED\u8A00\u6E32\u67D3\u300C\u6C38\u4E45 / Forever\u300D */\nexport function fmtDate(ms) {\n  if (ms === null || ms === undefined) return null;\n  const d = new Date(ms);\n  const p = (x) => String(x).padStart(2, '0');\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\n}\n\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6,\u5355\u4F4D\u8BCD\u968F\u8BED\u8A00 */\nexport function fmtDuration(sec) {\n  if (!Number.isFinite(sec) || sec < 0) return '-';\n  if (sec < 1) return t('dur.ms');\n  if (sec < 60) return t('dur.s', Math.round(sec));\n  if (sec < 3600) {\n    const m = Math.floor(sec / 60);\n    const s = Math.round(sec % 60);\n    return s ? t('dur.hm', m, s) : t('dur.h', m);\n  }\n  if (sec < 86400) {\n    const h = Math.floor(sec / 3600);\n    const m = Math.round((sec % 3600) / 60);\n    return m ? t('dur.hH', h, m) : t('dur.hH2', h);\n  }\n  return t('dur.d', Math.round(sec / 86400));\n}\n\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\nexport function iconFor(name = '', mime = '') {\n  const ext = (name.split('.').pop() || '').toLowerCase();\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\n  return '\u{1F4E6}';\n}\n\nexport async function copyText(text) {\n  try {\n    await navigator.clipboard.writeText(text);\n    return true;\n  } catch { /* \u8D70\u964D\u7EA7 */ }\n  try {\n    const ta = document.createElement('textarea');\n    ta.value = text;\n    ta.style.cssText = 'position:fixed;opacity:0';\n    document.body.appendChild(ta);\n    ta.select();\n    const ok = document.execCommand('copy');\n    ta.remove();\n    return ok;\n  } catch {\n    return false;\n  }\n}\n\nexport function toast(msg, type = 'info') {\n  let host = $('#toast-host');\n  if (!host) {\n    host = document.createElement('div');\n    host.id = 'toast-host';\n    document.body.appendChild(host);\n  }\n  const t = document.createElement('div');\n  t.className = `toast ${type}`;\n  t.textContent = msg;\n  host.appendChild(t);\n  requestAnimationFrame(() => t.classList.add('show'));\n  setTimeout(() => {\n    t.classList.remove('show');\n    setTimeout(() => t.remove(), 300);\n  }, 2400);\n}\n\nexport function initTheme() {\n  const btn = $('#theme-btn');\n  const meta = $('meta[name=\"theme-color\"]');\n  const sync = () => {\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\n  };\n  window.addEventListener('storage', event => {\n    if(event.key === 'theme' && ['dark','light'].includes(event.newValue)){document.documentElement.dataset.theme=event.newValue;sync();}\n  });\n  sync();\n  btn?.addEventListener('click', () => {\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\n    localStorage.setItem('theme', next);\n    document.documentElement.dataset.theme = next;\n    sync();\n  });\n}\n\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\nexport function el(tag, attrs = {}, ...children) {\n  const n = document.createElement(tag);\n  for (const [k, v] of Object.entries(attrs)) {\n    if (k === 'class') n.className = v;\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\n    else n[k] = v;\n  }\n  for (const c of children.flat(Infinity)) {\n    if (c == null || c === false) continue;\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\n  }\n  return n;\n}\n", "js/i18n.js": `/**\r
- * \u8F7B\u91CF i18n:HTML \u9759\u6001\u6587\u6848\u7528 data-i18n / data-i18n-ph / data-i18n-title \u6807\u8BB0,\r
- * JS \u52A8\u6001\u5B57\u7B26\u4E32\u7528 t('key', \u2026args);{n} \u5360\u4F4D\u3002\r
- * \u8BED\u8A00\u4F18\u5148\u7EA7:localStorage('lang') > \u6D4F\u89C8\u5668\u8BED\u8A00(en \u5F00\u5934\u2192\u82F1\u6587)> \u4E2D\u6587\u3002\r
- * \u5207\u6362\u540E\u8C03\u7528\u5DF2\u6CE8\u518C\u7684\u91CD\u6E32\u67D3\u94A9\u5B50(\u5404\u9875\u9762 setLang \u65F6\u767B\u8BB0)\u3002\r
- * \u8BCD\u5178\u503C\u4E3A\u6570\u7EC4\u65F6\u968F\u673A\u53D6\u4E00\u6761(\u9875\u811A\u5F69\u86CB,\u6BCF\u6B21\u52A0\u8F7D/\u5207\u8BED\u8A00\u91CD\u6447)\u3002\r
- */\r
-\r
-const DICT = {\r
-  zh: {\r
-    "ad.editShare": "\u7F16\u8F91\u5206\u4EAB",\r
-    "ad.editCount": "\u5DF2\u53D6\u6B21\u6570",\r
-    "ad.editLimit": "\u53D6\u4EF6\u4E0A\u9650",\r
-    "ad.editUnlimited": "\u4E0D\u9650\u6B21",\r
-    "ad.editSave": "\u4FDD\u5B58\u4FEE\u6539",\r
-    "ad.editCancel": "\u53D6\u6D88",\r
-    "ad.editReload": "\u653E\u5F03\u4FEE\u6539\u5E76\u91CD\u65B0\u52A0\u8F7D",\r
-    "ad.editSaved": "\u5206\u4EAB\u89C4\u5219\u5DF2\u66F4\u65B0",\r
-    "ad.editInvalid": "\u8BF7\u586B\u5199\u6709\u6548\u7684\u6B21\u6570\u548C\u8FC7\u671F\u65F6\u95F4",\r
-    "ad.editTimeChanged": "\u6709\u6548\u671F\u5DF2\u5230\uFF0C\u72B6\u6001\u5DF2\u66F4\u65B0\uFF0C\u8BF7\u786E\u8BA4\u540E\u518D\u6B21\u4FDD\u5B58",\r
-    "ad.editCleanupPending": "\u6587\u4EF6\u5DF2\u8FDB\u5165\u6E05\u7406\u671F\uFF0C\u5982\u4ECD\u53EF\u4E0B\u8F7D\uFF0C\u8BF7\u5148\u5907\u4EFD\u540E\u91CD\u65B0\u4E0A\u4F20",\r
-    "ad.editHint": "\u65F6\u95F4\u6309 {0} \u663E\u793A\u548C\u8F93\u5165\u3002\u8FC7\u53BB\u65F6\u95F4\u4F1A\u4F7F\u5206\u4EAB\u8FC7\u671F\uFF0C\u5E76\u6309\u540E\u53F0\u4FDD\u7559\u5929\u6570\u8FDB\u5165\u6E05\u7406\u6D41\u7A0B\u3002\u6C38\u4E45\u5206\u4EAB\u4ECD\u5360\u7528\u5B58\u50A8\u3002",\r
-    "ad.editStatusHint": "\u6709\u6548\uFF1A\u5FC5\u8981\u65F6\u5EF6\u957F\u81F3 7 \u5929\u540E\uFF0C\u5E76\u5C06\u4E0A\u9650\u8BBE\u4E3A\u5DF2\u53D6\u6B21\u6570 + 1\uFF08\u8FBE\u5230\u8BA1\u6570\u4E0A\u754C\u65F6\u8BBE\u4E3A\u4E0D\u9650\u6B21\uFF09\u3002\u5DF2\u8FC7\u671F\uFF1A\u65F6\u95F4\u8BBE\u4E3A\u5F53\u524D\u3002\u5DF2\u53D6\u5B8C\uFF1A\u8865\u9F50\u5DF2\u53D6\u6B21\u6570\uFF1B\u539F\u672C\u4E0D\u9650\u6B21\u65F6\u8BBE\u5B9A\u6709\u9650\u4E0A\u9650\u3002\u539F\u672C\u8FC7\u671F\u7684\u6587\u4EF6\u4F1A\u5EF6\u957F\u81F3 7 \u5929\u540E\u3002\u6240\u6709\u8054\u52A8\u503C\u5747\u663E\u793A\u5728\u8868\u5355\u4E2D\uFF0C\u4FDD\u5B58\u540E\u751F\u6548\u3002",\r
-    "audit.action.editShare": "\u4FEE\u6539\u5206\u4EAB\u89C4\u5219",\r
-    "audit.detail.beforeRules": "\u4FEE\u6539\u524D",\r
-    "audit.detail.afterRules": "\u4FEE\u6539\u540E",\r
-\r
-    'ad.settings': '\u8BBE\u7F6E',\r
-    'ad.shareSettings': '\u5206\u4EAB\u89C4\u5219',\r
-    'ad.guestWeeklyFiles': '\u672A\u5907\u6CE8\u8BBF\u5BA2\u6BCF\u5468\u6587\u4EF6\u6570',\r
-    'ad.displaySettings': '\u5217\u8868\u663E\u793A',\r
-    'ad.filesPageSize': '\u6587\u4EF6\u6BCF\u9875\u6761\u6570',\r
-    'ad.auditPageSize': '\u65E5\u5FD7\u6BCF\u9875\u6761\u6570',\r
-    'ad.browserSettings': '\u7ACB\u5373\u751F\u6548\uFF0C\u4EC5\u4FDD\u5B58\u5728\u5F53\u524D\u6D4F\u89C8\u5668',\r
-    'ad.preferenceNotSaved': '\u672C\u6B21\u5DF2\u751F\u6548\uFF0C\u6D4F\u89C8\u5668\u672A\u80FD\u4FDD\u5B58\u6B64\u504F\u597D',\r
-    'ad.filesPagination': '\u6587\u4EF6\u5206\u9875',\r
-    'ad.auditPagination': '\u65E5\u5FD7\u5206\u9875',\r
-    'context.add': '\u8865\u5145\u4FE1\u606F\uFF08\u9009\u586B\uFF09',\r
-    'context.name': '\u600E\u4E48\u79F0\u547C\u4F60',\r
-    'context.description': '\u6587\u4EF6\u8BF4\u660E',\r
-    'context.namePh': '\u586B\u5199\u4F60\u5E38\u7528\u7684\u79F0\u547C',\r
-    'context.descriptionPh': '\u7B80\u8FF0\u6587\u4EF6\u5185\u5BB9\uFF0C\u540C\u6279\u6587\u4EF6\u5171\u7528',\r
-    'context.visibility': '\u8865\u5145\u4FE1\u606F\u4EC5\u7BA1\u7406\u5458\u53EF\u89C1',\r
-    'ad.retentionTitle': '\u81EA\u52A8\u6E05\u7406',\r
-    'ad.recentUploads': '\u8FD1\u671F\u4E0A\u4F20',\r
-    'ad.historyScope': '\u6700\u8FD1 10 \u6761\u73B0\u5B58\u5206\u4EAB',\r
-    'ad.backFile': '\u8FD4\u56DE\u6587\u4EF6',\r
-    'ad.submittedName': '\u81EA\u586B\u79F0\u547C',\r
-    'ad.requestIP': '\u8BF7\u6C42 IP',\r
-    'ad.network': '\u7F51\u7EDC\u7EC4\u7EC7',\r
-    'ad.browserReported': '\u6D4F\u89C8\u5668',\r
-    'ad.browserHint': '\u7531\u6D4F\u89C8\u5668\u63D0\u4F9B\uFF0C\u53EF\u88AB\u4FEE\u6539\uFF0C\u4EC5\u4F5C\u53C2\u8003',\r
-    'ad.noteShort': '\u5907\u6CE8',\r
-    'ad.copyIP': '\u590D\u5236',\r
-    'ad.ipCopied': 'IP \u5DF2\u590D\u5236',\r
-    'ad.copyFailed': '\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u9009\u62E9',\r
-    'ad.fileDescription': '\u6587\u4EF6\u8BF4\u660E',\r
-    'audit.detail.filename': '\u6587\u4EF6\u540D',\r
-    'audit.detail.sizeBytes': '\u5927\u5C0F\uFF08\u5B57\u8282\uFF09',\r
-    'audit.navigation': "\u7BA1\u7406\u9875\u9762",\r
-    'audit.files': "\u6587\u4EF6\u7BA1\u7406",\r
-    'audit.title': "\u65E5\u5FD7\u5BA1\u8BA1",\r
-    'audit.retention': "\u6700\u8FD1 30 \u5929\uFF0C\u6700\u591A 1,000 \u6761\uFF1B\u65F6\u95F4\u6309\u672C\u5730\u65F6\u533A\u663E\u793A",\r
-    'audit.export': "\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C",\r
-    'audit.categories': "\u65E5\u5FD7\u5206\u7C7B",\r
-    'audit.all': "\u5168\u90E8\u65E5\u5FD7",\r
-    'audit.login': "\u767B\u5F55\u65E5\u5FD7",\r
-    'audit.operation': "\u64CD\u4F5C\u65E5\u5FD7",\r
-    'audit.security': "\u5B89\u5168\u4E8B\u4EF6",\r
-    'audit.result': "\u7ED3\u679C",\r
-    'audit.anyResult': "\u5168\u90E8\u7ED3\u679C",\r
-    'audit.success': "\u6210\u529F",\r
-    'audit.failed': "\u5931\u8D25",\r
-    'audit.blocked': "\u5DF2\u62E6\u622A",\r
-    'audit.from': "\u5F00\u59CB\u65E5\u671F",\r
-    'audit.to': "\u7ED3\u675F\u65E5\u671F",\r
-    'audit.keyword': "IP / \u64CD\u4F5C\u5BF9\u8C61",\r
-    'audit.search': "\u641C\u7D22 IP \u6216\u53D6\u4EF6\u7801",\r
-    'audit.filter': "\u7B5B\u9009",\r
-    'audit.reset': "\u91CD\u7F6E",\r
-    'audit.time': "\u65F6\u95F4",\r
-    'audit.action': "\u64CD\u4F5C",\r
-    'audit.actor': "\u64CD\u4F5C\u8EAB\u4EFD",\r
-    'audit.source': "\u6765\u6E90 IP / \u5C5E\u5730",\r
-    'audit.target': "\u64CD\u4F5C\u5BF9\u8C61",\r
-    'audit.details': "\u8BE6\u60C5",\r
-    'audit.empty': "\u6682\u65E0\u5339\u914D\u65E5\u5FD7\u3002\u65E5\u5FD7\u4ECE\u529F\u80FD\u4E0A\u7EBF\u540E\u5F00\u59CB\u8BB0\u5F55\u3002",\r
-    'audit.disabled': "\u672A\u542F\u7528\u65E5\u5FD7\u5BA1\u8BA1\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1\u3002",\r
-    'audit.page': "\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761",\r
-    'audit.dateError': "\u5F00\u59CB\u65E5\u671F\u4E0D\u80FD\u665A\u4E8E\u7ED3\u675F\u65E5\u671F",\r
-    'audit.http': "\u8BF7\u6C42 / \u72B6\u6001\u7801",\r
-    'audit.duration': "\u5904\u7406\u8017\u65F6",\r
-    'audit.id': "\u65E5\u5FD7\u7F16\u53F7",\r
-    'audit.agent': "\u6D4F\u89C8\u5668\u6807\u8BC6\uFF08\u5BA2\u6237\u7AEF\u63D0\u4F9B\uFF09",\r
-    'audit.yes': "\u662F",\r
-    'audit.no': "\u5426",\r
-    'audit.description': "\u8BF4\u660E",\r
-    'audit.downloadHint': "\u5DF2\u5F00\u59CB\u8FD4\u56DE\u6587\u4EF6\u6D41\uFF0C\u4E0D\u4EE3\u8868\u6D4F\u89C8\u5668\u5DF2\u5B8C\u6210\u4E0B\u8F7D\u3002",\r
-    'audit.writeFailed': "\u64CD\u4F5C\u5DF2\u5904\u7406\uFF0C\u4F46\u5BA1\u8BA1\u8BB0\u5F55\u672A\u4FDD\u5B58\uFF0C\u8BF7\u68C0\u67E5\u65E5\u5FD7\u5B58\u50A8\u3002",\r
-    'audit.action.login': "\u7BA1\u7406\u5458\u767B\u5F55",\r
-    'audit.action.logout': "\u9000\u51FA\u767B\u5F55",\r
-    'audit.action.retention': "\u4FEE\u6539\u8FC7\u671F\u4FDD\u7559\u5929\u6570",\r
-    'audit.action.uploadPolicy': "\u4FEE\u6539\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",\r
-    'audit.action.unblock': "\u624B\u52A8\u89E3\u5C01 IP",\r
-    'audit.action.cleanup': "\u6267\u884C\u8FC7\u671F\u6E05\u7406",\r
-    'audit.action.export': "\u5BFC\u51FA\u5BA1\u8BA1\u65E5\u5FD7",\r
-    'audit.action.ban': "\u89E6\u53D1\u767B\u5F55\u5C01\u7981",\r
-    'audit.action.delete': "\u5220\u9664\u5206\u4EAB",\r
-    'audit.action.note': "\u4FEE\u6539\u8BBF\u5BA2\u5907\u6CE8",\r
-    'audit.action.viewSource': "\u67E5\u770B\u6765\u6E90\u8BE6\u60C5",\r
-    'audit.action.download': "\u4E0B\u8F7D\u6587\u4EF6",\r
-    'audit.action.preview': '\u9884\u89C8\u6587\u4EF6',\r
-    'preview.title': '\u5185\u5BB9\u9884\u89C8',\r
-    'preview.partial': '\u90E8\u5206\u5185\u5BB9',\r
-    'preview.complete': '\u5B8C\u6574\u5185\u5BB9',\r
-    'preview.type': '\u6B64\u7C7B\u578B\u6682\u4E0D\u652F\u6301\u5728\u7EBF\u9884\u89C8',\r
-    'preview.size': '\u56FE\u7247\u8D85\u8FC7 2 MiB\uFF0C\u8BF7\u4E0B\u8F7D\u67E5\u770B',\r
-    'preview.encoding': '\u975E UTF-8 \u6587\u672C\u6216\u4E8C\u8FDB\u5236\u5185\u5BB9\uFF0C\u8BF7\u4E0B\u8F7D\u67E5\u770B',\r
-    'preview.image': '\u56FE\u7247\u65E0\u6CD5\u9884\u89C8\u6216\u5C3A\u5BF8\u8D85\u9650\uFF0C\u8BF7\u4E0B\u8F7D\u67E5\u770B',\r
-    'preview.empty': '\u7A7A\u6587\u4EF6',\r
-    'preview.timeout': '\u9884\u89C8\u52A0\u8F7D\u8D85\u65F6',\r
-    'audit.actor.admin': "\u7BA1\u7406\u5458",\r
-    'audit.actor.token': "\u5B9A\u65F6\u5668 / \u4EE4\u724C",\r
-    'audit.actor.anonymous': "\u672A\u8BA4\u8BC1",\r
-    'audit.detail.bannedUntil': "\u5C01\u7981\u622A\u6B62",\r
-    'audit.detail.expiredRetentionDays': "\u8FC7\u671F\u4FDD\u7559\u5929\u6570",\r
-    'audit.detail.weeklyFileLimit': "\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",\r
-    'audit.detail.notePresent': "\u8BBE\u7F6E\u5907\u6CE8",\r
-    'audit.detail.alreadyDeleted': "\u5206\u4EAB\u5DF2\u4E0D\u5B58\u5728",\r
-    'audit.detail.deletedShares': "\u5DF2\u6E05\u7406\u5206\u4EAB",\r
-    'audit.detail.abortedSessions': "\u5DF2\u53D6\u6D88\u4E0A\u4F20\u4F1A\u8BDD",\r
-\r
-    'ad.loginProtection': "\u767B\u5F55\u9632\u62A4",\r
-    'ad.guardRule': "{0} \u5206\u949F\u5185\u5931\u8D25 {1} \u6B21\uFF0C\u5C01\u7981\u767B\u5F55 {2} \u5206\u949F",\r
-    'ad.guardDisabled': "\u672A\u542F\u7528\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1",\r
-    'ad.guardEmpty': "\u5F53\u524D\u6CA1\u6709\u5C01\u7981 IP",\r
-    'ad.guardUnknown': "\u672A\u77E5\u6765\u6E90\uFF08\u5171\u7528\u9650\u5236\uFF09",\r
-    'ad.guardFailures': "\u5931\u8D25 {0} \u6B21",\r
-    'ad.guardUntil': "\u89E3\u5C01\u4E8E {0}",\r
-    'ad.guardLast': "\u6700\u8FD1\u5931\u8D25 {0}",\r
-    'ad.guardUnblock': "\u89E3\u5C01",\r
-    'ad.guardUnblocked': "\u5DF2\u89E3\u5C01",\r
-    'ad.loginBlocked': "\u767B\u5F55\u5931\u8D25\u6B21\u6570\u8FC7\u591A\uFF0C\u8BF7\u7B49\u5F85\u5C01\u7981\u5230\u671F\u540E\u91CD\u8BD5",\r
-    'ad.guardUnavailable': "\u767B\u5F55\u9632\u62A4\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5",\r
-\r
-    'ad.formatUnknown': "\u683C\u5F0F\u672A\u77E5",\r
-    'ad.format.archive': "\u538B\u7F29\u5305",\r
-    'ad.format.program': "\u5E94\u7528\u7A0B\u5E8F",\r
-    'ad.format.document': "\u6587\u6863",\r
-    'ad.format.image': "\u56FE\u7247",\r
-    'ad.format.video': "\u89C6\u9891",\r
-    'ad.format.audio': "\u97F3\u9891",\r
-    'ad.format.text': "\u6587\u672C / \u4EE3\u7801",\r
-    'ad.format.file': "\u6587\u4EF6",\r
-    'ad.uploader': "\u4E0A\u4F20\u8005",\r
-    'ad.shareState': "\u5206\u4EAB\u72B6\u6001",\r
-    'ad.fileAvailability': "\u6587\u4EF6\u72B6\u6001",\r
-    'ad.fileState.available': "\u53EF\u4E0B\u8F7D",\r
-    'ad.fileState.missing': "\u6587\u4EF6\u4E0D\u5B58\u5728",\r
-    'ad.fileState.unknown': "\u6682\u65F6\u65E0\u6CD5\u786E\u8BA4",\r
-    'ad.timeLeft': "\u5269\u4F59 {0}",\r
-    'ad.timeExpired': "\u5DF2\u8FC7\u671F {0}",\r
-    'ad.cleanupPermanent': "\u4E0D\u81EA\u52A8\u6E05\u7406",\r
-    'ad.cleanupActive': "\u8FC7\u671F\u540E\u4FDD\u7559 {0} \u5929",\r
-    'ad.cleanupRetained': "\u8FC7\u671F\u4FDD\u7559\u4E2D",\r
-    'ad.cleanupPending': "\u7B49\u5F85\u6E05\u7406\u4EFB\u52A1",\r
-    'ad.technical': "\u6280\u672F\u4FE1\u606F",\r
-    'ad.storedSize': "\u5B58\u50A8\u5927\u5C0F",\r
-    'ad.storedAt': "\u5165\u5E93\u65F6\u95F4",\r
-    'ad.exactBytes': "{0} \u5B57\u8282",\r
-    'ad.formatHint': "\u683C\u5F0F\u6309\u6587\u4EF6\u540D\u8BC6\u522B\uFF0C\u4E0D\u4EE3\u8868\u5185\u5BB9\u6821\u9A8C\u3002",\r
-    'ad.tryDownload': "\u5C1D\u8BD5\u4E0B\u8F7D",\r
-    'ad.guestLimits': "\u672A\u5907\u6CE8\u8BBF\u5BA2\u9650\u5236",\r
-    'ad.weeklyFiles': "\u6BCF\u5468\u6587\u4EF6\u6570",\r
-    'ad.guestRules': "\u5317\u4EAC\u65F6\u95F4\u5468\u4E00\u91CD\u7F6E\uFF1B\u5DF2\u63A5\u7EB3\u4E0A\u4F20\u8BA1\u6B21\uFF0C\u53D6\u6D88\u4E0D\u9000\u56DE\u3002\u672A\u5907\u6CE8\u8BBF\u5BA2\u4E0D\u80FD\u6C38\u4E45\u5206\u4EAB\u6216\u4E0D\u9650\u6B21\u53D6\u4EF6\u3002",\r
-    'ad.guestSaved': "\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u4E0A\u4F20",\r
-    'policy.expiry': "1 ~ 30 \u5929",\r
-    'policy.pickups': "1 \u6B21 \xB7 5 \u6B21",\r
-    'policy.remaining': "\u672C\u5468\u5269\u4F59 {0} / {1} \u4E2A\u6587\u4EF6 \xB7 {2} \u91CD\u7F6E",\r
-    'policy.unavailable': "\u6B63\u5728\u8BFB\u53D6\u4E0A\u4F20\u6743\u9650\uFF1B\u82E5\u957F\u65F6\u95F4\u672A\u6062\u590D\uFF0C\u8BF7\u5237\u65B0\u9875\u9762",\r
-    'policy.contact': "\u6682\u4E0D\u63A5\u53D7\u6587\u4EF6\u4E0A\u4F20\uFF0C\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458",\r
-    'ad.fileDetails': '\u6587\u4EF6\u8BE6\u60C5',\r
-    'ad.filename': '\u6587\u4EF6\u540D',\r
-    'ad.fileType': '\u6587\u4EF6\u7C7B\u578B',\r
-    'ad.cleanupAfter': '\u6700\u65E9\u6E05\u7406',\r
-    'ad.retentionDays': '\u8FC7\u671F\u540E\u4FDD\u7559',\r
-    'ad.days': '\u5929',\r
-    'ad.save': '\u4FDD\u5B58',\r
-    'ad.retry': '\u91CD\u8BD5',\r
-    'ad.settingsSaved': '\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u6E05\u7406',\r
-    'ad.source': '\u4E0A\u4F20\u6765\u6E90',\r
-    'ad.visitor': '\u8BBF\u5BA2 {0}',\r
-    'ad.visitorId': '\u8BBF\u5BA2\u6807\u8BC6',\r
-    'ad.sourceUnknown': '\u672A\u77E5',\r
-    'ad.sourceUnrecorded': '\u672A\u8BB0\u5F55',\r
-    'ad.sourceLocation': '\u51FA\u53E3\u5C5E\u5730',\r
-    'ad.sourceTime': '\u8BB0\u5F55\u65F6\u95F4',\r
-    'ad.sourceNote': '\u7BA1\u7406\u5458\u5907\u6CE8',\r
-    'ad.sourceSave': '\u4FDD\u5B58\u5907\u6CE8',\r
-    'ad.sourceClose': '\u5173\u95ED',\r
-    'ad.sourceSaved': '\u5907\u6CE8\u5DF2\u4FDD\u5B58',\r
-    'err.capacity': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6',\r
-    'err.capacityRemaining': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6\uFF0C\u5269\u4F59\u53EF\u7528\u7A7A\u95F4\u7EA6 {0} GB\uFF08{1} \u5B57\u8282\uFF09\u3002',\r
-    'doc.send': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001',\r
-    'doc.pickup': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D6\u4EF6',\r
-    'doc.admin': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u7BA1\u7406',\r
-    'doc.404': '404 - \u6587\u4EF6\u4E2D\u8F6C\u7AD9',\r
-\r
-    'brand.name': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9',\r
-    'brand.tagline': '\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u6587\u4EF6',\r
-    'brand.pickup': '\u53D6\u4EF6',\r
-    'brand.admin': '\u7BA1\u7406\u540E\u53F0',\r
-    'nav.pickup': '\u53D6\u4EF6',\r
-    'nav.send': '\u53D1\u9001',\r
-    'nav.theme': '\u5207\u6362\u4E3B\u9898',\r
-    'nav.lang': '\u5207\u6362\u8BED\u8A00',\r
-    'foot': [\r
-      '\u89C1\u5B57\u5982\u9762',\r
-      '\u7EB8\u77ED\u60C5\u957F',\r
-      '\u5C71\u9AD8\u6C34\u957F,\u540E\u4F1A\u6709\u671F',\r
-      '\u6B64\u4EF6\u5DF2\u7B7E\u6536,\u671B\u73CD\u91CD',\r
-      '\u98CE\u91CC\u96E8\u91CC,\u4E2D\u8F6C\u7AD9\u7B49\u4F60',\r
-      '\u6162\u4E00\u70B9,\u4E5F\u6CA1\u5173\u7CFB',\r
-    ],\r
-\r
-    'tab.file': '\u53D1\u6587\u4EF6',\r
-    'tab.text': '\u53D1\u6587\u672C',\r
-    'dz.click': '\u70B9\u51FB\u9009\u62E9\u6587\u4EF6',\r
-    'dz.drop': ',\u6216\u62D6\u62FD / \u7C98\u8D34\u5230\u6B64\u5904',\r
-    'dz.aria': '\u9009\u62E9\u6587\u4EF6',\r
-    'dz.hint': '\u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',\r
-    'dz.hintMax': '\u5355\u4E2A\u6587\u4EF6\u6700\u5927 {0} \xB7 \u652F\u6301\u591A\u9009,\u4E0A\u4F20\u540E\u751F\u6210\u53D6\u4EF6\u53E3\u4EE4',\r
-    'remove': '\u79FB\u9664',\r
-    'text.placeholder': '\u7C98\u8D34\u6216\u8F93\u5165\u8981\u5206\u4EAB\u7684\u6587\u672C\u2026',\r
-    'opt.expiry': '\u6709\u6548\u671F',\r
-    'opt.pickups': '\u53EF\u53D6\u6B21\u6570',\r
-    'seg.1d': '1 \u5929', 'seg.7d': '7 \u5929', 'seg.30d': '30 \u5929', 'seg.forever': '\u6C38\u4E45',\r
-    'seg.p1': '1 \u6B21', 'seg.p5': '5 \u6B21', 'seg.punlimited': '\u4E0D\u9650',\r
-    'btn.upload': '\u5F00\u59CB\u4E0A\u4F20',\r
-    'btn.genCode': '\u751F\u6210\u53E3\u4EE4',\r
-    'btn.cancel': '\u53D6\u6D88',\r
-    'btn.copyCode': '\u590D\u5236\u53E3\u4EE4',\r
-    'btn.copyLink': '\u590D\u5236\u94FE\u63A5',\r
-    'btn.copyAll': '\u590D\u5236\u5168\u90E8\u53E3\u4EE4',\r
-    'btn.again': '\u518D\u6765\u4E00\u4E2A',\r
-\r
-    'prog.preparing': '\u51C6\u5907\u4E2D\u2026',\r
-    'prog.uploading': '\u4E0A\u4F20\u4E2D\u2026',\r
-    'prog.init': '\u6B63\u5728\u68C0\u67E5\u53EF\u7528\u7A7A\u95F4\u2026',\r
-    'prog.merging': '\u6B63\u5728\u5B8C\u6210\u4E0A\u4F20\u2026',\r
-    'prog.file': '\u7B2C {0}/{1} \u4E2A',\r
-    'prog.part': '\u7B2C {0}/{1} \u7247',\r
-    'prog.eta': '\u5269\u4F59 {0}',\r
-    'prog.retry': '\u4E0A\u4F20\u5931\u8D25,\u91CD\u8BD5 {0}/3\u2026',\r
-\r
-    'result.ok': '\u2705 \u5206\u4EAB\u6210\u529F,\u628A\u53E3\u4EE4\u53D1\u7ED9\u5BF9\u65B9',\r
-    'result.okBatch': '\u2705 {0} \u4E2A\u6587\u4EF6\u5206\u4EAB\u6210\u529F',\r
-    'ticket.title': '\u53D6\u4EF6\u51ED\u8BC1',\r
-    'ticket.no': '\u2116 {0}',\r
-    'send.cap': '\u5206\u4EAB\u5185\u5BB9',\r
-    'receipt.cap': '\u5206\u4EAB\u7ED3\u679C',\r
-    'ph.title': '\u7B49\u5F85\u5206\u4EAB',\r
-    'ph.sub': '\u5206\u4EAB\u6210\u529F\u540E\uFF0C\u5728\u8FD9\u91CC\u590D\u5236\u53E3\u4EE4\u6216\u94FE\u63A5',\r
-\r
-    'flow.dropT': '\u5BC4\u4EF6',\r
-    'flow.dropS': '\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C',\r
-    'flow.tickT': '\u5206\u4EAB\u53E3\u4EE4',\r
-    'flow.tickS': '\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',\r
-    'flow.pickT': '\u53D6\u4EF6',\r
-    'flow.pickS': '\u8F93\u5165\u53E3\u4EE4\u5373\u53EF\u4E0B\u8F7D\u6216\u67E5\u770B',\r
-\r
-    'route.senderT': '\u5BC4\u4EF6\u4EBA \xB7 \u4F60',\r
-    'route.senderS': '\u9009\u62E9\u5185\u5BB9\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u548C\u53EF\u53D6\u6B21\u6570',\r
-    'route.relayT': '\u751F\u6210\u5206\u4EAB',\r
-    'route.relayS': '\u628A\u53D6\u4EF6\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9',\r
-    'route.takerT': '\u53D6\u4EF6\u4EBA \xB7 \u5BF9\u65B9',\r
-    'route.takerS': '\u8F93\u5165\u53E3\u4EE4\u6216\u6253\u5F00\u94FE\u63A5\uFF0C\u5373\u53EF\u53D6\u4EF6',\r
-    'route.fine': '\u53E3\u4EE4\u8BF7\u59A5\u5584\u4FDD\u7BA1\uFF0C\u4EC5\u5206\u4EAB\u7ED9\u9700\u8981\u7684\u4EBA',\r
-\r
-    'feat.splitT': '\u6587\u4EF6\u5206\u4EAB', 'feat.splitS': '\u5355\u6587\u4EF6\u6700\u5927 {0}',\r
-    'feat.ttlT': '\u81EA\u9009\u6709\u6548\u671F', 'feat.ttlS': '1 ~ 30 \u5929\u6216\u6C38\u4E45',\r
-    'feat.limitT': '\u9650\u6B21\u53D6\u4EF6', 'feat.limitS': '1 \u6B21 \xB7 5 \u6B21 \xB7 \u4E0D\u9650',\r
-    'feat.selfT': '\u4FBF\u6377\u53D6\u4EF6', 'feat.selfS': '\u652F\u6301\u53E3\u4EE4\u3001\u94FE\u63A5\u548C\u626B\u7801\u53D6\u4EF6',\r
-    'qr.hint': '\u626B\u7801\u76F4\u63A5\u53D6\u4EF6',\r
-    'label.code': '\u53E3\u4EE4',\r
-    'label.link': '\u94FE\u63A5',\r
-    'copied': '{0}\u5DF2\u590D\u5236',\r
-    'copy.fail': '\u590D\u5236\u5931\u8D25,\u8BF7\u624B\u52A8\u590D\u5236',\r
-    'copied.btn': '\u2713 \u5DF2\u590D\u5236',\r
-\r
-    'meta.after': '{0}\u540E\u8FC7\u671F({1})',\r
-    'meta.forever': '\u6C38\u4E45\u6709\u6548',\r
-    'meta.pickups': '\u53EF\u53D6 {0} \u6B21',\r
-    'meta.unlimited': '\u53D6\u4EF6\u6B21\u6570\u4E0D\u9650',\r
-    'files.count': '{0} \u4E2A\u6587\u4EF6 \xB7 \u5171 {1}',\r
-    'unknown.type': '\u672A\u77E5\u7C7B\u578B',\r
-    'text.counter': '{0} / {1}',\r
-\r
-    'err.oversize': '\u6587\u4EF6\u8D85\u8FC7 {0} \u4E0A\u9650({1})',\r
-    'err.empty': '\u7A7A\u6587\u4EF6\u4E0D\u80FD\u5206\u4EAB',\r
-    'err.tooMany': '\u4E00\u6B21\u6700\u591A\u5206\u4EAB {0} \u4E2A\u6587\u4EF6',\r
-    'err.upload': '\u4E0A\u4F20\u5931\u8D25,\u8BF7\u91CD\u8BD5',\r
-    'err.submit': '\u63D0\u4EA4\u5931\u8D25',\r
-    'req.fail': '\u8BF7\u6C42\u5931\u8D25 ({0})',\r
-    'toast.cancelled': '\u5DF2\u53D6\u6D88\u4E0A\u4F20',\r
-\r
-    'dur.s': '{0} \u79D2',\r
-    'dur.ms': '<1 \u79D2',\r
-    'dur.hm': '{0} \u5206 {1} \u79D2',\r
-    'dur.h': '{0} \u5206',\r
-    'dur.hH': '{0} \u65F6 {1} \u5206',\r
-    'dur.hH2': '{0} \u65F6',\r
-    'dur.d': '{0} \u5929',\r
-\r
-    'pk.title': '\u8F93\u5165\u53D6\u4EF6\u53E3\u4EE4',\r
-    'pk.sub': '\u8F93\u5165 6 \u4F4D\u6570\u5B57\u53E3\u4EE4,\u53D6\u51FA\u5206\u4EAB\u7684\u6587\u4EF6\u6216\u6587\u672C',\r
-    'pk.aria': '6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',\r
-    'pk.fail': '\u53D6\u4EF6\u5931\u8D25',\r
-    'pk.textChars': '\u6587\u672C \xB7 {0} \u5B57\u7B26',\r
-    'pk.copyAllText': '\u4E00\u952E\u590D\u5236\u5168\u6587',\r
-    'pk.download': '\u2B07 \u4E0B\u8F7D\u6587\u4EF6',\r
-    'pk.again': '\u91CD\u65B0\u8F93\u5165',\r
-    'pk.expireAt': '{0} \u8FC7\u671F',\r
-    'pk.left': '\u5269\u4F59\u53EF\u53D6 {0} \u6B21',\r
-    'pk.unnamed': '\u672A\u547D\u540D\u6587\u4EF6',\r
-    'copied.text': '\u5DF2\u590D\u5236\u5168\u6587',\r
-\r
-    'ad.loginTitle': '\u7BA1\u7406\u767B\u5F55',\r
-    'ad.loginSub': '\u4F7F\u7528\u7BA1\u7406\u4EE4\u724C\u767B\u5F55',\r
-    'ad.tokenPh': '\u7BA1\u7406\u4EE4\u724C',\r
-    'ad.login': '\u767B\u5F55',\r
-    'ad.badToken': '\u4EE4\u724C\u65E0\u6548',\r
-    'ad.total': '\u5206\u4EAB\u603B\u6570',\r
-    'ad.active': '\u5F53\u524D\u6709\u6548',\r
-    'ad.files': '\u6587\u4EF6',\r
-    'ad.texts': '\u6587\u672C',\r
-    'ad.storage': '\u5B58\u50A8\u7A7A\u95F4 \xB7 \u5DF2\u7528 / \u603B\u5BB9\u91CF',\r
-    'ad.storageReserved': '\u542B\u4E0A\u4F20\u9884\u7559\u7A7A\u95F4',\r
-    'ad.storageUnavailable': '\u6682\u4E0D\u53EF\u7528',\r
-    'ad.shareBytes': '\u5206\u4EAB\u5185\u5BB9\u5927\u5C0F',\r
-    'ad.today': '\u4ECA\u65E5\u65B0\u589E',\r
-    'ad.th.code': '\u53E3\u4EE4', 'ad.th.kind': '\u7C7B\u578B', 'ad.th.content': '\u5185\u5BB9',\r
-    'ad.th.size': '\u5927\u5C0F', 'ad.th.pickups': '\u5DF2\u53D6/\u4E0A\u9650', 'ad.th.expire': '\u8FC7\u671F\u65F6\u95F4',\r
-    'ad.th.status': '\u72B6\u6001', 'ad.th.created': '\u521B\u5EFA\u65F6\u95F4',\r
-    'ad.kind.file': '\u6587\u4EF6', 'ad.kind.text': '\u6587\u672C',\r
-    'ad.st.active': '\u6709\u6548', 'ad.st.expired': '\u5DF2\u8FC7\u671F', 'ad.st.exhausted': '\u5DF2\u53D6\u5B8C',\r
-    'ad.loading': '\u52A0\u8F7D\u4E2D\u2026',\r
-    'ad.empty': '\u6682\u65E0\u5206\u4EAB',\r
-    'ad.loadFail': '\u52A0\u8F7D\u5931\u8D25',\r
-    'ad.page': '\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761',\r
-    'ad.prev': '\u4E0A\u4E00\u9875', 'ad.next': '\u4E0B\u4E00\u9875',\r
-    'ad.refresh': '\u21BB \u5237\u65B0',\r
-    'ad.logout': '\u9000\u51FA\u767B\u5F55',\r
-    'ad.download': '\u4E0B\u8F7D',\r
-    'ad.delete': '\u5220\u9664',\r
-    'ad.deleted': '\u5DF2\u5220\u9664',\r
-    'ad.deleteFail': '\u5220\u9664\u5931\u8D25',\r
-    'ad.delTitle': '\u4F5C\u5E9F\u8FD9\u5F20\u53D6\u4EF6\u51ED\u8BC1?',\r
-    'ad.delWarn': '\u4F5C\u5E9F\u540E\u53E3\u4EE4\u7ACB\u5373\u5931\u6548,\u5BF9\u65B9\u5C06\u65E0\u6CD5\u53D6\u4EF6,\u4E14\u4E0D\u53EF\u6062\u590D\u3002',\r
-    'ad.delOk': '\u786E\u8BA4\u4F5C\u5E9F',\r
-    'ad.textFallback': '(\u6587\u672C)',\r
-    'ad.unnamed': '(\u672A\u547D\u540D)',\r
-    'ad.chars': '{0} \u5B57',\r
-    'ad.forever': '\u6C38\u4E45',\r
-\r
-    'nf.title': '\u9875\u9762\u4E0D\u5B58\u5728',\r
-    'nf.body': '\u4F60\u8981\u627E\u7684\u9875\u9762\u4E0D\u5728\u4E2D\u8F6C\u7AD9\u91CC',\r
-    'nf.send': '\u53BB\u53D1\u9001',\r
-    'nf.pickup': '\u53BB\u53D6\u4EF6',\r
-  },\r
-\r
-  en: {\r
-    "ad.editShare": "Edit share",\r
-    "ad.editCount": "Picked up",\r
-    "ad.editLimit": "Pickup limit",\r
-    "ad.editUnlimited": "Unlimited",\r
-    "ad.editSave": "Save changes",\r
-    "ad.editCancel": "Cancel",\r
-    "ad.editReload": "Discard changes and reload",\r
-    "ad.editSaved": "Share rules updated",\r
-    "ad.editInvalid": "Enter valid counts and an expiry time",\r
-    "ad.editTimeChanged": "The expiry time has passed. Review the updated status and save again.",\r
-    "ad.editCleanupPending": "This file is eligible for cleanup. Download a backup and upload it again if available.",\r
-    "ad.editHint": "Dates use {0}. Past dates expire the share and affect scheduled cleanup according to the retention setting. Permanent shares still use storage.",\r
-    "ad.editStatusHint": "Active extends expired dates by 7 days and raises an exhausted limit above the current count (or removes the limit at the count ceiling). Expired sets the expiry to now. Exhausted raises the count to its limit, assigns a limit if unlimited, and extends an expired date by 7 days. Review the changed values before saving.",\r
-    "audit.action.editShare": "Edit share rules",\r
-    "audit.detail.beforeRules": "Before",\r
-    "audit.detail.afterRules": "After",\r
-\r
-    'ad.settings': 'Settings',\r
-    'ad.shareSettings': 'Sharing rules',\r
-    'ad.guestWeeklyFiles': 'Unnoted guest files / week',\r
-    'ad.displaySettings': 'List display',\r
-    'ad.filesPageSize': 'Files per page',\r
-    'ad.auditPageSize': 'Logs per page',\r
-    'ad.browserSettings': 'Applied immediately, saved in this browser',\r
-    'ad.preferenceNotSaved': 'Applied for now; this browser could not save the preference',\r
-    'ad.filesPagination': 'File pagination',\r
-    'ad.auditPagination': 'Log pagination',\r
-    'context.add': 'Additional information (optional)',\r
-    'context.name': 'Your name',\r
-    'context.description': 'File description',\r
-    'context.namePh': 'Your name or nickname',\r
-    'context.descriptionPh': 'Describe the files; applies to this batch',\r
-    'context.visibility': 'Only visible to the administrator',\r
-    'ad.retentionTitle': 'Automatic cleanup',\r
-    'ad.recentUploads': 'Recent uploads',\r
-    'ad.historyScope': 'Latest 10 retained shares',\r
-    'ad.backFile': 'Back to file',\r
-    'ad.submittedName': 'Submitted name',\r
-    'ad.requestIP': 'Request IP',\r
-    'ad.network': 'Network',\r
-    'ad.browserReported': 'Browser',\r
-    'ad.browserHint': 'Reported by the browser; may be modified',\r
-    'ad.noteShort': 'Note',\r
-    'ad.copyIP': 'Copy',\r
-    'ad.ipCopied': 'IP copied',\r
-    'ad.copyFailed': 'Copy failed; select the IP manually',\r
-    'ad.fileDescription': 'Description',\r
-    'audit.detail.filename': 'Filename',\r
-    'audit.detail.sizeBytes': 'Size (bytes)',\r
-    'audit.navigation': "Admin pages",\r
-    'audit.files': "Files",\r
-    'audit.title': "Audit logs",\r
-    'audit.retention': "Last 30 days, up to 1,000 entries; times shown in your local timezone",\r
-    'audit.export': "Export results",\r
-    'audit.categories': "Log categories",\r
-    'audit.all': "All logs",\r
-    'audit.login': "Login logs",\r
-    'audit.operation': "Operations",\r
-    'audit.security': "Security",\r
-    'audit.result': "Result",\r
-    'audit.anyResult': "All results",\r
-    'audit.success': "Success",\r
-    'audit.failed': "Failed",\r
-    'audit.blocked': "Blocked",\r
-    'audit.from': "Start date",\r
-    'audit.to': "End date",\r
-    'audit.keyword': "IP / Target",\r
-    'audit.search': "Search IP or pickup code",\r
-    'audit.filter': "Filter",\r
-    'audit.reset': "Reset",\r
-    'audit.time': "Time",\r
-    'audit.action': "Action",\r
-    'audit.actor': "Actor",\r
-    'audit.source': "Source IP / Location",\r
-    'audit.target': "Target",\r
-    'audit.details': "Details",\r
-    'audit.empty': "No matching logs. Recording starts when this feature is deployed.",\r
-    'audit.disabled': "Audit logging is not enabled: bind R2 or D1.",\r
-    'audit.page': "Page {0} / {1} \xB7 {2} entries",\r
-    'audit.dateError': "Start date must not be after end date",\r
-    'audit.http': "Request / Status",\r
-    'audit.duration': "Processing time",\r
-    'audit.id': "Log ID",\r
-    'audit.agent': "Browser identifier (client supplied)",\r
-    'audit.yes': "Yes",\r
-    'audit.no': "No",\r
-    'audit.description': "Description",\r
-    'audit.downloadHint': "The file stream was opened; this does not confirm the browser finished downloading.",\r
-    'audit.writeFailed': "The operation was processed, but its audit record could not be saved. Check log storage.",\r
-    'audit.action.login': "Admin login",\r
-    'audit.action.logout': "Log out",\r
-    'audit.action.retention': "Change expired retention",\r
-    'audit.action.uploadPolicy': "Change weekly upload quota",\r
-    'audit.action.unblock': "Unblock IP",\r
-    'audit.action.cleanup': "Run expired cleanup",\r
-    'audit.action.export': "Export audit logs",\r
-    'audit.action.ban': "Trigger login ban",\r
-    'audit.action.delete': "Delete share",\r
-    'audit.action.note': "Change visitor note",\r
-    'audit.action.viewSource': "View source details",\r
-    'audit.action.download': "Download file",\r
-    'audit.action.preview': 'Preview file',\r
-    'preview.title': 'Content preview',\r
-    'preview.partial': 'Partial content',\r
-    'preview.complete': 'Complete content',\r
-    'preview.type': 'Preview is unavailable for this file type',\r
-    'preview.size': 'Image exceeds 2 MiB. Download to view.',\r
-    'preview.encoding': 'Not UTF-8 text or contains binary data. Download to view.',\r
-    'preview.image': 'Image cannot be previewed or dimensions exceed the limit. Download to view.',\r
-    'preview.empty': 'Empty file',\r
-    'preview.timeout': 'Preview timed out',\r
-    'audit.actor.admin': "Administrator",\r
-    'audit.actor.token': "Scheduler / Token",\r
-    'audit.actor.anonymous': "Unauthenticated",\r
-    'audit.detail.bannedUntil': "Blocked until",\r
-    'audit.detail.expiredRetentionDays': "Expired retention days",\r
-    'audit.detail.weeklyFileLimit': "Weekly upload limit",\r
-    'audit.detail.notePresent': "Note set",\r
-    'audit.detail.alreadyDeleted': "Share already absent",\r
-    'audit.detail.deletedShares': "Shares deleted",\r
-    'audit.detail.abortedSessions': "Upload sessions aborted",\r
-\r
-    'ad.loginProtection': "Login protection",\r
-    'ad.guardRule': "{1} failures in {0} minutes block login for {2} minutes",\r
-    'ad.guardDisabled': "Not enabled: bind R2 or D1",\r
-    'ad.guardEmpty': "No blocked IPs",\r
-    'ad.guardUnknown': "Unknown source (shared limit)",\r
-    'ad.guardFailures': "{0} failures",\r
-    'ad.guardUntil': "Unblocks at {0}",\r
-    'ad.guardLast': "Last failure {0}",\r
-    'ad.guardUnblock': "Unblock",\r
-    'ad.guardUnblocked': "IP unblocked",\r
-    'ad.loginBlocked': "Too many failed logins. Wait until the block expires.",\r
-    'ad.guardUnavailable': "Login protection unavailable. Please try again later.",\r
-\r
-    'ad.formatUnknown': "Unknown format",\r
-    'ad.format.archive': "Archive",\r
-    'ad.format.program': "Application",\r
-    'ad.format.document': "Document",\r
-    'ad.format.image': "Image",\r
-    'ad.format.video': "Video",\r
-    'ad.format.audio': "Audio",\r
-    'ad.format.text': "Text / code",\r
-    'ad.format.file': "File",\r
-    'ad.uploader': "Uploaded by",\r
-    'ad.shareState': "Share status",\r
-    'ad.fileAvailability': "File status",\r
-    'ad.fileState.available': "Available",\r
-    'ad.fileState.missing': "File missing",\r
-    'ad.fileState.unknown': "Unable to verify",\r
-    'ad.timeLeft': "{0} left",\r
-    'ad.timeExpired': "Expired {0} ago",\r
-    'ad.cleanupPermanent': "No automatic cleanup",\r
-    'ad.cleanupActive': "Kept for {0} days after expiry",\r
-    'ad.cleanupRetained': "Retained after expiry",\r
-    'ad.cleanupPending': "Awaiting cleanup",\r
-    'ad.technical': "Technical details",\r
-    'ad.storedSize': "Stored size",\r
-    'ad.storedAt': "Stored at",\r
-    'ad.exactBytes': "{0} bytes",\r
-    'ad.formatHint': "Format is inferred from the filename; content has not been verified.",\r
-    'ad.tryDownload': "Try download",\r
-    'ad.guestLimits': "Unnoted visitor limits",\r
-    'ad.weeklyFiles': "Files per week",\r
-    'ad.guestRules': "Resets Monday, Beijing time. Accepted uploads count even if cancelled. Unnoted visitors cannot create permanent or unlimited-pickup shares.",\r
-    'ad.guestSaved': "Saved for subsequent uploads",\r
-    'policy.expiry': "1 to 30 days",\r
-    'policy.pickups': "1 or 5 pickups",\r
-    'policy.remaining': "{0} / {1} files left this week \xB7 resets {2}",\r
-    'policy.unavailable': "Loading upload permissions. Refresh if this persists.",\r
-    'policy.contact': "File uploads are unavailable. Contact the administrator.",\r
-    'ad.fileDetails': 'File details',\r
-    'ad.filename': 'Filename',\r
-    'ad.fileType': 'File type',\r
-    'ad.cleanupAfter': 'Cleanup after',\r
-    'ad.retentionDays': 'Keep after expiry',\r
-    'ad.days': 'days',\r
-    'ad.save': 'Save',\r
-    'ad.retry': 'Retry',\r
-    'ad.settingsSaved': 'Saved for subsequent cleanup runs',\r
-    'ad.source': 'Upload source',\r
-    'ad.visitor': 'Visitor {0}',\r
-    'ad.visitorId': 'Visitor ID',\r
-    'ad.sourceUnknown': 'Unknown',\r
-    'ad.sourceUnrecorded': 'Not recorded',\r
-    'ad.sourceLocation': 'Exit location',\r
-    'ad.sourceTime': 'Recorded at',\r
-    'ad.sourceNote': 'Admin note',\r
-    'ad.sourceSave': 'Save note',\r
-    'ad.sourceClose': 'Close',\r
-    'ad.sourceSaved': 'Note saved',\r
-    'err.capacity': 'Storage capacity exceeds the free quota.',\r
-    'err.capacityRemaining': 'Storage capacity exceeds the free quota. Available space: approximately {0} GB ({1} bytes).',\r
-    'doc.send': 'file-relay - Send',\r
-    'doc.pickup': 'file-relay - Pickup',\r
-    'doc.admin': 'file-relay - Admin',\r
-    'doc.404': '404 - file-relay',\r
-\r
-    'brand.name': 'file-relay',\r
-    'brand.tagline': 'Files, picked up like parcels',\r
-    'brand.pickup': 'Pickup',\r
-    'brand.admin': 'Admin',\r
-    'nav.pickup': 'Pick up',\r
-    'nav.send': 'Send',\r
-    'nav.theme': 'Toggle theme',\r
-    'nav.lang': 'Switch language',\r
-    'foot': [\r
-      'Yours, from afar',\r
-      'Words run short, feelings run long',\r
-      'See you down the road',\r
-      'Signed, sealed, delivered',\r
-      'Through wind and rain, the relay waits',\r
-      'Take care, until next time',\r
-    ],\r
-\r
-    'tab.file': 'Send file',\r
-    'tab.text': 'Send text',\r
-    'dz.click': 'Click to choose files',\r
-    'dz.drop': ', or drag & drop / paste here',\r
-    'dz.aria': 'Choose files',\r
-    'dz.hint': 'A 6-digit pickup code is generated after upload',\r
-    'dz.hintMax': 'Up to {0} per file \xB7 multiple selection supported',\r
-    'remove': 'Remove',\r
-    'text.placeholder': 'Paste or type the text to share\u2026',\r
-    'opt.expiry': 'Expires',\r
-    'opt.pickups': 'Pickup limit',\r
-    'seg.1d': '1 day', 'seg.7d': '7 days', 'seg.30d': '30 days', 'seg.forever': 'Forever',\r
-    'seg.p1': '1\xD7', 'seg.p5': '5\xD7', 'seg.punlimited': 'Unlimited',\r
-    'btn.upload': 'Start upload',\r
-    'btn.genCode': 'Generate code',\r
-    'btn.cancel': 'Cancel',\r
-    'btn.copyCode': 'Copy code',\r
-    'btn.copyLink': 'Copy link',\r
-    'btn.copyAll': 'Copy all codes',\r
-    'btn.again': 'New share',\r
-\r
-    'prog.preparing': 'Preparing\u2026',\r
-    'prog.uploading': 'Uploading\u2026',\r
-    'prog.init': 'Checking available space\u2026',\r
-    'prog.merging': 'Finishing upload\u2026',\r
-    'prog.file': 'file {0}/{1}',\r
-    'prog.part': 'part {0}/{1}',\r
-    'prog.eta': 'ETA {0}',\r
-    'prog.retry': 'Upload failed, retrying {0}/3\u2026',\r
-\r
-    'result.ok': '\u2705 Shared! Send the code to the recipient',\r
-    'result.okBatch': '\u2705 {0} files shared successfully',\r
-    'ticket.title': 'PICKUP TICKET',\r
-    'ticket.no': '\u2116 {0}',\r
-    'send.cap': 'SHARE CONTENT',\r
-    'receipt.cap': 'SHARE RESULTS',\r
-    'ph.title': 'READY TO SHARE',\r
-    'ph.sub': 'Copy your pickup code or link here after sharing',\r
-\r
-    'flow.dropT': 'Send',\r
-    'flow.dropS': 'Choose files or enter text',\r
-    'flow.tickT': 'Ticket',\r
-    'flow.tickS': 'A 6-digit pickup code is issued',\r
-    'flow.pickT': 'Pick up',\r
-    'flow.pickS': 'The recipient claims it with the code',\r
-\r
-    'route.senderT': 'Sender \xB7 you',\r
-    'route.senderS': 'Choose content, expiry and pickup limit',\r
-    'route.relayT': 'Create a share',\r
-    'route.relayS': 'Send the pickup code or link to the recipient',\r
-    'route.takerT': 'Recipient',\r
-    'route.takerS': 'Enter the code or open the link to pick up',\r
-    'route.fine': 'Keep the code private; share only with your recipients',\r
-\r
-    'feat.splitT': 'File sharing', 'feat.splitS': 'Up to {0} per file',\r
-    'feat.ttlT': 'You set the clock', 'feat.ttlS': '1-30 days, or forever',\r
-    'feat.limitT': 'Limited pickups', 'feat.limitS': '1\xD7 \xB7 5\xD7 \xB7 unlimited',\r
-    'feat.selfT': 'Easy pickup', 'feat.selfS': 'Use a code, link or QR code',\r
-    'qr.hint': 'Scan to pick up',\r
-    'label.code': 'code',\r
-    'label.link': 'link',\r
-    'copied': '{0} copied',\r
-    'copy.fail': 'Copy failed, please copy manually',\r
-    'copied.btn': '\u2713 Copied',\r
-\r
-    'meta.after': 'Expires in {0} ({1})',\r
-    'meta.forever': 'Never expires',\r
-    'meta.pickups': '{0} pickups allowed',\r
-    'meta.unlimited': 'Unlimited pickups',\r
-    'files.count': '{0} files \xB7 {1} total',\r
-    'unknown.type': 'unknown type',\r
-    'text.counter': '{0} / {1}',\r
-\r
-    'err.oversize': 'File exceeds the {0} limit ({1})',\r
-    'err.empty': 'Empty files cannot be shared',\r
-    'err.tooMany': 'Up to {0} files per batch',\r
-    'err.upload': 'Upload failed, please retry',\r
-    'err.submit': 'Submission failed',\r
-    'req.fail': 'Request failed ({0})',\r
-    'toast.cancelled': 'Upload cancelled',\r
-\r
-    'dur.s': '{0}s',\r
-    'dur.ms': '<1s',\r
-    'dur.hm': '{0}m {1}s',\r
-    'dur.h': '{0}m',\r
-    'dur.hH': '{0}h {1}m',\r
-    'dur.hH2': '{0}h',\r
-    'dur.d': '{0}d',\r
-\r
-    'pk.title': 'Enter pickup code',\r
-    'pk.sub': 'Enter the 6-digit code to retrieve the shared file or text',\r
-    'pk.aria': '6-digit pickup code',\r
-    'pk.fail': 'Pickup failed',\r
-    'pk.textChars': 'Text \xB7 {0} chars',\r
-    'pk.copyAllText': 'Copy all text',\r
-    'pk.download': '\u2B07 Download file',\r
-    'pk.again': 'Try another code',\r
-    'pk.expireAt': 'Expires {0}',\r
-    'pk.left': '{0} pickups left',\r
-    'pk.unnamed': 'Untitled file',\r
-    'copied.text': 'Full text copied',\r
-\r
-    'ad.loginTitle': 'Admin login',\r
-    'ad.loginSub': 'Sign in with your admin token',\r
-    'ad.tokenPh': 'Admin token',\r
-    'ad.login': 'Log in',\r
-    'ad.badToken': 'Invalid token',\r
-    'ad.total': 'Total shares',\r
-    'ad.active': 'Active',\r
-    'ad.files': 'Files',\r
-    'ad.texts': 'Texts',\r
-    'ad.storage': 'Storage \xB7 used / capacity',\r
-    'ad.storageReserved': 'Includes upload reservations',\r
-    'ad.storageUnavailable': 'Unavailable',\r
-    'ad.shareBytes': 'Shared content size',\r
-    'ad.today': 'New today',\r
-    'ad.th.code': 'Code', 'ad.th.kind': 'Type', 'ad.th.content': 'Content',\r
-    'ad.th.size': 'Size', 'ad.th.pickups': 'Picked/Limit', 'ad.th.expire': 'Expires',\r
-    'ad.th.status': 'Status', 'ad.th.created': 'Created',\r
-    'ad.kind.file': 'File', 'ad.kind.text': 'Text',\r
-    'ad.st.active': 'Active', 'ad.st.expired': 'Expired', 'ad.st.exhausted': 'Exhausted',\r
-    'ad.loading': 'Loading\u2026',\r
-    'ad.empty': 'No shares yet',\r
-    'ad.loadFail': 'Failed to load',\r
-    'ad.page': 'Page {0} / {1} \xB7 {2} total',\r
-    'ad.prev': 'Prev', 'ad.next': 'Next',\r
-    'ad.refresh': '\u21BB Refresh',\r
-    'ad.logout': 'Log out',\r
-    'ad.download': 'Download',\r
-    'ad.delete': 'Delete',\r
-    'ad.deleted': 'Deleted',\r
-    'ad.deleteFail': 'Delete failed',\r
-    'ad.delTitle': 'Void this ticket?',\r
-    'ad.delWarn': 'The code stops working immediately, the recipient can no longer pick it up, and this cannot be undone.',\r
-    'ad.delOk': 'Void it',\r
-    'ad.textFallback': '(text)',\r
-    'ad.unnamed': '(unnamed)',\r
-    'ad.chars': '{0} chars',\r
-    'ad.forever': 'Forever',\r
-\r
-    'nf.title': 'Page not found',\r
-    'nf.body': "The page you're looking for isn't in this relay",\r
-    'nf.send': 'Send files',\r
-    'nf.pickup': 'Pick up',\r
-  },\r
-};\r
-\r
-export let LANG =\r
-  localStorage.getItem('lang') ||\r
-  ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');\r
-\r
-/** \u53D6\u8BCD:\u5F53\u524D\u8BED\u8A00 \u2192 \u4E2D\u6587\u515C\u5E95 \u2192 key \u672C\u8EAB;\u6570\u7EC4\u503C\u968F\u673A\u53D6\u4E00\u6761;{0}{1}\u2026 \u4F9D\u6B21\u66FF\u6362 */\r
-export function t(key, ...args) {\r
-  let s = (DICT[LANG] && DICT[LANG][key]) ?? DICT.zh[key] ?? key;\r
-  if (Array.isArray(s)) s = s[Math.floor(Math.random() * s.length)];\r
-  args.forEach((v, i) => { s = s.replaceAll(\`{\${i}}\`, String(v)); });\r
-  return s;\r
-}\r
-\r
-const rerenders = [];\r
-/** \u5404\u9875\u9762\u767B\u8BB0:\u8BED\u8A00\u5207\u6362\u540E\u91CD\u7B97\u52A8\u6001\u6587\u6848 */\r
-export function onLangChange(fn) { rerenders.push(fn); }\r
-\r
-function applyLang() {\r
-  document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';\r
-  document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = t(n.dataset.i18n); });\r
-  document.querySelectorAll('[data-i18n-ph]').forEach((n) => { n.placeholder = t(n.dataset.i18nPh); });\r
-  document.querySelectorAll('[data-i18n-title]').forEach((n) => { n.title = t(n.dataset.i18nTitle); });\r
-  document.querySelectorAll('[data-i18n-aria]').forEach((n) => { n.setAttribute('aria-label', t(n.dataset.i18nAria)); });\r
-  const btn = document.getElementById('lang-btn');\r
-  if (btn) btn.textContent = LANG === 'en' ? '\u4E2D' : 'EN';\r
-}\r
-\r
-export function initI18n() {\r
-  applyLang();\r
-  document.getElementById('lang-btn')?.addEventListener('click', () => {\r
-    LANG = LANG === 'en' ? 'zh' : 'en';\r
-    localStorage.setItem('lang', LANG);\r
-    applyLang();\r
-    rerenders.forEach((fn) => fn());\r
-  });\r
-}\r
-`, "js/index.js": "import { initUi } from './ui.js';\nimport { $, $$, api, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme, el } from './common.js';\nimport { t, onLangChange, initI18n } from './i18n.js';\n\ninitTheme();\ninitI18n();\n\nconst els = {\n  dropzone: $('#dropzone'),\n  dzHint: $('#dz-hint'),\n  fileInput: $('#file-input'),\n  fileList: $('#file-list'),\n  textInput: $('#text-input'),\n  textCounter: $('#text-counter'),\n  btnUpload: $('#btn-upload'),\n  btnText: $('#btn-text'),\n  progress: $('#progress'),\n  progressFill: $('#progress-fill'),\n  progressText: $('#progress-text'),\n  btnCancel: $('#btn-cancel'),\n  results: $('#results'),\n  placeholder: $('#result-placeholder'),\n  capDate: $('#cap-date'),\n};\n\nconst MAX_SIZE_FALLBACK = 25 * 1024 * 1024;\nconst MAX_BATCH = 10;\nlet cfg = { fileBackend: 'kv', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config \u52A0\u8F7D\u540E\u8986\u76D6\nlet MAX_SIZE = MAX_SIZE_FALLBACK;\nlet policyReady = false;\n\nlet files = []; // \u5F85\u4E0A\u4F20\u961F\u5217(File[])\nlet queueUI = new Map(); // File \u2192 { row, bar, status }\nlet queueState = new Map(); // File \u2192 'idle' | { done: code } | 'fail'(\u8BED\u8A00\u5207\u6362\u540E\u91CD\u6E32\u67D3\u7528)\nlet session = null; // \u8FDB\u884C\u4E2D\u7684 R2 \u5206\u7247\u4F1A\u8BDD { uploadId, partSize, parts }\nlet currentXhr = null;\nlet cancelled = false;\nlet uploading = false;\nlet lastResults = [];\n\n/* \u670D\u52A1\u7AEF\u914D\u7F6E:\u51B3\u5B9A\u8D70\u5206\u7247\u4E0A\u4F20(R2 \u5927\u5B58\u50A8)\u8FD8\u662F\u5355\u8BF7\u6C42\u76F4\u4F20(KV \u5C0F\u5B58\u50A8) */\nfunction canUploadFiles() {\n  return policyReady && cfg.fileBackend !== 'none' && cfg.fileUploadAvailable !== false && cfg.uploadsRemaining !== 0;\n}\nfunction updateHint() {\n  els.dzHint.textContent = t('dz.hintMax', fmtBytes(MAX_SIZE));\n  const feature = $('[data-i18n=\"feat.splitS\"]');\n  if (feature) feature.textContent = t('feat.splitS', fmtBytes(MAX_SIZE));\n  for (const [id, value, allowed, fallback] of [\n    ['seg-expiry', 'forever', cfg.allowPermanent === true, '7d'],\n    ['seg-pickups', 'null', cfg.allowUnlimited === true, '5'],\n  ]) {\n    const button = $(`#${id} [data-v=\"${value}\"]`);\n    button.disabled = !allowed;\n    if (!allowed && button.classList.contains('active')) {\n      button.classList.remove('active');\n      $(`#${id} [data-v=\"${fallback}\"]`).classList.add('active');\n    }\n  }\n  $('[data-i18n=\"feat.ttlS\"]').textContent = t(cfg.allowPermanent ? 'feat.ttlS' : 'policy.expiry');\n  $('[data-i18n=\"feat.limitS\"]').textContent = t(cfg.allowUnlimited ? 'feat.limitS' : 'policy.pickups');\n  $('#upload-policy-hint').textContent = !policyReady ? t('policy.unavailable')\n    : cfg.fileUploadAvailable === false ? t('policy.contact')\n    : cfg.weeklyFileLimit !== null && cfg.weeklyFileLimit !== undefined\n      ? t('policy.remaining', cfg.uploadsRemaining, cfg.weeklyFileLimit, fmtDate(cfg.uploadsResetAt)) : '';\n  $$('.seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n}\nasync function refreshPolicy() {\n  try {\n    cfg = await api('/api/config');\n    if (!Number.isSafeInteger(cfg.maxFileSize) || (cfg.maxFileSize < 0 || (cfg.maxFileSize === 0 && cfg.fileBackend !== 'none'))) throw new Error('Invalid upload policy');\n    MAX_SIZE = cfg.maxFileSize;\n    policyReady = true;\n  } catch { policyReady = false; }\n  updateHint();\n  setBusy(uploading);\n}\nupdateHint();\nrefreshPolicy();\n\n/* \u5BC4\u4EF6\u5355\u62AC\u5934\u65E5\u671F(\u88C5\u9970) */\nif (els.capDate) els.capDate.textContent = fmtDate(Date.now()).split(' ')[0];\n\n/* \u8BED\u8A00\u5207\u6362:\u91CD\u7B97\u52A8\u6001\u6587\u6848\u4E0E\u7ED3\u679C\u5361\u7247 */\nonLangChange(() => {\n  if (cfg.maxFileSize) updateHint();\n  renderQueue();\n  if (lastResults.length) showResults(lastResults);\n});\n\n/* ---------- tabs ---------- */\n$$('.tab').forEach((tb) =>\n  tb.addEventListener('click', () => {\n    if (uploading) return; // \u4E0A\u4F20\u4E2D\u7981\u6B62\u5207\u6362\n    $$('.tab').forEach((x) => x.classList.toggle('active', x === tb));\n    const tab = tb.dataset.tab;\n    $('#panel-file').hidden = tab !== 'file';\n    $('#panel-text').hidden = tab !== 'text';\n    $('#upload-description-field').hidden = tab !== 'file';\n    $$('.tab').forEach(x => x.setAttribute('aria-pressed', String(x === tb)));\n    els.btnUpload.hidden = tab !== 'file';\n    els.btnText.hidden = tab !== 'text';\n    hideResult();\n  }),\n);\n\n/* ---------- segmented \u9009\u9879 ---------- */\nfor (const id of ['seg-expiry', 'seg-pickups']) {\n  $(`#${id}`).addEventListener('click', (e) => {\n    const b = e.target.closest('button');\n    if (!b || b.disabled) return;\n    $$('button', $(`#${id}`)).forEach((x) => {\n      x.classList.toggle('active', x === b);\n      x.setAttribute('aria-pressed', String(x === b));\n    });\n  });\n}\nfunction readOptions() {\n  const exp = $('#seg-expiry .active').dataset.v;\n  const pk = $('#seg-pickups .active').dataset.v;\n  return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk),\n    displayName: $('#upload-name').value.trim(),\n    description: $('#panel-file').hidden ? '' : $('#upload-description').value.trim() };\n}\n$$('.tab, .seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n$('#upload-description').addEventListener('input', e => {\n  $('#description-count').textContent = `${e.target.value.length} / 300`;\n});\n\n/* ---------- \u6587\u4EF6\u961F\u5217:\u70B9\u51FB / \u5168\u7A97\u53E3\u62D6\u62FD / \u667A\u80FD\u7C98\u8D34,\u518D\u9009\u5373\u6574\u4F53\u66FF\u6362 ---------- */\nels.dropzone.addEventListener('click', () => els.fileInput.click());\nels.dropzone.addEventListener('keydown', (e) => {\n  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); els.fileInput.click(); }\n});\nels.fileInput.addEventListener('change', () => {\n  setFiles([...els.fileInput.files]);\n  els.fileInput.value = '';\n});\n\nfunction showTab(name) {\n  const tb = $(`.tab[data-tab=\"${name}\"]`);\n  if (tb && !tb.classList.contains('active')) tb.click(); // \u4E0A\u4F20\u4E2D\u65F6 tab \u5904\u7406\u5668\u81EA\u5DF1\u4F1A\u62D2\u7EDD\n}\n\n/* \u62D6\u5230\u9875\u9762\u4EFB\u610F\u4F4D\u7F6E\u90FD\u9AD8\u4EAE\u5E76\u53EF\u653E\u4E0B(\u4E0D\u518D\u8981\u6C42\u7CBE\u786E\u547D\u4E2D\u62D6\u62FD\u533A) */\nlet dragDepth = 0;\nwindow.addEventListener('dragenter', (e) => {\n  if (![...(e.dataTransfer?.types || [])].includes('Files')) return;\n  dragDepth++;\n  if (!uploading) els.dropzone.classList.add('dragover');\n});\nwindow.addEventListener('dragleave', () => {\n  if (--dragDepth <= 0) { dragDepth = 0; els.dropzone.classList.remove('dragover'); }\n});\nwindow.addEventListener('dragover', (e) => e.preventDefault());\nwindow.addEventListener('drop', (e) => {\n  e.preventDefault();\n  dragDepth = 0;\n  els.dropzone.classList.remove('dragover');\n  if (e.dataTransfer?.files?.length) setFiles([...e.dataTransfer.files]);\n});\n\n/* \u7C98\u8D34\u667A\u80FD\u8DEF\u7531:\u7C98\u8D34\u6587\u4EF6\u2192\u6587\u4EF6\u9875;\u6587\u4EF6\u9875\u7C98\u8D34\u7EAF\u6587\u672C\u2192\u81EA\u52A8\u5207\u5230\u6587\u672C\u9875 */\ndocument.addEventListener('paste', (e) => {\n  if (e.target?.closest?.('textarea, input')) return; // \u8F93\u5165\u6846\u5185\u7C98\u8D34\u8D70\u9ED8\u8BA4\u884C\u4E3A\n  if (e.clipboardData?.files?.length) {\n    setFiles([...e.clipboardData.files]);\n    return;\n  }\n  const text = e.clipboardData?.getData('text/plain');\n  if (text && $('#panel-text').hidden) {\n    showTab('text');\n    els.textInput.value = text;\n    els.textInput.dispatchEvent(new Event('input'));\n  }\n});\n\nfunction setFiles(list) {\n  if (uploading) return;\n  const ok = [];\n  for (const f of list) {\n    if (f.size > MAX_SIZE) { toast(t('err.oversize', fmtBytes(MAX_SIZE), fmtBytes(f.size)), 'error'); continue; }\n    if (f.size < 1) { toast(t('err.empty'), 'error'); continue; }\n    ok.push(f);\n  }\n  if (ok.length > MAX_BATCH) {\n    toast(t('err.tooMany', MAX_BATCH), 'error');\n    ok.length = MAX_BATCH;\n  }\n  files = ok; // \u66FF\u6362\u8BED\u4E49:\u518D\u6B21\u9009\u62E9\u5373\u91CD\u7F6E\u961F\u5217\n  queueState = new Map(files.map((f) => [f, 'idle']));\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n  hideResult();\n}\n\nfunction statusText(f, st) {\n  if (st === 'fail') return '\u2717';\n  if (st && st.done) return `\u2713 ${st.done}`;\n  return fmtBytes(f.size);\n}\n\nfunction renderQueue() {\n  els.fileList.replaceChildren();\n  queueUI = new Map();\n  files.forEach((f) => {\n    const st = queueState.get(f) || 'idle';\n    const bar = el('div', { class: 'fr-bar' });\n    const status = el('small', { class: 'fr-status' }, statusText(f, st));\n    const row = el('div', {\n      class: `file-row${st === 'fail' ? ' fail' : ''}${st && st.done ? ' done' : ''}`,\n    });\n    row.replaceChildren(\n      el('span', { class: 'fr-icon' }, iconFor(f.name, f.type)),\n      el('div', { class: 'fr-meta' },\n        el('b', { title: f.name }, f.name),\n        el('small', {}, `${fmtBytes(f.size)} \xB7 ${f.type || t('unknown.type')}`),\n      ),\n      status,\n      el('button', { class: 'icon-btn fr-remove', title: t('remove'), type: 'button', onclick: () => removeFile(f) }, '\u2715'),\n      bar,\n    );\n    if (st && st.done) bar.style.width = '100%';\n    queueUI.set(f, { row, bar, status });\n    els.fileList.append(row);\n  });\n  els.fileList.hidden = files.length === 0;\n  els.dropzone.hidden = files.length > 0;\n}\n\nfunction removeFile(f) {\n  if (uploading) return;\n  files = files.filter((x) => x !== f);\n  queueState.delete(f);\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n}\n\n/* ---------- \u6587\u672C\u8F93\u5165 ---------- */\nels.textInput.addEventListener('input', () => {\n  els.textCounter.textContent = t('text.counter', els.textInput.value.length, 65536);\n  els.btnText.disabled = !policyReady || !els.textInput.value.trim();\n});\n\n/* ---------- \u4E0A\u4F20:\u961F\u5217\u987A\u5E8F\u9010\u4E2A,\u805A\u5408\u8FDB\u5EA6 + \u6BCF\u884C\u8FF7\u4F60\u8FDB\u5EA6 ---------- */\nels.btnUpload.addEventListener('click', startUpload);\nels.btnCancel.addEventListener('click', cancelUpload);\nels.btnText.addEventListener('click', submitText);\n\nfunction sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }\n\nfunction xhrPut(url, blob, onProgress) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open('PUT', url);\n    xhr.onload = () => {\n      let etag = null;\n      try {\n        const result = JSON.parse(xhr.responseText);\n        if (result.error === 'capacity_exceeded' || (xhr.status >= 400 && xhr.status < 500) || result.error?.startsWith('upload_policy')) {\n          const error = new Error(result.message);\n          error.code = result.error;\n          error.remainingBytes = result.remainingBytes;\n          reject(error);\n          return;\n        }\n        etag = result.etag;\n      } catch { /* ignore */ }\n      resolve(xhr.status >= 200 && xhr.status < 300 && etag ? etag : null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\n/** \u5355\u7247\u6700\u591A\u91CD\u8BD5 3 \u6B21,\u9000\u907F 1s/2s/4s */\nasync function putPartWithRetry(uploadId, n, blob, onProgress) {\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) return null;\n    const etag = await xhrPut(`/api/uploads/${uploadId}/parts/${n}`, blob, onProgress);\n    if (etag) return etag;\n    await sleep([1000, 2000, 4000][attempt] || 4000);\n  }\n  return null;\n}\n\nfunction xhrJson(method, url, blob, onProgress, context) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open(method, url);\n    if (context) xhr.setRequestHeader('X-Upload-Context', encodeURIComponent(JSON.stringify(context)));\n    xhr.onload = () => {\n      if (xhr.status >= 200 && xhr.status < 300) {\n        try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }\n      }\n      if (xhr.status >= 400 && xhr.status < 500) {\n        let data;\n        try { data = JSON.parse(xhr.responseText); } catch { /* Use status below. */ }\n        const error = new Error(data?.message || t('req.fail', xhr.status));\n        error.code = data?.error;\n        reject(error);\n        return;\n      }\n      resolve(null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\nlet speedState = { t: 0, loaded: 0, speed: 0 };\nlet curFileIdx = 0;\nlet curFileTotal = 1;\nfunction updateAggregate(loaded, total) {\n  const pct = Math.min(100, Math.floor((loaded / total) * 100));\n  els.progressFill.style.width = pct + '%';\n  const now = performance.now();\n  if (speedState.t && loaded > speedState.loaded) {\n    const inst = (loaded - speedState.loaded) / ((now - speedState.t) / 1000);\n    speedState.speed = speedState.speed ? speedState.speed * 0.7 + inst * 0.3 : inst;\n  }\n  speedState.t = now;\n  speedState.loaded = loaded;\n  let text = `${pct}% \xB7 ${fmtBytes(loaded)} / ${fmtBytes(total)} \xB7 ${fmtBytes(speedState.speed)}/s`;\n  if (speedState.speed > 1024 && loaded > 0 && loaded < total) {\n    text += ` \xB7 ${t('prog.eta', fmtDuration((total - loaded) / speedState.speed))}`;\n  }\n  if (curFileTotal > 1) text += ` \xB7 ${t('prog.file', curFileIdx, curFileTotal)}`;\n  els.progressText.textContent = text;\n}\n\n/** \u7B49\u5F85\u6001(\u521D\u59CB\u5316/\u91CD\u8BD5\u95F4\u9694/\u5408\u5E76\u5206\u7247):\u8FDB\u5EA6\u6761\u53E0\u52A0\u6D41\u5149\u52A8\u753B */\nfunction setPending(on) {\n  els.progressFill.classList.toggle('pending', on);\n}\n\nasync function startUpload() {\n  if (!files.length || uploading || !canUploadFiles()) return;\n  uploading = true;\n  cancelled = false;\n  speedState = { t: 0, loaded: 0, speed: 0 };\n  curFileIdx = 0;\n  curFileTotal = files.length;\n  const opts = readOptions();\n  const responses = [];\n  const totalBytes = files.reduce((s, f) => s + f.size, 0);\n  let baseBytes = 0;\n  setBusy(true);\n  els.progress.hidden = false;\n  els.progressFill.style.width = '0%';\n  setPending(false);\n  els.progressText.textContent = t('prog.preparing');\n\n  for (let i = 0; i < files.length; i++) {\n    if (cancelled) break;\n    const f = files[i];\n    const ui = queueUI.get(f);\n    curFileIdx = i + 1;\n    ui.row.classList.add('uploading');\n    els.progressText.textContent = t('prog.uploading');\n    const onProgress = (loaded) => {\n      ui.bar.style.width = Math.min(100, (loaded / f.size) * 100) + '%';\n      updateAggregate(baseBytes + loaded, totalBytes);\n    };\n    try {\n      const res = cfg.fileBackend === 'kv'\n        ? await directUpload(f, opts, onProgress)\n        : await multipartUpload(f, opts, onProgress);\n      responses.push(res);\n      baseBytes += f.size;\n      queueState.set(f, { done: res.code });\n      ui.bar.style.width = '100%';\n      ui.row.classList.add('done');\n      ui.status.textContent = `\u2713 ${res.code}`;\n    } catch (e) {\n      await abortUpload();\n      queueState.set(f, 'fail');\n      ui.row.classList.add('fail');\n      ui.status.textContent = '\u2717';\n      if (e.code === 'capacity_exceeded') {\n        window.alert(Number.isSafeInteger(e.remainingBytes) && e.remainingBytes >= 0\n          ? t('err.capacityRemaining', (e.remainingBytes / 1e9).toFixed(3), e.remainingBytes.toLocaleString())\n          : t('err.capacity'));\n      } else if (!cancelled) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');\n      break; // \u4E00\u4E2A\u5931\u8D25\u5373\u505C,\u4FDD\u7559\u961F\u5217\u4FBF\u4E8E\u5904\u7406\n    }\n  }\n\n  uploading = false;\n  els.progress.hidden = true;\n  setPending(false);\n  setBusy(false);\n  if (cancelled) toast(t('toast.cancelled'));\n  if (responses.length) showResults(responses);\n  await refreshPolicy();\n}\n\n/* ---------- \u5C0F\u5B58\u50A8\u6A21\u5F0F(KV):\u5355\u8BF7\u6C42\u76F4\u4F20,\u5931\u8D25\u6574\u6587\u4EF6\u91CD\u53D1 ---------- */\nasync function directUpload(f, opts, onProgress) {\n  const qs = new URLSearchParams({\n    filename: f.name,\n    mime: f.type || 'application/octet-stream',\n    expiry: opts.expiry,\n  });\n  if (opts.maxPickups !== null) qs.set('maxPickups', String(opts.maxPickups));\n\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) throw new Error('cancelled');\n    setPending(false);\n    const res = await xhrJson('POST', `/api/shares/file?${qs}`, f, onProgress,\n      { displayName: opts.displayName, description: opts.description });\n    if (res) return res;\n    if (cancelled) throw new Error('cancelled');\n    setPending(true);\n    els.progressText.textContent = t('prog.retry', attempt + 1);\n    await sleep([1000, 2000][attempt] || 4000);\n  }\n  throw new Error(t('err.upload'));\n}\n\n/* ---------- \u5927\u5B58\u50A8\u6A21\u5F0F(R2):\u5206\u7247\u4E0A\u4F20 ---------- */\nasync function multipartUpload(f, opts, onProgress) {\n  setPending(true);\n  els.progressText.textContent = t('prog.init');\n  const init = await api('/api/uploads/init', {\n    method: 'POST',\n    body: { filename: f.name, size: f.size, mime: f.type || 'application/octet-stream', ...opts },\n  });\n  session = init;\n  setPending(false);\n\n  const etags = [];\n  let doneBytes = 0;\n  for (let i = 1; i <= init.parts; i++) {\n    const blob = f.slice((i - 1) * init.partSize, Math.min(i * init.partSize, f.size));\n    const etag = await putPartWithRetry(init.uploadId, i, blob, (loaded) =>\n      onProgress(doneBytes + loaded),\n    );\n    if (!etag) {\n      const wasCancelled = cancelled;\n      await abortUpload();\n      throw new Error(wasCancelled ? 'cancelled' : t('err.upload'));\n    }\n    etags.push({ partNumber: i, etag });\n    doneBytes += blob.size;\n  }\n  if (cancelled) throw new Error('cancelled');\n\n  els.progressFill.style.width = '100%';\n  setPending(true);\n  els.progressText.textContent = t('prog.merging');\n  try {\n    const res = await api(`/api/uploads/${init.uploadId}/complete`, {\n      method: 'POST',\n      body: { parts: etags },\n    });\n    session = null;\n    return res;\n  } catch (e) {\n    await abortUpload();\n    throw e;\n  }\n}\n\nasync function cancelUpload() {\n  cancelled = true;\n  currentXhr?.abort();\n  await abortUpload();\n}\n\nasync function abortUpload() {\n  if (!session) return;\n  const id = session.uploadId;\n  session = null;\n  try { await api(`/api/uploads/${id}/abort`, { method: 'POST', body: {} }); } catch { /* ignore */ }\n}\n\nfunction setBusy(busy) {\n  for (const field of [$('#upload-name'), $('#upload-description')]) field.disabled = busy;\n  els.btnUpload.disabled = busy || files.length === 0 || !canUploadFiles();\n  els.btnText.disabled = busy || !policyReady || !els.textInput.value.trim();\n}\n\n/* \u5237\u65B0/\u5173\u9875\u65F6\u5C3D\u529B\u901A\u77E5\u670D\u52A1\u7AEF\u653E\u5F03(\u4E0D\u662F\u65AD\u70B9\u7EED\u4F20) */\nwindow.addEventListener('pagehide', () => {\n  if (session) navigator.sendBeacon(`/api/uploads/${session.uploadId}/abort`);\n});\n\n/* ---------- \u6587\u672C\u5206\u4EAB ---------- */\nasync function submitText() {\n  const text = els.textInput.value;\n  if (!text.trim() || !policyReady) return;\n  setBusy(true);\n  try {\n    const res = await api('/api/shares/text', { method: 'POST', body: { text, ...readOptions() } });\n    showResults([res]);\n  } catch (e) {\n    toast(e.message || t('err.submit'), 'error');\n  } finally {\n    setBusy(false);\n  }\n}\n\n/* ---------- \u7ED3\u679C\u5361\u7247(\u591A\u6587\u4EF6\u65F6\u9010\u5F20\u5806\u53E0 + \u6279\u91CF\u5934\u90E8) ---------- */\nfunction qrSvgFor(url) {\n  /* vendored qrcode-generator:\u5168\u5C40 window.qrcode(classic script \u5148\u4E8E\u672C\u6A21\u5757\u52A0\u8F7D) */\n  try {\n    const qr = window.qrcode(0, 'M');\n    qr.addData(url);\n    qr.make();\n    const holder = document.createElement('div');\n    holder.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true, alt: t('qr.hint') });\n    return holder.firstElementChild;\n  } catch { return null; }\n}\n\nfunction metaText(r) {\n  const parts = [];\n  parts.push(r.expireAt\n    ? t('meta.after', fmtDuration((r.expireAt - Date.now()) / 1000), fmtDate(r.expireAt))\n    : t('meta.forever'));\n  parts.push(r.maxPickups === null || r.maxPickups === undefined ? t('meta.unlimited') : t('meta.pickups', r.maxPickups));\n  if (r.kind === 'file' && r.size) parts.push(fmtBytes(r.size));\n  return parts.join(' \xB7 ');\n}\n\n/* \u7ED3\u679C\u5361\u7247 = \u53D6\u4EF6\u51ED\u8BC1\u7968\u636E:\u7968\u5934(\u6807\u9898+\u2116) \u2192 \u7968\u8EAB(\u53E3\u4EE4+\u4E8C\u7EF4\u7801) \u2192 \u6495\u7968\u7EBF \u2192 \u7968\u811A(\u64CD\u4F5C) */\nfunction buildResultCard(r, compact) {\n  const link = `${location.origin}/pickup?code=${r.code}`;\n  const qr = qrSvgFor(link);\n  const col = el('div', { class: 'result-col' },\n    compact && r.kind === 'file' && r.filename ? el('div', { class: 'result-file-name' }, r.filename) : null,\n    el('div', { class: 'code' }, ...r.code.split('').map((d) => el('span', {}, d))),\n    el('div', { class: 'result-link' }, link),\n    el('div', { class: 'result-meta' }, metaText(r)),\n  );\n  const main = el('div', { class: 'result-main' },\n    qr ? el('div', { class: 'qr-wrap', title: t('qr.hint') }, qr, el('div', { class: 'qr-hint' }, t('qr.hint'))) : null,\n    col,\n  );\n  return el('div', { class: 'result' },\n    el('div', { class: 'tk-head' },\n      el('span', {}, t('ticket.title')),\n      el('span', { class: 'tk-no' }, t('ticket.no', r.code)),\n    ),\n    el('div', { class: 'tk-body' },\n      compact ? null : el('p', { class: 'result-title' }, t('result.ok')),\n      main,\n    ),\n    el('div', { class: 'tk-tear' }),\n    el('div', { class: 'tk-foot' },\n      el('button', { class: 'btn primary', type: 'button', onclick: (e) => copyBtn(e.currentTarget, r.code, t('label.code')) }, t('btn.copyCode')),\n      el('button', { class: 'btn', type: 'button', onclick: (e) => copyBtn(e.currentTarget, link, t('label.link')) }, t('btn.copyLink')),\n      compact ? null : el('button', { class: 'btn ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n    ),\n  );\n}\n\nfunction showResults(list) {\n  lastResults = list;\n  if (els.placeholder) els.placeholder.hidden = true;\n  els.results.replaceChildren();\n  if (list.length > 1) {\n    els.results.append(\n      el('div', { class: 'result-batch-head' },\n        el('p', { class: 'result-title batch' }, t('result.okBatch', list.length)),\n        el('div', { class: 'btn-row' },\n          el('button', {\n            class: 'btn small', type: 'button',\n            onclick: async (e) => {\n              const ok = await copyText(list.map((r) => r.code).join('\\n'));\n              toast(ok ? t('copied', t('label.code')) : t('copy.fail'), ok ? 'ok' : 'error');\n            },\n          }, t('btn.copyAll')),\n          el('button', { class: 'btn small ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n        ),\n      ),\n    );\n  }\n  for (const r of list) els.results.append(buildResultCard(r, list.length > 1));\n  els.results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });\n}\n\nfunction resetAll() {\n  files = [];\n  queueState = new Map();\n  renderQueue();\n  els.btnUpload.disabled = true;\n  els.textInput.value = '';\n  els.textCounter.textContent = t('text.counter', 0, 65536);\n  els.btnText.disabled = true;\n  hideResult();\n}\n\n/** \u590D\u5236\u6210\u529F\u540E\u6309\u94AE\u77ED\u6682\u53D8\u6210\"\u2713 \u5DF2\u590D\u5236\" */\nasync function copyBtn(btn, text, label) {\n  const ok = await copyText(text);\n  toast(ok ? t('copied', label) : t('copy.fail'), ok ? 'ok' : 'error');\n  if (!ok) return;\n  btn.textContent = t('copied.btn');\n  btn.disabled = true;\n  setTimeout(() => { btn.textContent = label === t('label.code') ? t('btn.copyCode') : t('btn.copyLink'); btn.disabled = false; }, 1500);\n}\n\nfunction hideResult() {\n  lastResults = [];\n  if (els.placeholder) els.placeholder.hidden = false;\n  els.results.replaceChildren();\n}\n\ninitUi('index');\n", "js/pickup.js": "import { initUi } from './ui.js';\nimport { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js';\nimport { t, onLangChange, initI18n } from './i18n.js';\n\ninitTheme();\ninitI18n();\n\nconst boxes = $$('.otp-box');\nconst row = $('#otp-row');\nconst errorBox = $('#pickup-error');\nconst resultCard = $('#pickup-result');\nlet querying = false;\nlet last = null; // { res, code } \u8BED\u8A00\u5207\u6362\u65F6\u91CD\u6E32\u67D3\n\nonLangChange(() => {\n  if (last && !resultCard.hidden) render(last.res, last.code);\n});\n\nfunction value() {\n  return boxes.map((b) => b.value).join('');\n}\n\n/* \u586B\u5165 1-6 \u4F4D\u6570\u5B57:\u591F 6 \u4F4D\u81EA\u52A8\u63D0\u4EA4,\u5426\u5219\u805A\u7126\u5230\u4E0B\u4E00\u4E2A\u7A7A\u683C */\nfunction fill(digits) {\n  boxes.forEach((b, i) => { b.value = digits[i] || ''; });\n  hideError();\n  if (digits.length === 6) {\n    boxes[5].focus();\n    if (!querying) submit();\n  } else {\n    boxes[Math.min(digits.length, 5)].focus();\n  }\n}\n\nboxes.forEach((box, i) => {\n  box.addEventListener('input', () => {\n    box.value = box.value.replace(/\\D/g, '').slice(0, 1);\n    hideError();\n    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();\n    if (value().length === 6 && !querying) submit();\n  });\n  box.addEventListener('keydown', (e) => {\n    if (e.key === 'Backspace' && !box.value && i > 0) {\n      e.preventDefault();\n      boxes[i - 1].value = '';\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowLeft' && i > 0) {\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {\n      boxes[i + 1].focus();\n    } else if (e.key === 'Enter' && value().length === 6 && !querying) {\n      submit();\n    }\n  });\n  box.addEventListener('paste', (e) => {\n    e.preventDefault();\n    const digits = (e.clipboardData.getData('text') || '').replace(/\\D/g, '').slice(0, 6);\n    if (digits) fill(digits);\n  });\n  box.addEventListener('focus', () => box.select());\n});\n\nfunction showError(msg) {\n  errorBox.textContent = msg;\n  errorBox.hidden = false;\n  row.classList.remove('shake');\n  void row.offsetWidth; /* \u5F3A\u5236 reflow,\u91CD\u542F\u52A8\u753B */\n  row.classList.add('shake');\n}\nfunction hideError() {\n  errorBox.hidden = true;\n}\n\nasync function submit() {\n  const code = value();\n  querying = true;\n  hideError();\n  resultCard.hidden = true;\n  try {\n    const res = await api('/api/pickup', { method: 'POST', body: { code } });\n    render(res, code);\n  } catch (e) {\n    showError(e.message || t('pk.fail'));\n  } finally {\n    querying = false;\n  }\n}\n\nfunction metaLine(res) {\n  const parts = [];\n  parts.push(res.expireAt ? t('pk.expireAt', fmtDate(res.expireAt)) : t('meta.forever'));\n  parts.push(res.pickupsLeft === null || res.pickupsLeft === undefined ? t('meta.unlimited') : t('pk.left', res.pickupsLeft));\n  return parts.join(' \xB7 ');\n}\n\nfunction render(res, code) {\n  last = { res, code };\n  resultCard.replaceChildren();\n\n  if (res.kind === 'text') {\n    const pre = el('pre', { class: 'text-body' });\n    pre.textContent = res.text ?? '';\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, '\u{1F4DD}'),\n        el('div', { class: 'sc-meta' }, el('b', {}, t('pk.textChars', res.size))),\n      ),\n      pre,\n      el('div', { class: 'btn-row' },\n        el('button', { class: 'btn primary', onclick: async () => {\n          (await copyText(res.text)) ? toast(t('copied.text'), 'ok') : toast(t('copy.fail'), 'error');\n        } }, t('pk.copyAllText')),\n      ),\n    );\n  } else {\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, iconFor(res.filename, res.mime)),\n        el('div', { class: 'sc-meta' },\n          el('b', {}, res.filename || t('pk.unnamed')),\n          el('small', {}, `${fmtBytes(res.size)} \xB7 ${res.mime || t('unknown.type')}`),\n        ),\n      ),\n      el('a', {\n        class: 'btn primary block',\n        href: `/api/pickup/${code}/download`,\n        download: res.filename || 'file',\n      }, t('pk.download')),\n    );\n  }\n\n  resultCard.append(\n    el('div', { class: 'meta-line' }, metaLine(res)),\n    el('div', { class: 'btn-row' },\n      el('button', { class: 'btn ghost', onclick: reset }, t('pk.again')),\n    ),\n  );\n  resultCard.hidden = false;\n}\n\nfunction reset() {\n  last = null;\n  resultCard.hidden = true;\n  boxes.forEach((b) => { b.value = ''; });\n  hideError();\n  boxes[0].focus();\n}\n\n/* \u652F\u6301 /pickup?code=xxxxxx \u5E26\u53C2\u8FDB\u5165 */\nconst fromUrl = new URLSearchParams(location.search).get('code');\nif (fromUrl && /^\\d{1,6}$/.test(fromUrl)) {\n  fill(fromUrl.slice(0, 6));\n} else {\n  boxes[0].focus();\n}\n\ninitUi('pickup');\n", "js/ui-audit-layout.js": "export function initAuditLayout() {\n    /* Keep category selection, applied filters and export in the same workspace. */\n    (() => {\n        const form = document.querySelector('#audit-filter'), exportButton = document.querySelector('#audit-export');\n        if (!form || !exportButton)\n            return;\n        const oldActions = exportButton.parentElement;\n        form.querySelector('.audit-actions').append(exportButton);\n        oldActions.remove();\n        const notice = document.createElement('small');\n        notice.id = 'ui-audit-pending';\n        notice.className = 'ui-audit-pending';\n        notice.setAttribute('role', 'status');\n        notice.hidden = true;\n        form.append(notice);\n        const fields = ['audit-result', 'audit-from', 'audit-to', 'audit-q'].map(id => document.getElementById(id));\n        const snapshot = () => JSON.stringify(fields.map(n => n.value.trim()));\n        let applied = snapshot();\n        function sync() {\n            const dirty = snapshot() !== applied, en = document.documentElement.lang === 'en';\n            notice.hidden = !dirty;\n            notice.textContent = en ? 'Filters changed. Apply them before exporting.' : '\u7B5B\u9009\u6761\u4EF6\u5DF2\u66F4\u6539\uFF0C\u8BF7\u5148\u70B9\u51FB\u201C\u7B5B\u9009\u201D\u3002';\n            exportButton.setAttribute('aria-disabled', String(dirty));\n            exportButton.title = en ? 'Export all matching records across pages' : '\u5BFC\u51FA\u5F53\u524D\u7C7B\u522B\u53CA\u7B5B\u9009\u6761\u4EF6\u4E0B\u7684\u5168\u90E8\u5339\u914D\u8BB0\u5F55\uFF0C\u5305\u542B\u6240\u6709\u5206\u9875';\n            if (dirty)\n                exportButton.setAttribute('aria-describedby', notice.id);\n            else\n                exportButton.removeAttribute('aria-describedby');\n        }\n        for (const n of fields) {\n            n.addEventListener('input', sync);\n            n.addEventListener('change', sync);\n        }\n        form.addEventListener('submit', () => { const from = fields[1].value, to = fields[2].value; if (from && to && from > to) {\n            sync();\n            return;\n        } applied = snapshot(); sync(); });\n        document.querySelector('#audit-reset').addEventListener('click', () => { applied = snapshot(); sync(); });\n        exportButton.addEventListener('click', e => { if (snapshot() !== applied) {\n            e.preventDefault();\n            e.stopImmediatePropagation();\n            sync();\n        } }, true);\n        document.querySelector('#lang-btn').addEventListener('click', sync);\n        sync();\n    })();\n}\n", "js/ui-classifications.js": "export function initClassifications() {\n    /* Attach record categories to their subject; navigation and outcome badges stay intact. */\n    (() => {\n        const body = document.querySelector('#audit-body');\n        if (!body)\n            return;\n        function enhance() {\n            for (const cell of body.querySelectorAll('tr>td:nth-child(2)')) {\n                const category = cell.querySelector(':scope > small'), action = cell.querySelector(':scope > span');\n                if (!category || !action)\n                    continue;\n                const line = document.createElement('div');\n                line.className = 'ui-record-line';\n                const tag = document.createElement('sup');\n                tag.className = 'ui-record-sup';\n                tag.textContent = category.textContent;\n                const key = [...document.querySelectorAll('.audit-categories button[data-category]')].find(button => button.textContent.trim() === category.textContent.trim())?.dataset.category;\n                tag.dataset.tone = { login: 'blue', operation: 'teal', security: 'amber' }[key] || 'slate';\n                line.append(action, tag);\n                cell.replaceChildren(line);\n            }\n        }\n        enhance();\n        new MutationObserver(enhance).observe(body, { childList: true, subtree: true });\n    })();\n}\n", "js/ui-controls.js": `export function initControls() {
+`, "js/admin-audit.js": "import { $, api, el, fmtDate } from './common.js';\nimport { t, LANG, onLangChange } from './i18n.js';\nimport { pageSize, scrollToList } from './admin-preferences.js';\n\nexport function initAudit() {\n  const view = $('#admin-audit-view');\n  const body = $('#audit-body');\n  const dialog = $('#audit-dialog');\n  let category = 'all', offset = 0, total = 0, request = 0;\n  let filters = {}, rows = [], available = false;\n  let limit = pageSize('audit');\n  const action = row => t(`audit.action.${row.action}`);\n  const actor = row => t(`audit.actor.${row.actor}`);\n  const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;\n  function shareRules(value) {\n    try {\n      const rules = JSON.parse(value);\n      if (!Number.isSafeInteger(rules?.pickupCount) || !(rules.maxPickups === null || Number.isSafeInteger(rules.maxPickups)) ||\n          !(rules.expireAt === null || Number.isSafeInteger(rules.expireAt))) return String(value);\n      return `${t('ad.th.pickups')} ${rules.pickupCount} / ${rules.maxPickups ?? '\u221E'} \xB7 ${t('ad.th.expire')} ${rules.expireAt === null ? t('ad.forever') : fmtDate(rules.expireAt)}`;\n    } catch { return String(value); } // Older/external records may not contain a rule snapshot.\n  }\n  function place(row) {\n    let country = row.country;\n    if (/^[A-Z]{2}$/.test(country)) country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n    return [...new Set([country, row.region, row.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n  }\n  function close() { dialog.close(); $('#audit-detail').replaceChildren(); }\n  function details(row) {\n    const fields = [\n      [t('audit.time'), fmtDate(row.at)], [t('audit.action'), action(row)],\n      [t('audit.result'), t(`audit.${row.result}`)], [t('audit.actor'), actor(row)],\n      ['IP', ip(row)], [t('ad.sourceLocation'), place(row)],\n      [t('audit.target'), row.target || '\u2014'], [t('audit.http'), `${row.method} \xB7 ${row.status}`],\n      [t('audit.duration'), `${row.durationMs} ms`], [t('audit.id'), row.id],\n      [t('audit.agent'), row.agent || '\u2014'],\n    ];\n    for (const [key, value] of Object.entries(row.detail)) {\n      fields.push([t(`audit.detail.${key}`), ['beforeRules','afterRules'].includes(key) ? shareRules(value) : key === 'bannedUntil' ? fmtDate(value)\n        : typeof value === 'boolean' ? t(value ? 'audit.yes' : 'audit.no') : String(value)]);\n    }\n    if (row.action === 'download') fields.push([t('audit.description'), t('audit.downloadHint')]);\n    $('#audit-detail').replaceChildren(...fields.map(([label, value]) => el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));\n    dialog.showModal();\n  }\n  function render() {\n    body.replaceChildren(...rows.map(row => el('tr', {},\n      el('td', {}, fmtDate(row.at)),\n      el('td', {}, el('span', {}, action(row)), el('small', { class: 'muted' }, t(`audit.${row.category}`))),\n      el('td', {}, el('span', { class: `audit-result audit-${row.result}` }, t(`audit.${row.result}`))),\n      el('td', { class: 'audit-actor' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.actor')), actor(row)),\n      el('td', { class: 'audit-source' }, el('span', { class: 'mono' }, ip(row)),\n        row.country || row.region || row.city ? el('small', { class: 'muted' }, place(row)) : null),\n      el('td', { class: 'audit-target' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.target')), row.target || '\u2014'),\n      el('td', {}, el('button', { type: 'button', class: 'btn small ghost', onclick: () => details(row) }, t('audit.details'))),\n    )));\n    $('#audit-page').textContent = t('audit.page', Math.floor(offset / limit) + 1, Math.max(1, Math.ceil(total / limit)), total);\n    $('#audit-prev').disabled = offset === 0;\n    $('#audit-next').disabled = offset + limit >= total;\n  }\n  async function load() {\n    const ticket = ++request;\n    available = false;\n    $('#audit-error').hidden = true;\n    $('#audit-state').textContent = t('ad.loading');\n    $('#audit-page').textContent = '';\n    body.replaceChildren();\n    for (const id of ['audit-prev', 'audit-next', 'audit-export', 'audit-refresh']) $('#' + id).disabled = true;\n    try {\n      const params = new URLSearchParams({ ...filters, category, offset, limit });\n      const data = await api(`/api/admin/audit-logs?${params}`);\n      if (ticket !== request || view.hidden) return;\n      if (typeof data.enabled !== 'boolean' || !Array.isArray(data.rows) || !Number.isSafeInteger(data.total)) throw new Error(t('ad.loadFail'));\n      available = data.enabled;\n      rows = data.rows; total = data.total;\n      if (available && offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return load(); }\n      $('#audit-state').textContent = !available ? t('audit.disabled') : !total ? t('audit.empty') : '';\n      render();\n      $('#audit-export').disabled = !available || total === 0;\n    } catch (e) {\n      if (ticket !== request || view.hidden) return;\n      $('#audit-state').textContent = '';\n      $('#audit-error').textContent = e.message || t('ad.loadFail');\n      $('#audit-error').hidden = false;\n    } finally { if (ticket === request) $('#audit-refresh').disabled = false; }\n  }\n  function selectView(audit) {\n    view.hidden = !audit;\n    $('#admin-files-view').hidden = audit;\n    for (const [id, active] of [['admin-files-tab', !audit], ['admin-audit-tab', audit]]) {\n      $('#' + id).setAttribute('aria-pressed', String(active));\n    }\n    if (audit) load(); else { request++; close(); }\n  }\n  $('#admin-files-tab').addEventListener('click', () => selectView(false));\n  $('#admin-audit-tab').addEventListener('click', () => selectView(true));\n  $('#audit-filter').addEventListener('submit', e => {\n    e.preventDefault();\n    const from = $('#audit-from').value, to = $('#audit-to').value;\n    if (from && to && from > to) {\n      $('#audit-error').textContent = t('audit.dateError'); $('#audit-error').hidden = false; return;\n    }\n    filters = { result: $('#audit-result').value, q: $('#audit-q').value.trim() };\n    if (from) filters.from = new Date(`${from}T00:00:00`).getTime();\n    if (to) { const end = new Date(`${to}T00:00:00`); end.setDate(end.getDate() + 1); filters.to = end.getTime() - 1; }\n    offset = 0; load();\n  });\n  $('#audit-reset').addEventListener('click', () => { $('#audit-filter').reset(); filters = {}; offset = 0; load(); });\n  for (const button of document.querySelectorAll('.audit-categories button')) button.addEventListener('click', () => {\n    category = button.dataset.category; offset = 0;\n    for (const item of document.querySelectorAll('.audit-categories button')) item.setAttribute('aria-pressed', String(item === button));\n    load();\n  });\n  $('#audit-prev').addEventListener('click', async () => { offset = Math.max(0, offset - limit); await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\n  $('#audit-next').addEventListener('click', async () => { offset += limit; await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\n  $('#audit-refresh').addEventListener('click', load);\n  window.addEventListener('admin-page-size', event => {\n    if (event.detail.name !== 'audit') return;\n    limit = event.detail.value; offset = 0;\n    if (!view.hidden) load();\n  });\n  $('#audit-export').addEventListener('click', async () => {\n    $('#audit-export').disabled = true;\n    $('#audit-error').hidden = true;\n    const exportFilters = { ...filters, category };\n    try {\n      const params = new URLSearchParams({ ...exportFilters, offset: 0, limit: 1000 });\n      const data = await api(`/api/admin/audit-logs/export?${params}`);\n      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), filters: exportFilters, ...data }, null, 2)], { type: 'application/json' });\n      const url = URL.createObjectURL(blob);\n      const link = el('a', { href: url, download: `audit-${new Date().toISOString().slice(0, 10)}.json` });\n      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);\n    } catch (e) { $('#audit-error').textContent = e.message || t('ad.loadFail'); $('#audit-error').hidden = false; }\n    finally { $('#audit-export').disabled = !available || total === 0; }\n  });\n  $('#audit-close').addEventListener('click', close);\n  dialog.addEventListener('cancel', e => { e.preventDefault(); close(); });\n  window.addEventListener('audit-write-failed', () => { $('#audit-write-warning').hidden = false; });\n  onLangChange(() => { close(); if (!view.hidden) load(); });\n}\n", "js/admin-preferences.js": "import { $ } from './common.js';\nimport { t } from './i18n.js';\n\nconst options = { files: [10, 20, 40], audit: [20, 50, 100] };\nconst values = { files: 20, audit: 20 };\nfor (const name of Object.keys(values)) {\n  try {\n    const saved = Number(localStorage.getItem(`admin-page-size-${name}`));\n    if (options[name].includes(saved)) values[name] = saved;\n  } catch { /* Browser preferences are optional when persistent storage is blocked. */ }\n}\nexport function pageSize(name) { return values[name]; }\n\nexport function scrollToList(selector) {\n  const list = $(selector);\n  const top = list.querySelector('.table-wrap').getBoundingClientRect().top + window.scrollY\n    - list.querySelector('.list-toolbar').getBoundingClientRect().height - 20;\n  window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });\n}\n\nexport function initAdminPreferences() {\n  const dialog = $('#settings-dialog');\n  $('#admin-settings-btn').addEventListener('click', () => dialog.showModal());\n  $('#settings-close').addEventListener('click', () => dialog.close());\n  for (const name of Object.keys(values)) {\n    const select = $(`#${name}-page-size`);\n    select.value = String(values[name]);\n    select.addEventListener('change', () => {\n      const value = Number(select.value);\n      if (!options[name].includes(value)) return;\n      values[name] = value;\n      $('#preferences-error').hidden = true;\n      try { localStorage.setItem(`admin-page-size-${name}`, String(value)); }\n      catch {\n        $('#preferences-error').textContent = t('ad.preferenceNotSaved');\n        $('#preferences-error').hidden = false;\n      }\n      window.dispatchEvent(new CustomEvent('admin-page-size', { detail: { name, value } }));\n    });\n  }\n  window.addEventListener('audit-write-failed', () => { $('#settings-audit-warning').hidden = false; });\n}\n", "js/admin-preview.js": "import { el } from './common.js';\nimport { t } from './i18n.js';\n\n/** CSV excerpt, preserving quoted commas/newlines and omitting an incomplete last record. */\nexport function csvExcerpt(text, truncated) {\n  const rows = []; let row = [], cell = '', quoted = false, afterQuote = false, clipped = truncated;\n  const pushCell = () => { row.push(cell); cell = ''; afterQuote = false; };\n  const pushRow = () => { pushCell(); rows.push(row.slice(0, 20)); if (row.length > 20) clipped = true; row = []; };\n  for (let i = 0; i < text.length; i++) {\n    const c = text[i];\n    if (quoted) {\n      if (c === '\"') { if (text[i + 1] === '\"') { cell += '\"'; i++; } else { quoted = false; afterQuote = true; } }\n      else cell += c;\n    } else if (c === ',' || c === '\\n' || c === '\\r') {\n      if (c === ',') pushCell();\n      else { if (c === '\\r' && text[i + 1] === '\\n') i++; pushRow(); }\n    } else if (c === '\"' && !cell && !afterQuote) quoted = true;\n    else { if (afterQuote || c === '\"') return null; cell += c; }\n    if (rows.length >= 50) { clipped ||= i < text.length - 1; return { rows, clipped }; }\n  }\n  if (!truncated) {\n    if (quoted) return null;\n    if (cell || row.length || afterQuote) pushRow();\n  }\n  return { rows, clipped };\n}\n\nexport function createFilePreview(code, filename) {\n  const scope = el('small', { class: 'muted' });\n  const body = el('div', { class: 'file-preview-body' });\n  const element = el('section', { class: 'file-preview file-wide', 'aria-label': t('preview.title') },\n    el('div', { class: 'file-preview-heading' }, el('b', {}, t('preview.title')), scope), body);\n  let controller, objectUrl, closed = false;\n  function release() { if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null; }\n  async function load() {\n    controller?.abort(); release();\n    const current = new AbortController(); controller = current;\n    const timeout = setTimeout(() => current.abort(), 15000);\n    body.textContent = t('ad.loading'); scope.textContent = '';\n    try {\n      const response = await fetch(`/api/admin/shares/${code}/preview`, { signal: current.signal });\n      if (response.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n      if (!response.ok) throw new Error(t(response.status === 410 || response.status === 404 ? 'ad.fileState.missing' : 'ad.loadFail'));\n      if (response.headers.get('Content-Type')?.startsWith('image/')) {\n        const blob = await response.blob();\n        if (closed || controller !== current) return;\n        if (blob.size > 2 * 1024 * 1024) throw new Error(t('preview.size'));\n        objectUrl = URL.createObjectURL(blob);\n        const img = el('img', { src: objectUrl, alt: filename, class: 'file-preview-image' });\n        img.addEventListener('error', () => { if (!closed && controller === current) { release(); body.textContent = t('preview.image'); } });\n        body.replaceChildren(img);\n        scope.textContent = `${response.headers.get('X-Preview-Width')} \xD7 ${response.headers.get('X-Preview-Height')}`;\n      } else {\n        const data = await response.json();\n        if (closed || controller !== current) return;\n        if (data.kind === 'unsupported') {\n          body.textContent = t(['type', 'size', 'encoding', 'image'].includes(data.reason) ? `preview.${data.reason}` : 'preview.type');\n        } else {\n          if (!['text', 'csv'].includes(data.kind) || typeof data.text !== 'string' || data.text.length > 65536) throw new Error(t('ad.loadFail'));\n          const csv = data.kind === 'csv' ? csvExcerpt(data.text, data.truncated) : null;\n          scope.textContent = t(data.truncated || csv?.clipped ? 'preview.partial' : 'preview.complete');\n          if (csv?.rows.length) {\n            const table = el('table', { class: 'file-preview-table', 'aria-label': t('preview.title') });\n            table.append(el('tbody', {}, ...csv.rows.map(row => el('tr', {}, ...row.map(cell => el('td', {}, cell))))));\n            body.replaceChildren(table);\n          } else body.replaceChildren(el('pre', {}, data.text || t('preview.empty')));\n        }\n      }\n    } catch (error) {\n      if (!closed && controller === current) body.replaceChildren(\n        el('span', { role: 'alert' }, current.signal.aborted ? t('preview.timeout') : error.message || t('ad.loadFail')),\n        el('button', { type: 'button', class: 'btn small ghost', onclick: load }, t('ad.retry')));\n    } finally { clearTimeout(timeout); }\n  }\n  load();\n  return { element, dispose() { closed = true; controller?.abort(); release(); body.replaceChildren(); } };\n}\n", "js/admin-security.js": "import { api } from './common.js';\nexport function initSecurity() {\n    /* Security workspace backed by authenticated, persistent server actions. */\n    (() => {\n        if (!document.querySelector('#admin-panel'))\n            return;\n        const $ = s => document.querySelector(s), nav = $('#admin-navigation');\n        const t = (zh, en) => document.documentElement.lang === 'en' ? en : zh;\n        const el = (tag, attrs = {}, ...children) => { const n = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) {\n            if (k === 'class')\n                n.className = v;\n            else if (k === 'click')\n                n.addEventListener('click', v);\n            else\n                n.setAttribute(k, v);\n        } for (const c of children.flat())\n            if (c != null)\n                n.append(c instanceof Node ? c : document.createTextNode(String(c))); return n; };\n        let pendingAction = false;\n        const btn = (zh, en, fn, cls = 'btn small ghost') => el('button', { type: 'button', class: cls, click: async (event) => {\n                const button = event.currentTarget;\n                if (button.disabled)\n                    return;\n                let controls = [];\n                try {\n                    const result = fn();\n                    if (result && typeof result.then === 'function') {\n                        controls = [...dialog.querySelectorAll('button,input,select')].map(n => [n, n.disabled]);\n                        for (const [n] of controls)\n                            n.disabled = true;\n                        button.disabled = true;\n                        pendingAction = true;\n                        await result;\n                    }\n                }\n                catch (error) {\n                    if (dialog.open)\n                        fail($('#sec-form-error'), error.message);\n                    else {\n                        toast(error.message);\n                        feedback.classList.add('sec-feedback-error');\n                    }\n                }\n                finally {\n                    pendingAction = false;\n                    if (button.isConnected)\n                        button.disabled = false;\n                    for (const [n, disabled] of controls)\n                        if (n.isConnected)\n                            n.disabled = disabled;\n                }\n            } }, t(zh, en));\n        const input = (id, value = '', attrs = {}) => el('input', { id, value, ...attrs });\n        const field = (zh, en, node) => el('label', { class: 'sec-field', for: node.id }, el('span', {}, t(zh, en)), node.type === 'number' ? numberControl(node, t(zh, en)) : node);\n        const numberControl = (node, label) => window.numberControl(node, label);\n        const date = n => new Intl.DateTimeFormat(document.documentElement.lang === 'en' ? 'en-GB' : 'zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(n);\n        const liveBans = () => store.bans.filter(b => b.until === null || b.until > Date.now());\n        const scopes = [['login', '\u540E\u53F0\u767B\u5F55', 'Admin login'], ['upload', '\u4E0A\u4F20', 'Upload'], ['pickup', '\u53D6\u4EF6', 'Pickup']];\n        const scopeName = key => { const s = scopes.find(s => s[0] === key); return t(s[1], s[2]); };\n        const scopeText = list => list.map(scopeName).join(' / ');\n        const scopeBadges = (list, sup = false) => el(sup ? 'sup' : 'div', { class: 'sec-scope-badges' + (sup ? ' sec-scope-sup' : '') }, ...list.map(s => el('span', { 'data-tone': { login: 'blue', upload: 'orange', pickup: 'teal' }[s] }, scopeName(s))));\n        const ipLine = row => el('div', { class: 'sec-ip-line' }, el('b', { class: 'mono' }, row.ip), scopeBadges(row.scopes, true));\n        function scopePicker(values = ['login'], prefix = 'sec-scope', disabled = []) {\n            const checks = scopes.map(([key, zh, en]) => { const n = input(prefix + '-' + key, '', { type: 'checkbox' }); n.disabled = disabled.includes(key); n.checked = !n.disabled && values.includes(key); return { key, n, label: el('label', { class: 'sec-check' }, n, t(zh, en)) }; });\n            return { node: el('fieldset', { class: 'sec-scope-picker' }, el('legend', {}, t('\u4FDD\u62A4\u8303\u56F4', 'Protected actions')), ...checks.map(c => c.label)), values: () => checks.filter(c => c.n.checked && !c.n.disabled && !disabled.includes(c.key)).map(c => c.key) };\n        }\n        const geography = { CN: { label: ['\u4E2D\u56FD', 'China'], regions: { ZJ: ['\u6D59\u6C5F', 'Zhejiang'], GX: ['\u5E7F\u897F', 'Guangxi'], GD: ['\u5E7F\u4E1C', 'Guangdong'], SH: ['\u4E0A\u6D77', 'Shanghai'], BJ: ['\u5317\u4EAC', 'Beijing'] } }, US: { label: ['\u7F8E\u56FD', 'United States'], regions: { CA: ['\u52A0\u5229\u798F\u5C3C\u4E9A', 'California'], NY: ['\u7EBD\u7EA6\u5DDE', 'New York'] } }, SG: { label: ['\u65B0\u52A0\u5761', 'Singapore'], regions: {} }, JP: { label: ['\u65E5\u672C', 'Japan'], regions: { '13': ['\u4E1C\u4EAC\u90FD', 'Tokyo'] } }, DE: { label: ['\u5FB7\u56FD', 'Germany'], regions: {} } };\n        const regionName = r => [geography[r.country] ? t(...geography[r.country].label) : r.country, r.region ? (geography[r.country]?.regions[r.region] ? t(...geography[r.country].regions[r.region]) : r.region) : t('\u5168\u90E8\u5730\u533A', 'All regions')].join(' \xB7 ');\n        const activeRegions = () => store.regions.filter(r => r.enabled && (r.until === null || r.until > Date.now()));\n        const overlaps = (a, b) => a.some(s => b.includes(s));\n        function geoPicker(country = 'CN', region = '', unknown = false) {\n            const countryInput = input('sec-country', country, { list: 'sec-country-options', maxlength: 2, placeholder: unknown ? t('\u7559\u7A7A\u8868\u793A\u672A\u77E5', 'Blank for unknown') : 'CN', autocomplete: 'off' });\n            const countries = el('datalist', { id: 'sec-country-options' }, ...Object.entries(geography).map(([key, g]) => el('option', { value: key }, t(...g.label))));\n            const regionInput = input('sec-region', region, { list: 'sec-region-options', maxlength: 10, placeholder: t('\u5168\u90E8\u7701\u5DDE\uFF08\u53EF\u586B\u4EE3\u7801\uFF09', 'All subdivisions (or enter code)'), autocomplete: 'off' }), regions = el('datalist', { id: 'sec-region-options' });\n            const update = () => { countryInput.value = countryInput.value.toUpperCase(); regions.replaceChildren(...Object.entries(geography[countryInput.value]?.regions || {}).map(([key, label]) => el('option', { value: key }, t(...label)))); };\n            countryInput.addEventListener('input', () => { regionInput.value = ''; update(); });\n            regionInput.addEventListener('input', () => { regionInput.value = regionInput.value.toUpperCase(); });\n            update();\n            const node = el('div', { class: 'sec-form-grid' }, field('\u56FD\u5BB6 / \u5730\u533A\u4EE3\u7801', 'Country code', countryInput), field('\u7701 / \u5DDE\u4EE3\u7801', 'Subdivision code', regionInput), countries, regions);\n            window.attachHelp(node.querySelector('label > span'), el('span', {}, t('\u4F7F\u7528 Cloudflare \u7684\u56FD\u5BB6\u4E0E\u7701\u5DDE\u4EE3\u7801\uFF0C\u5982 CN / ZJ\u3001US / TX\u3002\u7701\u5DDE\u7559\u7A7A\u8868\u793A\u6574\u4E2A\u56FD\u5BB6\uFF1B\u53EF\u9009\u62E9\u5E38\u7528\u4EE3\u7801\u6216\u81EA\u884C\u8F93\u5165\u3002', 'Use Cloudflare country/subdivision codes, e.g. CN / ZJ or US / TX. A blank subdivision covers the country. Select a suggestion or enter a code.')));\n            return { country: countryInput, region: regionInput, node };\n        }\n        const durationSelect = id => el('select', { id }, ...[['30', '30 \u5206\u949F', '30 minutes'], ['60', '1 \u5C0F\u65F6', '1 hour'], ['1440', '24 \u5C0F\u65F6', '24 hours'], ['0', '\u6C38\u4E45', 'Permanent']].map(([v, zh, en]) => el('option', { value: v }, t(zh, en))));\n        let store = { enabled: false, configRevision: '', rules: { login: { enabled: true, limit: 5, window: 10, duration: 30 }, upload: { enabled: true, limit: 20, window: 10, duration: 30 }, pickup: { enabled: true, limit: 10, window: 10, duration: 30 } }, bans: [], allow: [], regions: [] };\n        const selected = new Set();\n        let tab = 'bans', query = '', kind = 'all', scopeFilter = 'all', page = 1, open = false, failed = false, empty = false, lastFocus = null, loaded = false, loading = false;\n        function validateState(data) {\n            if (!data || typeof data.enabled !== 'boolean' || typeof data.configRevision !== 'string' || !scopes.every(([k]) => data.rules?.[k] && typeof data.rules[k].enabled === 'boolean' && ['limit', 'window', 'duration'].every(n => Number.isInteger(data.rules[k][n]) && data.rules[k][n] > 0)) || !['bans', 'allow', 'regions'].every(k => Array.isArray(data[k]) && data[k].every(r => r && Array.isArray(r.scopes) && r.scopes.every(v => scopes.some(([s]) => s === v)))))\n                throw new Error(t('\u9632\u62A4\u72B6\u6001\u683C\u5F0F\u65E0\u6548', 'Invalid protection response'));\n            return data;\n        }\n        async function refresh() { if (loading)\n            return; loading = true; render(); try {\n            store = validateState(await api('/api/admin/security'));\n            loaded = true;\n            failed = false;\n        }\n        catch (error) {\n            failed = true;\n            throw error;\n        }\n        finally {\n            loading = false;\n            render();\n        } }\n        async function mutate(action, data = {}) { await api('/api/admin/security', { method: 'POST', body: { action, configRevision: store.configRevision, ...data } }); try {\n            store = validateState(await api('/api/admin/security'));\n            failed = false;\n        }\n        catch {\n            failed = true;\n            throw new Error(t('\u64CD\u4F5C\u5DF2\u4FDD\u5B58\uFF0C\u4F46\u72B6\u6001\u5237\u65B0\u5931\u8D25\u3002\u8BF7\u5173\u95ED\u5F39\u7A97\u5E76\u5237\u65B0\uFF0C\u52FF\u91CD\u590D\u63D0\u4EA4\u3002', 'Saved, but refresh failed. Close and refresh without submitting again.'));\n        } }\n        const view = el('section', { id: 'security-view', hidden: '', 'aria-labelledby': 'security-title' });\n        $('#admin-panel').append(view);\n        const navButton = btn('\u5B89\u5168\u9632\u62A4', 'Security', () => show(), 'admin-nav-link');\n        navButton.id = 'admin-security-tab';\n        navButton.setAttribute('aria-controls', 'security-view');\n        navButton.setAttribute('aria-pressed', 'false');\n        nav.append(navButton);\n        const dialog = el('dialog', { id: 'security-dialog', class: 'source-dialog sec-dialog', 'aria-labelledby': 'security-dialog-title' });\n        document.body.append(dialog);\n        const old = $('#login-protection');\n        old.hidden = true;\n        const shortcut = el('section', { class: 'settings-section sec-setting-entry' }, el('h4', {}, t('\u5B89\u5168\u9632\u62A4', 'Security')), btn('\u7BA1\u7406\u8BBF\u95EE\u89C4\u5219\u4E0E\u5C01\u7981 \u2192', 'Manage access rules and bans \u2192', () => { $('#settings-dialog').close(); show(); }));\n        old.before(shortcut);\n        const auditEntry = $('.ui-guard-entry');\n        if (auditEntry) {\n            auditEntry.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            auditEntry.onclick = () => show();\n        }\n        function show() { open = true; $('#admin-files-view').hidden = true; $('#admin-audit-view').hidden = true; view.hidden = false; for (const n of nav.querySelectorAll('button'))\n            n.setAttribute('aria-pressed', String(n === navButton)); render(); if (!loaded && !loading)\n            refresh().catch(error => toast(error.message)); }\n        for (const id of ['#admin-files-tab', '#admin-audit-tab'])\n            $(id).addEventListener('click', () => { open = false; view.hidden = true; navButton.setAttribute('aria-pressed', 'false'); });\n        const feedback = el('div', { id: 'sec-feedback', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });\n        document.body.append(feedback);\n        let feedbackTimer;\n        function clearFeedback() { clearTimeout(feedbackTimer); feedback.textContent = ''; feedback.classList.remove('sec-feedback-error'); }\n        function toast(msg) { clearFeedback(); feedback.textContent = msg; feedbackTimer = setTimeout(clearFeedback, 4000); }\n        for (const id of ['#admin-files-tab', '#admin-audit-tab'])\n            $(id).addEventListener('click', clearFeedback);\n        dialog.addEventListener('close', () => { if (!open)\n            clearFeedback(); });\n        const auditLabels = { manualBan: ['\u624B\u52A8\u5C01\u7981 IP', 'Manually ban IP'], allowIP: ['\u6DFB\u52A0\u5141\u8BB8 IP', 'Allow IP'], removeAllow: ['\u79FB\u9664\u5141\u8BB8 IP', 'Remove allowed IP'], securityRules: ['\u4FEE\u6539\u9632\u62A4\u89C4\u5219', 'Change protection rules'], regionAdd: ['\u6DFB\u52A0\u5730\u533A\u5C01\u7981', 'Add region ban'], regionEdit: ['\u4FEE\u6539\u5730\u533A\u5C01\u7981', 'Edit region ban'], regionToggle: ['\u5207\u6362\u5730\u533A\u89C4\u5219\u72B6\u6001', 'Toggle region rule'], regionRemove: ['\u79FB\u9664\u5730\u533A\u5C01\u7981', 'Remove region ban'] };\n        function translateAudit() { for (const host of [$('#audit-body'), $('#audit-detail')]) {\n            const walker = document.createTreeWalker(host, NodeFilter.SHOW_TEXT);\n            let n;\n            while (n = walker.nextNode()) {\n                const label = auditLabels[n.textContent.replace('audit.action.', '')];\n                if (label && n.textContent.startsWith('audit.action.'))\n                    n.textContent = t(...label);\n            }\n        } }\n        for (const host of [$('#audit-body'), $('#audit-detail')])\n            new MutationObserver(translateAudit).observe(host, { childList: true, subtree: true });\n        function close() { dialog.close(); if (lastFocus?.isConnected)\n            lastFocus.focus(); }\n        dialog.addEventListener('cancel', e => { e.preventDefault(); if (!pendingAction)\n            close(); });\n        dialog.addEventListener('keydown', e => { if (e.key !== 'Tab')\n            return; const a = [...dialog.querySelectorAll('button,input,select,textarea')].filter(n => !n.disabled && n.getClientRects().length); if (!a.length)\n            return; const first = a[0], last = a.at(-1); if (e.shiftKey && document.activeElement === first) {\n            e.preventDefault();\n            last.focus();\n        }\n        else if (!e.shiftKey && document.activeElement === last) {\n            e.preventDefault();\n            first.focus();\n        } });\n        function modal(zh, en) { clearFeedback(); lastFocus = document.activeElement; dialog.classList.remove('sec-rules-dialog'); dialog.replaceChildren(); const head = el('div', { class: 'source-heading' }, el('h3', { id: 'security-dialog-title' }, t(zh, en)), btn('\u5173\u95ED', 'Close', close)); const body = el('div', { class: 'source-body sec-dialog-body' }), error = el('p', { id: 'sec-form-error', class: 'error-box', hidden: '', role: 'alert' }), foot = el('div', { class: 'source-footer' }); body.append(error); dialog.append(head, body, foot); dialog.showModal(); return { body, foot, error }; }\n        function fail(node, msg) { node.textContent = msg; node.hidden = false; }\n        function canonical(value) { const s = value.trim(); if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(s) && s.split('.').every(x => Number(x) <= 255 && !/^0\\d/.test(x)))\n            return s; if (s.includes(':') && !/[\\s/%\\[\\]]/.test(s)) {\n            try {\n                return new URL('http://[' + s + ']/').hostname.slice(1, -1).toLowerCase();\n            }\n            catch { }\n        } return null; }\n        function logLink(ip) { $('#admin-audit-tab').click(); $('#audit-reset').click(); $('#audit-q').value = ip; $('#audit-filter').requestSubmit(); }\n        function confirmUnban(ips) { const current = liveBans().filter(b => ips.includes(b.ip)); if (!current.length)\n            return; const m = modal('\u89E3\u9664 IP \u5C01\u7981', 'Unban IPs'); m.body.prepend(el('p', {}, t(`\u89E3\u9664 ${current.length} \u4E2A IP \u7684\u5C01\u7981\uFF1F`, `Remove bans for ${current.length} IP addresses?`)), ...current.map(b => el('div', {}, el('b', { class: 'mono' }, b.ip), scopeBadges(b.scopes))), el('small', { class: 'muted' }, t('\u5730\u533A\u5C01\u7981\u53CA\u5176\u4ED6\u8BBF\u95EE\u9650\u5236\u4ECD\u7136\u751F\u6548\u3002', 'Region bans and other access restrictions still apply.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u786E\u8BA4\u89E3\u5C01', 'Unban', async () => { await mutate('unban', { ips }); selected.clear(); close(); render(); toast(t('\u5DF2\u89E3\u9664\u5C01\u7981', 'Bans removed')); }, 'btn primary')); }\n        function openAdd(allow = false) {\n            const m = modal(allow ? '\u6DFB\u52A0\u5141\u8BB8 IP' : '\u624B\u52A8\u5C01\u7981 IP', allow ? 'Allow IP' : 'Ban IP');\n            const ip = input('sec-ip', '', { placeholder: '203.0.113.20 / 2001:db8::1', autocomplete: 'off' }), note = input('sec-note', '', { maxlength: 120, placeholder: t('\u7528\u9014\u6216\u539F\u56E0', 'Purpose or reason') });\n            const duration = durationSelect('sec-duration'), scope = scopePicker(allow ? ['login'] : ['login', 'upload', 'pickup']);\n            m.body.prepend(field('IP \u5730\u5740', 'IP address', ip), scope.node, ...(allow ? [] : [field('\u5C01\u7981\u65F6\u957F', 'Ban duration', duration)]), field(allow ? '\u5907\u6CE8' : '\u5C01\u7981\u539F\u56E0', allow ? 'Note' : 'Ban reason', note), el('small', { class: 'muted' }, t(allow ? '\u4EC5\u8C41\u514D\u6240\u9009\u8303\u56F4\u7684\u81EA\u52A8\u5C01\u7981\uFF0C\u4E0D\u7ED5\u8FC7\u624B\u52A8\u5C01\u7981\u3001\u5730\u533A\u89C4\u5219\u6216\u8EAB\u4EFD\u6821\u9A8C\u3002' : '\u5728\u6240\u9009\u8303\u56F4\u62E6\u622A\u540E\u7EED\u8BF7\u6C42\uFF1B\u540E\u53F0\u767B\u5F55\u8303\u56F4\u4E0D\u64A4\u9500\u5DF2\u767B\u5F55\u4F1A\u8BDD\u3002', allow ? 'Exempts automatic bans in selected scopes, never manual bans, region rules or authentication.' : 'Blocks subsequent requests in selected scopes; login bans do not revoke existing sessions.')));\n            window.attachHelp($('#security-dialog-title'), m.body.querySelector(':scope > small'));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn(allow ? '\u6DFB\u52A0\u5141\u8BB8 IP' : '\u786E\u8BA4\u5C01\u7981', allow ? 'Allow IP' : 'Ban IP', async () => {\n                const value = canonical(ip.value), chosen = scope.values();\n                if (!value)\n                    return fail(m.error, t('\u8BF7\u8F93\u5165\u5355\u4E2A\u6709\u6548 IPv4 \u6216 IPv6 \u5730\u5740\u3002', 'Enter one valid IPv4 or IPv6 address.'));\n                if (!chosen.length)\n                    return fail(m.error, t('\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u4FDD\u62A4\u8303\u56F4\u3002', 'Select at least one protected action.'));\n                if ((allow ? store.allow : liveBans()).some(b => b.ip === value))\n                    return fail(m.error, t('\u8BE5\u540D\u5355\u5DF2\u6709\u6B64 IP\uFF0C\u8BF7\u5148\u79FB\u9664\u539F\u8BB0\u5F55\u518D\u8C03\u6574\u8303\u56F4\u3002', 'This list already contains the IP. Remove the existing entry to change its scope.'));\n                if (!note.value.trim())\n                    return fail(m.error, t('\u8BF7\u586B\u5199\u5907\u6CE8\u6216\u539F\u56E0\uFF0C\u4FBF\u4E8E\u540E\u7EED\u5BA1\u8BA1\u3002', 'Enter a note or reason for the audit trail.'));\n                await mutate(allow ? 'allow' : 'ban', { ip: value, scopes: chosen, note: note.value.trim(), minutes: Number(duration.value) });\n                tab = allow ? 'allow' : 'bans';\n                query = '';\n                kind = 'all';\n                scopeFilter = 'all';\n                page = 1;\n                empty = false;\n                close();\n                render();\n                toast(t('\u8BB0\u5F55\u5DF2\u6DFB\u52A0', 'Entry added'));\n            }, 'btn primary'));\n            ip.focus();\n        }\n        function removeAllow(row) { const m = modal('\u79FB\u9664\u5141\u8BB8 IP', 'Remove allowed IP'); m.body.prepend(el('p', { class: 'mono' }, row.ip), scopeBadges(row.scopes), el('p', {}, t('\u79FB\u9664\u540E\uFF0C\u8BE5 IP \u5C06\u91CD\u65B0\u9002\u7528\u6240\u9009\u8303\u56F4\u7684\u81EA\u52A8\u5C01\u7981\u89C4\u5219\u3002', 'Automatic ban rules will apply again in these scopes.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u79FB\u9664', 'Remove', async () => { await mutate('removeAllow', { ip: row.ip }); close(); render(); toast(t('\u5DF2\u79FB\u9664\u5141\u8BB8 IP', 'Allow entry removed')); }, 'btn primary')); }\n        function editRules() {\n            const m = modal('\u81EA\u52A8\u9632\u62A4\u89C4\u5219', 'Automatic protection rules'), controls = [];\n            dialog.classList.add('sec-rules-dialog');\n            m.body.prepend(el('div', { class: 'sec-rules-columns', 'aria-hidden': 'true' },\n                el('span', {}, t('\u4FDD\u62A4\u8303\u56F4', 'Protection')),\n                el('span', {}, t('\u7EDF\u8BA1\u7A97\u53E3 / \u5206\u949F', 'Window / min')),\n                el('span', {}, t('\u89E6\u53D1\u6B21\u6570', 'Threshold')),\n                el('span', {}, t('\u5C01\u7981\u65F6\u957F / \u5206\u949F', 'Ban / min'))));\n            for (const [key, zh, en] of scopes) {\n                const rule = store.rules[key], suffix = key === 'login' ? '' : '-' + key;\n                const enabled = input('sec-enabled' + suffix, '', { type: 'checkbox' });\n                enabled.checked = rule.enabled;\n                const limit = input('sec-threshold' + suffix, rule.limit, { type: 'number', min: 1, max: 10000, step: 1 }), minutes = input('sec-window' + suffix, rule.window, { type: 'number', min: 1, max: 1440, step: 1 }), duration = input('sec-ban-minutes' + suffix, rule.duration, { type: 'number', min: 1, max: 10080, step: 1 });\n                const toggle = () => { for (const n of [limit, minutes, duration])\n                    n.disabled = !enabled.checked; };\n                enabled.onchange = toggle;\n                toggle();\n                const descriptions = { login: ['\u7BA1\u7406\u4EE4\u724C\u6821\u9A8C\u5931\u8D25\u6B21\u6570', 'Failed admin-token checks'], upload: ['\u53D1\u8D77\u5206\u4EAB\u6B21\u6570\uFF1B\u6587\u4EF6\u548C\u6587\u672C\u5747\u8BA1\u5165\uFF0C\u5206\u7247\u4E0D\u91CD\u590D\u8BA1\u6570', 'Share creation attempts; files and text count, chunks do not'], pickup: ['\u65E0\u6548\u53D6\u4EF6\u53E3\u4EE4\u6B21\u6570\uFF1B\u6210\u529F\u53D6\u4EF6\u4E0D\u8BA1\u5165', 'Invalid pickup-code attempts; successful pickups do not count'] };\n                m.body.append(el('section', { class: 'sec-rule-section', 'aria-labelledby': 'sec-rule-label-' + key }, el('label', { class: 'sec-check', id: 'sec-rule-label-' + key }, enabled, el('b', {}, t(zh, en))), el('small', { class: 'muted' }, t(...descriptions[key])), el('div', { class: 'sec-rule-fields' }, field('\u7A97\u53E3\uFF08\u5206\u949F\uFF09', 'Window (min)', minutes), field('\u89E6\u53D1\u6B21\u6570', 'Threshold', limit), field('\u5C01\u7981\uFF08\u5206\u949F\uFF09', 'Ban (min)', duration))));\n                controls.push({ key, enabled, limit, minutes, duration });\n                const section = m.body.lastElementChild;\n                window.attachHelp(section.querySelector('.sec-check'), section.querySelector(':scope > small'));\n            }\n            m.body.append(el('small', { class: 'muted' }, t('\u6309 IP \u72EC\u7ACB\u8BA1\u6570\uFF0C\u4EC5\u5C01\u7981\u89E6\u53D1\u7684\u8303\u56F4\u3002\u505C\u7528\u89C4\u5219\u4E0D\u4F1A\u89E3\u9664\u5DF2\u6709\u5C01\u7981\u3002', 'Counters are per IP and scope. Pausing a rule does not remove existing bans.')));\n            window.attachHelp($('#security-dialog-title'), m.body.lastElementChild);\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u4FDD\u5B58\u89C4\u5219', 'Save rules', async () => { if (controls.some(c => c.enabled.checked && [c.limit, c.minutes, c.duration].some(n => !n.value || !n.reportValidity())))\n                return; const rules = structuredClone(store.rules); for (const c of controls)\n                rules[c.key] = { ...rules[c.key], enabled: c.enabled.checked, ...(c.enabled.checked ? { limit: Number(c.limit.value), window: Number(c.minutes.value), duration: Number(c.duration.value) } : {}) }; await mutate('rules', { rules }); close(); render(); toast(t('\u89C4\u5219\u5DF2\u4FDD\u5B58', 'Rules saved')); }, 'btn primary'));\n        }\n        function editRegion(row = null) {\n            const m = modal(row ? '\u7F16\u8F91\u5730\u533A\u5C01\u7981' : '\u6DFB\u52A0\u5730\u533A\u5C01\u7981', row ? 'Edit region ban' : 'Add region ban');\n            const geo = geoPicker(row?.country || 'CN', row?.region || ''), scope = scopePicker(row?.scopes || ['upload', 'pickup'], 'sec-scope', ['login']), reason = input('sec-region-reason', row?.reason || '', { maxlength: 120, placeholder: t('\u586B\u5199\u5C01\u7981\u539F\u56E0', 'Reason for blocking') });\n            const duration = durationSelect('sec-region-duration');\n            duration.value = '0';\n            if (row) {\n                duration.prepend(el('option', { value: 'keep' }, t('\u4FDD\u6301\u539F\u5230\u671F\u65F6\u95F4', 'Keep current expiry')));\n                duration.value = 'keep';\n            }\n            const enabled = input('sec-region-enabled', '', { type: 'checkbox' });\n            enabled.checked = row?.enabled ?? true;\n            m.body.prepend(geo.node, scope.node, el('div', { class: 'sec-form-grid' }, field('\u5C01\u7981\u65F6\u957F', 'Duration', duration), el('label', { class: 'sec-check' }, enabled, t('\u542F\u7528\u89C4\u5219', 'Enable rule'))), field('\u539F\u56E0', 'Reason', reason));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u4FDD\u5B58\u89C4\u5219', 'Save rule', async () => {\n                const chosen = scope.values();\n                if (!chosen.length)\n                    return fail(m.error, t('\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u4FDD\u62A4\u8303\u56F4\u3002', 'Select at least one protected action.'));\n                if (!reason.value.trim())\n                    return fail(m.error, t('\u8BF7\u586B\u5199\u5C01\u7981\u539F\u56E0\u3002', 'Enter a reason.'));\n                const until = duration.value === 'keep' ? row.until : Number(duration.value) ? Date.now() + Number(duration.value) * 60000 : null;\n                if (enabled.checked && until !== null && until <= Date.now())\n                    return fail(m.error, t('\u539F\u89C4\u5219\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u5C01\u7981\u65F6\u957F\u3002', 'This rule expired; choose a new duration.'));\n                const candidate = { country: geo.country.value, region: geo.region.value, scopes: chosen, enabled: enabled.checked, reason: reason.value.trim(), until };\n                if (store.regions.some(r => r !== row && r.country === candidate.country && r.region === candidate.region && overlaps(r.scopes, chosen)))\n                    return fail(m.error, t('\u8BE5\u5730\u533A\u5DF2\u6709\u91CD\u53E0\u8303\u56F4\u7684\u89C4\u5219\uFF0C\u8BF7\u7F16\u8F91\u73B0\u6709\u89C4\u5219\u3002', 'This region has an overlapping rule. Edit that rule instead.'));\n                await mutate('region', { id: row?.id, rule: candidate });\n                tab = 'regions';\n                query = '';\n                scopeFilter = 'all';\n                page = 1;\n                empty = false;\n                close();\n                render();\n                toast(t('\u5730\u533A\u89C4\u5219\u5DF2\u4FDD\u5B58', 'Region rule saved'));\n            }, 'btn primary'));\n        }\n        function toggleRegion(row) {\n            if (row.until !== null && row.until <= Date.now()) {\n                editRegion(row);\n                $('#sec-region-enabled').checked = true;\n                return;\n            }\n            const m = modal(row.enabled ? '\u505C\u7528\u5730\u533A\u89C4\u5219' : '\u542F\u7528\u5730\u533A\u89C4\u5219', row.enabled ? 'Pause region rule' : 'Enable region rule');\n            m.body.prepend(el('b', {}, regionName(row)), scopeBadges(row.scopes), el('p', {}, t(row.enabled ? '\u505C\u7528\u540E\uFF0C\u8BE5\u5730\u533A\u4E0D\u518D\u53D7\u6B64\u89C4\u5219\u9650\u5236\u3002' : '\u542F\u7528\u540E\uFF0C\u5C06\u62E6\u622A\u6B64\u5730\u533A\u5728\u6240\u9009\u8303\u56F4\u7684\u8BF7\u6C42\u3002', row.enabled ? 'This rule will stop blocking the region.' : 'Requests from this region will be blocked in selected scopes.')));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u786E\u8BA4', 'Confirm', async () => { await mutate('region', { id: row.id, rule: { ...row, enabled: !row.enabled } }); close(); render(); toast(t('\u89C4\u5219\u72B6\u6001\u5DF2\u66F4\u65B0', 'Rule status updated')); }, 'btn primary'));\n        }\n        function removeRegion(row) { const m = modal('\u79FB\u9664\u5730\u533A\u89C4\u5219', 'Remove region rule'); m.body.prepend(el('b', {}, regionName(row)), scopeBadges(row.scopes), el('p', {}, t('\u79FB\u9664\u540E\u4E0D\u518D\u6309\u6B64\u89C4\u5219\u62E6\u622A\uFF1B\u5176\u4ED6\u89C4\u5219\u4ECD\u751F\u6548\u3002', 'This rule will be removed; other rules remain active.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u79FB\u9664', 'Remove', async () => { await mutate('removeRegion', { id: row.id }); close(); render(); toast(t('\u5730\u533A\u89C4\u5219\u5DF2\u79FB\u9664', 'Region rule removed')); }, 'btn primary')); }\n        function testRules() {\n            const m = modal('\u89C4\u5219\u6D4B\u8BD5', 'Test rules'), ip = input('sec-test-ip', '203.0.113.20', { autocomplete: 'off' }), geo = geoPicker('US', '', true), scope = el('select', { id: 'sec-test-scope' }, ...scopes.map(([key, zh, en]) => el('option', { value: key }, t(zh, en))));\n            const count = input('sec-test-count', '0', { type: 'number', min: 0, max: 100000, step: 1 }), hint = el('small', { class: 'muted' }), result = el('div', { id: 'sec-test-result', role: 'status', 'aria-live': 'polite', hidden: '' });\n            const update = () => { const key = scope.value, r = store.rules[key]; hint.textContent = t(`\u586B\u5165\u8BE5 IP \u6700\u8FD1 ${r.window} \u5206\u949F\u7684${key === 'upload' ? '\u53D1\u8D77\u5206\u4EAB' : '\u6821\u9A8C\u5931\u8D25'}\u603B\u6B21\u6570\uFF08\u542B\u672C\u6B21\uFF09\uFF1B\u6D4B\u8BD5\u4E0D\u4F1A\u5199\u5165\u5C01\u7981\u3002`, `Enter ${key === 'upload' ? 'share attempts' : 'failed checks'} in the last ${r.window} min, including this request. Testing does not create a ban.`); result.hidden = true; };\n            scope.onchange = update;\n            update();\n            m.body.prepend(el('div', { class: 'sec-form-grid' }, field('\u6A21\u62DF\u8BF7\u6C42 IP', 'Simulated request IP', ip), field('\u8BF7\u6C42\u8303\u56F4', 'Request scope', scope)), geo.node, field('\u7A97\u53E3\u5185\u6B21\u6570\uFF08\u542B\u672C\u6B21\uFF09', 'Count in window (including this request)', count), hint, el('small', { class: 'muted' }, t('\u5C5E\u5730\u7531\u4F60\u624B\u52A8\u6307\u5B9A\uFF0C\u4E0D\u67E5\u8BE2\u6B64 IP \u7684\u5B9E\u9645\u4F4D\u7F6E\u3002\u653E\u884C\u4EC5\u4EE3\u8868\u901A\u8FC7\u9632\u62A4\uFF0C\u4ECD\u9700\u6EE1\u8DB3\u767B\u5F55\u3001\u5206\u4EAB\u53CA\u53D6\u4EF6\u6821\u9A8C\u3002', 'Location is entered manually, not looked up. Passing protection does not bypass authentication or share permissions.')), result);\n            window.attachHelp(m.body.querySelector('label[for=\"sec-test-count\"] > span'), hint);\n            window.attachHelp($('#security-dialog-title'), m.body.querySelector(':scope > small'));\n            for (const n of [ip, geo.country, geo.region, count])\n                n.addEventListener('input', () => { result.hidden = true; });\n            m.foot.append(btn('\u5173\u95ED', 'Close', close), btn('\u6D4B\u8BD5\u89C4\u5219', 'Test rules', async () => {\n                result.hidden = true;\n                const address = canonical(ip.value);\n                if (!address)\n                    return fail(m.error, t('\u8BF7\u8F93\u5165\u6709\u6548 IP \u5730\u5740\u3002', 'Enter a valid IP address.'));\n                if (!count.value || !count.reportValidity())\n                    return;\n                m.error.hidden = true;\n                const key = scope.value;\n                const { blocked, reason } = await api('/api/admin/security/test', { method: 'POST', body: { ip: address, scope: key, country: geo.country.value, region: geo.region.value, count: Number(count.value) } });\n                result.className = 'sec-test-result ' + (blocked ? 'sec-test-blocked' : 'sec-test-pass');\n                result.replaceChildren(el('b', {}, t(blocked ? '\u62E6\u622A' : '\u9632\u62A4\u653E\u884C', blocked ? 'Blocked' : 'Passes protection') + ' \xB7 ' + scopeName(key)), el('p', {}, reason), ...(!geo.country.value ? [el('small', { class: 'muted' }, t('\u5C5E\u5730\u672A\u77E5\uFF0C\u672A\u5339\u914D\u5730\u533A\u89C4\u5219\uFF1BIP \u4E0E\u81EA\u52A8\u9632\u62A4\u4ECD\u53C2\u4E0E\u5224\u65AD\u3002', 'Unknown location: region rules skipped; IP and automatic rules still apply.'))] : []));\n                result.hidden = false;\n            }, 'btn primary'));\n        }\n        function details(row) { const m = modal('\u5C01\u7981\u8BE6\u60C5', 'Ban details'); const pairs = [[t('IP \u5730\u5740', 'IP address'), row.ip], [t('\u4FDD\u62A4\u8303\u56F4', 'Scope'), scopeText(row.scopes)], [t('\u65B9\u5F0F', 'Type'), row.kind === 'auto' ? t('\u81EA\u52A8\u5C01\u7981', 'Automatic') : t('\u624B\u52A8\u5C01\u7981', 'Manual')], [t('\u539F\u56E0', 'Reason'), row.reason], [t('\u89E6\u53D1\u6B21\u6570', 'Trigger count'), row.kind === 'auto' ? row.failures : '\u2014'], [t('\u5C01\u7981\u65F6\u95F4', 'Banned at'), date(row.at)], [t('\u89E3\u5C01\u65F6\u95F4', 'Expires'), row.until === null ? t('\u6C38\u4E45', 'Never') : date(row.until)]]; m.body.prepend(el('dl', { class: 'sec-details' }, ...pairs.map(([k, v]) => el('div', {}, el('dt', { class: 'muted' }, k), el('dd', {}, v))))); m.foot.append(btn('\u67E5\u770B\u65E5\u5FD7', 'View logs', () => { close(); logLink(row.ip); }), btn('\u5173\u95ED', 'Close', close), btn('\u89E3\u5C01', 'Unban', () => { close(); confirmUnban([row.ip]); }, 'btn primary')); }\n        function rows() { if (empty)\n            return []; return (tab === 'bans' ? liveBans() : tab === 'regions' ? store.regions : store.allow).filter(b => (tab !== 'bans' || kind === 'all' || b.kind === kind) && (scopeFilter === 'all' || b.scopes.includes(scopeFilter)) && (!query || [b.ip, b.note || b.reason, b.country ? regionName(b) : '', scopeText(b.scopes)].join(' ').toLowerCase().includes(query.toLowerCase()))); }\n        function exportRows() { if (failed || loading || !store.enabled || filtersDirty())\n            return; const items = rows(), data = tab === 'regions' ? [['Country', 'Subdivision', 'Scope', 'Enabled', 'Reason', 'Expires'], ...items.map(r => [r.country, r.region, r.scopes.join('|'), r.enabled, r.reason, r.until === null ? 'Never' : new Date(r.until).toISOString()])] : [['IP', 'Scope', tab === 'bans' ? 'Type' : 'Note', tab === 'bans' ? 'Reason' : 'Created', ...(tab === 'bans' ? ['Expires'] : [])], ...items.map(b => tab === 'bans' ? [b.ip, b.scopes.join('|'), b.kind, b.reason, b.until === null ? 'Never' : new Date(b.until).toISOString()] : [b.ip, b.scopes.join('|'), b.note, new Date(b.created).toISOString()])]; const csv = '\\uFEFF' + data.map(r => r.map(v => '\"' + String(v).replace(/^[=+\\-@]/, \"'$&\").replaceAll('\"', '\"\"') + '\"').join(',')).join('\\r\\n'); const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); const a = el('a', { href: url, download: 'security-' + tab + '.csv' }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast(t('\u5DF2\u5BFC\u51FA\u5168\u90E8\u5339\u914D\u8BB0\u5F55', 'All matching records exported')); }\n        function filtersDirty() { return $('#sec-search') && ($('#sec-search').value.trim() !== query || ($('#sec-kind')?.value || 'all') !== kind || $('#sec-scope-filter').value !== scopeFilter); }\n        function syncExport() {\n            const dirty = filtersDirty(), exportButton = $('#sec-export'), pending = $('#sec-filter-pending');\n            if (exportButton)\n                exportButton.disabled = failed || loading || !store.enabled || dirty || !rows().length;\n            if (pending)\n                pending.hidden = !dirty;\n        }\n        function render() {\n            const focusId = view.contains(document.activeElement) ? document.activeElement.id : null;\n            clearFeedback();\n            const active = liveBans();\n            for (const ip of selected)\n                if (!active.some(b => b.ip === ip))\n                    selected.delete(ip);\n            navButton.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            view.replaceChildren();\n            const actions = el('div', { class: 'sec-actions' }, btn('\u9632\u62A4\u89C4\u5219', 'Rules', editRules), btn('\u89C4\u5219\u6D4B\u8BD5', 'Test rules', testRules));\n            actions.children[0].id = 'sec-rules';\n            actions.children[1].id = 'sec-test';\n            if (failed || loading || !store.enabled)\n                for (const n of actions.children)\n                    n.disabled = true;\n            const title = el('h2', { id: 'security-title' }, t('\u5B89\u5168\u9632\u62A4', 'Security'));\n            view.append(el('div', { class: 'sec-heading' }, title, actions));\n            window.attachHelp(title, el('span', {}, t('\u4FDD\u62A4\u540E\u53F0\u767B\u5F55\u3001\u4E0A\u4F20\u548C\u53D6\u4EF6\u3002\u5730\u533A\u5C01\u7981\u4EC5\u4F5C\u7528\u4E8E\u4E0A\u4F20\u548C\u53D6\u4EF6\uFF1B\u5141\u8BB8\u540D\u5355\u53EA\u8C41\u514D\u81EA\u52A8\u5C01\u7981\u3002', 'Protects admin login, uploads and pickups. Region bans apply only to uploads and pickups; allowed IPs bypass automatic bans only.')));\n            const enabled = (!failed && !loading && store.enabled) ? Object.values(store.rules).filter(r => r.enabled).length : 0;\n            const summary = el('div', { class: 'sec-summary' }, el('div', { class: 'sec-auto-summary' }, el('b', { class: failed ? 'sec-warning' : enabled ? 'sec-enabled' : 'muted' }, failed || loading || !store.enabled ? t(loading ? '\u6B63\u5728\u8BFB\u53D6' : failed ? '\u72B6\u6001\u672A\u77E5' : '\u672A\u542F\u7528', loading ? 'Loading' : failed ? 'Status unknown' : 'Unavailable') : enabled ? t(`\u81EA\u52A8\u9632\u62A4 ${enabled} / 3 \u5DF2\u542F\u7528`, `${enabled} / 3 automatic rules enabled`) : t('\u81EA\u52A8\u9632\u62A4\u5DF2\u6682\u505C', 'Automatic protection paused'))), el('div', { class: 'sec-metric' }, el('b', { id: 'sec-ip-total' }, failed || loading || !store.enabled ? '\u2014' : empty ? 0 : active.length), el('small', { class: 'muted' }, t('\u5F53\u524D\u5C01\u7981 IP', 'Active IP bans'))), el('div', { class: 'sec-metric' }, el('b', { id: 'sec-region-total' }, failed || loading || !store.enabled ? '\u2014' : empty ? 0 : activeRegions().length), el('small', { class: 'muted' }, t('\u751F\u6548\u5730\u533A\u89C4\u5219', 'Active region rules'))));\n            const ruleGrid = el('div', { class: 'sec-rule-grid' }), triggers = { login: ['\u4EE4\u724C\u6821\u9A8C\u5931\u8D25', 'Failed token checks'], upload: ['\u53D1\u8D77\u6587\u4EF6\u6216\u6587\u672C\u5206\u4EAB\uFF0C\u5206\u7247\u4E0D\u91CD\u590D\u8BA1\u6570', 'File or text share attempts; chunks do not count'], pickup: ['\u65E0\u6548\u53E3\u4EE4\uFF0C\u6210\u529F\u53D6\u4EF6\u4E0D\u8BA1\u5165', 'Invalid codes; successful pickups do not count'] };\n            if (failed || loading || !store.enabled)\n                summary.firstChild.append(el('small', { class: 'muted' }, t('\u65E0\u6CD5\u8BFB\u53D6\u9632\u62A4\u72B6\u6001\uFF0C\u8BF7\u5237\u65B0\u91CD\u8BD5', 'Unable to read protection status; refresh to retry')));\n            else {\n                for (const [key] of scopes) {\n                    const r = store.rules[key], name = el('b', {}, scopeName(key));\n                    const rule = el('div', { class: 'sec-rule-summary' }, name, el('small', { class: 'muted' }, r.enabled ? t(`${r.window} \u5206\u949F ${r.limit} \u6B21`, `${r.limit} in ${r.window} min`) : t('\u5DF2\u6682\u505C', 'Paused')), el('small', { class: r.enabled ? 'muted' : 'sec-rule-inactive' }, r.enabled ? t(`\u5C01\u7981 ${r.duration} \u5206\u949F`, `${r.duration} min ban`) : t('\u4E0D\u89E6\u53D1\u81EA\u52A8\u5C01\u7981', 'No automatic ban')));\n                    ruleGrid.append(rule);\n                    window.attachHelp(name, el('span', {}, t(...triggers[key])));\n                }\n                summary.firstChild.append(ruleGrid);\n            }\n            view.append(summary);\n            const tabs = el('div', { class: 'sec-tabs', role: 'group', 'aria-label': t('\u9632\u62A4\u540D\u5355', 'Protection lists') });\n            for (const [key, zh, en] of [['bans', '\u5C01\u7981 IP', 'Banned IPs'], ['regions', '\u5730\u533A\u5C01\u7981', 'Region bans'], ['allow', '\u5141\u8BB8\u540D\u5355', 'Allowed IPs']]) {\n                const b = btn(zh, en, () => { tab = key; page = 1; query = ''; kind = 'all'; scopeFilter = 'all'; selected.clear(); render(); });\n                b.setAttribute('aria-pressed', String(tab === key));\n                b.dataset.secTab = key;\n                tabs.append(b);\n            }\n            const add = tab === 'bans' ? btn('\u624B\u52A8\u5C01\u7981', 'Ban IP', () => openAdd(false), 'btn small primary') : tab === 'regions' ? btn('\u6DFB\u52A0\u5730\u533A', 'Add region', () => editRegion(), 'btn small primary') : btn('\u6DFB\u52A0\u5141\u8BB8 IP', 'Allow IP', () => openAdd(true), 'btn small primary');\n            add.id = 'sec-add';\n            add.disabled = failed || loading || !store.enabled;\n            view.append(el('div', { class: 'sec-list-heading' }, tabs, add));\n            const search = input('sec-search', query, { type: 'search', placeholder: t(tab === 'regions' ? '\u641C\u7D22\u5730\u533A / \u539F\u56E0' : tab === 'allow' ? '\u641C\u7D22 IP / \u5907\u6CE8' : '\u641C\u7D22 IP / \u539F\u56E0', tab === 'regions' ? 'Search region / reason' : tab === 'allow' ? 'Search IP / note' : 'Search IP / reason'), 'aria-label': t('\u641C\u7D22\u540D\u5355', 'Search list') });\n            const filter = el('select', { id: 'sec-kind', 'aria-label': t('\u5C01\u7981\u65B9\u5F0F', 'Ban type') }, el('option', { value: 'all' }, t('\u5168\u90E8\u65B9\u5F0F', 'All types')), el('option', { value: 'auto' }, t('\u81EA\u52A8\u5C01\u7981', 'Automatic')), el('option', { value: 'manual' }, t('\u624B\u52A8\u5C01\u7981', 'Manual')));\n            filter.value = kind;\n            const scope = el('select', { id: 'sec-scope-filter', 'aria-label': t('\u4FDD\u62A4\u8303\u56F4', 'Protected action') }, el('option', { value: 'all' }, t('\u5168\u90E8\u8303\u56F4', 'All scopes')), ...scopes.filter(([key]) => tab !== 'regions' || key !== 'login').map(([key, zh, en]) => el('option', { value: key }, t(zh, en))));\n            scope.value = scopeFilter;\n            const apply = () => { query = search.value.trim(); kind = filter.value; scopeFilter = scope.value; page = 1; selected.clear(); draw(); };\n            search.addEventListener('input', syncExport);\n            filter.onchange = syncExport;\n            scope.onchange = syncExport;\n            const exportButton = btn('\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C', 'Export results', exportRows);\n            exportButton.id = 'sec-export';\n            exportButton.title = t('\u5BFC\u51FA\u5F53\u524D\u7C7B\u522B\u548C\u7B5B\u9009\u6761\u4EF6\u4E0B\u7684\u5168\u90E8\u8BB0\u5F55\uFF0C\u5305\u542B\u6240\u6709\u5206\u9875\u3002', 'Export all matching records in this category across pages.');\n            const submit = btn('\u7B5B\u9009', 'Filter', () => { });\n            submit.type = 'submit';\n            const form = el('form', { class: 'sec-toolbar', id: 'sec-filter' }, el('div', { class: 'sec-actions sec-filters' }, search, scope, ...(tab === 'bans' ? [filter] : [])), el('div', { class: 'sec-actions sec-filter-actions' }, submit, btn('\u91CD\u7F6E', 'Reset', () => { query = ''; kind = 'all'; scopeFilter = 'all'; page = 1; selected.clear(); render(); }), exportButton));\n            form.onsubmit = e => { e.preventDefault(); apply(); };\n            view.append(form, el('small', { id: 'sec-filter-pending', class: 'sec-filter-pending', role: 'status', hidden: '' }, t('\u7B5B\u9009\u6761\u4EF6\u5DF2\u66F4\u6539\uFF0C\u8BF7\u5148\u70B9\u51FB\u201C\u7B5B\u9009\u201D\u3002', 'Filters changed. Apply them before exporting.')), el('div', { id: 'sec-list' }));\n            draw();\n            if (focusId)\n                document.getElementById(focusId)?.focus();\n        }\n        function draw() {\n            const host = $('#sec-list');\n            if (!host)\n                return;\n            if (loading || (!store.enabled && !failed)) {\n                host.replaceChildren(el('div', { class: 'sec-empty', role: 'status' }, loading ? t('\u6B63\u5728\u8BFB\u53D6\u9632\u62A4\u72B6\u6001\u2026', 'Loading protection\u2026') : t('\u5B89\u5168\u9632\u62A4\u672A\u542F\u7528\uFF0C\u9700\u8981\u7ED1\u5B9A R2 \u6216 D1\u3002', 'Protection unavailable. Bind R2 or D1.')));\n                syncExport();\n                return;\n            }\n            const focusId = document.activeElement?.id;\n            host.replaceChildren();\n            if (failed) {\n                syncExport();\n                host.append(el('div', { class: 'sec-empty', role: 'alert' }, t('\u9632\u62A4\u6570\u636E\u52A0\u8F7D\u5931\u8D25', 'Failed to load protection data'), btn('\u91CD\u8BD5', 'Retry', () => refresh())));\n                return;\n            }\n            $('#sec-ip-total').textContent = empty ? 0 : liveBans().length;\n            $('#sec-region-total').textContent = empty ? 0 : activeRegions().length;\n            for (const ip of selected)\n                if (!liveBans().some(b => b.ip === ip))\n                    selected.delete(ip);\n            const items = rows(), max = Math.max(1, Math.ceil(items.length / 5));\n            page = Math.min(page, max);\n            const visible = items.slice((page - 1) * 5, page * 5);\n            const prev = btn('\u4E0A\u4E00\u9875', 'Previous', () => { page--; draw(); }), next = btn('\u4E0B\u4E00\u9875', 'Next', () => { page++; draw(); });\n            prev.disabled = page <= 1;\n            next.disabled = page >= max;\n            const bulk = btn(t(`\u89E3\u5C01\u6240\u9009\uFF08${selected.size}\uFF09`, `Unban selected (${selected.size})`), `Unban selected (${selected.size})`, () => confirmUnban([...selected]));\n            bulk.id = 'sec-bulk';\n            bulk.disabled = !selected.size;\n            host.append(el('div', { class: 'sec-pagination' }, el('div', { class: 'sec-actions' }, el('small', { class: 'muted' }, t(`\u5171 ${items.length} \u6761 \xB7 \u7B2C ${page} / ${max} \u9875`, `${items.length} entries \xB7 Page ${page} / ${max}`)), ...(tab === 'bans' && selected.size ? [el('span', { class: 'sec-selection-count' }, t(`\u5DF2\u9009 ${selected.size} \u9879`, `Selected ${selected.size}`)), bulk, btn('\u53D6\u6D88\u9009\u62E9', 'Clear selection', () => { selected.clear(); draw(); })] : [])), el('div', { class: 'sec-actions' }, prev, next, btn('\u5237\u65B0', 'Refresh', async () => { await refresh(); toast(t('\u5DF2\u5237\u65B0', 'Refreshed')); }))));\n            syncExport();\n            if (!items.length) {\n                host.append(el('div', { class: 'sec-empty' }, query ? t('\u6CA1\u6709\u5339\u914D\u7684\u8BB0\u5F55', 'No matching records') : tab === 'bans' ? t('\u5F53\u524D\u6CA1\u6709\u5C01\u7981 IP', 'No active bans') : tab === 'regions' ? t('\u5C1A\u672A\u6DFB\u52A0\u5730\u533A\u89C4\u5219', 'No region rules') : t('\u5C1A\u672A\u6DFB\u52A0\u5141\u8BB8 IP', 'No allowed IPs')));\n                return;\n            }\n            if (tab === 'regions') {\n                drawRegions(host, visible);\n                return;\n            }\n            const table = el('table', { class: 'sec-table', 'aria-label': t(tab === 'bans' ? '\u5C01\u7981\u5217\u8868' : '\u5141\u8BB8\u540D\u5355', tab === 'bans' ? 'Banned IPs' : 'Allowed IPs') });\n            const header = el('tr');\n            if (tab === 'bans') {\n                const all = input('sec-select-page', '', { type: 'checkbox', 'aria-label': t('\u9009\u62E9\u672C\u9875', 'Select this page') });\n                all.checked = visible.every(r => selected.has(r.ip));\n                all.indeterminate = !all.checked && visible.some(r => selected.has(r.ip));\n                all.onchange = () => { for (const r of visible)\n                    all.checked ? selected.add(r.ip) : selected.delete(r.ip); draw(); };\n                header.append(el('th', {}, all));\n            }\n            const cols = tab === 'bans' ? [[\"IP / \u4FDD\u62A4\u8303\u56F4\", \"IP / scope\"], [\"\u539F\u56E0\", \"Reason\"], [\"\u89E6\u53D1\u6B21\u6570\", \"Count\"], [\"\u5C01\u7981\u65F6\u95F4\", \"Banned at\"], [\"\u81EA\u52A8\u89E3\u5C01\", \"Expires\"], [\"\u64CD\u4F5C\", \"Actions\"]] : [[\"IP / \u8C41\u514D\u8303\u56F4\", \"IP / exempt scope\"], [\"\u5907\u6CE8\", \"Note\"], [\"\u6DFB\u52A0\u65F6\u95F4\", \"Added\"], [\"\u64CD\u4F5C\", \"Actions\"]];\n            for (const [zh, en] of cols)\n                header.append(el('th', {}, t(zh, en)));\n            table.append(el('thead', {}, header));\n            const body = el('tbody');\n            for (const r of visible) {\n                const row = el('tr');\n                if (tab === 'bans') {\n                    const check = input('sec-select-' + r.ip, '', { type: 'checkbox', 'aria-label': t('\u9009\u62E9 ' + r.ip, 'Select ' + r.ip) });\n                    check.checked = selected.has(r.ip);\n                    check.onchange = () => { check.checked ? selected.add(r.ip) : selected.delete(r.ip); draw(); };\n                    row.append(el('td', { class: 'sec-select' }, check));\n                    const remaining = r.until === null ? t('\u6C38\u4E45', 'Permanent') : t(`\u5269\u4F59 ${Math.max(1, Math.ceil((r.until - Date.now()) / 60000))} \u5206\u949F`, `${Math.max(1, Math.ceil((r.until - Date.now()) / 60000))} min left`);\n                    row.append(el('td', { 'data-label': 'IP', class: 'sec-address' }, ipLine(r)), el('td', { 'data-label': t('\u539F\u56E0', 'Reason') }, el('div', { class: 'ui-record-line' }, el('span', {}, r.reason), el('sup', { class: 'ui-record-sup', 'data-tone': r.kind === 'auto' ? 'violet' : 'slate' }, r.kind === 'auto' ? t('\u81EA\u52A8\u5C01\u7981', 'Automatic') : t('\u624B\u52A8\u5C01\u7981', 'Manual')))), el('td', { 'data-label': t('\u89E6\u53D1\u6B21\u6570', 'Count') }, r.kind === 'auto' ? r.failures : '\u2014'), el('td', { 'data-label': t('\u5C01\u7981\u65F6\u95F4', 'Banned at') }, date(r.at)), el('td', { 'data-label': t('\u81EA\u52A8\u89E3\u5C01', 'Expires') }, remaining, ...(r.until === null ? [] : [el('small', { class: 'muted' }, date(r.until))])), el('td', { class: 'sec-row-actions' }, btn('\u8BE6\u60C5', 'Details', () => details(r)), btn('\u65E5\u5FD7', 'Logs', () => logLink(r.ip)), btn('\u89E3\u5C01', 'Unban', () => confirmUnban([r.ip]))));\n                }\n                else\n                    row.append(el('td', { 'data-label': 'IP', class: 'sec-address' }, ipLine(r)), el('td', { 'data-label': t('\u5907\u6CE8', 'Note') }, r.note), el('td', { 'data-label': t('\u6DFB\u52A0\u65F6\u95F4', 'Added') }, date(r.created)), el('td', { class: 'sec-row-actions' }, btn('\u65E5\u5FD7', 'Logs', () => logLink(r.ip)), btn('\u79FB\u9664', 'Remove', () => removeAllow(r))));\n                body.append(row);\n            }\n            table.append(body);\n            host.append(el('div', { class: 'sec-table-wrap' }, table));\n            if (focusId?.startsWith('sec-select'))\n                document.getElementById(focusId)?.focus();\n        }\n        function drawRegions(host, items) {\n            const table = el('table', { class: 'sec-table sec-region-table', 'aria-label': t('\u5730\u533A\u5C01\u7981\u89C4\u5219', 'Region ban rules') }), head = el('tr');\n            for (const [zh, en] of [['\u5730\u533A / \u8303\u56F4', 'Region / scope'], ['\u539F\u56E0', 'Reason'], ['\u72B6\u6001', 'Status'], ['\u5230\u671F\u65F6\u95F4', 'Expires'], ['\u64CD\u4F5C', 'Actions']])\n                head.append(el('th', {}, t(zh, en)));\n            table.append(el('thead', {}, head));\n            const body = el('tbody');\n            for (const r of items) {\n                const expired = r.until !== null && r.until <= Date.now(), active = r.enabled && !expired;\n                body.append(el('tr', {}, el('td', { class: 'sec-address' }, el('div', { class: 'sec-ip-line' }, el('b', {}, regionName(r)), scopeBadges(r.scopes, true))), el('td', { 'data-label': t('\u539F\u56E0', 'Reason') }, r.reason), el('td', { 'data-label': t('\u72B6\u6001', 'Status') }, el('span', { class: active ? 'sec-enabled' : 'muted' }, expired ? t('\u5DF2\u8FC7\u671F', 'Expired') : r.enabled ? t('\u751F\u6548\u4E2D', 'Active') : t('\u5DF2\u505C\u7528', 'Paused'))), el('td', { 'data-label': t('\u5230\u671F\u65F6\u95F4', 'Expires') }, r.until === null ? t('\u6C38\u4E45', 'Never') : date(r.until)), el('td', { class: 'sec-row-actions' }, btn('\u7F16\u8F91', 'Edit', () => editRegion(r)), btn(r.enabled && !expired ? '\u505C\u7528' : '\u542F\u7528', r.enabled && !expired ? 'Pause' : 'Enable', () => toggleRegion(r)), btn('\u65E5\u5FD7', 'Logs', () => logLink(r.id)), btn('\u79FB\u9664', 'Remove', () => removeRegion(r)))));\n            }\n            table.append(body);\n            host.append(el('div', { class: 'sec-table-wrap' }, table));\n        }\n        $('#lang-btn').addEventListener('click', () => { navButton.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            shortcut.querySelector('h4').textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            shortcut.querySelector('button').textContent = t('\u7BA1\u7406\u8BBF\u95EE\u89C4\u5219\u4E0E\u5C01\u7981 \u2192', 'Manage access rules and bans \u2192'); if (open)\n            render(); });\n        setInterval(() => { if (open && !document.hidden && !dialog.open && !loading && $('#sec-list') && !filtersDirty())\n            refresh().catch(error => toast(error.message)); }, 60000);\n    })();\n}\n", "js/admin-share-editor.js": "import { api, el, fmtDate } from './common.js';\nimport { t } from './i18n.js';\n\nconst MAX_COUNT = 2147483647;\nconst WEEK = 7 * 86400000;\nexport function ruleStatus(rules, now = Date.now()) {\n  if (rules.expireAt !== null && rules.expireAt <= now) return 'expired';\n  if (rules.maxPickups !== null && rules.pickupCount >= rules.maxPickups) return 'exhausted';\n  return 'active';\n}\n/** Selecting a status changes visible values; the server still derives the saved status. */\nexport function linkStatus(rules, status, now = Date.now()) {\n  const next = { ...rules };\n  if (status === 'expired') next.expireAt = now;\n  else {\n    if (next.expireAt !== null && next.expireAt <= now) next.expireAt = now + WEEK;\n    if (status === 'active' && next.maxPickups !== null && next.pickupCount >= next.maxPickups)\n      next.maxPickups = next.pickupCount < MAX_COUNT ? next.pickupCount + 1 : null;\n    if (status === 'exhausted') {\n      next.maxPickups ??= Math.max(1, next.pickupCount);\n      next.pickupCount = Math.max(next.pickupCount, next.maxPickups);\n    }\n  }\n  return next;\n}\nfunction localDateTime(value) {\n  const date = new Date(value);\n  const pad = n => String(n).padStart(2, '0');\n  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;\n}\n\nexport function createShareEditor(detail, { onSaved, onCancel, onBusy }) {\n  const form = el('form', { id: 'share-edit-form', class: 'share-edit-form' });\n  const number = (id, value, min) => el('input', { id, type: 'number', value, min, max: MAX_COUNT, step: 1, required: true });\n  const count = number('share-edit-count', detail.pickupCount, 0);\n  const limit = number('share-edit-limit', detail.maxPickups ?? Math.max(1, detail.pickupCount+1), 1);\n  const unlimited = el('input', { id: 'share-edit-unlimited', type: 'checkbox' });\n  unlimited.checked = detail.maxPickups === null;\n  const permanent = el('input', { id: 'share-edit-permanent', type: 'checkbox' });\n  permanent.checked = detail.expireAt === null;\n  const expiry = el('input', { id: 'share-edit-expiry', type: 'datetime-local', step: 60, min: '1970-01-01T00:00', max: '9999-12-31T23:59', required: true });\n  let exactExpiry = detail.expireAt;\n  let displayedExpiry = localDateTime(exactExpiry ?? Date.now()+WEEK);\n  expiry.value = displayedExpiry;\n  const status = el('select', { id: 'share-edit-status' }, ...['active','expired','exhausted'].map(value => el('option', { value }, t('ad.st.'+value))));\n  status.value = detail.status;\n  const field = (label, control) => el('div', { class: 'share-edit-field' }, el('label', { htmlFor: control.id }, label), control);\n  const check = (label, control) => el('label', { class: 'share-edit-check' }, control, label);\n  const limitField = field(t('ad.editLimit'), limit);\n  limitField.append(check(t('ad.editUnlimited'), unlimited));\n  const expiryField = field(t('ad.th.expire'), expiry);\n  expiryField.classList.add('share-edit-expiry');\n  expiryField.append(check(t('ad.forever'), permanent));\n  const linked = el('p', { class: 'share-edit-linked muted', role: 'status', hidden: true });\n  const error = el('p', { id: 'share-edit-error', class: 'error-box', role: 'alert', hidden: true });\n  const reload = el('button', { type: 'button', class: 'btn small ghost', hidden: true, onclick: onCancel }, t('ad.editReload'));\n  const save = el('button', { type: 'submit', class: 'btn primary' }, t('ad.editSave'));\n  const cancel = el('button', { type: 'button', class: 'btn ghost', onclick: onCancel }, t('ad.editCancel'));\n  form.append(el('strong', { class: 'share-edit-filename', title: detail.filename || '' }, detail.filename || t('ad.unnamed')),\n    el('div', { class: 'share-edit-grid' }, field(t('ad.editCount'), count), limitField, field(t('ad.th.status'), status), expiryField),\n    linked, error, reload, el('div', { class: 'share-edit-actions' }, cancel, save));\n  function values() {\n    return { pickupCount: count.valueAsNumber, maxPickups: unlimited.checked ? null : limit.valueAsNumber,\n      expireAt: permanent.checked ? null : expiry.value === displayedExpiry && exactExpiry !== null ? exactExpiry : new Date(expiry.value).getTime() };\n  }\n  function sync() { limit.disabled = unlimited.checked; expiry.disabled = permanent.checked; }\n  const valid = rules => Number.isSafeInteger(rules.pickupCount) && rules.pickupCount >= 0 && rules.pickupCount <= MAX_COUNT &&\n    (rules.maxPickups === null || (Number.isSafeInteger(rules.maxPickups) && rules.maxPickups >= 1 && rules.maxPickups <= MAX_COUNT)) &&\n    (rules.expireAt === null || Number.isFinite(rules.expireAt));\n  for (const control of [count, limit, unlimited, expiry, permanent]) {\n    control.addEventListener('input', () => { sync(); linked.hidden = true; const rules = values(); if (valid(rules)) status.value = ruleStatus(rules); });\n  }\n  status.addEventListener('change', () => {\n    const before = values();\n    if (!valid(before)) { error.textContent = t('ad.editInvalid'); error.hidden = false; return; }\n    const next = linkStatus(before, status.value), changes = [];\n    if (before.pickupCount !== next.pickupCount) changes.push(`${t('ad.editCount')} \u2192 ${next.pickupCount}`);\n    if (before.maxPickups !== next.maxPickups) changes.push(`${t('ad.editLimit')} \u2192 ${next.maxPickups ?? '\u221E'}`);\n    if (before.expireAt !== next.expireAt) changes.push(`${t('ad.th.expire')} \u2192 ${fmtDate(next.expireAt)}`);\n    count.value = next.pickupCount; unlimited.checked = next.maxPickups === null;\n    if (next.maxPickups !== null) limit.value = next.maxPickups;\n    permanent.checked = next.expireAt === null;\n    exactExpiry = next.expireAt;\n    displayedExpiry = localDateTime(next.expireAt ?? Date.now()+WEEK); expiry.value = displayedExpiry;\n    sync(); linked.textContent = changes.join('\uFF1B'); linked.hidden = !changes.length;\n  });\n  let busy = false;\n  form.addEventListener('submit', async event => {\n    event.preventDefault();\n    if (busy || !form.reportValidity()) return;\n    const rules = values();\n    if (!valid(rules)) { error.textContent = t('ad.editInvalid'); error.hidden = false; return; }\n    if (status.value !== ruleStatus(rules)) { status.value = ruleStatus(rules); error.textContent = t('ad.editTimeChanged'); error.hidden = false; return; }\n    busy = true; onBusy(true); error.hidden = reload.hidden = true;\n    const controls = [...form.querySelectorAll('input,button,select')].map(node => [node,node.disabled]);\n    for (const [node] of controls) node.disabled = true;\n    let saved = false;\n    try {\n      await api(`/api/admin/shares/${detail.code}`, { method: 'PUT', body: { expected: {\n        id: detail.id, pickupCount: detail.pickupCount, maxPickups: detail.maxPickups, expireAt: detail.expireAt,\n      }, rules: { ...rules, status: status.value } } });\n      saved = true;\n    } catch (e) {\n      error.textContent = e.message; error.hidden = false; reload.hidden = e.code !== 'share_conflict';\n    } finally {\n      busy = false; onBusy(false);\n      for (const [node,disabled] of controls) node.disabled = disabled;\n    }\n    if (saved) onSaved();\n  });\n  sync();\n  return { element: form, enhance() {\n    const help = el('span', {}, t('ad.editHint', Intl.DateTimeFormat().resolvedOptions().timeZone));\n    window.attachHelp(expiryField.querySelector('label'), help);\n    window.attachHelp(form.querySelector('label[for=\"share-edit-status\"]'), el('span', {}, t('ad.editStatusHint')));\n    count.focus();\n  } };\n}\n", "js/admin.js": "import { initUi } from './ui.js';\nimport { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el } from './common.js';\nimport { LANG, t, onLangChange, initI18n } from './i18n.js';\nimport { initAudit } from './admin-audit.js';\nimport { createFilePreview } from './admin-preview.js';\nimport { createShareEditor } from './admin-share-editor.js';\nimport { pageSize, scrollToList, initAdminPreferences } from './admin-preferences.js';\n\ninitTheme();\ninitI18n();\ninitDialogs();\ninitAdminPreferences();\ninitAudit();\n\nconst loginCard = $('#admin-login');\nconst panel = $('#admin-panel');\nconst loginError = $('#login-error');\nconst tokenInput = $('#admin-token');\nconst statsRow = $('#stats-row');\nconst tbody = $('#shares-body');\nconst btnPrev = $('#btn-prev');\nconst btnNext = $('#btn-next');\nconst btnRefresh = $('#btn-refresh');\nconst pageInfo = $('#page-info');\n\nlet limit = pageSize('files'); // Bounded to 40 to leave room for KV reads on the free plan.\nlet offset = 0;\nlet total = 0;\nlet listRequest = 0;\nlet listBusy = false;\n\n/* \u8BED\u8A00\u5207\u6362:\u9762\u677F\u53EF\u89C1\u65F6\u6309\u65B0\u8BED\u8A00\u91CD\u62C9\u6587\u6848 */\nonLangChange(() => {\n  if ($('#source-dialog').open) closeSource();\n  if ($('#file-dialog').open) closeFileDetails();\n  if (!panel.hidden) {\n    loadStats();\n    loadList();\n    loadLoginProtection();\n  }\n});\n\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\n(async () => {\n  try {\n    await api('/api/admin/stats');\n    showPanel();\n  } catch {\n    loginCard.hidden = false;\n    tokenInput.focus();\n  }\n})();\n\nasync function login() {\n  const token = tokenInput.value.trim();\n  if (!token || $('#btn-login').disabled) return;\n  $('#btn-login').disabled = true;\n  loginError.hidden = true;\n  try {\n    await api('/api/admin/login', { method: 'POST', body: { token } });\n    showPanel();\n  } catch (e) {\n    loginError.textContent = e.code === 'login_blocked' ? t('ad.loginBlocked')\n      : e.code === 'login_protection_unavailable' ? t('ad.guardUnavailable') : e.message || t('ad.badToken');\n    loginError.hidden = false;\n  } finally { $('#btn-login').disabled = false; }\n}\n$('#btn-login').addEventListener('click', login);\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\n\nfunction showPanel() {\n  loginCard.hidden = true;\n  panel.hidden = false;\n  $('#admin-navigation').hidden = false;\n  $('#admin-settings-btn').hidden = false;\n  loadStats();\n  loadList();\n  loadSettings();\n  loadGuestPolicy();\n  loadLoginProtection();\n}\n\n$('#btn-logout').addEventListener('click', async () => {\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\n  location.reload();\n});\n\n/* ---------- \u7EDF\u8BA1 ---------- */\nlet lastStats = null; // \u5220\u9664\u540E\u672C\u5730\u9012\u51CF\u7528,\u907F\u514D\u7ACB\u5373\u91CD\u62C9\u649E\u4E0A KV \u6700\u7EC8\u4E00\u81F4\u7A97\u53E3\n\nfunction renderStats(s) {\n  const counts = [\n    [s.total, 'ad.total'], [s.active, 'ad.active'], [s.files, 'ad.files'],\n    [s.texts, 'ad.texts'], [s.todayCreated, 'ad.today'],\n  ];\n  const capacity = s.fileBackend === 'r2' ? s.storage : null;\n  const storageCard = el('div', { class: 'stat-card storage-card' },\n    el('small', {}, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes')),\n    capacity\n      ? el('div', { class: 'storage-value' },\n          el('b', {}, fmtBytes(capacity.usedBytes)),\n          el('span', { class: 'storage-total' }, ` / ${fmtBytes(capacity.capacityBytes)}`))\n      : el('div', { class: 'storage-value' }, el('b', {}, s.fileBackend === 'r2'\n          ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),\n  );\n  if (capacity) {\n    const ratio = Math.min(1, Math.max(0, capacity.usedBytes / capacity.capacityBytes));\n    storageCard.append(\n      el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,\n        value: capacity.usedBytes, ariaLabel: t('ad.storage') }),\n      el('div', { class: 'storage-caption' },\n        el('small', {}, t('ad.storageReserved')), el('small', {}, `${Math.round(ratio * 100)}%`)),\n    );\n  }\n  statsRow.replaceChildren(\n    el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>\n      el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),\n    storageCard,\n  );\n}\n\nasync function loadStats() {\n  try {\n    lastStats = await api('/api/admin/stats');\n    renderStats(lastStats);\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\n}\n\n/** \u5220\u9664\u6210\u529F\u540E\u672C\u5730\u540C\u6B65\u7EDF\u8BA1(\u670D\u52A1\u7AEF KV \u7D22\u5F15\u6700\u957F 60s \u624D\u53CD\u6620\u5220\u9664,\u91CD\u62C9\u4F1A\u770B\u5230\u65E7\u6570) */\nasync function statsAfterDelete(r) {\n  if (!lastStats) return;\n  const s = { ...lastStats };\n  s.total = Math.max(0, s.total - 1);\n  if (r.kind === 'file') s.files = Math.max(0, s.files - 1);\n  else s.texts = Math.max(0, s.texts - 1);\n  s.totalBytes = Math.max(0, s.totalBytes - r.size);\n  if (r.status === 'active') s.active = Math.max(0, s.active - 1);\n  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);\n  if (r.created_at >= todayStart.getTime()) s.todayCreated = Math.max(0, s.todayCreated - 1);\n  lastStats = s;\n  renderStats(s);\n  if (s.fileBackend === 'r2') {\n    try { s.storage = (await api('/api/admin/stats')).storage; }\n    catch { s.storage = null; } // Do not present stale capacity as current after deletion.\n    if (lastStats === s) renderStats(s);\n  }\n}\n\n/* ---------- \u5217\u8868 ---------- */\nconst STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };\nconst KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };\n\nasync function loadList() {\n  const request = ++listRequest;\n  listBusy = true;\n  btnPrev.disabled = btnNext.disabled = btnRefresh.disabled = true;\n  pageInfo.textContent = t('ad.loading');\n  tbody.setAttribute('aria-busy', 'true');\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));\n  try {\n    const data = await api(`/api/admin/shares?limit=${limit}&offset=${offset}`);\n    if (request !== listRequest) return;\n    if (!Number.isSafeInteger(data.total) || data.total < 0 || !Array.isArray(data.rows)) throw new Error(t('ad.loadFail'));\n    total = data.total;\n    if (offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return loadList(); }\n    const rows = data.rows ?? [];\n    tbody.replaceChildren();\n    for (const r of rows) {\n      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n      tbody.append(\n        el('tr', {},\n          el('td', { class: 'mono' }, r.code),\n          el('td', { class: 'share-content-cell' },\n            el('div', { class: 'share-filename-line' },\n              r.kind === 'file'\n                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)\n                : el('span', { class: 'share-filename', title: content }, content),\n              el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),\n          sourceCell(r),\n          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),\n          el('td', {}, fmtDate(r.created_at)),\n          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),\n        ),\n      );\n    }\n    if (rows.length === 0) {\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));\n    }\n    listBusy = false;\n    updatePager();\n  } catch (e) {\n    if (request !== listRequest) return;\n    pageInfo.textContent = t('ad.loadFail');\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));\n  } finally {\n    if (request === listRequest) {\n      listBusy = false;\n      btnRefresh.disabled = false;\n      tbody.setAttribute('aria-busy', 'false');\n    }\n  }\n}\n\nfunction updatePager() {\n  const page = Math.floor(offset / limit) + 1;\n  const pages = Math.max(1, Math.ceil(total / limit));\n  pageInfo.textContent = t('ad.page', page, pages, total);\n  btnPrev.disabled = listBusy || offset <= 0;\n  btnNext.disabled = listBusy || offset + limit >= total;\n}\nbtnPrev.addEventListener('click', async () => { offset = Math.max(0, offset - limit); await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\nbtnNext.addEventListener('click', async () => { offset += limit; await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\nbtnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });\nwindow.addEventListener('admin-page-size', event => {\n  if (event.detail.name !== 'files') return;\n  limit = event.detail.value; offset = 0;\n  if (!panel.hidden) loadList();\n});\n\n/* ---------- \u5220\u9664:\u7968\u636E\u98CE\u786E\u8BA4\u5F39\u7A97 + \u672C\u5730\u540C\u6B65(KV \u6700\u7EC8\u4E00\u81F4,\u5220\u9664\u540E\u7ACB\u5373\u91CD\u62C9\u4F1A\u770B\u5230\u6B8B\u7559\u7D22\u5F15) ---------- */\nconst delMask = $('#del-mask');\nconst delTarget = $('#del-target');\nlet delResolve = null;\n\nfunction confirmDelete(r) {\n  const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n  delTarget.replaceChildren(\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.code')), el('b', { class: 'mono' }, r.code)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.content')), el('span', {}, content)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),\n      el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),\n  );\n  delMask.showModal();\n  $('#del-cancel').focus();\n  return new Promise((resolve) => { delResolve = resolve; });\n}\n\nfunction closeDelModal(v) {\n  if (!delResolve) return;\n  delMask.close();\n  const resolve = delResolve;\n  delResolve = null;\n  resolve(v);\n}\n$('#del-cancel').addEventListener('click', () => closeDelModal(false));\n$('#del-ok').addEventListener('click', () => closeDelModal(true));\ndelMask.addEventListener('click', (e) => e.target === delMask && closeDelModal(false));\ndelMask.addEventListener('cancel', e => { e.preventDefault(); closeDelModal(false); });\n\nasync function remove(r, tr) {\n  if (!(await confirmDelete(r))) return;\n  try {\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\n    toast(t('ad.deleted'), 'ok');\n    statsAfterDelete(r);\n    total = Math.max(0, total - 1);\n    tr?.remove();\n    // \u5F53\u524D\u9875\u5220\u7A7A\u4E14\u4E0D\u5728\u7B2C\u4E00\u9875:\u9000\u56DE\u4E0A\u4E00\u9875\u91CD\u62C9,\u907F\u514D\u505C\u5728\u7A7A\u9875\n    if (tbody.rows.length === 0 && offset > 0) {\n      offset = Math.max(0, offset - limit);\n      loadList();\n    } else {\n      updatePager();\n    }\n  } catch (e) {\n    toast(e.message || t('ad.deleteFail'), 'error');\n  }\n}\n\n/* Upload source details: source labels are text nodes, never interpolated HTML. */\nconst sourceDialog = $('#source-dialog');\nconst sourceForm = $('#source-form');\nconst sourceNote = $('#source-note');\nconst sourceSave = $('#source-save');\nconst sourceError = $('#source-error');\nconst noteOverrides = new Map(); // Read-your-write while KV propagation completes.\nlet sourceRequest = 0;\nlet activeSource = null;\nlet sourceReturnCode = null;\nlet sourceHistoryLoaded = false;\n\nfunction sourceField(label, value, className = '', hint = '') {\n  return el('div', { class: `source-field ${className}` },\n    el('small', { class: 'muted', ...(hint ? { title: hint } : {}) }, label), el('span', {}, value));\n}\nfunction browserLabel(ua) {\n  if (!ua) return t('ad.sourceUnrecorded');\n  const browser = /Edg\\//.test(ua) ? 'Edge' : /Firefox\\//.test(ua) ? 'Firefox'\n    : /Chrome\\//.test(ua) ? 'Chrome' : /Safari\\//.test(ua) ? 'Safari' : t('ad.sourceUnknown');\n  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS'\n    : /Windows/.test(ua) ? 'Windows' : /Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';\n  return [browser, os].filter(Boolean).join(' \xB7 ');\n}\n\nfunction visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }\nfunction sourceLabel(source) {\n  const override = noteOverrides.get(source.visitorId);\n  return (override !== undefined ? override : source.note) || visitorLabel(source.visitorId);\n}\nfunction locationLabel(source) {\n  let country = source.country;\n  if (country && /^[A-Z]{2}$/.test(country)) {\n    country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n  }\n  return [...new Set([country, source.region, source.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n}\nfunction sourceCell(row) {\n  if (!row.source) return el('td', { class: 'source-cell muted' }, t('ad.sourceUnrecorded'));\n  const button = el('button', { class: 'source-link', type: 'button', onclick: () => openSource(row) }, sourceLabel(row.source));\n  button.dataset.visitor = row.source.visitorId;\n  button.title = t('ad.source');\n  return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));\n}\nasync function openSource(row, returnCode = null) {\n  const request = ++sourceRequest;\n  activeSource = null;\n  sourceReturnCode = returnCode;\n  $('#source-back').hidden = !returnCode;\n  $('#source-history').hidden = true;\n  $('#source-history-list').replaceChildren();\n  sourceHistoryLoaded = false;\n  sourceForm.hidden = true;\n  $('#source-identity').hidden = true;\n  $('#source-visitor-id').textContent = '';\n  sourceError.hidden = true;\n  sourceSave.disabled = false;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = `${t('ad.th.code')} ${row.code}`;\n  $('#source-detail').textContent = t('ad.loading');\n  sourceDialog.showModal();\n  try {\n    const { source } = await api(`/api/admin/shares/${row.code}/source`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }\n    activeSource = { code: row.code, visitorId: source.visitorId };\n    $('#source-visitor-id').textContent = source.visitorId;\n    const ip = el('span', { class: 'source-ip' }, source.ip || t('ad.sourceUnknown'));\n    if (source.ip) ip.append(el('button', { class: 'btn small ghost', type: 'button',\n      onclick: async () => toast(t(await copyText(source.ip) ? 'ad.ipCopied' : 'ad.copyFailed')) }, t('ad.copyIP')));\n    $('#source-detail').replaceChildren(\n      ...(source.displayName ? [sourceField(t('ad.submittedName'), source.displayName)] : []),\n      sourceField(t('ad.requestIP'), ip),\n      sourceField(t('ad.sourceLocation'), locationLabel(source)),\n      ...(source.asn || source.organization ? [sourceField(t('ad.network'),\n        [source.organization, source.asn ? `AS${source.asn}` : null].filter(Boolean).join(' \xB7 '))] : []),\n      sourceField(t('ad.browserReported'), browserLabel(source.userAgent), '', t('ad.browserHint')),\n      sourceField(t('ad.sourceTime'), fmtDate(source.capturedAt)),\n      ...(source.userAgent ? [el('div', { class: 'source-agent source-field-wide' }, el('small', { class: 'muted' }, 'User-Agent'),\n        el('p', { class: 'mono', title: source.userAgent, tabIndex: 0 }, source.userAgent))] : []),\n    );\n    $('#source-history').hidden = false;\n    sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';\n    sourceForm.hidden = false;\n    $('#source-identity').hidden = false;\n    sourceSave.hidden = false;\n    loadSourceHistory();\n  } catch (e) {\n    if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');\n  }\n}\nfunction closeSource() {\n  sourceRequest++;\n  activeSource = null;\n  sourceReturnCode = null;\n  $('#source-history').hidden = true;\n  $('#source-history-list').replaceChildren();\n  $('#source-back').hidden = true;\n  sourceNote.value = '';\n  $('#source-identity').hidden = true;\n  $('#source-visitor-id').textContent = '';\n  sourceForm.hidden = true;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = '';\n  $('#source-detail').replaceChildren();\n  sourceDialog.close();\n}\nsourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });\n$('#source-close').addEventListener('click', closeSource);\n$('#source-back').addEventListener('click', () => {\n  const code = sourceReturnCode;\n  closeSource();\n  if (code) openFileDetails(code);\n});\nasync function loadSourceHistory() {\n  if (!activeSource || sourceHistoryLoaded) return;\n  sourceHistoryLoaded = true;\n  const request = sourceRequest;\n  const list = $('#source-history-list');\n  list.textContent = t('ad.loading');\n  try {\n    const { rows } = await api(`/api/admin/shares/${activeSource.code}/source/activity`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },\n      el('div', { class: 'activity-head' }, row.kind === 'file'\n        ? el('button', { type: 'button', class: 'source-link', title: row.filename || t('ad.unnamed'),\n          onclick: () => { closeSource(); openFileDetails(row.code); } }, row.filename || t('ad.unnamed'))\n        : el('span', {}, t('ad.textFallback')),\n        el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),\n      el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} \xB7 ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} \xB7 ${row.code}`),\n      row.ip || row.country || row.region || row.city\n        ? el('small', { class: 'muted' }, [row.ip, row.country || row.region || row.city ? locationLabel(row) : null].filter(Boolean).join(' \xB7 ')) : null,\n    )));\n    if (!rows.length) list.textContent = t('ad.empty');\n  } catch (error) {\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    sourceHistoryLoaded = false;\n    list.replaceChildren(el('p', { class: 'error-box', role: 'alert' }, error.message || t('ad.loadFail')),\n      el('button', { type: 'button', class: 'btn small ghost', onclick: loadSourceHistory }, t('ad.retry')));\n  }\n}\nsourceForm.addEventListener('submit', async (e) => {\n  e.preventDefault();\n  if (!activeSource || sourceSave.disabled) return;\n  const { code } = activeSource;\n  const request = sourceRequest;\n  sourceSave.disabled = true;\n  sourceError.hidden = true;\n  try {\n    const result = await api(`/api/admin/shares/${code}/source`, { method: 'PUT', body: { note: sourceNote.value } });\n    noteOverrides.set(result.visitorId, result.note);\n    document.querySelectorAll('[data-visitor]').forEach((button) => {\n      if (button.dataset.visitor === result.visitorId) button.textContent = result.note || visitorLabel(result.visitorId);\n    });\n    if (request === sourceRequest) closeSource();\n    toast(t('ad.sourceSaved'));\n  } catch (error) {\n    if (request === sourceRequest) {\n      sourceError.textContent = error.message || t('ad.loadFail');\n      sourceError.hidden = false;\n    }\n  } finally {\n    if (request === sourceRequest) sourceSave.disabled = false;\n  }\n});\n\n/* File details use their own request generation so closed dialogs stay empty. */\nconst fileDialog = $('#file-dialog');\nconst fileDetail = $('#file-detail');\nconst fileDownload = $('#file-download');\nlet fileRequest = 0;\nlet activePreview = null;\nlet activeFileDetail = null;\nlet shareEditBusy = false;\nfunction resetShareEditor() {\n  $('#file-editor').hidden = true;\n  $('#file-editor').replaceChildren();\n  fileDetail.hidden = false;\n  fileDialog.querySelector('.source-footer').hidden = false;\n  $('#file-title').textContent = t('ad.fileDetails');\n}\nfunction fileField(label, value, secondary) {\n  return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),\n    el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);\n}\n\nasync function openFileDetails(code) {\n  if (shareEditBusy) return;\n  activeFileDetail = null;\n  resetShareEditor();\n  $('#file-edit').hidden = true;\n  activePreview?.dispose(); activePreview = null;\n  const request = ++fileRequest;\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  $('#file-context').textContent = `${t('ad.th.code')} ${code}`;\n  fileDetail.textContent = t('ad.loading');\n  fileDialog.showModal();\n  try {\n    const detail = await api(`/api/admin/shares/${code}`);\n    if (request !== fileRequest || !fileDialog.open) return;\n    activeFileDetail = detail;\n    const state = detail.storage?.state || 'unknown';\n    const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };\n    const source = detail.source;\n    const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',\n      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }, code); },\n    }, sourceLabel(source)) : t('ad.sourceUnrecorded');\n    if (source) sourceButton.dataset.visitor = source.visitorId;\n    fileDetail.replaceChildren(\n      el('div', { class: 'file-identity file-wide' },\n        el('strong', {}, detail.filename || t('ad.unnamed')),\n        el('div', { class: 'file-summary' },\n          el('span', { title: t('ad.exactBytes', detail.size.toLocaleString()) }, fmtBytes(detail.size)),\n          el('span', { class: `badge ${detail.status}`, title: t('ad.shareState') }, t(STATUS_KEY[detail.status])),\n          state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),\n      ...(detail.description ? [el('div', { class: 'file-description file-wide' },\n        el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),\n      ...(state === 'available' ? [(activePreview = createFilePreview(code, detail.filename || '')).element] : []),\n      fileField(t('ad.source'), sourceButton),\n      fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '\u221E'}`),\n      fileField(t('ad.th.created'), fmtDate(detail.createdAt)),\n      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)),\n\n    );\n    fileDownload.href = `/api/admin/shares/${code}/download`;\n    fileDownload.download = detail.filename || 'file';\n    fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');\n    fileDownload.hidden = state === 'missing';\n    $('#file-edit').hidden = state !== 'available';\n    $('#file-edit').disabled = detail.cleanupStatus === 'pending';\n    $('#file-edit').title = detail.cleanupStatus === 'pending' ? t('ad.editCleanupPending') : '';\n  } catch (error) {\n    if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');\n  }\n}\nfunction closeFileDetails() {\n  if (shareEditBusy) return;\n  activeFileDetail = null;\n  resetShareEditor();\n  $('#file-edit').hidden = true;\n  activePreview?.dispose(); activePreview = null;\n  fileRequest++;\n  fileDetail.replaceChildren();\n  $('#file-context').textContent = '';\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  fileDialog.close();\n}\n$('#file-close').addEventListener('click', closeFileDetails);\n$('#file-edit').addEventListener('click', () => {\n  if (!activeFileDetail || shareEditBusy) return;\n  const detail = activeFileDetail;\n  const editor = createShareEditor(detail, {\n    onBusy(value) { shareEditBusy = value; $('#lang-btn').disabled = value; },\n    onCancel() { openFileDetails(detail.code); },\n    onSaved() {\n      toast(t('ad.editSaved'));\n      openFileDetails(detail.code);\n      loadList(); loadStats();\n    },\n  });\n  fileDetail.hidden = true;\n  fileDialog.querySelector('.source-footer').hidden = true;\n  $('#file-title').textContent = t('ad.editShare');\n  $('#file-editor').replaceChildren(editor.element);\n  $('#file-editor').hidden = false;\n  editor.enhance();\n});\nfileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });\n\n/* Keep unsaved input local; only a validated save changes retention. */\nconst retentionInput = $('#retention-days');\nconst retentionSave = $('#retention-save');\nconst retentionError = $('#retention-error');\nasync function loadSettings() {\n  $('#retention-status').hidden = true;\n  retentionInput.disabled = true;\n  retentionSave.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-retry').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings');\n    if (!Number.isInteger(settings.expiredRetentionDays) || settings.expiredRetentionDays < 0 || settings.expiredRetentionDays > 3650) throw new Error(t('ad.loadFail'));\n    retentionInput.value = settings.expiredRetentionDays;\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n    $('#retention-retry').hidden = false;\n  }\n}\n$('#retention-retry').addEventListener('click', loadSettings);\nretentionInput.addEventListener('input', () => { $('#retention-status').hidden = true; });\n$('#retention-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (retentionSave.disabled || !retentionInput.reportValidity()) return;\n  retentionSave.disabled = true;\n  retentionInput.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-status').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });\n    retentionInput.value = settings.expiredRetentionDays;\n    $('#retention-status').textContent = t('ad.settingsSaved');\n    $('#retention-status').hidden = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n  } finally {\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  }\n});\n\nconst guestWeekly = $('#guest-weekly');\nconst guestSave = $('#guest-save');\nconst guestError = $('#guest-error');\nfunction guestBusy(busy) {\n  for (const control of [guestWeekly, guestSave]) control.disabled = busy;\n}\nasync function loadGuestPolicy() {\n  $('#guest-status').hidden = true;\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-retry').hidden = true;\n  try {\n    const policy = await api('/api/admin/upload-policy');\n    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000) throw new Error(t('ad.loadFail'));\n    guestWeekly.value = policy.weeklyFileLimit;\n    guestBusy(false);\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n    $('#guest-retry').hidden = false;\n  }\n}\n$('#guest-retry').addEventListener('click', loadGuestPolicy);\nguestWeekly.addEventListener('input', () => { $('#guest-status').hidden = true; });\n$('#guest-policy-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (guestSave.disabled || !e.target.reportValidity()) return;\n  const body = { weeklyFileLimit: Number(guestWeekly.value) };\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-status').hidden = true;\n  try {\n    await api('/api/admin/upload-policy', { method: 'PUT', body });\n    $('#guest-status').textContent = t('ad.guestSaved');\n    $('#guest-status').hidden = false;\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n  } finally { guestBusy(false); }\n});\n\nlet guardRequest = 0;\nasync function loadLoginProtection() {\n  const request = ++guardRequest;\n  const refresh = $('#login-guard-refresh');\n  const error = $('#login-guard-error');\n  refresh.disabled = true;\n  error.hidden = true;\n  $('#login-guard-bans').replaceChildren();\n  $('#login-guard-status').textContent = '';\n  try {\n    const data = await api('/api/admin/login-protection');\n    if (request !== guardRequest) return;\n    if (typeof data.enabled !== 'boolean' || !Array.isArray(data.bans) ||\n        ![data.maxFailures, data.windowSeconds, data.banSeconds].every(n => Number.isInteger(n) && n > 0)) throw new Error(t('ad.loadFail'));\n    $('#login-guard-status').textContent = data.enabled\n      ? t('ad.guardRule', data.windowSeconds / 60, data.maxFailures, data.banSeconds / 60) : t('ad.guardDisabled');\n    if (!data.enabled) return;\n    if (!data.bans.length) $('#login-guard-bans').append(el('small', { class: 'muted' }, t('ad.guardEmpty')));\n    for (const ban of data.bans) {\n      const button = el('button', { class: 'btn small ghost', type: 'button' }, t('ad.guardUnblock'));\n      button.addEventListener('click', async () => {\n        button.disabled = true;\n        error.hidden = true;\n        try {\n          await api('/api/admin/login-protection/unblock', { method: 'POST', body: { ip: ban.ip } });\n          toast(t('ad.guardUnblocked'), 'ok');\n          await loadLoginProtection();\n        } catch (e) {\n          error.textContent = e.message || t('ad.loadFail');\n          error.hidden = false;\n          button.disabled = false;\n        }\n      });\n      $('#login-guard-bans').append(el('div', { class: 'login-guard-row' },\n        el('div', { class: 'login-guard-info' },\n          el('b', {}, ban.ip === 'unknown' ? t('ad.guardUnknown') : ban.ip),\n          el('small', { class: 'muted' }, t('ad.guardFailures', ban.failures) + ' \xB7 ' + t('ad.guardUntil', fmtDate(ban.bannedUntil))),\n          el('small', { class: 'muted' }, t('ad.guardLast', fmtDate(ban.lastFailedAt)))), button));\n    }\n  } catch (e) {\n    if (request !== guardRequest) return;\n    error.textContent = e.message || t('ad.loadFail');\n    error.hidden = false;\n  } finally { if (request === guardRequest) refresh.disabled = false; }\n}\n$('#login-guard-refresh').addEventListener('click', loadLoginProtection);\n\ninitUi('admin');\n", "js/common.js": "import { t } from './i18n.js';\n\nexport const $ = (sel, el = document) => el.querySelector(sel);\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\n\n/** Keep Tab within modal content, including the wrap past the final button. */\nexport function initDialogs() {\n  for (const dialog of $$('dialog')) {\n    dialog.addEventListener('keydown', event => {\n      if (event.key !== 'Tab') return;\n      const controls = $$('button, a[href], input, select, textarea, summary, [tabindex]', dialog)\n        .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);\n      const first = controls[0];\n      const last = controls.at(-1);\n      if (!first) { event.preventDefault(); return; }\n      if (!controls.includes(document.activeElement) || (event.shiftKey && document.activeElement === first)) {\n        event.preventDefault(); (event.shiftKey ? last : first).focus();\n      } else if (!event.shiftKey && document.activeElement === last) {\n        event.preventDefault(); first.focus();\n      }\n    });\n  }\n}\n\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\nexport async function api(path, opts = {}) {\n  const res = await fetch(path, {\n    method: opts.method || 'GET',\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\n  });\n  if (res.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n  let data = null;\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\n  if (!res.ok) {\n    throw responseError(data, res.status);\n  }\n  return data;\n}\n\n/** Shared by fetch and XHR so security errors survive multipart/direct uploads. */\nexport function responseError(data, status) {\n  const error = new Error(data?.message || t('req.fail', status));\n  return Object.assign(error, { code: data?.error || 'unknown', status,\n    remainingBytes: data?.remainingBytes, retryAt: data?.retryAt,\n    serverTime: data?.serverTime, reason: data?.reason, requestId: data?.requestId });\n}\n\nexport function fmtBytes(n) {\n  if (!Number.isFinite(n) || n < 0) return '-';\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\n  let i = 0;\n  while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 100) / 100;\n  return `${v} ${units[i]}`;\n}\n\n/** \u6C38\u4E45\u5206\u4EAB\u8FD4\u56DE null,\u7531\u8C03\u7528\u65B9\u6309\u8BED\u8A00\u6E32\u67D3\u300C\u6C38\u4E45 / Forever\u300D */\nexport function fmtDate(ms) {\n  if (ms === null || ms === undefined) return null;\n  const d = new Date(ms);\n  const p = (x) => String(x).padStart(2, '0');\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\n}\n\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6,\u5355\u4F4D\u8BCD\u968F\u8BED\u8A00 */\nexport function fmtDuration(sec) {\n  if (!Number.isFinite(sec) || sec < 0) return '-';\n  if (sec < 1) return t('dur.ms');\n  if (sec < 60) return t('dur.s', Math.round(sec));\n  if (sec < 3600) {\n    const m = Math.floor(sec / 60);\n    const s = Math.round(sec % 60);\n    return s ? t('dur.hm', m, s) : t('dur.h', m);\n  }\n  if (sec < 86400) {\n    const h = Math.floor(sec / 3600);\n    const m = Math.round((sec % 3600) / 60);\n    return m ? t('dur.hH', h, m) : t('dur.hH2', h);\n  }\n  return t('dur.d', Math.round(sec / 86400));\n}\n\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\nexport function iconFor(name = '', mime = '') {\n  const ext = (name.split('.').pop() || '').toLowerCase();\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\n  return '\u{1F4E6}';\n}\n\nexport async function copyText(text) {\n  try {\n    await navigator.clipboard.writeText(text);\n    return true;\n  } catch { /* \u8D70\u964D\u7EA7 */ }\n  try {\n    const ta = document.createElement('textarea');\n    ta.value = text;\n    ta.style.cssText = 'position:fixed;opacity:0';\n    document.body.appendChild(ta);\n    ta.select();\n    const ok = document.execCommand('copy');\n    ta.remove();\n    return ok;\n  } catch {\n    return false;\n  }\n}\n\nexport function toast(msg, type = 'info') {\n  let host = $('#toast-host');\n  if (!host) {\n    host = document.createElement('div');\n    host.id = 'toast-host';\n    document.body.appendChild(host);\n  }\n  const t = document.createElement('div');\n  t.className = `toast ${type}`;\n  t.textContent = msg;\n  host.appendChild(t);\n  requestAnimationFrame(() => t.classList.add('show'));\n  setTimeout(() => {\n    t.classList.remove('show');\n    setTimeout(() => t.remove(), 300);\n  }, 2400);\n}\n\nexport function initTheme() {\n  const btn = $('#theme-btn');\n  const meta = $('meta[name=\"theme-color\"]');\n  const sync = () => {\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\n  };\n  window.addEventListener('storage', event => {\n    if(event.key === 'theme' && ['dark','light'].includes(event.newValue)){document.documentElement.dataset.theme=event.newValue;sync();}\n  });\n  sync();\n  btn?.addEventListener('click', () => {\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\n    localStorage.setItem('theme', next);\n    document.documentElement.dataset.theme = next;\n    sync();\n  });\n}\n\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\nexport function el(tag, attrs = {}, ...children) {\n  const n = document.createElement(tag);\n  for (const [k, v] of Object.entries(attrs)) {\n    if (k === 'class') n.className = v;\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\n    else n[k] = v;\n  }\n  for (const c of children.flat(Infinity)) {\n    if (c == null || c === false) continue;\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\n  }\n  return n;\n}\n", "js/i18n.js": `/**
+ * \u8F7B\u91CF i18n:HTML \u9759\u6001\u6587\u6848\u7528 data-i18n / data-i18n-ph / data-i18n-title \u6807\u8BB0,
+ * JS \u52A8\u6001\u5B57\u7B26\u4E32\u7528 t('key', \u2026args);{n} \u5360\u4F4D\u3002
+ * \u8BED\u8A00\u4F18\u5148\u7EA7:localStorage('lang') > \u6D4F\u89C8\u5668\u8BED\u8A00(en \u5F00\u5934\u2192\u82F1\u6587)> \u4E2D\u6587\u3002
+ * \u5207\u6362\u540E\u8C03\u7528\u5DF2\u6CE8\u518C\u7684\u91CD\u6E32\u67D3\u94A9\u5B50(\u5404\u9875\u9762 setLang \u65F6\u767B\u8BB0)\u3002
+ * \u8BCD\u5178\u503C\u4E3A\u6570\u7EC4\u65F6\u968F\u673A\u53D6\u4E00\u6761(\u9875\u811A\u5F69\u86CB,\u6BCF\u6B21\u52A0\u8F7D/\u5207\u8BED\u8A00\u91CD\u6447)\u3002
+ */
+
+const DICT = {
+  zh: {
+    "ad.editShare": "\u7F16\u8F91\u5206\u4EAB",
+    "ad.editCount": "\u5DF2\u53D6\u6B21\u6570",
+    "ad.editLimit": "\u53D6\u4EF6\u4E0A\u9650",
+    "ad.editUnlimited": "\u4E0D\u9650\u6B21",
+    "ad.editSave": "\u4FDD\u5B58\u4FEE\u6539",
+    "ad.editCancel": "\u53D6\u6D88",
+    "ad.editReload": "\u653E\u5F03\u4FEE\u6539\u5E76\u91CD\u65B0\u52A0\u8F7D",
+    "ad.editSaved": "\u5206\u4EAB\u89C4\u5219\u5DF2\u66F4\u65B0",
+    "ad.editInvalid": "\u8BF7\u586B\u5199\u6709\u6548\u7684\u6B21\u6570\u548C\u8FC7\u671F\u65F6\u95F4",
+    "ad.editTimeChanged": "\u6709\u6548\u671F\u5DF2\u5230\uFF0C\u72B6\u6001\u5DF2\u66F4\u65B0\uFF0C\u8BF7\u786E\u8BA4\u540E\u518D\u6B21\u4FDD\u5B58",
+    "ad.editCleanupPending": "\u6587\u4EF6\u5DF2\u8FDB\u5165\u6E05\u7406\u671F\uFF0C\u5982\u4ECD\u53EF\u4E0B\u8F7D\uFF0C\u8BF7\u5148\u5907\u4EFD\u540E\u91CD\u65B0\u4E0A\u4F20",
+    "ad.editHint": "\u65F6\u95F4\u6309 {0} \u663E\u793A\u548C\u8F93\u5165\u3002\u8FC7\u53BB\u65F6\u95F4\u4F1A\u4F7F\u5206\u4EAB\u8FC7\u671F\uFF0C\u5E76\u6309\u540E\u53F0\u4FDD\u7559\u5929\u6570\u8FDB\u5165\u6E05\u7406\u6D41\u7A0B\u3002\u6C38\u4E45\u5206\u4EAB\u4ECD\u5360\u7528\u5B58\u50A8\u3002",
+    "ad.editStatusHint": "\u6709\u6548\uFF1A\u5FC5\u8981\u65F6\u5EF6\u957F\u81F3 7 \u5929\u540E\uFF0C\u5E76\u5C06\u4E0A\u9650\u8BBE\u4E3A\u5DF2\u53D6\u6B21\u6570 + 1\uFF08\u8FBE\u5230\u8BA1\u6570\u4E0A\u754C\u65F6\u8BBE\u4E3A\u4E0D\u9650\u6B21\uFF09\u3002\u5DF2\u8FC7\u671F\uFF1A\u65F6\u95F4\u8BBE\u4E3A\u5F53\u524D\u3002\u5DF2\u53D6\u5B8C\uFF1A\u8865\u9F50\u5DF2\u53D6\u6B21\u6570\uFF1B\u539F\u672C\u4E0D\u9650\u6B21\u65F6\u8BBE\u5B9A\u6709\u9650\u4E0A\u9650\u3002\u539F\u672C\u8FC7\u671F\u7684\u6587\u4EF6\u4F1A\u5EF6\u957F\u81F3 7 \u5929\u540E\u3002\u6240\u6709\u8054\u52A8\u503C\u5747\u663E\u793A\u5728\u8868\u5355\u4E2D\uFF0C\u4FDD\u5B58\u540E\u751F\u6548\u3002",
+    "audit.action.editShare": "\u4FEE\u6539\u5206\u4EAB\u89C4\u5219",
+    "audit.detail.beforeRules": "\u4FEE\u6539\u524D",
+    "audit.detail.afterRules": "\u4FEE\u6539\u540E",
+
+    'ad.settings': '\u8BBE\u7F6E',
+    'ad.shareSettings': '\u5206\u4EAB\u89C4\u5219',
+    'ad.guestWeeklyFiles': '\u672A\u5907\u6CE8\u8BBF\u5BA2\u6BCF\u5468\u6587\u4EF6\u6570',
+    'ad.displaySettings': '\u5217\u8868\u663E\u793A',
+    'ad.filesPageSize': '\u6587\u4EF6\u6BCF\u9875\u6761\u6570',
+    'ad.auditPageSize': '\u65E5\u5FD7\u6BCF\u9875\u6761\u6570',
+    'ad.browserSettings': '\u7ACB\u5373\u751F\u6548\uFF0C\u4EC5\u4FDD\u5B58\u5728\u5F53\u524D\u6D4F\u89C8\u5668',
+    'ad.preferenceNotSaved': '\u672C\u6B21\u5DF2\u751F\u6548\uFF0C\u6D4F\u89C8\u5668\u672A\u80FD\u4FDD\u5B58\u6B64\u504F\u597D',
+    'ad.filesPagination': '\u6587\u4EF6\u5206\u9875',
+    'ad.auditPagination': '\u65E5\u5FD7\u5206\u9875',
+    'context.add': '\u8865\u5145\u4FE1\u606F\uFF08\u9009\u586B\uFF09',
+    'context.name': '\u600E\u4E48\u79F0\u547C\u4F60',
+    'context.description': '\u6587\u4EF6\u8BF4\u660E',
+    'context.namePh': '\u586B\u5199\u4F60\u5E38\u7528\u7684\u79F0\u547C',
+    'context.descriptionPh': '\u7B80\u8FF0\u6587\u4EF6\u5185\u5BB9\uFF0C\u540C\u6279\u6587\u4EF6\u5171\u7528',
+    'context.visibility': '\u8865\u5145\u4FE1\u606F\u4EC5\u7BA1\u7406\u5458\u53EF\u89C1',
+    'ad.retentionTitle': '\u81EA\u52A8\u6E05\u7406',
+    'ad.recentUploads': '\u8FD1\u671F\u4E0A\u4F20',
+    'ad.historyScope': '\u6700\u8FD1 10 \u6761\u73B0\u5B58\u5206\u4EAB',
+    'ad.backFile': '\u8FD4\u56DE\u6587\u4EF6',
+    'ad.submittedName': '\u81EA\u586B\u79F0\u547C',
+    'ad.requestIP': '\u8BF7\u6C42 IP',
+    'ad.network': '\u7F51\u7EDC\u7EC4\u7EC7',
+    'ad.browserReported': '\u6D4F\u89C8\u5668',
+    'ad.browserHint': '\u7531\u6D4F\u89C8\u5668\u63D0\u4F9B\uFF0C\u53EF\u88AB\u4FEE\u6539\uFF0C\u4EC5\u4F5C\u53C2\u8003',
+    'ad.noteShort': '\u5907\u6CE8',
+    'ad.copyIP': '\u590D\u5236',
+    'ad.ipCopied': 'IP \u5DF2\u590D\u5236',
+    'ad.copyFailed': '\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u9009\u62E9',
+    'ad.fileDescription': '\u6587\u4EF6\u8BF4\u660E',
+    'audit.detail.filename': '\u6587\u4EF6\u540D',
+    'audit.detail.sizeBytes': '\u5927\u5C0F\uFF08\u5B57\u8282\uFF09',
+    'audit.navigation': "\u7BA1\u7406\u9875\u9762",
+    'audit.files': "\u6587\u4EF6\u7BA1\u7406",
+    'audit.title': "\u65E5\u5FD7\u5BA1\u8BA1",
+    'audit.retention': "\u6700\u8FD1 30 \u5929\uFF0C\u6700\u591A 1,000 \u6761\uFF1B\u65F6\u95F4\u6309\u672C\u5730\u65F6\u533A\u663E\u793A",
+    'audit.export': "\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C",
+    'audit.categories': "\u65E5\u5FD7\u5206\u7C7B",
+    'audit.all': "\u5168\u90E8\u65E5\u5FD7",
+    'audit.login': "\u767B\u5F55\u65E5\u5FD7",
+    'audit.operation': "\u64CD\u4F5C\u65E5\u5FD7",
+    'audit.security': "\u5B89\u5168\u4E8B\u4EF6",
+    'audit.result': "\u7ED3\u679C",
+    'audit.anyResult': "\u5168\u90E8\u7ED3\u679C",
+    'audit.success': "\u6210\u529F",
+    'audit.failed': "\u5931\u8D25",
+    'audit.blocked': "\u5DF2\u62E6\u622A",
+    'audit.from': "\u5F00\u59CB\u65E5\u671F",
+    'audit.to': "\u7ED3\u675F\u65E5\u671F",
+    'audit.keyword': "IP / \u64CD\u4F5C\u5BF9\u8C61",
+    'audit.search': "\u641C\u7D22 IP \u6216\u53D6\u4EF6\u7801",
+    'audit.filter': "\u7B5B\u9009",
+    'audit.reset': "\u91CD\u7F6E",
+    'audit.time': "\u65F6\u95F4",
+    'audit.action': "\u64CD\u4F5C",
+    'audit.actor': "\u64CD\u4F5C\u8EAB\u4EFD",
+    'audit.source': "\u6765\u6E90 IP / \u5C5E\u5730",
+    'audit.target': "\u64CD\u4F5C\u5BF9\u8C61",
+    'audit.details': "\u8BE6\u60C5",
+    'audit.empty': "\u6682\u65E0\u5339\u914D\u65E5\u5FD7\u3002\u65E5\u5FD7\u4ECE\u529F\u80FD\u4E0A\u7EBF\u540E\u5F00\u59CB\u8BB0\u5F55\u3002",
+    'audit.disabled': "\u672A\u542F\u7528\u65E5\u5FD7\u5BA1\u8BA1\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1\u3002",
+    'audit.page': "\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761",
+    'audit.dateError': "\u5F00\u59CB\u65E5\u671F\u4E0D\u80FD\u665A\u4E8E\u7ED3\u675F\u65E5\u671F",
+    'audit.http': "\u8BF7\u6C42 / \u72B6\u6001\u7801",
+    'audit.duration': "\u5904\u7406\u8017\u65F6",
+    'audit.id': "\u65E5\u5FD7\u7F16\u53F7",
+    'audit.agent': "\u6D4F\u89C8\u5668\u6807\u8BC6\uFF08\u5BA2\u6237\u7AEF\u63D0\u4F9B\uFF09",
+    'audit.yes': "\u662F",
+    'audit.no': "\u5426",
+    'audit.description': "\u8BF4\u660E",
+    'audit.downloadHint': "\u5DF2\u5F00\u59CB\u8FD4\u56DE\u6587\u4EF6\u6D41\uFF0C\u4E0D\u4EE3\u8868\u6D4F\u89C8\u5668\u5DF2\u5B8C\u6210\u4E0B\u8F7D\u3002",
+    'audit.writeFailed': "\u64CD\u4F5C\u5DF2\u5904\u7406\uFF0C\u4F46\u5BA1\u8BA1\u8BB0\u5F55\u672A\u4FDD\u5B58\uFF0C\u8BF7\u68C0\u67E5\u65E5\u5FD7\u5B58\u50A8\u3002",
+    'audit.action.login': "\u7BA1\u7406\u5458\u767B\u5F55",
+    'audit.action.logout': "\u9000\u51FA\u767B\u5F55",
+    'audit.action.retention': "\u4FEE\u6539\u8FC7\u671F\u4FDD\u7559\u5929\u6570",
+    'audit.action.uploadPolicy': "\u4FEE\u6539\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",
+    'audit.action.unblock': "\u624B\u52A8\u89E3\u5C01 IP",
+    'audit.action.cleanup': "\u6267\u884C\u8FC7\u671F\u6E05\u7406",
+    'audit.action.export': "\u5BFC\u51FA\u5BA1\u8BA1\u65E5\u5FD7",
+    'audit.action.ban': "\u89E6\u53D1\u767B\u5F55\u5C01\u7981",
+    'audit.action.delete': "\u5220\u9664\u5206\u4EAB",
+    'audit.action.note': "\u4FEE\u6539\u8BBF\u5BA2\u5907\u6CE8",
+    'audit.action.viewSource': "\u67E5\u770B\u6765\u6E90\u8BE6\u60C5",
+    'audit.action.download': "\u4E0B\u8F7D\u6587\u4EF6",
+    'audit.action.preview': '\u9884\u89C8\u6587\u4EF6',
+    'preview.title': '\u5185\u5BB9\u9884\u89C8',
+    'preview.partial': '\u90E8\u5206\u5185\u5BB9',
+    'preview.complete': '\u5B8C\u6574\u5185\u5BB9',
+    'preview.type': '\u6B64\u7C7B\u578B\u6682\u4E0D\u652F\u6301\u5728\u7EBF\u9884\u89C8',
+    'preview.size': '\u56FE\u7247\u8D85\u8FC7 2 MiB\uFF0C\u8BF7\u4E0B\u8F7D\u67E5\u770B',
+    'preview.encoding': '\u975E UTF-8 \u6587\u672C\u6216\u4E8C\u8FDB\u5236\u5185\u5BB9\uFF0C\u8BF7\u4E0B\u8F7D\u67E5\u770B',
+    'preview.image': '\u56FE\u7247\u65E0\u6CD5\u9884\u89C8\u6216\u5C3A\u5BF8\u8D85\u9650\uFF0C\u8BF7\u4E0B\u8F7D\u67E5\u770B',
+    'preview.empty': '\u7A7A\u6587\u4EF6',
+    'preview.timeout': '\u9884\u89C8\u52A0\u8F7D\u8D85\u65F6',
+    'audit.actor.admin': "\u7BA1\u7406\u5458",
+    'audit.actor.token': "\u5B9A\u65F6\u5668 / \u4EE4\u724C",
+    'audit.actor.anonymous': "\u672A\u8BA4\u8BC1",
+    'audit.detail.bannedUntil': "\u5C01\u7981\u622A\u6B62",
+    'audit.detail.expiredRetentionDays': "\u8FC7\u671F\u4FDD\u7559\u5929\u6570",
+    'audit.detail.weeklyFileLimit': "\u6BCF\u5468\u4E0A\u4F20\u6B21\u6570",
+    'audit.detail.notePresent': "\u8BBE\u7F6E\u5907\u6CE8",
+    'audit.detail.alreadyDeleted': "\u5206\u4EAB\u5DF2\u4E0D\u5B58\u5728",
+    'audit.detail.deletedShares': "\u5DF2\u6E05\u7406\u5206\u4EAB",
+    'audit.detail.abortedSessions': "\u5DF2\u53D6\u6D88\u4E0A\u4F20\u4F1A\u8BDD",
+
+    'ad.loginProtection': "\u767B\u5F55\u9632\u62A4",
+    'ad.guardRule': "{0} \u5206\u949F\u5185\u5931\u8D25 {1} \u6B21\uFF0C\u5C01\u7981\u767B\u5F55 {2} \u5206\u949F",
+    'ad.guardDisabled': "\u672A\u542F\u7528\uFF1A\u9700\u7ED1\u5B9A R2 \u6216 D1",
+    'ad.guardEmpty': "\u5F53\u524D\u6CA1\u6709\u5C01\u7981 IP",
+    'ad.guardUnknown': "\u672A\u77E5\u6765\u6E90\uFF08\u5171\u7528\u9650\u5236\uFF09",
+    'ad.guardFailures': "\u5931\u8D25 {0} \u6B21",
+    'ad.guardUntil': "\u89E3\u5C01\u4E8E {0}",
+    'ad.guardLast': "\u6700\u8FD1\u5931\u8D25 {0}",
+    'ad.guardUnblock': "\u89E3\u5C01",
+    'ad.guardUnblocked': "\u5DF2\u89E3\u5C01",
+    'ad.loginBlocked': "\u767B\u5F55\u5931\u8D25\u6B21\u6570\u8FC7\u591A\uFF0C\u8BF7\u7B49\u5F85\u5C01\u7981\u5230\u671F\u540E\u91CD\u8BD5",
+    'ad.guardUnavailable': "\u767B\u5F55\u9632\u62A4\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5",
+
+    'ad.formatUnknown': "\u683C\u5F0F\u672A\u77E5",
+    'ad.format.archive': "\u538B\u7F29\u5305",
+    'ad.format.program': "\u5E94\u7528\u7A0B\u5E8F",
+    'ad.format.document': "\u6587\u6863",
+    'ad.format.image': "\u56FE\u7247",
+    'ad.format.video': "\u89C6\u9891",
+    'ad.format.audio': "\u97F3\u9891",
+    'ad.format.text': "\u6587\u672C / \u4EE3\u7801",
+    'ad.format.file': "\u6587\u4EF6",
+    'ad.uploader': "\u4E0A\u4F20\u8005",
+    'ad.shareState': "\u5206\u4EAB\u72B6\u6001",
+    'ad.fileAvailability': "\u6587\u4EF6\u72B6\u6001",
+    'ad.fileState.available': "\u53EF\u4E0B\u8F7D",
+    'ad.fileState.missing': "\u6587\u4EF6\u4E0D\u5B58\u5728",
+    'ad.fileState.unknown': "\u6682\u65F6\u65E0\u6CD5\u786E\u8BA4",
+    'ad.timeLeft': "\u5269\u4F59 {0}",
+    'ad.timeExpired': "\u5DF2\u8FC7\u671F {0}",
+    'ad.cleanupPermanent': "\u4E0D\u81EA\u52A8\u6E05\u7406",
+    'ad.cleanupActive': "\u8FC7\u671F\u540E\u4FDD\u7559 {0} \u5929",
+    'ad.cleanupRetained': "\u8FC7\u671F\u4FDD\u7559\u4E2D",
+    'ad.cleanupPending': "\u7B49\u5F85\u6E05\u7406\u4EFB\u52A1",
+    'ad.technical': "\u6280\u672F\u4FE1\u606F",
+    'ad.storedSize': "\u5B58\u50A8\u5927\u5C0F",
+    'ad.storedAt': "\u5165\u5E93\u65F6\u95F4",
+    'ad.exactBytes': "{0} \u5B57\u8282",
+    'ad.formatHint': "\u683C\u5F0F\u6309\u6587\u4EF6\u540D\u8BC6\u522B\uFF0C\u4E0D\u4EE3\u8868\u5185\u5BB9\u6821\u9A8C\u3002",
+    'ad.tryDownload': "\u5C1D\u8BD5\u4E0B\u8F7D",
+    'ad.guestLimits': "\u672A\u5907\u6CE8\u8BBF\u5BA2\u9650\u5236",
+    'ad.weeklyFiles': "\u6BCF\u5468\u6587\u4EF6\u6570",
+    'ad.guestRules': "\u5317\u4EAC\u65F6\u95F4\u5468\u4E00\u91CD\u7F6E\uFF1B\u5DF2\u63A5\u7EB3\u4E0A\u4F20\u8BA1\u6B21\uFF0C\u53D6\u6D88\u4E0D\u9000\u56DE\u3002\u672A\u5907\u6CE8\u8BBF\u5BA2\u4E0D\u80FD\u6C38\u4E45\u5206\u4EAB\u6216\u4E0D\u9650\u6B21\u53D6\u4EF6\u3002",
+    'ad.guestSaved': "\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u4E0A\u4F20",
+    'policy.expiry': "1 ~ 30 \u5929",
+    'policy.pickups': "1 \u6B21 \xB7 5 \u6B21",
+    'policy.remaining': "\u672C\u5468\u5269\u4F59 {0} / {1} \u4E2A\u6587\u4EF6 \xB7 {2} \u91CD\u7F6E",
+    'policy.unavailable': "\u6B63\u5728\u8BFB\u53D6\u4E0A\u4F20\u6743\u9650\uFF1B\u82E5\u957F\u65F6\u95F4\u672A\u6062\u590D\uFF0C\u8BF7\u5237\u65B0\u9875\u9762",
+    'policy.contact': "\u6682\u4E0D\u63A5\u53D7\u6587\u4EF6\u4E0A\u4F20\uFF0C\u8BF7\u8054\u7CFB\u7BA1\u7406\u5458",
+    'ad.fileDetails': '\u6587\u4EF6\u8BE6\u60C5',
+    'ad.filename': '\u6587\u4EF6\u540D',
+    'ad.fileType': '\u6587\u4EF6\u7C7B\u578B',
+    'ad.cleanupAfter': '\u6700\u65E9\u6E05\u7406',
+    'ad.retentionDays': '\u8FC7\u671F\u540E\u4FDD\u7559',
+    'ad.days': '\u5929',
+    'ad.save': '\u4FDD\u5B58',
+    'ad.retry': '\u91CD\u8BD5',
+    'ad.settingsSaved': '\u5DF2\u4FDD\u5B58\uFF0C\u5C06\u7528\u4E8E\u540E\u7EED\u6E05\u7406',
+    'ad.source': '\u4E0A\u4F20\u6765\u6E90',
+    'ad.visitor': '\u8BBF\u5BA2 {0}',
+    'ad.visitorId': '\u8BBF\u5BA2\u6807\u8BC6',
+    'ad.sourceUnknown': '\u672A\u77E5',
+    'ad.sourceUnrecorded': '\u672A\u8BB0\u5F55',
+    'ad.sourceLocation': '\u51FA\u53E3\u5C5E\u5730',
+    'ad.sourceTime': '\u8BB0\u5F55\u65F6\u95F4',
+    'ad.sourceNote': '\u7BA1\u7406\u5458\u5907\u6CE8',
+    'ad.sourceSave': '\u4FDD\u5B58\u5907\u6CE8',
+    'ad.sourceClose': '\u5173\u95ED',
+    'ad.sourceSaved': '\u5907\u6CE8\u5DF2\u4FDD\u5B58',
+    'err.capacity': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6',
+    'err.capacityRemaining': '\u5BB9\u91CF\u8D85\u51FA\u514D\u8D39\u989D\u5EA6\uFF0C\u5269\u4F59\u53EF\u7528\u7A7A\u95F4\u7EA6 {0} GB\uFF08{1} \u5B57\u8282\uFF09\u3002',
+    'doc.send': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001',
+    'doc.pickup': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D6\u4EF6',
+    'doc.admin': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u7BA1\u7406',
+    'doc.404': '404 - \u6587\u4EF6\u4E2D\u8F6C\u7AD9',
+
+    'brand.name': '\u6587\u4EF6\u4E2D\u8F6C\u7AD9',
+    'brand.tagline': '\u50CF\u53D6\u5FEB\u9012\u4E00\u6837\u53D6\u6587\u4EF6',
+    'brand.pickup': '\u53D6\u4EF6',
+    'brand.admin': '\u7BA1\u7406\u540E\u53F0',
+    'nav.pickup': '\u53D6\u4EF6',
+    'nav.send': '\u53D1\u9001',
+    'nav.theme': '\u5207\u6362\u4E3B\u9898',
+    'nav.lang': '\u5207\u6362\u8BED\u8A00',
+    'foot': [
+      '\u89C1\u5B57\u5982\u9762',
+      '\u7EB8\u77ED\u60C5\u957F',
+      '\u5C71\u9AD8\u6C34\u957F,\u540E\u4F1A\u6709\u671F',
+      '\u6B64\u4EF6\u5DF2\u7B7E\u6536,\u671B\u73CD\u91CD',
+      '\u98CE\u91CC\u96E8\u91CC,\u4E2D\u8F6C\u7AD9\u7B49\u4F60',
+      '\u6162\u4E00\u70B9,\u4E5F\u6CA1\u5173\u7CFB',
+    ],
+
+    'tab.file': '\u53D1\u6587\u4EF6',
+    'tab.text': '\u53D1\u6587\u672C',
+    'dz.click': '\u70B9\u51FB\u9009\u62E9\u6587\u4EF6',
+    'dz.drop': ',\u6216\u62D6\u62FD / \u7C98\u8D34\u5230\u6B64\u5904',
+    'dz.aria': '\u9009\u62E9\u6587\u4EF6',
+    'dz.hint': '\u4E0A\u4F20\u540E\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',
+    'dz.hintMax': '\u5355\u4E2A\u6587\u4EF6\u6700\u5927 {0} \xB7 \u652F\u6301\u591A\u9009,\u4E0A\u4F20\u540E\u751F\u6210\u53D6\u4EF6\u53E3\u4EE4',
+    'remove': '\u79FB\u9664',
+    'text.placeholder': '\u7C98\u8D34\u6216\u8F93\u5165\u8981\u5206\u4EAB\u7684\u6587\u672C\u2026',
+    'opt.expiry': '\u6709\u6548\u671F',
+    'opt.pickups': '\u53EF\u53D6\u6B21\u6570',
+    'seg.1d': '1 \u5929', 'seg.7d': '7 \u5929', 'seg.30d': '30 \u5929', 'seg.forever': '\u6C38\u4E45',
+    'seg.p1': '1 \u6B21', 'seg.p5': '5 \u6B21', 'seg.punlimited': '\u4E0D\u9650',
+    'btn.upload': '\u5F00\u59CB\u4E0A\u4F20',
+    'btn.genCode': '\u751F\u6210\u53E3\u4EE4',
+    'btn.cancel': '\u53D6\u6D88',
+    'btn.copyCode': '\u590D\u5236\u53E3\u4EE4',
+    'btn.copyLink': '\u590D\u5236\u94FE\u63A5',
+    'btn.copyAll': '\u590D\u5236\u5168\u90E8\u53E3\u4EE4',
+    'btn.again': '\u518D\u6765\u4E00\u4E2A',
+
+    'prog.preparing': '\u51C6\u5907\u4E2D\u2026',
+    'prog.uploading': '\u4E0A\u4F20\u4E2D\u2026',
+    'prog.init': '\u6B63\u5728\u68C0\u67E5\u53EF\u7528\u7A7A\u95F4\u2026',
+    'prog.merging': '\u6B63\u5728\u5B8C\u6210\u4E0A\u4F20\u2026',
+    'prog.file': '\u7B2C {0}/{1} \u4E2A',
+    'prog.part': '\u7B2C {0}/{1} \u7247',
+    'prog.eta': '\u5269\u4F59 {0}',
+    'prog.retry': '\u4E0A\u4F20\u5931\u8D25,\u91CD\u8BD5 {0}/3\u2026',
+
+    'result.ok': '\u2705 \u5206\u4EAB\u6210\u529F,\u628A\u53E3\u4EE4\u53D1\u7ED9\u5BF9\u65B9',
+    'result.okBatch': '\u2705 {0} \u4E2A\u6587\u4EF6\u5206\u4EAB\u6210\u529F',
+    'ticket.title': '\u53D6\u4EF6\u51ED\u8BC1',
+    'ticket.no': '\u2116 {0}',
+    'send.cap': '\u5206\u4EAB\u5185\u5BB9',
+    'receipt.cap': '\u5206\u4EAB\u7ED3\u679C',
+    'ph.title': '\u7B49\u5F85\u5206\u4EAB',
+    'ph.sub': '\u5206\u4EAB\u6210\u529F\u540E\uFF0C\u5728\u8FD9\u91CC\u590D\u5236\u53E3\u4EE4\u6216\u94FE\u63A5',
+
+    'flow.dropT': '\u5BC4\u4EF6',
+    'flow.dropS': '\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C',
+    'flow.tickT': '\u5206\u4EAB\u53E3\u4EE4',
+    'flow.tickS': '\u751F\u6210 6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',
+    'flow.pickT': '\u53D6\u4EF6',
+    'flow.pickS': '\u8F93\u5165\u53E3\u4EE4\u5373\u53EF\u4E0B\u8F7D\u6216\u67E5\u770B',
+
+    'route.senderT': '\u5BC4\u4EF6\u4EBA \xB7 \u4F60',
+    'route.senderS': '\u9009\u62E9\u5185\u5BB9\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u548C\u53EF\u53D6\u6B21\u6570',
+    'route.relayT': '\u751F\u6210\u5206\u4EAB',
+    'route.relayS': '\u628A\u53D6\u4EF6\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9',
+    'route.takerT': '\u53D6\u4EF6\u4EBA \xB7 \u5BF9\u65B9',
+    'route.takerS': '\u8F93\u5165\u53E3\u4EE4\u6216\u6253\u5F00\u94FE\u63A5\uFF0C\u5373\u53EF\u53D6\u4EF6',
+    'route.fine': '\u53E3\u4EE4\u8BF7\u59A5\u5584\u4FDD\u7BA1\uFF0C\u4EC5\u5206\u4EAB\u7ED9\u9700\u8981\u7684\u4EBA',
+
+    'feat.splitT': '\u6587\u4EF6\u5206\u4EAB', 'feat.splitS': '\u5355\u6587\u4EF6\u6700\u5927 {0}',
+    'feat.ttlT': '\u81EA\u9009\u6709\u6548\u671F', 'feat.ttlS': '1 ~ 30 \u5929\u6216\u6C38\u4E45',
+    'feat.limitT': '\u9650\u6B21\u53D6\u4EF6', 'feat.limitS': '1 \u6B21 \xB7 5 \u6B21 \xB7 \u4E0D\u9650',
+    'feat.selfT': '\u4FBF\u6377\u53D6\u4EF6', 'feat.selfS': '\u652F\u6301\u53E3\u4EE4\u3001\u94FE\u63A5\u548C\u626B\u7801\u53D6\u4EF6',
+    'qr.hint': '\u626B\u7801\u76F4\u63A5\u53D6\u4EF6',
+    'label.code': '\u53E3\u4EE4',
+    'label.link': '\u94FE\u63A5',
+    'copied': '{0}\u5DF2\u590D\u5236',
+    'copy.fail': '\u590D\u5236\u5931\u8D25,\u8BF7\u624B\u52A8\u590D\u5236',
+    'copied.btn': '\u2713 \u5DF2\u590D\u5236',
+
+    'meta.after': '{0}\u540E\u8FC7\u671F({1})',
+    'meta.forever': '\u6C38\u4E45\u6709\u6548',
+    'meta.pickups': '\u53EF\u53D6 {0} \u6B21',
+    'meta.unlimited': '\u53D6\u4EF6\u6B21\u6570\u4E0D\u9650',
+    'files.count': '{0} \u4E2A\u6587\u4EF6 \xB7 \u5171 {1}',
+    'unknown.type': '\u672A\u77E5\u7C7B\u578B',
+    'text.counter': '{0} / {1}',
+
+    'err.oversize': '\u6587\u4EF6\u8D85\u8FC7 {0} \u4E0A\u9650({1})',
+    'err.empty': '\u7A7A\u6587\u4EF6\u4E0D\u80FD\u5206\u4EAB',
+    'err.tooMany': '\u4E00\u6B21\u6700\u591A\u5206\u4EAB {0} \u4E2A\u6587\u4EF6',
+    'err.upload': '\u4E0A\u4F20\u5931\u8D25,\u8BF7\u91CD\u8BD5',
+    'err.submit': '\u63D0\u4EA4\u5931\u8D25',
+    'req.fail': '\u8BF7\u6C42\u5931\u8D25 ({0})',
+    'toast.cancelled': '\u5DF2\u53D6\u6D88\u4E0A\u4F20',
+
+    'dur.s': '{0} \u79D2',
+    'dur.ms': '<1 \u79D2',
+    'dur.hm': '{0} \u5206 {1} \u79D2',
+    'dur.h': '{0} \u5206',
+    'dur.hH': '{0} \u65F6 {1} \u5206',
+    'dur.hH2': '{0} \u65F6',
+    'dur.d': '{0} \u5929',
+
+    'pk.title': '\u8F93\u5165\u53D6\u4EF6\u53E3\u4EE4',
+    'pk.sub': '\u8F93\u5165 6 \u4F4D\u6570\u5B57\u53E3\u4EE4,\u53D6\u51FA\u5206\u4EAB\u7684\u6587\u4EF6\u6216\u6587\u672C',
+    'pk.aria': '6 \u4F4D\u53D6\u4EF6\u53E3\u4EE4',
+    'pk.fail': '\u53D6\u4EF6\u5931\u8D25',
+    'pk.textChars': '\u6587\u672C \xB7 {0} \u5B57\u7B26',
+    'pk.copyAllText': '\u4E00\u952E\u590D\u5236\u5168\u6587',
+    'pk.download': '\u2B07 \u4E0B\u8F7D\u6587\u4EF6',
+    'pk.again': '\u91CD\u65B0\u8F93\u5165',
+    'pk.expireAt': '{0} \u8FC7\u671F',
+    'pk.left': '\u5269\u4F59\u53EF\u53D6 {0} \u6B21',
+    'pk.unnamed': '\u672A\u547D\u540D\u6587\u4EF6',
+    'copied.text': '\u5DF2\u590D\u5236\u5168\u6587',
+
+    'ad.loginTitle': '\u7BA1\u7406\u767B\u5F55',
+    'ad.loginSub': '\u4F7F\u7528\u7BA1\u7406\u4EE4\u724C\u767B\u5F55',
+    'ad.tokenPh': '\u7BA1\u7406\u4EE4\u724C',
+    'ad.login': '\u767B\u5F55',
+    'ad.badToken': '\u4EE4\u724C\u65E0\u6548',
+    'ad.total': '\u5206\u4EAB\u603B\u6570',
+    'ad.active': '\u5F53\u524D\u6709\u6548',
+    'ad.files': '\u6587\u4EF6',
+    'ad.texts': '\u6587\u672C',
+    'ad.storage': '\u5B58\u50A8\u7A7A\u95F4 \xB7 \u5DF2\u7528 / \u603B\u5BB9\u91CF',
+    'ad.storageReserved': '\u542B\u4E0A\u4F20\u9884\u7559\u7A7A\u95F4',
+    'ad.storageUnavailable': '\u6682\u4E0D\u53EF\u7528',
+    'ad.shareBytes': '\u5206\u4EAB\u5185\u5BB9\u5927\u5C0F',
+    'ad.today': '\u4ECA\u65E5\u65B0\u589E',
+    'ad.th.code': '\u53E3\u4EE4', 'ad.th.kind': '\u7C7B\u578B', 'ad.th.content': '\u5185\u5BB9',
+    'ad.th.size': '\u5927\u5C0F', 'ad.th.pickups': '\u5DF2\u53D6/\u4E0A\u9650', 'ad.th.expire': '\u8FC7\u671F\u65F6\u95F4',
+    'ad.th.status': '\u72B6\u6001', 'ad.th.created': '\u521B\u5EFA\u65F6\u95F4',
+    'ad.kind.file': '\u6587\u4EF6', 'ad.kind.text': '\u6587\u672C',
+    'ad.st.active': '\u6709\u6548', 'ad.st.expired': '\u5DF2\u8FC7\u671F', 'ad.st.exhausted': '\u5DF2\u53D6\u5B8C',
+    'ad.loading': '\u52A0\u8F7D\u4E2D\u2026',
+    'ad.empty': '\u6682\u65E0\u5206\u4EAB',
+    'ad.loadFail': '\u52A0\u8F7D\u5931\u8D25',
+    'ad.page': '\u7B2C {0} / {1} \u9875 \xB7 \u5171 {2} \u6761',
+    'ad.prev': '\u4E0A\u4E00\u9875', 'ad.next': '\u4E0B\u4E00\u9875',
+    'ad.refresh': '\u21BB \u5237\u65B0',
+    'ad.logout': '\u9000\u51FA\u767B\u5F55',
+    'ad.download': '\u4E0B\u8F7D',
+    'ad.delete': '\u5220\u9664',
+    'ad.deleted': '\u5DF2\u5220\u9664',
+    'ad.deleteFail': '\u5220\u9664\u5931\u8D25',
+    'ad.delTitle': '\u4F5C\u5E9F\u8FD9\u5F20\u53D6\u4EF6\u51ED\u8BC1?',
+    'ad.delWarn': '\u4F5C\u5E9F\u540E\u53E3\u4EE4\u7ACB\u5373\u5931\u6548,\u5BF9\u65B9\u5C06\u65E0\u6CD5\u53D6\u4EF6,\u4E14\u4E0D\u53EF\u6062\u590D\u3002',
+    'ad.delOk': '\u786E\u8BA4\u4F5C\u5E9F',
+    'ad.textFallback': '(\u6587\u672C)',
+    'ad.unnamed': '(\u672A\u547D\u540D)',
+    'ad.chars': '{0} \u5B57',
+    'ad.forever': '\u6C38\u4E45',
+
+    'nf.title': '\u9875\u9762\u4E0D\u5B58\u5728',
+    'nf.body': '\u4F60\u8981\u627E\u7684\u9875\u9762\u4E0D\u5728\u4E2D\u8F6C\u7AD9\u91CC',
+    'nf.send': '\u53BB\u53D1\u9001',
+    'nf.pickup': '\u53BB\u53D6\u4EF6',
+  },
+
+  en: {
+    "ad.editShare": "Edit share",
+    "ad.editCount": "Picked up",
+    "ad.editLimit": "Pickup limit",
+    "ad.editUnlimited": "Unlimited",
+    "ad.editSave": "Save changes",
+    "ad.editCancel": "Cancel",
+    "ad.editReload": "Discard changes and reload",
+    "ad.editSaved": "Share rules updated",
+    "ad.editInvalid": "Enter valid counts and an expiry time",
+    "ad.editTimeChanged": "The expiry time has passed. Review the updated status and save again.",
+    "ad.editCleanupPending": "This file is eligible for cleanup. Download a backup and upload it again if available.",
+    "ad.editHint": "Dates use {0}. Past dates expire the share and affect scheduled cleanup according to the retention setting. Permanent shares still use storage.",
+    "ad.editStatusHint": "Active extends expired dates by 7 days and raises an exhausted limit above the current count (or removes the limit at the count ceiling). Expired sets the expiry to now. Exhausted raises the count to its limit, assigns a limit if unlimited, and extends an expired date by 7 days. Review the changed values before saving.",
+    "audit.action.editShare": "Edit share rules",
+    "audit.detail.beforeRules": "Before",
+    "audit.detail.afterRules": "After",
+
+    'ad.settings': 'Settings',
+    'ad.shareSettings': 'Sharing rules',
+    'ad.guestWeeklyFiles': 'Unnoted guest files / week',
+    'ad.displaySettings': 'List display',
+    'ad.filesPageSize': 'Files per page',
+    'ad.auditPageSize': 'Logs per page',
+    'ad.browserSettings': 'Applied immediately, saved in this browser',
+    'ad.preferenceNotSaved': 'Applied for now; this browser could not save the preference',
+    'ad.filesPagination': 'File pagination',
+    'ad.auditPagination': 'Log pagination',
+    'context.add': 'Additional information (optional)',
+    'context.name': 'Your name',
+    'context.description': 'File description',
+    'context.namePh': 'Your name or nickname',
+    'context.descriptionPh': 'Describe the files; applies to this batch',
+    'context.visibility': 'Only visible to the administrator',
+    'ad.retentionTitle': 'Automatic cleanup',
+    'ad.recentUploads': 'Recent uploads',
+    'ad.historyScope': 'Latest 10 retained shares',
+    'ad.backFile': 'Back to file',
+    'ad.submittedName': 'Submitted name',
+    'ad.requestIP': 'Request IP',
+    'ad.network': 'Network',
+    'ad.browserReported': 'Browser',
+    'ad.browserHint': 'Reported by the browser; may be modified',
+    'ad.noteShort': 'Note',
+    'ad.copyIP': 'Copy',
+    'ad.ipCopied': 'IP copied',
+    'ad.copyFailed': 'Copy failed; select the IP manually',
+    'ad.fileDescription': 'Description',
+    'audit.detail.filename': 'Filename',
+    'audit.detail.sizeBytes': 'Size (bytes)',
+    'audit.navigation': "Admin pages",
+    'audit.files': "Files",
+    'audit.title': "Audit logs",
+    'audit.retention': "Last 30 days, up to 1,000 entries; times shown in your local timezone",
+    'audit.export': "Export results",
+    'audit.categories': "Log categories",
+    'audit.all': "All logs",
+    'audit.login': "Login logs",
+    'audit.operation': "Operations",
+    'audit.security': "Security",
+    'audit.result': "Result",
+    'audit.anyResult': "All results",
+    'audit.success': "Success",
+    'audit.failed': "Failed",
+    'audit.blocked': "Blocked",
+    'audit.from': "Start date",
+    'audit.to': "End date",
+    'audit.keyword': "IP / Target",
+    'audit.search': "Search IP or pickup code",
+    'audit.filter': "Filter",
+    'audit.reset': "Reset",
+    'audit.time': "Time",
+    'audit.action': "Action",
+    'audit.actor': "Actor",
+    'audit.source': "Source IP / Location",
+    'audit.target': "Target",
+    'audit.details': "Details",
+    'audit.empty': "No matching logs. Recording starts when this feature is deployed.",
+    'audit.disabled': "Audit logging is not enabled: bind R2 or D1.",
+    'audit.page': "Page {0} / {1} \xB7 {2} entries",
+    'audit.dateError': "Start date must not be after end date",
+    'audit.http': "Request / Status",
+    'audit.duration': "Processing time",
+    'audit.id': "Log ID",
+    'audit.agent': "Browser identifier (client supplied)",
+    'audit.yes': "Yes",
+    'audit.no': "No",
+    'audit.description': "Description",
+    'audit.downloadHint': "The file stream was opened; this does not confirm the browser finished downloading.",
+    'audit.writeFailed': "The operation was processed, but its audit record could not be saved. Check log storage.",
+    'audit.action.login': "Admin login",
+    'audit.action.logout': "Log out",
+    'audit.action.retention': "Change expired retention",
+    'audit.action.uploadPolicy': "Change weekly upload quota",
+    'audit.action.unblock': "Unblock IP",
+    'audit.action.cleanup': "Run expired cleanup",
+    'audit.action.export': "Export audit logs",
+    'audit.action.ban': "Trigger login ban",
+    'audit.action.delete': "Delete share",
+    'audit.action.note': "Change visitor note",
+    'audit.action.viewSource': "View source details",
+    'audit.action.download': "Download file",
+    'audit.action.preview': 'Preview file',
+    'preview.title': 'Content preview',
+    'preview.partial': 'Partial content',
+    'preview.complete': 'Complete content',
+    'preview.type': 'Preview is unavailable for this file type',
+    'preview.size': 'Image exceeds 2 MiB. Download to view.',
+    'preview.encoding': 'Not UTF-8 text or contains binary data. Download to view.',
+    'preview.image': 'Image cannot be previewed or dimensions exceed the limit. Download to view.',
+    'preview.empty': 'Empty file',
+    'preview.timeout': 'Preview timed out',
+    'audit.actor.admin': "Administrator",
+    'audit.actor.token': "Scheduler / Token",
+    'audit.actor.anonymous': "Unauthenticated",
+    'audit.detail.bannedUntil': "Blocked until",
+    'audit.detail.expiredRetentionDays': "Expired retention days",
+    'audit.detail.weeklyFileLimit': "Weekly upload limit",
+    'audit.detail.notePresent': "Note set",
+    'audit.detail.alreadyDeleted': "Share already absent",
+    'audit.detail.deletedShares': "Shares deleted",
+    'audit.detail.abortedSessions': "Upload sessions aborted",
+
+    'ad.loginProtection': "Login protection",
+    'ad.guardRule': "{1} failures in {0} minutes block login for {2} minutes",
+    'ad.guardDisabled': "Not enabled: bind R2 or D1",
+    'ad.guardEmpty': "No blocked IPs",
+    'ad.guardUnknown': "Unknown source (shared limit)",
+    'ad.guardFailures': "{0} failures",
+    'ad.guardUntil': "Unblocks at {0}",
+    'ad.guardLast': "Last failure {0}",
+    'ad.guardUnblock': "Unblock",
+    'ad.guardUnblocked': "IP unblocked",
+    'ad.loginBlocked': "Too many failed logins. Wait until the block expires.",
+    'ad.guardUnavailable': "Login protection unavailable. Please try again later.",
+
+    'ad.formatUnknown': "Unknown format",
+    'ad.format.archive': "Archive",
+    'ad.format.program': "Application",
+    'ad.format.document': "Document",
+    'ad.format.image': "Image",
+    'ad.format.video': "Video",
+    'ad.format.audio': "Audio",
+    'ad.format.text': "Text / code",
+    'ad.format.file': "File",
+    'ad.uploader': "Uploaded by",
+    'ad.shareState': "Share status",
+    'ad.fileAvailability': "File status",
+    'ad.fileState.available': "Available",
+    'ad.fileState.missing': "File missing",
+    'ad.fileState.unknown': "Unable to verify",
+    'ad.timeLeft': "{0} left",
+    'ad.timeExpired': "Expired {0} ago",
+    'ad.cleanupPermanent': "No automatic cleanup",
+    'ad.cleanupActive': "Kept for {0} days after expiry",
+    'ad.cleanupRetained': "Retained after expiry",
+    'ad.cleanupPending': "Awaiting cleanup",
+    'ad.technical': "Technical details",
+    'ad.storedSize': "Stored size",
+    'ad.storedAt': "Stored at",
+    'ad.exactBytes': "{0} bytes",
+    'ad.formatHint': "Format is inferred from the filename; content has not been verified.",
+    'ad.tryDownload': "Try download",
+    'ad.guestLimits': "Unnoted visitor limits",
+    'ad.weeklyFiles': "Files per week",
+    'ad.guestRules': "Resets Monday, Beijing time. Accepted uploads count even if cancelled. Unnoted visitors cannot create permanent or unlimited-pickup shares.",
+    'ad.guestSaved': "Saved for subsequent uploads",
+    'policy.expiry': "1 to 30 days",
+    'policy.pickups': "1 or 5 pickups",
+    'policy.remaining': "{0} / {1} files left this week \xB7 resets {2}",
+    'policy.unavailable': "Loading upload permissions. Refresh if this persists.",
+    'policy.contact': "File uploads are unavailable. Contact the administrator.",
+    'ad.fileDetails': 'File details',
+    'ad.filename': 'Filename',
+    'ad.fileType': 'File type',
+    'ad.cleanupAfter': 'Cleanup after',
+    'ad.retentionDays': 'Keep after expiry',
+    'ad.days': 'days',
+    'ad.save': 'Save',
+    'ad.retry': 'Retry',
+    'ad.settingsSaved': 'Saved for subsequent cleanup runs',
+    'ad.source': 'Upload source',
+    'ad.visitor': 'Visitor {0}',
+    'ad.visitorId': 'Visitor ID',
+    'ad.sourceUnknown': 'Unknown',
+    'ad.sourceUnrecorded': 'Not recorded',
+    'ad.sourceLocation': 'Exit location',
+    'ad.sourceTime': 'Recorded at',
+    'ad.sourceNote': 'Admin note',
+    'ad.sourceSave': 'Save note',
+    'ad.sourceClose': 'Close',
+    'ad.sourceSaved': 'Note saved',
+    'err.capacity': 'Storage capacity exceeds the free quota.',
+    'err.capacityRemaining': 'Storage capacity exceeds the free quota. Available space: approximately {0} GB ({1} bytes).',
+    'doc.send': 'file-relay - Send',
+    'doc.pickup': 'file-relay - Pickup',
+    'doc.admin': 'file-relay - Admin',
+    'doc.404': '404 - file-relay',
+
+    'brand.name': 'file-relay',
+    'brand.tagline': 'Files, picked up like parcels',
+    'brand.pickup': 'Pickup',
+    'brand.admin': 'Admin',
+    'nav.pickup': 'Pick up',
+    'nav.send': 'Send',
+    'nav.theme': 'Toggle theme',
+    'nav.lang': 'Switch language',
+    'foot': [
+      'Yours, from afar',
+      'Words run short, feelings run long',
+      'See you down the road',
+      'Signed, sealed, delivered',
+      'Through wind and rain, the relay waits',
+      'Take care, until next time',
+    ],
+
+    'tab.file': 'Send file',
+    'tab.text': 'Send text',
+    'dz.click': 'Click to choose files',
+    'dz.drop': ', or drag & drop / paste here',
+    'dz.aria': 'Choose files',
+    'dz.hint': 'A 6-digit pickup code is generated after upload',
+    'dz.hintMax': 'Up to {0} per file \xB7 multiple selection supported',
+    'remove': 'Remove',
+    'text.placeholder': 'Paste or type the text to share\u2026',
+    'opt.expiry': 'Expires',
+    'opt.pickups': 'Pickup limit',
+    'seg.1d': '1 day', 'seg.7d': '7 days', 'seg.30d': '30 days', 'seg.forever': 'Forever',
+    'seg.p1': '1\xD7', 'seg.p5': '5\xD7', 'seg.punlimited': 'Unlimited',
+    'btn.upload': 'Start upload',
+    'btn.genCode': 'Generate code',
+    'btn.cancel': 'Cancel',
+    'btn.copyCode': 'Copy code',
+    'btn.copyLink': 'Copy link',
+    'btn.copyAll': 'Copy all codes',
+    'btn.again': 'New share',
+
+    'prog.preparing': 'Preparing\u2026',
+    'prog.uploading': 'Uploading\u2026',
+    'prog.init': 'Checking available space\u2026',
+    'prog.merging': 'Finishing upload\u2026',
+    'prog.file': 'file {0}/{1}',
+    'prog.part': 'part {0}/{1}',
+    'prog.eta': 'ETA {0}',
+    'prog.retry': 'Upload failed, retrying {0}/3\u2026',
+
+    'result.ok': '\u2705 Shared! Send the code to the recipient',
+    'result.okBatch': '\u2705 {0} files shared successfully',
+    'ticket.title': 'PICKUP TICKET',
+    'ticket.no': '\u2116 {0}',
+    'send.cap': 'SHARE CONTENT',
+    'receipt.cap': 'SHARE RESULTS',
+    'ph.title': 'READY TO SHARE',
+    'ph.sub': 'Copy your pickup code or link here after sharing',
+
+    'flow.dropT': 'Send',
+    'flow.dropS': 'Choose files or enter text',
+    'flow.tickT': 'Ticket',
+    'flow.tickS': 'A 6-digit pickup code is issued',
+    'flow.pickT': 'Pick up',
+    'flow.pickS': 'The recipient claims it with the code',
+
+    'route.senderT': 'Sender \xB7 you',
+    'route.senderS': 'Choose content, expiry and pickup limit',
+    'route.relayT': 'Create a share',
+    'route.relayS': 'Send the pickup code or link to the recipient',
+    'route.takerT': 'Recipient',
+    'route.takerS': 'Enter the code or open the link to pick up',
+    'route.fine': 'Keep the code private; share only with your recipients',
+
+    'feat.splitT': 'File sharing', 'feat.splitS': 'Up to {0} per file',
+    'feat.ttlT': 'You set the clock', 'feat.ttlS': '1-30 days, or forever',
+    'feat.limitT': 'Limited pickups', 'feat.limitS': '1\xD7 \xB7 5\xD7 \xB7 unlimited',
+    'feat.selfT': 'Easy pickup', 'feat.selfS': 'Use a code, link or QR code',
+    'qr.hint': 'Scan to pick up',
+    'label.code': 'code',
+    'label.link': 'link',
+    'copied': '{0} copied',
+    'copy.fail': 'Copy failed, please copy manually',
+    'copied.btn': '\u2713 Copied',
+
+    'meta.after': 'Expires in {0} ({1})',
+    'meta.forever': 'Never expires',
+    'meta.pickups': '{0} pickups allowed',
+    'meta.unlimited': 'Unlimited pickups',
+    'files.count': '{0} files \xB7 {1} total',
+    'unknown.type': 'unknown type',
+    'text.counter': '{0} / {1}',
+
+    'err.oversize': 'File exceeds the {0} limit ({1})',
+    'err.empty': 'Empty files cannot be shared',
+    'err.tooMany': 'Up to {0} files per batch',
+    'err.upload': 'Upload failed, please retry',
+    'err.submit': 'Submission failed',
+    'req.fail': 'Request failed ({0})',
+    'toast.cancelled': 'Upload cancelled',
+
+    'dur.s': '{0}s',
+    'dur.ms': '<1s',
+    'dur.hm': '{0}m {1}s',
+    'dur.h': '{0}m',
+    'dur.hH': '{0}h {1}m',
+    'dur.hH2': '{0}h',
+    'dur.d': '{0}d',
+
+    'pk.title': 'Enter pickup code',
+    'pk.sub': 'Enter the 6-digit code to retrieve the shared file or text',
+    'pk.aria': '6-digit pickup code',
+    'pk.fail': 'Pickup failed',
+    'pk.textChars': 'Text \xB7 {0} chars',
+    'pk.copyAllText': 'Copy all text',
+    'pk.download': '\u2B07 Download file',
+    'pk.again': 'Try another code',
+    'pk.expireAt': 'Expires {0}',
+    'pk.left': '{0} pickups left',
+    'pk.unnamed': 'Untitled file',
+    'copied.text': 'Full text copied',
+
+    'ad.loginTitle': 'Admin login',
+    'ad.loginSub': 'Sign in with your admin token',
+    'ad.tokenPh': 'Admin token',
+    'ad.login': 'Log in',
+    'ad.badToken': 'Invalid token',
+    'ad.total': 'Total shares',
+    'ad.active': 'Active',
+    'ad.files': 'Files',
+    'ad.texts': 'Texts',
+    'ad.storage': 'Storage \xB7 used / capacity',
+    'ad.storageReserved': 'Includes upload reservations',
+    'ad.storageUnavailable': 'Unavailable',
+    'ad.shareBytes': 'Shared content size',
+    'ad.today': 'New today',
+    'ad.th.code': 'Code', 'ad.th.kind': 'Type', 'ad.th.content': 'Content',
+    'ad.th.size': 'Size', 'ad.th.pickups': 'Picked/Limit', 'ad.th.expire': 'Expires',
+    'ad.th.status': 'Status', 'ad.th.created': 'Created',
+    'ad.kind.file': 'File', 'ad.kind.text': 'Text',
+    'ad.st.active': 'Active', 'ad.st.expired': 'Expired', 'ad.st.exhausted': 'Exhausted',
+    'ad.loading': 'Loading\u2026',
+    'ad.empty': 'No shares yet',
+    'ad.loadFail': 'Failed to load',
+    'ad.page': 'Page {0} / {1} \xB7 {2} total',
+    'ad.prev': 'Prev', 'ad.next': 'Next',
+    'ad.refresh': '\u21BB Refresh',
+    'ad.logout': 'Log out',
+    'ad.download': 'Download',
+    'ad.delete': 'Delete',
+    'ad.deleted': 'Deleted',
+    'ad.deleteFail': 'Delete failed',
+    'ad.delTitle': 'Void this ticket?',
+    'ad.delWarn': 'The code stops working immediately, the recipient can no longer pick it up, and this cannot be undone.',
+    'ad.delOk': 'Void it',
+    'ad.textFallback': '(text)',
+    'ad.unnamed': '(unnamed)',
+    'ad.chars': '{0} chars',
+    'ad.forever': 'Forever',
+
+    'nf.title': 'Page not found',
+    'nf.body': "The page you're looking for isn't in this relay",
+    'nf.send': 'Send files',
+    'nf.pickup': 'Pick up',
+  },
+};
+
+export let LANG =
+  localStorage.getItem('lang') ||
+  ((navigator.language || '').toLowerCase().startsWith('en') ? 'en' : 'zh');
+
+/** \u53D6\u8BCD:\u5F53\u524D\u8BED\u8A00 \u2192 \u4E2D\u6587\u515C\u5E95 \u2192 key \u672C\u8EAB;\u6570\u7EC4\u503C\u968F\u673A\u53D6\u4E00\u6761;{0}{1}\u2026 \u4F9D\u6B21\u66FF\u6362 */
+export function t(key, ...args) {
+  let s = (DICT[LANG] && DICT[LANG][key]) ?? DICT.zh[key] ?? key;
+  if (Array.isArray(s)) s = s[Math.floor(Math.random() * s.length)];
+  args.forEach((v, i) => { s = s.replaceAll(\`{\${i}}\`, String(v)); });
+  return s;
+}
+
+const rerenders = [];
+/** \u5404\u9875\u9762\u767B\u8BB0:\u8BED\u8A00\u5207\u6362\u540E\u91CD\u7B97\u52A8\u6001\u6587\u6848 */
+export function onLangChange(fn) { rerenders.push(fn); }
+
+function applyLang() {
+  document.documentElement.lang = LANG === 'en' ? 'en' : 'zh-CN';
+  document.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = t(n.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach((n) => { n.placeholder = t(n.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-title]').forEach((n) => { n.title = t(n.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-aria]').forEach((n) => { n.setAttribute('aria-label', t(n.dataset.i18nAria)); });
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = LANG === 'en' ? '\u4E2D' : 'EN';
+}
+
+export function initI18n() {
+  applyLang();
+  document.getElementById('lang-btn')?.addEventListener('click', () => {
+    LANG = LANG === 'en' ? 'zh' : 'en';
+    localStorage.setItem('lang', LANG);
+    applyLang();
+    rerenders.forEach((fn) => fn());
+  });
+}
+`, "js/index.js": "import { initUi } from './ui.js';\nimport { $, $$, api, responseError, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme, el } from './common.js';\nimport { createSecurityFeedback, isSecurityError } from './security-feedback.js';\nimport { t, onLangChange, initI18n } from './i18n.js';\n\ninitTheme();\ninitI18n();\n\nconst els = {\n  dropzone: $('#dropzone'),\n  dzHint: $('#dz-hint'),\n  fileInput: $('#file-input'),\n  fileList: $('#file-list'),\n  textInput: $('#text-input'),\n  textCounter: $('#text-counter'),\n  btnUpload: $('#btn-upload'),\n  btnText: $('#btn-text'),\n  progress: $('#progress'),\n  progressFill: $('#progress-fill'),\n  progressText: $('#progress-text'),\n  btnCancel: $('#btn-cancel'),\n  results: $('#results'),\n  placeholder: $('#result-placeholder'),\n  capDate: $('#cap-date'),\n};\n\nconst MAX_SIZE_FALLBACK = 25 * 1024 * 1024;\nconst MAX_BATCH = 10;\nlet cfg = { fileBackend: 'kv', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config \u52A0\u8F7D\u540E\u8986\u76D6\nlet MAX_SIZE = MAX_SIZE_FALLBACK;\nlet policyReady = false;\n\nlet files = []; // \u5F85\u4E0A\u4F20\u961F\u5217(File[])\nlet queueUI = new Map(); // File \u2192 { row, bar, status }\nlet queueState = new Map(); // File \u2192 'idle' | { done: code } | 'fail'(\u8BED\u8A00\u5207\u6362\u540E\u91CD\u6E32\u67D3\u7528)\nlet session = null; // \u8FDB\u884C\u4E2D\u7684 R2 \u5206\u7247\u4F1A\u8BDD { uploadId, partSize, parts }\nlet currentXhr = null;\nlet cancelled = false;\nlet uploading = false;\nlet lastResults = [];\nconst securityFeedback = createSecurityFeedback($('.form-card'), 'upload', () =>\n  $('#panel-text').hidden ? startUpload() : submitText());\n\n/* \u670D\u52A1\u7AEF\u914D\u7F6E:\u51B3\u5B9A\u8D70\u5206\u7247\u4E0A\u4F20(R2 \u5927\u5B58\u50A8)\u8FD8\u662F\u5355\u8BF7\u6C42\u76F4\u4F20(KV \u5C0F\u5B58\u50A8) */\nfunction canUploadFiles() {\n  return policyReady && cfg.fileBackend !== 'none' && cfg.fileUploadAvailable !== false && cfg.uploadsRemaining !== 0;\n}\nfunction updateHint() {\n  els.dzHint.textContent = t('dz.hintMax', fmtBytes(MAX_SIZE));\n  const feature = $('[data-i18n=\"feat.splitS\"]');\n  if (feature) feature.textContent = t('feat.splitS', fmtBytes(MAX_SIZE));\n  for (const [id, value, allowed, fallback] of [\n    ['seg-expiry', 'forever', cfg.allowPermanent === true, '7d'],\n    ['seg-pickups', 'null', cfg.allowUnlimited === true, '5'],\n  ]) {\n    const button = $(`#${id} [data-v=\"${value}\"]`);\n    button.disabled = !allowed;\n    if (!allowed && button.classList.contains('active')) {\n      button.classList.remove('active');\n      $(`#${id} [data-v=\"${fallback}\"]`).classList.add('active');\n    }\n  }\n  $('[data-i18n=\"feat.ttlS\"]').textContent = t(cfg.allowPermanent ? 'feat.ttlS' : 'policy.expiry');\n  $('[data-i18n=\"feat.limitS\"]').textContent = t(cfg.allowUnlimited ? 'feat.limitS' : 'policy.pickups');\n  $('#upload-policy-hint').textContent = !policyReady ? t('policy.unavailable')\n    : cfg.fileUploadAvailable === false ? t('policy.contact')\n    : cfg.weeklyFileLimit !== null && cfg.weeklyFileLimit !== undefined\n      ? t('policy.remaining', cfg.uploadsRemaining, cfg.weeklyFileLimit, fmtDate(cfg.uploadsResetAt)) : '';\n  $$('.seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n}\nasync function refreshPolicy() {\n  try {\n    cfg = await api('/api/config');\n    if (!Number.isSafeInteger(cfg.maxFileSize) || (cfg.maxFileSize < 0 || (cfg.maxFileSize === 0 && cfg.fileBackend !== 'none'))) throw new Error('Invalid upload policy');\n    MAX_SIZE = cfg.maxFileSize;\n    policyReady = true;\n  } catch { policyReady = false; }\n  updateHint();\n  setBusy(uploading);\n}\nupdateHint();\nrefreshPolicy();\n\n/* \u5BC4\u4EF6\u5355\u62AC\u5934\u65E5\u671F(\u88C5\u9970) */\nif (els.capDate) els.capDate.textContent = fmtDate(Date.now()).split(' ')[0];\n\n/* \u8BED\u8A00\u5207\u6362:\u91CD\u7B97\u52A8\u6001\u6587\u6848\u4E0E\u7ED3\u679C\u5361\u7247 */\nonLangChange(() => {\n  if (cfg.maxFileSize) updateHint();\n  renderQueue();\n  if (lastResults.length) showResults(lastResults);\n});\n\n/* ---------- tabs ---------- */\n$$('.tab').forEach((tb) =>\n  tb.addEventListener('click', () => {\n    if (uploading) return; // \u4E0A\u4F20\u4E2D\u7981\u6B62\u5207\u6362\n    $$('.tab').forEach((x) => x.classList.toggle('active', x === tb));\n    const tab = tb.dataset.tab;\n    $('#panel-file').hidden = tab !== 'file';\n    $('#panel-text').hidden = tab !== 'text';\n    $('#upload-description-field').hidden = tab !== 'file';\n    $$('.tab').forEach(x => x.setAttribute('aria-pressed', String(x === tb)));\n    els.btnUpload.hidden = tab !== 'file';\n    els.btnText.hidden = tab !== 'text';\n    hideResult();\n  }),\n);\n\n/* ---------- segmented \u9009\u9879 ---------- */\nfor (const id of ['seg-expiry', 'seg-pickups']) {\n  $(`#${id}`).addEventListener('click', (e) => {\n    const b = e.target.closest('button');\n    if (!b || b.disabled) return;\n    $$('button', $(`#${id}`)).forEach((x) => {\n      x.classList.toggle('active', x === b);\n      x.setAttribute('aria-pressed', String(x === b));\n    });\n  });\n}\nfunction readOptions() {\n  const exp = $('#seg-expiry .active').dataset.v;\n  const pk = $('#seg-pickups .active').dataset.v;\n  return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk),\n    displayName: $('#upload-name').value.trim(),\n    description: $('#panel-file').hidden ? '' : $('#upload-description').value.trim() };\n}\n$$('.tab, .seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n$('#upload-description').addEventListener('input', e => {\n  $('#description-count').textContent = `${e.target.value.length} / 300`;\n});\n\n/* ---------- \u6587\u4EF6\u961F\u5217:\u70B9\u51FB / \u5168\u7A97\u53E3\u62D6\u62FD / \u667A\u80FD\u7C98\u8D34,\u518D\u9009\u5373\u6574\u4F53\u66FF\u6362 ---------- */\nels.dropzone.addEventListener('click', () => els.fileInput.click());\nels.dropzone.addEventListener('keydown', (e) => {\n  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); els.fileInput.click(); }\n});\nels.fileInput.addEventListener('change', () => {\n  setFiles([...els.fileInput.files]);\n  els.fileInput.value = '';\n});\n\nfunction showTab(name) {\n  const tb = $(`.tab[data-tab=\"${name}\"]`);\n  if (tb && !tb.classList.contains('active')) tb.click(); // \u4E0A\u4F20\u4E2D\u65F6 tab \u5904\u7406\u5668\u81EA\u5DF1\u4F1A\u62D2\u7EDD\n}\n\n/* \u62D6\u5230\u9875\u9762\u4EFB\u610F\u4F4D\u7F6E\u90FD\u9AD8\u4EAE\u5E76\u53EF\u653E\u4E0B(\u4E0D\u518D\u8981\u6C42\u7CBE\u786E\u547D\u4E2D\u62D6\u62FD\u533A) */\nlet dragDepth = 0;\nwindow.addEventListener('dragenter', (e) => {\n  if (![...(e.dataTransfer?.types || [])].includes('Files')) return;\n  dragDepth++;\n  if (!uploading) els.dropzone.classList.add('dragover');\n});\nwindow.addEventListener('dragleave', () => {\n  if (--dragDepth <= 0) { dragDepth = 0; els.dropzone.classList.remove('dragover'); }\n});\nwindow.addEventListener('dragover', (e) => e.preventDefault());\nwindow.addEventListener('drop', (e) => {\n  e.preventDefault();\n  dragDepth = 0;\n  els.dropzone.classList.remove('dragover');\n  if (e.dataTransfer?.files?.length) setFiles([...e.dataTransfer.files]);\n});\n\n/* \u7C98\u8D34\u667A\u80FD\u8DEF\u7531:\u7C98\u8D34\u6587\u4EF6\u2192\u6587\u4EF6\u9875;\u6587\u4EF6\u9875\u7C98\u8D34\u7EAF\u6587\u672C\u2192\u81EA\u52A8\u5207\u5230\u6587\u672C\u9875 */\ndocument.addEventListener('paste', (e) => {\n  if (e.target?.closest?.('textarea, input')) return; // \u8F93\u5165\u6846\u5185\u7C98\u8D34\u8D70\u9ED8\u8BA4\u884C\u4E3A\n  if (e.clipboardData?.files?.length) {\n    setFiles([...e.clipboardData.files]);\n    return;\n  }\n  const text = e.clipboardData?.getData('text/plain');\n  if (text && $('#panel-text').hidden) {\n    showTab('text');\n    els.textInput.value = text;\n    els.textInput.dispatchEvent(new Event('input'));\n  }\n});\n\nfunction setFiles(list) {\n  if (uploading) return;\n  const ok = [];\n  for (const f of list) {\n    if (f.size > MAX_SIZE) { toast(t('err.oversize', fmtBytes(MAX_SIZE), fmtBytes(f.size)), 'error'); continue; }\n    if (f.size < 1) { toast(t('err.empty'), 'error'); continue; }\n    ok.push(f);\n  }\n  if (ok.length > MAX_BATCH) {\n    toast(t('err.tooMany', MAX_BATCH), 'error');\n    ok.length = MAX_BATCH;\n  }\n  files = ok; // \u66FF\u6362\u8BED\u4E49:\u518D\u6B21\u9009\u62E9\u5373\u91CD\u7F6E\u961F\u5217\n  queueState = new Map(files.map((f) => [f, 'idle']));\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n  hideResult();\n}\n\nfunction statusText(f, st) {\n  if (st === 'fail') return '\u2717';\n  if (st && st.done) return `\u2713 ${st.done}`;\n  return fmtBytes(f.size);\n}\n\nfunction renderQueue() {\n  els.fileList.replaceChildren();\n  queueUI = new Map();\n  files.forEach((f) => {\n    const st = queueState.get(f) || 'idle';\n    const bar = el('div', { class: 'fr-bar' });\n    const status = el('small', { class: 'fr-status' }, statusText(f, st));\n    const row = el('div', {\n      class: `file-row${st === 'fail' ? ' fail' : ''}${st && st.done ? ' done' : ''}`,\n    });\n    row.replaceChildren(\n      el('span', { class: 'fr-icon' }, iconFor(f.name, f.type)),\n      el('div', { class: 'fr-meta' },\n        el('b', { title: f.name }, f.name),\n        el('small', {}, `${fmtBytes(f.size)} \xB7 ${f.type || t('unknown.type')}`),\n      ),\n      status,\n      el('button', { class: 'icon-btn fr-remove', title: t('remove'), type: 'button', onclick: () => removeFile(f) }, '\u2715'),\n      bar,\n    );\n    if (st && st.done) bar.style.width = '100%';\n    queueUI.set(f, { row, bar, status });\n    els.fileList.append(row);\n  });\n  els.fileList.hidden = files.length === 0;\n  els.dropzone.hidden = files.length > 0;\n}\n\nfunction removeFile(f) {\n  if (uploading) return;\n  files = files.filter((x) => x !== f);\n  queueState.delete(f);\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n}\n\n/* ---------- \u6587\u672C\u8F93\u5165 ---------- */\nels.textInput.addEventListener('input', () => {\n  els.textCounter.textContent = t('text.counter', els.textInput.value.length, 65536);\n  els.btnText.disabled = !policyReady || !els.textInput.value.trim();\n});\n\n/* ---------- \u4E0A\u4F20:\u961F\u5217\u987A\u5E8F\u9010\u4E2A,\u805A\u5408\u8FDB\u5EA6 + \u6BCF\u884C\u8FF7\u4F60\u8FDB\u5EA6 ---------- */\nels.btnUpload.addEventListener('click', startUpload);\nels.btnCancel.addEventListener('click', cancelUpload);\nels.btnText.addEventListener('click', submitText);\n\nfunction sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }\n\nfunction xhrPut(url, blob, onProgress) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open('PUT', url);\n    xhr.onload = () => {\n      let etag = null;\n      try {\n        const result = JSON.parse(xhr.responseText);\n        if (result.error === 'capacity_exceeded' || (xhr.status >= 400 && xhr.status < 500) || result.error?.startsWith('upload_policy') || isSecurityError({ code: result.error })) {\n          const error = responseError(result, xhr.status);\n          reject(error);\n          return;\n        }\n        etag = result.etag;\n      } catch { /* ignore */ }\n      resolve(xhr.status >= 200 && xhr.status < 300 && etag ? etag : null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\n/** \u5355\u7247\u6700\u591A\u91CD\u8BD5 3 \u6B21,\u9000\u907F 1s/2s/4s */\nasync function putPartWithRetry(uploadId, n, blob, onProgress) {\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) return null;\n    const etag = await xhrPut(`/api/uploads/${uploadId}/parts/${n}`, blob, onProgress);\n    if (etag) return etag;\n    await sleep([1000, 2000, 4000][attempt] || 4000);\n  }\n  return null;\n}\n\nfunction xhrJson(method, url, blob, onProgress, context) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open(method, url);\n    if (context) xhr.setRequestHeader('X-Upload-Context', encodeURIComponent(JSON.stringify(context)));\n    xhr.onload = () => {\n      if (xhr.status >= 200 && xhr.status < 300) {\n        try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }\n      }\n      let data;\n      try { data = JSON.parse(xhr.responseText); } catch { /* Use status below. */ }\n      if ((xhr.status >= 400 && xhr.status < 500) || isSecurityError({ code: data?.error })) {\n        reject(responseError(data, xhr.status));\n        return;\n      }\n      resolve(null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\nlet speedState = { t: 0, loaded: 0, speed: 0 };\nlet curFileIdx = 0;\nlet curFileTotal = 1;\nfunction updateAggregate(loaded, total) {\n  const pct = Math.min(100, Math.floor((loaded / total) * 100));\n  els.progressFill.style.width = pct + '%';\n  const now = performance.now();\n  if (speedState.t && loaded > speedState.loaded) {\n    const inst = (loaded - speedState.loaded) / ((now - speedState.t) / 1000);\n    speedState.speed = speedState.speed ? speedState.speed * 0.7 + inst * 0.3 : inst;\n  }\n  speedState.t = now;\n  speedState.loaded = loaded;\n  let text = `${pct}% \xB7 ${fmtBytes(loaded)} / ${fmtBytes(total)} \xB7 ${fmtBytes(speedState.speed)}/s`;\n  if (speedState.speed > 1024 && loaded > 0 && loaded < total) {\n    text += ` \xB7 ${t('prog.eta', fmtDuration((total - loaded) / speedState.speed))}`;\n  }\n  if (curFileTotal > 1) text += ` \xB7 ${t('prog.file', curFileIdx, curFileTotal)}`;\n  els.progressText.textContent = text;\n}\n\n/** \u7B49\u5F85\u6001(\u521D\u59CB\u5316/\u91CD\u8BD5\u95F4\u9694/\u5408\u5E76\u5206\u7247):\u8FDB\u5EA6\u6761\u53E0\u52A0\u6D41\u5149\u52A8\u753B */\nfunction setPending(on) {\n  els.progressFill.classList.toggle('pending', on);\n}\n\nasync function startUpload() {\n  if (!files.length || uploading || !canUploadFiles() || !securityFeedback.canRetry()) return;\n  // A retry must not re-upload files already accepted earlier in the batch.\n  const pendingFiles = files.filter(file => !queueState.get(file)?.done);\n  if (!pendingFiles.length) return;\n  securityFeedback.clear();\n  uploading = true;\n  cancelled = false;\n  speedState = { t: 0, loaded: 0, speed: 0 };\n  curFileIdx = 0;\n  curFileTotal = pendingFiles.length;\n  const opts = readOptions();\n  const responses = [];\n  const totalBytes = pendingFiles.reduce((s, f) => s + f.size, 0);\n  let baseBytes = 0;\n  setBusy(true);\n  els.progress.hidden = false;\n  els.progressFill.style.width = '0%';\n  setPending(false);\n  els.progressText.textContent = t('prog.preparing');\n\n  for (let i = 0; i < pendingFiles.length; i++) {\n    if (cancelled) break;\n    const f = pendingFiles[i];\n    const ui = queueUI.get(f);\n    ui.row.classList.remove('fail');\n    curFileIdx = i + 1;\n    ui.row.classList.add('uploading');\n    els.progressText.textContent = t('prog.uploading');\n    const onProgress = (loaded) => {\n      ui.bar.style.width = Math.min(100, (loaded / f.size) * 100) + '%';\n      updateAggregate(baseBytes + loaded, totalBytes);\n    };\n    try {\n      const res = cfg.fileBackend === 'kv'\n        ? await directUpload(f, opts, onProgress)\n        : await multipartUpload(f, opts, onProgress);\n      responses.push(res);\n      baseBytes += f.size;\n      queueState.set(f, { done: res.code });\n      ui.bar.style.width = '100%';\n      ui.row.classList.add('done');\n      ui.status.textContent = `\u2713 ${res.code}`;\n    } catch (e) {\n      await abortUpload();\n      queueState.set(f, 'fail');\n      ui.row.classList.add('fail');\n      ui.status.textContent = '\u2717';\n      if (e.code === 'capacity_exceeded') {\n        window.alert(Number.isSafeInteger(e.remainingBytes) && e.remainingBytes >= 0\n          ? t('err.capacityRemaining', (e.remainingBytes / 1e9).toFixed(3), e.remainingBytes.toLocaleString())\n          : t('err.capacity'));\n      } else if (!cancelled && !securityFeedback.show(e)) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');\n      break; // \u4E00\u4E2A\u5931\u8D25\u5373\u505C,\u4FDD\u7559\u961F\u5217\u4FBF\u4E8E\u5904\u7406\n    }\n  }\n\n  uploading = false;\n  els.progress.hidden = true;\n  setPending(false);\n  setBusy(false);\n  if (cancelled) toast(t('toast.cancelled'));\n  if (responses.length) showResults([...lastResults, ...responses]);\n  await refreshPolicy();\n}\n\n/* ---------- \u5C0F\u5B58\u50A8\u6A21\u5F0F(KV):\u5355\u8BF7\u6C42\u76F4\u4F20,\u5931\u8D25\u6574\u6587\u4EF6\u91CD\u53D1 ---------- */\nasync function directUpload(f, opts, onProgress) {\n  const qs = new URLSearchParams({\n    filename: f.name,\n    mime: f.type || 'application/octet-stream',\n    expiry: opts.expiry,\n  });\n  if (opts.maxPickups !== null) qs.set('maxPickups', String(opts.maxPickups));\n\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) throw new Error('cancelled');\n    setPending(false);\n    const res = await xhrJson('POST', `/api/shares/file?${qs}`, f, onProgress,\n      { displayName: opts.displayName, description: opts.description });\n    if (res) return res;\n    if (cancelled) throw new Error('cancelled');\n    setPending(true);\n    els.progressText.textContent = t('prog.retry', attempt + 1);\n    await sleep([1000, 2000][attempt] || 4000);\n  }\n  throw new Error(t('err.upload'));\n}\n\n/* ---------- \u5927\u5B58\u50A8\u6A21\u5F0F(R2):\u5206\u7247\u4E0A\u4F20 ---------- */\nasync function multipartUpload(f, opts, onProgress) {\n  setPending(true);\n  els.progressText.textContent = t('prog.init');\n  const init = await api('/api/uploads/init', {\n    method: 'POST',\n    body: { filename: f.name, size: f.size, mime: f.type || 'application/octet-stream', ...opts },\n  });\n  session = init;\n  setPending(false);\n\n  const etags = [];\n  let doneBytes = 0;\n  for (let i = 1; i <= init.parts; i++) {\n    const blob = f.slice((i - 1) * init.partSize, Math.min(i * init.partSize, f.size));\n    const etag = await putPartWithRetry(init.uploadId, i, blob, (loaded) =>\n      onProgress(doneBytes + loaded),\n    );\n    if (!etag) {\n      const wasCancelled = cancelled;\n      await abortUpload();\n      throw new Error(wasCancelled ? 'cancelled' : t('err.upload'));\n    }\n    etags.push({ partNumber: i, etag });\n    doneBytes += blob.size;\n  }\n  if (cancelled) throw new Error('cancelled');\n\n  els.progressFill.style.width = '100%';\n  setPending(true);\n  els.progressText.textContent = t('prog.merging');\n  try {\n    const res = await api(`/api/uploads/${init.uploadId}/complete`, {\n      method: 'POST',\n      body: { parts: etags },\n    });\n    session = null;\n    return res;\n  } catch (e) {\n    await abortUpload();\n    throw e;\n  }\n}\n\nasync function cancelUpload() {\n  cancelled = true;\n  currentXhr?.abort();\n  await abortUpload();\n}\n\nasync function abortUpload() {\n  if (!session) return;\n  const id = session.uploadId;\n  session = null;\n  try { await api(`/api/uploads/${id}/abort`, { method: 'POST', body: {} }); } catch { /* ignore */ }\n}\n\nfunction setBusy(busy) {\n  for (const field of [$('#upload-name'), $('#upload-description')]) field.disabled = busy;\n  els.btnUpload.disabled = busy || files.length === 0 || !canUploadFiles();\n  els.btnText.disabled = busy || !policyReady || !els.textInput.value.trim();\n}\n\n/* \u5237\u65B0/\u5173\u9875\u65F6\u5C3D\u529B\u901A\u77E5\u670D\u52A1\u7AEF\u653E\u5F03(\u4E0D\u662F\u65AD\u70B9\u7EED\u4F20) */\nwindow.addEventListener('pagehide', () => {\n  if (session) navigator.sendBeacon(`/api/uploads/${session.uploadId}/abort`);\n});\n\n/* ---------- \u6587\u672C\u5206\u4EAB ---------- */\nasync function submitText() {\n  const text = els.textInput.value;\n  if (!text.trim() || !policyReady || !securityFeedback.canRetry()) return;\n  securityFeedback.clear();\n  setBusy(true);\n  try {\n    const res = await api('/api/shares/text', { method: 'POST', body: { text, ...readOptions() } });\n    showResults([res]);\n  } catch (e) {\n    if (!securityFeedback.show(e)) toast(e.message || t('err.submit'), 'error');\n  } finally {\n    setBusy(false);\n  }\n}\n\n/* ---------- \u7ED3\u679C\u5361\u7247(\u591A\u6587\u4EF6\u65F6\u9010\u5F20\u5806\u53E0 + \u6279\u91CF\u5934\u90E8) ---------- */\nfunction qrSvgFor(url) {\n  /* vendored qrcode-generator:\u5168\u5C40 window.qrcode(classic script \u5148\u4E8E\u672C\u6A21\u5757\u52A0\u8F7D) */\n  try {\n    const qr = window.qrcode(0, 'M');\n    qr.addData(url);\n    qr.make();\n    const holder = document.createElement('div');\n    holder.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true, alt: t('qr.hint') });\n    return holder.firstElementChild;\n  } catch { return null; }\n}\n\nfunction metaText(r) {\n  const parts = [];\n  parts.push(r.expireAt\n    ? t('meta.after', fmtDuration((r.expireAt - Date.now()) / 1000), fmtDate(r.expireAt))\n    : t('meta.forever'));\n  parts.push(r.maxPickups === null || r.maxPickups === undefined ? t('meta.unlimited') : t('meta.pickups', r.maxPickups));\n  if (r.kind === 'file' && r.size) parts.push(fmtBytes(r.size));\n  return parts.join(' \xB7 ');\n}\n\n/* \u7ED3\u679C\u5361\u7247 = \u53D6\u4EF6\u51ED\u8BC1\u7968\u636E:\u7968\u5934(\u6807\u9898+\u2116) \u2192 \u7968\u8EAB(\u53E3\u4EE4+\u4E8C\u7EF4\u7801) \u2192 \u6495\u7968\u7EBF \u2192 \u7968\u811A(\u64CD\u4F5C) */\nfunction buildResultCard(r, compact) {\n  const link = `${location.origin}/pickup?code=${r.code}`;\n  const qr = qrSvgFor(link);\n  const col = el('div', { class: 'result-col' },\n    compact && r.kind === 'file' && r.filename ? el('div', { class: 'result-file-name' }, r.filename) : null,\n    el('div', { class: 'code' }, ...r.code.split('').map((d) => el('span', {}, d))),\n    el('div', { class: 'result-link' }, link),\n    el('div', { class: 'result-meta' }, metaText(r)),\n  );\n  const main = el('div', { class: 'result-main' },\n    qr ? el('div', { class: 'qr-wrap', title: t('qr.hint') }, qr, el('div', { class: 'qr-hint' }, t('qr.hint'))) : null,\n    col,\n  );\n  return el('div', { class: 'result' },\n    el('div', { class: 'tk-head' },\n      el('span', {}, t('ticket.title')),\n      el('span', { class: 'tk-no' }, t('ticket.no', r.code)),\n    ),\n    el('div', { class: 'tk-body' },\n      compact ? null : el('p', { class: 'result-title' }, t('result.ok')),\n      main,\n    ),\n    el('div', { class: 'tk-tear' }),\n    el('div', { class: 'tk-foot' },\n      el('button', { class: 'btn primary', type: 'button', onclick: (e) => copyBtn(e.currentTarget, r.code, t('label.code')) }, t('btn.copyCode')),\n      el('button', { class: 'btn', type: 'button', onclick: (e) => copyBtn(e.currentTarget, link, t('label.link')) }, t('btn.copyLink')),\n      compact ? null : el('button', { class: 'btn ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n    ),\n  );\n}\n\nfunction showResults(list) {\n  lastResults = list;\n  if (els.placeholder) els.placeholder.hidden = true;\n  els.results.replaceChildren();\n  if (list.length > 1) {\n    els.results.append(\n      el('div', { class: 'result-batch-head' },\n        el('p', { class: 'result-title batch' }, t('result.okBatch', list.length)),\n        el('div', { class: 'btn-row' },\n          el('button', {\n            class: 'btn small', type: 'button',\n            onclick: async (e) => {\n              const ok = await copyText(list.map((r) => r.code).join('\\n'));\n              toast(ok ? t('copied', t('label.code')) : t('copy.fail'), ok ? 'ok' : 'error');\n            },\n          }, t('btn.copyAll')),\n          el('button', { class: 'btn small ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n        ),\n      ),\n    );\n  }\n  for (const r of list) els.results.append(buildResultCard(r, list.length > 1));\n  els.results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });\n}\n\nfunction resetAll() {\n  files = [];\n  queueState = new Map();\n  renderQueue();\n  els.btnUpload.disabled = true;\n  els.textInput.value = '';\n  els.textCounter.textContent = t('text.counter', 0, 65536);\n  els.btnText.disabled = true;\n  hideResult();\n}\n\n/** \u590D\u5236\u6210\u529F\u540E\u6309\u94AE\u77ED\u6682\u53D8\u6210\"\u2713 \u5DF2\u590D\u5236\" */\nasync function copyBtn(btn, text, label) {\n  const ok = await copyText(text);\n  toast(ok ? t('copied', label) : t('copy.fail'), ok ? 'ok' : 'error');\n  if (!ok) return;\n  btn.textContent = t('copied.btn');\n  btn.disabled = true;\n  setTimeout(() => { btn.textContent = label === t('label.code') ? t('btn.copyCode') : t('btn.copyLink'); btn.disabled = false; }, 1500);\n}\n\nfunction hideResult() {\n  lastResults = [];\n  if (els.placeholder) els.placeholder.hidden = false;\n  els.results.replaceChildren();\n}\n\ninitUi('index');\n", "js/pickup.js": "import { initUi } from './ui.js';\nimport { createSecurityFeedback } from './security-feedback.js';\nimport { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js';\nimport { t, onLangChange, initI18n } from './i18n.js';\n\ninitTheme();\ninitI18n();\n\nconst boxes = $$('.otp-box');\nconst row = $('#otp-row');\nconst errorBox = $('#pickup-error');\nconst resultCard = $('#pickup-result');\nlet querying = false;\nlet last = null; // { res, code } \u8BED\u8A00\u5207\u6362\u65F6\u91CD\u6E32\u67D3\nconst securityFeedback = createSecurityFeedback($('#pickup-input-card'), 'pickup', submit);\n\nonLangChange(() => {\n  if (last && !resultCard.hidden) render(last.res, last.code);\n});\n\nfunction value() {\n  return boxes.map((b) => b.value).join('');\n}\n\n/* \u586B\u5165 1-6 \u4F4D\u6570\u5B57:\u591F 6 \u4F4D\u81EA\u52A8\u63D0\u4EA4,\u5426\u5219\u805A\u7126\u5230\u4E0B\u4E00\u4E2A\u7A7A\u683C */\nfunction fill(digits) {\n  boxes.forEach((b, i) => { b.value = digits[i] || ''; });\n  hideError();\n  if (digits.length === 6) {\n    boxes[5].focus();\n    if (!querying) submit();\n  } else {\n    boxes[Math.min(digits.length, 5)].focus();\n  }\n}\n\nboxes.forEach((box, i) => {\n  box.addEventListener('input', () => {\n    box.value = box.value.replace(/\\D/g, '').slice(0, 1);\n    hideError();\n    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();\n    if (value().length === 6 && !querying) submit();\n  });\n  box.addEventListener('keydown', (e) => {\n    if (e.key === 'Backspace' && !box.value && i > 0) {\n      e.preventDefault();\n      boxes[i - 1].value = '';\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowLeft' && i > 0) {\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {\n      boxes[i + 1].focus();\n    } else if (e.key === 'Enter' && value().length === 6 && !querying) {\n      submit();\n    }\n  });\n  box.addEventListener('paste', (e) => {\n    e.preventDefault();\n    const digits = (e.clipboardData.getData('text') || '').replace(/\\D/g, '').slice(0, 6);\n    if (digits) fill(digits);\n  });\n  box.addEventListener('focus', () => box.select());\n});\n\nfunction showError(msg) {\n  errorBox.textContent = msg;\n  errorBox.hidden = false;\n  row.classList.remove('shake');\n  void row.offsetWidth; /* \u5F3A\u5236 reflow,\u91CD\u542F\u52A8\u753B */\n  row.classList.add('shake');\n}\nfunction hideError() {\n  errorBox.hidden = true;\n}\n\nasync function submit() {\n  const code = value();\n  if (querying || !/^\\d{6}$/.test(code) || !securityFeedback.canRetry()) return;\n  securityFeedback.clear();\n  querying = true;\n  hideError();\n  resultCard.hidden = true;\n  try {\n    const res = await api('/api/pickup', { method: 'POST', body: { code } });\n    render(res, code);\n  } catch (e) {\n    if (!securityFeedback.show(e)) showError(e.message || t('pk.fail'));\n  } finally {\n    querying = false;\n  }\n}\n\nfunction metaLine(res) {\n  const parts = [];\n  parts.push(res.expireAt ? t('pk.expireAt', fmtDate(res.expireAt)) : t('meta.forever'));\n  parts.push(res.pickupsLeft === null || res.pickupsLeft === undefined ? t('meta.unlimited') : t('pk.left', res.pickupsLeft));\n  return parts.join(' \xB7 ');\n}\n\nfunction render(res, code) {\n  last = { res, code };\n  resultCard.replaceChildren();\n\n  if (res.kind === 'text') {\n    const pre = el('pre', { class: 'text-body' });\n    pre.textContent = res.text ?? '';\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, '\u{1F4DD}'),\n        el('div', { class: 'sc-meta' }, el('b', {}, t('pk.textChars', res.size))),\n      ),\n      pre,\n      el('div', { class: 'btn-row' },\n        el('button', { class: 'btn primary', onclick: async () => {\n          (await copyText(res.text)) ? toast(t('copied.text'), 'ok') : toast(t('copy.fail'), 'error');\n        } }, t('pk.copyAllText')),\n      ),\n    );\n  } else {\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, iconFor(res.filename, res.mime)),\n        el('div', { class: 'sc-meta' },\n          el('b', {}, res.filename || t('pk.unnamed')),\n          el('small', {}, `${fmtBytes(res.size)} \xB7 ${res.mime || t('unknown.type')}`),\n        ),\n      ),\n      el('a', {\n        class: 'btn primary block',\n        href: `/api/pickup/${code}/download`,\n      }, t('pk.download')),\n    );\n  }\n\n  resultCard.append(\n    el('div', { class: 'meta-line' }, metaLine(res)),\n    el('div', { class: 'btn-row' },\n      el('button', { class: 'btn ghost', onclick: reset }, t('pk.again')),\n    ),\n  );\n  resultCard.hidden = false;\n}\n\nfunction reset() {\n  last = null;\n  resultCard.hidden = true;\n  boxes.forEach((b) => { b.value = ''; });\n  hideError();\n  boxes[0].focus();\n}\n\n/* \u652F\u6301 /pickup?code=xxxxxx \u5E26\u53C2\u8FDB\u5165 */\nconst fromUrl = new URLSearchParams(location.search).get('code');\nif (fromUrl && /^\\d{1,6}$/.test(fromUrl)) {\n  fill(fromUrl.slice(0, 6));\n} else {\n  boxes[0].focus();\n}\n\ninitUi('pickup');\n", "js/security-download.js": "import { initTheme, responseError } from './common.js';\nimport { initI18n, onLangChange } from './i18n.js';\nimport { createSecurityFeedback } from './security-feedback.js';\n\ninitTheme(); initI18n();\ndocument.documentElement.classList.add('ui-enhanced', 'ui-soft');\nconst data = JSON.parse(document.querySelector('#security-data').textContent);\nconst feedback = createSecurityFeedback(document.querySelector('#download-feedback'), 'download', () => location.reload());\nfeedback.show(responseError(data, 403));\nconst translate = () => {\n  const en = document.documentElement.lang === 'en';\n  document.title = en ? 'File download \xB7 File relay' : '\u6587\u4EF6\u4E0B\u8F7D \xB7 \u6587\u4EF6\u4E2D\u8F6C\u7AD9';\n  document.querySelector('#back-pickup').textContent = en ? 'Back to pickup' : '\u8FD4\u56DE\u53D6\u4EF6\u9875';\n};\nonLangChange(translate); translate();\n", "js/security-feedback.js": "import { el, copyText } from './common.js';\nimport { onLangChange } from './i18n.js';\n\nconst EMAIL = 'iblykk@gmail.com';\nexport const isSecurityError = error => ['security_blocked', 'security_unavailable'].includes(error?.code);\n\n/** One persistent notice per surface. No requests run on countdown expiry. */\nexport function createSecurityFeedback(host, operation, retry) {\n  let current = null, timer = null, deadline = 0, pending = false;\n  const card = el('section', { class: 'security-feedback', hidden: '', tabindex: '-1', 'aria-label': '\u8BBF\u95EE\u63D0\u793A' });\n  host.append(card);\n  const text = (zh, en) => document.documentElement.lang === 'en' ? en : zh;\n  const action = () => ({ upload: text('\u4E0A\u4F20', 'upload'), pickup: text('\u53D6\u4EF6', 'pick up'), download: text('\u4E0B\u8F7D', 'download') })[operation];\n  function clear() {\n    current = null;\n    clearInterval(timer);\n    timer = null;\n    card.hidden = true;\n    card.replaceChildren();\n  }\n  function ready() { return !pending && (!current || performance.now() >= deadline); }\n  function draw() {\n    if (!current) return;\n    const error = current;\n    const unavailable = error.code === 'security_unavailable';\n    const reason = unavailable ? 'service_unavailable' : error.reason;\n    const title = unavailable ? text('\u670D\u52A1\u6682\u65F6\u4E0D\u53EF\u7528', 'Service temporarily unavailable') : text('\u6682\u65F6\u65E0\u6CD5' + action(), 'Unable to ' + action());\n    const descriptions = {\n      rate_limit: text('\u64CD\u4F5C\u8F83\u9891\u7E41\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002\u5982\u6709\u7591\u95EE\uFF0C\u53EF\u8054\u7CFB\u7AD9\u957F\u3002', 'Too many attempts. Please try again later or contact the site owner.'),\n      region: text('\u5F53\u524D\u8BBF\u95EE\u5730\u533A\u4E0D\u5728\u672C\u7AD9\u5F00\u653E\u8303\u56F4\u5185\u3002\u5982\u6709\u7591\u95EE\uFF0C\u53EF\u8054\u7CFB\u7AD9\u957F\u3002', 'Access is unavailable from your current region. Contact the site owner for help.'),\n      service_unavailable: text('\u6682\u65F6\u65E0\u6CD5\u5904\u7406\u8BF7\u6C42\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002', 'Your request cannot be processed right now. Please try again later.'),\n    };\n    const description = descriptions[reason] || text('\u5F53\u524D\u7F51\u7EDC\u7684\u8BF7\u6C42\u53D7\u5230\u9650\u5236\u3002\u5982\u9700\u534F\u52A9\uFF0C\u8BF7\u8054\u7CFB\u7AD9\u957F\u3002', 'Requests from your current network are restricted. Contact the site owner for help.');\n    const heading = el('h3', {}, title);\n    const content = el('div', {}, heading, el('p', {}, description));\n    const head = el('div', { class: 'security-feedback-head' }, el('span', { class: 'security-feedback-icon', 'aria-hidden': 'true' }, '!'), content);\n    const status = el('p', { class: 'security-feedback-status', role: 'status' });\n    const copy = async value => {\n      if (await copyText(value)) { status.textContent = text('\u5DF2\u590D\u5236', 'Copied'); return; }\n      const dialog = el('dialog', { class: 'security-copy-dialog', 'aria-label': text('\u624B\u52A8\u590D\u5236', 'Copy manually') });\n      const field = el('textarea', { readonly: '', 'aria-label': text('\u5F85\u590D\u5236\u5185\u5BB9', 'Text to copy') });\n      field.value = value;\n      const close = el('button', { type: 'button', class: 'btn ghost', onclick: () => dialog.close() }, text('\u5173\u95ED', 'Close'));\n      dialog.append(field, close); document.body.append(dialog);\n      dialog.addEventListener('close', () => dialog.remove(), { once: true });\n      dialog.showModal(); field.focus(); field.select();\n    };\n    const id = typeof error.requestId === 'string' && /^[a-zA-Z0-9-]{1,80}$/.test(error.requestId) ? error.requestId : '';\n    const feedback = [text('\u6587\u4EF6\u4E2D\u8F6C\u7AD9\u8BBF\u95EE\u53CD\u9988', 'File relay access feedback'),\n      text('\u64CD\u4F5C\uFF1A', 'Action: ') + action(), text('\u63D0\u793A\uFF1A', 'Notice: ') + description,\n      text('\u53D1\u751F\u65F6\u95F4\uFF1A', 'Time: ') + new Date(error.serverTime || error.receivedAt).toISOString(),\n      ...(id ? [text('\u8BF7\u6C42\u7F16\u53F7\uFF1A', 'Request ID: ') + id] : []), '', text('\u8865\u5145\u8BF4\u660E\uFF1A', 'Additional details: ')].join('\\n');\n    const contact = el('a', { class: 'btn ghost', href: `mailto:${EMAIL}?subject=${encodeURIComponent(text('\u6587\u4EF6\u4E2D\u8F6C\u7AD9 \xB7 \u8BBF\u95EE\u53CD\u9988', 'File relay \xB7 Access feedback'))}&body=${encodeURIComponent(feedback)}` }, text('\u8054\u7CFB\u7AD9\u957F', 'Contact site owner'));\n    const retryButton = el('button', { type: 'button', class: 'btn primary', onclick: async () => {\n      if (!ready()) return;\n      pending = true; tick();\n      try { await retry(); }\n      finally { pending = false; if (current) draw(); }\n    } }, text('\u91CD\u65B0\u5C1D\u8BD5', 'Try again'));\n    const contactFirst = !unavailable && reason !== 'rate_limit';\n    if (contactFirst) { contact.className = 'btn primary'; retryButton.className = 'btn ghost'; }\n    const actions = el('div', { class: 'security-feedback-actions' }, ...(contactFirst ? [contact, retryButton] : [retryButton, contact]));\n    const time = el('div', { class: 'security-feedback-time' });\n    const remaining = el('span', {});\n    const hasExpiry = Number.isFinite(error.retryAt) && error.retryAt > 0;\n    time.hidden = !hasExpiry;\n    if (hasExpiry) time.append(el('span', {}, text('\u9884\u8BA1\u53EF\u91CD\u8BD5\uFF1A', 'Try after: ') + new Date(error.retryAt).toLocaleString(document.documentElement.lang, { hour12: false })), remaining);\n    const tip = text('\u8C03\u7528\u90AE\u4EF6\u5E94\u7528\u5E76\u9884\u586B\u53CD\u9988\u4FE1\u606F\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u53D1\u9001\u3002\u672A\u914D\u7F6E\u90AE\u4EF6\u5E94\u7528\u65F6\uFF0C\u53EF\u590D\u5236\u90AE\u7BB1\u540E\u81EA\u884C\u5199\u4FE1\u3002', 'Opens your mail app with a draft; nothing is sent automatically. You can also copy the email address.');\n    const help = el('button', { type: 'button', class: 'security-help', 'aria-label': tip, title: tip, 'aria-expanded': 'false' }, '?');\n    const helpText = el('span', { class: 'security-help-text', role: 'tooltip' }, tip);\n    help.onclick = () => help.setAttribute('aria-expanded', String(help.getAttribute('aria-expanded') !== 'true'));\n    help.onkeydown = event => { if (event.key === 'Escape') help.setAttribute('aria-expanded', 'false'); };\n    const fallback = el('div', { class: 'security-feedback-fallback' },\n      el('button', { type: 'button', class: 'security-text-button', onclick: () => copy(EMAIL) }, text('\u590D\u5236\u90AE\u7BB1', 'Copy email')),\n      el('span', { class: 'security-help-wrap' }, help, helpText));\n    const reference = el('div', { class: 'security-feedback-reference' },\n      el('span', {}, id ? text('\u8BF7\u6C42\u7F16\u53F7 ', 'Request ID ') + id : ''),\n      el('button', { type: 'button', class: 'security-text-button', onclick: () => copy(feedback) }, text('\u590D\u5236\u53CD\u9988\u4FE1\u606F', 'Copy feedback')));\n    card.replaceChildren(head, time, actions, fallback, reference, status);\n    function tick() {\n      const seconds = Math.max(0, Math.ceil((deadline - performance.now()) / 1000));\n      retryButton.disabled = pending || seconds > 0;\n      remaining.textContent = seconds ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` : text('\u53EF\u91CD\u65B0\u68C0\u67E5', 'Ready to retry');\n    }\n    clearInterval(timer); tick(); timer = setInterval(tick, 1000);\n  }\n  onLangChange(draw);\n  window.addEventListener('pagehide', () => clearInterval(timer));\n  window.addEventListener('pageshow', () => { if (current) draw(); });\n  return {\n    clear,\n    canRetry: () => !current || performance.now() >= deadline,\n    show(error) {\n      if (!isSecurityError(error)) return false;\n      const receivedAt = Date.now();\n      current = { ...error, receivedAt };\n      const serverTime = Number.isFinite(error.serverTime) ? error.serverTime : receivedAt;\n      deadline = performance.now() + (Number.isFinite(error.retryAt) ? Math.max(0, error.retryAt - serverTime) : 0);\n      draw(); card.hidden = false; card.focus({ preventScroll: true });\n      card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });\n      return true;\n    },\n  };\n}\n", "js/ui-audit-layout.js": "export function initAuditLayout() {\n    /* Keep category selection, applied filters and export in the same workspace. */\n    (() => {\n        const form = document.querySelector('#audit-filter'), exportButton = document.querySelector('#audit-export');\n        if (!form || !exportButton)\n            return;\n        const oldActions = exportButton.parentElement;\n        form.querySelector('.audit-actions').append(exportButton);\n        oldActions.remove();\n        const notice = document.createElement('small');\n        notice.id = 'ui-audit-pending';\n        notice.className = 'ui-audit-pending';\n        notice.setAttribute('role', 'status');\n        notice.hidden = true;\n        form.append(notice);\n        const fields = ['audit-result', 'audit-from', 'audit-to', 'audit-q'].map(id => document.getElementById(id));\n        const snapshot = () => JSON.stringify(fields.map(n => n.value.trim()));\n        let applied = snapshot();\n        function sync() {\n            const dirty = snapshot() !== applied, en = document.documentElement.lang === 'en';\n            notice.hidden = !dirty;\n            notice.textContent = en ? 'Filters changed. Apply them before exporting.' : '\u7B5B\u9009\u6761\u4EF6\u5DF2\u66F4\u6539\uFF0C\u8BF7\u5148\u70B9\u51FB\u201C\u7B5B\u9009\u201D\u3002';\n            exportButton.setAttribute('aria-disabled', String(dirty));\n            exportButton.title = en ? 'Export all matching records across pages' : '\u5BFC\u51FA\u5F53\u524D\u7C7B\u522B\u53CA\u7B5B\u9009\u6761\u4EF6\u4E0B\u7684\u5168\u90E8\u5339\u914D\u8BB0\u5F55\uFF0C\u5305\u542B\u6240\u6709\u5206\u9875';\n            if (dirty)\n                exportButton.setAttribute('aria-describedby', notice.id);\n            else\n                exportButton.removeAttribute('aria-describedby');\n        }\n        for (const n of fields) {\n            n.addEventListener('input', sync);\n            n.addEventListener('change', sync);\n        }\n        form.addEventListener('submit', () => { const from = fields[1].value, to = fields[2].value; if (from && to && from > to) {\n            sync();\n            return;\n        } applied = snapshot(); sync(); });\n        document.querySelector('#audit-reset').addEventListener('click', () => { applied = snapshot(); sync(); });\n        exportButton.addEventListener('click', e => { if (snapshot() !== applied) {\n            e.preventDefault();\n            e.stopImmediatePropagation();\n            sync();\n        } }, true);\n        document.querySelector('#lang-btn').addEventListener('click', sync);\n        sync();\n    })();\n}\n", "js/ui-classifications.js": "export function initClassifications() {\n    /* Attach record categories to their subject; navigation and outcome badges stay intact. */\n    (() => {\n        const body = document.querySelector('#audit-body');\n        if (!body)\n            return;\n        function enhance() {\n            for (const cell of body.querySelectorAll('tr>td:nth-child(2)')) {\n                const category = cell.querySelector(':scope > small'), action = cell.querySelector(':scope > span');\n                if (!category || !action)\n                    continue;\n                const line = document.createElement('div');\n                line.className = 'ui-record-line';\n                const tag = document.createElement('sup');\n                tag.className = 'ui-record-sup';\n                tag.textContent = category.textContent;\n                const key = [...document.querySelectorAll('.audit-categories button[data-category]')].find(button => button.textContent.trim() === category.textContent.trim())?.dataset.category;\n                tag.dataset.tone = { login: 'blue', operation: 'teal', security: 'amber' }[key] || 'slate';\n                line.append(action, tag);\n                cell.replaceChildren(line);\n            }\n        }\n        enhance();\n        new MutationObserver(enhance).observe(body, { childList: true, subtree: true });\n    })();\n}\n", "js/ui-controls.js": `export function initControls() {
     /* Shared accessible controls. Native inputs and their original events are retained. */
     (() => {
         const en = () => document.documentElement.lang === 'en';
@@ -1396,7 +1396,7 @@ export function initI18n() {\r
         new MutationObserver(upgrade).observe(document.body, { childList: true, subtree: true });
     })();
 }
-`, "js/ui-entry.js": "export function initEntry() {\n    /* Shared send, pickup and login controls. */\n    if (true) {\n        const root = document.documentElement, q = s => document.querySelector(s);\n        const en = () => document.documentElement.lang === 'en';\n        const words = [];\n        const label = (node, zh, english) => { words.push([node, zh, english]); node.textContent = en() ? english : zh; return node; };\n        const button = (id, zh, english, cls = 'btn ghost') => { const n = document.createElement('button'); n.type = 'button'; n.id = id; n.className = cls; return label(n, zh, english); };\n        if (q('#dropzone') || q('#otp-row')) {\n            const header = q('.topbar'), nav = document.createElement('nav');\n            nav.className = 'ui-public-nav';\n            nav.setAttribute('aria-label', '\u53D1\u9001\u4E0E\u53D6\u4EF6');\n            for (const [url, zh, english, active] of [['/', '\u53D1\u9001', 'Send', !!q('#dropzone')], ['/pickup', '\u53D6\u4EF6', 'Pick up', !!q('#otp-row')]]) {\n                const a = document.createElement('a');\n                a.href = url;\n                a.className = 'admin-nav-link';\n                label(a, zh, english);\n                a.setAttribute('aria-current', active ? 'page' : 'false');\n                nav.append(a);\n            }\n            q('.brand').after(nav);\n            header.classList.add('ui-public-header');\n            q('.actions a')?.remove();\n        }\n        if (q('#dropzone')) {\n            root.classList.add('ui-send');\n            q('#upload-name').setAttribute('autocomplete', 'nickname');\n            q('#upload-description').rows = 2;\n            const context = q('.upload-context'), summary = context.querySelector('summary'), caption = document.createElement('span');\n            context.open = true;\n            caption.dataset.i18n = summary.dataset.i18n;\n            caption.textContent = summary.textContent;\n            summary.removeAttribute('data-i18n');\n            summary.replaceChildren(caption);\n            summary.append(q('[data-i18n=\"context.visibility\"]'));\n            const footer = q('.foot');\n            footer.removeAttribute('data-i18n');\n            footer.classList.add('ui-send-footer');\n            footer.replaceChildren();\n            const about = document.createElement('div'), description = document.createElement('small');\n            about.className = 'ui-footer-about';\n            label(description, '\u89C1\u5B57\u5982\u9762\uFF0C\u8BA9\u5206\u4EAB\u7B80\u5355\u4E00\u70B9\u3002', 'A simpler way to share files and words.');\n            about.append(description);\n            const contact = document.createElement('div');\n            contact.className = 'ui-footer-contact';\n            const mail = document.createElement('a');\n            mail.href = 'mailto:iblykk@gmail.com';\n            label(mail, '\u8054\u7CFB\u7AD9\u957F', 'Contact');\n            contact.append(mail);\n            const links = document.createElement('nav');\n            links.className = 'ui-footer-links';\n            links.setAttribute('aria-label', '\u9875\u5C3E\u5BFC\u822A');\n            const help = button('ui-send-help', '\u4F7F\u7528\u5E2E\u52A9', 'Help', 'ui-footer-link'), pickup = document.createElement('a');\n            pickup.href = '/pickup';\n            pickup.className = 'ui-footer-link';\n            label(pickup, '\u524D\u5F80\u53D6\u4EF6', 'Pick up a share');\n            links.append(help, pickup);\n            const footerInner = document.createElement('div');\n            footerInner.className = 'ui-footer-inner';\n            footerInner.append(about, links, contact);\n            footer.append(footerInner);\n            const helpDialog = document.createElement('dialog');\n            helpDialog.id = 'ui-send-help-dialog';\n            helpDialog.className = 'source-dialog ui-send-help-dialog';\n            helpDialog.setAttribute('aria-labelledby', 'ui-send-help-title');\n            const helpHead = document.createElement('div');\n            helpHead.className = 'source-heading';\n            const helpTitle = document.createElement('h3');\n            helpTitle.id = 'ui-send-help-title';\n            label(helpTitle, '\u4F7F\u7528\u5E2E\u52A9', 'Sharing help');\n            helpHead.append(helpTitle);\n            const helpBody = document.createElement('div');\n            helpBody.className = 'source-body ui-send-help-body';\n            for (const [zhTitle, enTitle, zhText, enText] of [\n                ['\u5982\u4F55\u53D1\u9001\uFF1F', 'How do I send?', '\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u4E0E\u53EF\u53D6\u6B21\u6570\uFF0C\u63D0\u4EA4\u540E\u5C06\u751F\u6210\u7684\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9\u3002', 'Choose files or enter text, set expiry and pickup limits, then send the generated code or link to your recipient.'],\n                ['\u5BF9\u65B9\u5982\u4F55\u53D6\u4EF6\uFF1F', 'How does the recipient collect it?', '\u5728\u53D6\u4EF6\u9875\u8F93\u5165 6 \u4F4D\u53E3\u4EE4\uFF0C\u4E5F\u53EF\u4EE5\u76F4\u63A5\u6253\u5F00\u5206\u4EAB\u94FE\u63A5\u6216\u626B\u63CF\u4E8C\u7EF4\u7801\u3002', 'Enter the six-digit code on the pickup page, open the share link, or scan its QR code.'],\n                ['\u53E3\u4EE4\u65E0\u6CD5\u4F7F\u7528\u600E\u4E48\u529E\uFF1F', 'Why is a code unavailable?', '\u5148\u68C0\u67E5\u53E3\u4EE4\u662F\u5426\u6B63\u786E\uFF1B\u5206\u4EAB\u8FC7\u671F\u3001\u8FBE\u5230\u53D6\u4EF6\u6B21\u6570\u4E0A\u9650\u6216\u88AB\u5220\u9664\u540E\uFF0C\u5C06\u65E0\u6CD5\u7EE7\u7EED\u53D6\u4EF6\u3002\u53EF\u8054\u7CFB\u53D1\u9001\u8005\u91CD\u65B0\u5206\u4EAB\u3002', 'Check the code first. Expired, deleted or fully collected shares are unavailable. Ask the sender to share again.']\n            ]) {\n                const section = document.createElement('section'), heading = document.createElement('h4'), text = document.createElement('p');\n                label(heading, zhTitle, enTitle);\n                label(text, zhText, enText);\n                section.append(heading, text);\n                helpBody.append(section);\n            }\n            const helpFoot = document.createElement('div');\n            helpFoot.className = 'source-footer';\n            const closeHelp = button('ui-send-help-close', '\u77E5\u9053\u4E86', 'Got it', 'btn primary');\n            helpFoot.append(closeHelp);\n            helpDialog.append(helpHead, helpBody, helpFoot);\n            document.body.append(helpDialog);\n            help.onclick = () => helpDialog.showModal();\n            closeHelp.onclick = () => helpDialog.close();\n            helpDialog.addEventListener('close', () => help.focus());\n        }\n        if (q('#otp-row')) {\n            root.classList.add('ui-pickup');\n            const card = q('#pickup-input-card'), result = q('#pickup-result'), boxes = [...document.querySelectorAll('.otp-box')], error = q('#pickup-error');\n            const actions = document.createElement('div');\n            actions.className = 'ui-pickup-actions';\n            const submit = button('ui-query', '\u67E5\u770B\u5206\u4EAB', 'View share', 'btn primary');\n            const clear = button('ui-clear', '\u6E05\u7A7A', 'Clear');\n            actions.append(submit, clear);\n            error.before(actions);\n            boxes.forEach((box, i) => box.setAttribute('aria-label', en() ? `Digit ${i + 1}` : `\u7B2C ${i + 1} \u4F4D\u53E3\u4EE4`));\n            submit.onclick = () => {\n                const value = boxes.map(n => n.value).join('');\n                if (!/^\\d{6}$/.test(value)) {\n                    error.textContent = en() ? 'Enter all 6 digits.' : '\u8BF7\u8F93\u5165\u5B8C\u6574\u7684 6 \u4F4D\u6570\u5B57\u53E3\u4EE4\u3002';\n                    error.hidden = false;\n                    boxes.find(n => !n.value)?.focus();\n                    return;\n                }\n                boxes[5].dispatchEvent(new Event('input', { bubbles: true }));\n            };\n            clear.onclick = () => { boxes.forEach(n => n.value = ''); error.hidden = true; result.hidden = true; boxes[0].focus(); };\n            const sync = () => { card.hidden = !result.hidden; root.classList.toggle('ui-pickup-found', !result.hidden); };\n            new MutationObserver(sync).observe(result, { attributes: true, attributeFilter: ['hidden'] });\n            sync();\n            const ready = document.createElement('div');\n            ready.className = 'ui-pickup-caption';\n            label(ready, '\u53D6\u4EF6\u6210\u529F', 'Share found');\n            result.before(ready);\n        }\n        const login = q('#admin-login');\n        if (login) {\n            const sync = () => root.classList.toggle('ui-login', !login.hidden);\n            new MutationObserver(sync).observe(login, { attributes: true, attributeFilter: ['hidden'] });\n            sync();\n            const token = q('#admin-token'), field = document.createElement('div');\n            field.className = 'ui-token-field';\n            token.before(field);\n            field.append(token);\n            const toggle = button('ui-token-toggle', '\u663E\u793A', 'Show', 'btn small ghost');\n            toggle.setAttribute('aria-pressed', 'false');\n            toggle.setAttribute('aria-label', '\u663E\u793A\u7BA1\u7406\u4EE4\u724C');\n            field.append(toggle);\n            toggle.onclick = () => { const show = token.type === 'password'; token.type = show ? 'text' : 'password'; toggle.textContent = en() ? (show ? 'Hide' : 'Show') : (show ? '\u9690\u85CF' : '\u663E\u793A'); toggle.setAttribute('aria-pressed', String(show)); toggle.setAttribute('aria-label', en() ? (show ? 'Hide admin token' : 'Show admin token') : (show ? '\u9690\u85CF\u7BA1\u7406\u4EE4\u724C' : '\u663E\u793A\u7BA1\u7406\u4EE4\u724C')); };\n            token.required = true;\n            q('#btn-login').addEventListener('click', e => { if (!token.reportValidity()) {\n                e.preventDefault();\n                e.stopImmediatePropagation();\n            } }, true);\n            const back = document.createElement('a');\n            back.href = '/';\n            back.className = 'ui-entry-back';\n            label(back, '\u8FD4\u56DE\u53D1\u9001\u9875', 'Back to send');\n            login.append(back);\n            const error = q('#login-error');\n            q('#btn-login').before(error);\n            error.setAttribute('role', 'alert');\n        }\n        q('#lang-btn')?.addEventListener('click', () => { for (const [node, zh, english] of words)\n            node.textContent = en() ? english : zh; });\n    }\n}\n", "js/ui.js": `import { initEntry } from './ui-entry.js';
+`, "js/ui-entry.js": "export function initEntry() {\n    /* Shared send, pickup and login controls. */\n    if (true) {\n        const root = document.documentElement, q = s => document.querySelector(s);\n        const en = () => document.documentElement.lang === 'en';\n        const words = [];\n        const label = (node, zh, english) => { words.push([node, zh, english]); node.textContent = en() ? english : zh; return node; };\n        const button = (id, zh, english, cls = 'btn ghost') => { const n = document.createElement('button'); n.type = 'button'; n.id = id; n.className = cls; return label(n, zh, english); };\n        if (q('#dropzone') || q('#otp-row')) {\n            const header = q('.topbar'), nav = document.createElement('nav');\n            nav.className = 'ui-public-nav';\n            nav.setAttribute('aria-label', '\u53D1\u9001\u4E0E\u53D6\u4EF6');\n            for (const [url, zh, english, active] of [['/', '\u53D1\u9001', 'Send', !!q('#dropzone')], ['/pickup', '\u53D6\u4EF6', 'Pick up', !!q('#otp-row')]]) {\n                const a = document.createElement('a');\n                a.href = url;\n                a.className = 'admin-nav-link';\n                label(a, zh, english);\n                a.setAttribute('aria-current', active ? 'page' : 'false');\n                nav.append(a);\n            }\n            q('.brand').after(nav);\n            header.classList.add('ui-public-header');\n            q('.actions a')?.remove();\n        }\n        if (q('#dropzone')) {\n            root.classList.add('ui-send');\n            q('#upload-name').setAttribute('autocomplete', 'nickname');\n            q('#upload-description').rows = 2;\n            const context = q('.upload-context'), summary = context.querySelector('summary'), caption = document.createElement('span');\n            context.open = true;\n            caption.dataset.i18n = summary.dataset.i18n;\n            caption.textContent = summary.textContent;\n            summary.removeAttribute('data-i18n');\n            summary.replaceChildren(caption);\n            summary.append(q('[data-i18n=\"context.visibility\"]'));\n        }\n        if (q('#dropzone') || q('#otp-row')) {\n            const isPickup = !!q('#otp-row');\n            const footer = q('.foot');\n            footer.removeAttribute('data-i18n');\n            footer.classList.add('ui-send-footer');\n            footer.replaceChildren();\n            const about = document.createElement('div'), description = document.createElement('small');\n            about.className = 'ui-footer-about';\n            label(description, '\u89C1\u5B57\u5982\u9762\uFF0C\u8BA9\u5206\u4EAB\u7B80\u5355\u4E00\u70B9\u3002', 'A simpler way to share files and words.');\n            about.append(description);\n            const contact = document.createElement('div');\n            contact.className = 'ui-footer-contact';\n            const mail = document.createElement('a');\n            mail.href = 'mailto:iblykk@gmail.com';\n            label(mail, '\u8054\u7CFB\u7AD9\u957F', 'Contact');\n            contact.append(mail);\n            const links = document.createElement('nav');\n            links.className = 'ui-footer-links';\n            links.setAttribute('aria-label', '\u9875\u5C3E\u5BFC\u822A');\n            const help = button('ui-send-help', '\u4F7F\u7528\u5E2E\u52A9', 'Help', 'ui-footer-link'), pickup = document.createElement('a');\n            pickup.href = isPickup ? '/' : '/pickup';\n            pickup.className = 'ui-footer-link';\n            label(pickup, isPickup ? '\u524D\u5F80\u53D1\u9001' : '\u524D\u5F80\u53D6\u4EF6', isPickup ? 'Send a share' : 'Pick up a share');\n            links.append(help, pickup);\n            const footerInner = document.createElement('div');\n            footerInner.className = 'ui-footer-inner';\n            footerInner.append(about, links, contact);\n            footer.append(footerInner);\n            const helpDialog = document.createElement('dialog');\n            helpDialog.id = 'ui-send-help-dialog';\n            helpDialog.className = 'source-dialog ui-send-help-dialog';\n            helpDialog.setAttribute('aria-labelledby', 'ui-send-help-title');\n            const helpHead = document.createElement('div');\n            helpHead.className = 'source-heading';\n            const helpTitle = document.createElement('h3');\n            helpTitle.id = 'ui-send-help-title';\n            label(helpTitle, '\u4F7F\u7528\u5E2E\u52A9', 'Sharing help');\n            helpHead.append(helpTitle);\n            const helpBody = document.createElement('div');\n            helpBody.className = 'source-body ui-send-help-body';\n            for (const [zhTitle, enTitle, zhText, enText] of [\n                ['\u5982\u4F55\u53D1\u9001\uFF1F', 'How do I send?', '\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u4E0E\u53EF\u53D6\u6B21\u6570\uFF0C\u63D0\u4EA4\u540E\u5C06\u751F\u6210\u7684\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9\u3002', 'Choose files or enter text, set expiry and pickup limits, then send the generated code or link to your recipient.'],\n                ['\u5BF9\u65B9\u5982\u4F55\u53D6\u4EF6\uFF1F', 'How does the recipient collect it?', '\u5728\u53D6\u4EF6\u9875\u8F93\u5165 6 \u4F4D\u53E3\u4EE4\uFF0C\u4E5F\u53EF\u4EE5\u76F4\u63A5\u6253\u5F00\u5206\u4EAB\u94FE\u63A5\u6216\u626B\u63CF\u4E8C\u7EF4\u7801\u3002', 'Enter the six-digit code on the pickup page, open the share link, or scan its QR code.'],\n                ['\u53E3\u4EE4\u65E0\u6CD5\u4F7F\u7528\u600E\u4E48\u529E\uFF1F', 'Why is a code unavailable?', '\u5148\u68C0\u67E5\u53E3\u4EE4\u662F\u5426\u6B63\u786E\uFF1B\u5206\u4EAB\u8FC7\u671F\u3001\u8FBE\u5230\u53D6\u4EF6\u6B21\u6570\u4E0A\u9650\u6216\u88AB\u5220\u9664\u540E\uFF0C\u5C06\u65E0\u6CD5\u7EE7\u7EED\u53D6\u4EF6\u3002\u53EF\u8054\u7CFB\u53D1\u9001\u8005\u91CD\u65B0\u5206\u4EAB\u3002', 'Check the code first. Expired, deleted or fully collected shares are unavailable. Ask the sender to share again.']\n            ]) {\n                const section = document.createElement('section'), heading = document.createElement('h4'), text = document.createElement('p');\n                label(heading, zhTitle, enTitle);\n                label(text, zhText, enText);\n                section.append(heading, text);\n                helpBody.append(section);\n            }\n            const helpFoot = document.createElement('div');\n            helpFoot.className = 'source-footer';\n            const closeHelp = button('ui-send-help-close', '\u77E5\u9053\u4E86', 'Got it', 'btn primary');\n            helpFoot.append(closeHelp);\n            helpDialog.append(helpHead, helpBody, helpFoot);\n            document.body.append(helpDialog);\n            help.onclick = () => helpDialog.showModal();\n            closeHelp.onclick = () => helpDialog.close();\n            helpDialog.addEventListener('close', () => help.focus());\n        }\n        if (q('#otp-row')) {\n            root.classList.add('ui-pickup');\n            const card = q('#pickup-input-card'), result = q('#pickup-result'), boxes = [...document.querySelectorAll('.otp-box')], error = q('#pickup-error');\n            const actions = document.createElement('div');\n            actions.className = 'ui-pickup-actions';\n            const submit = button('ui-query', '\u67E5\u770B\u5206\u4EAB', 'View share', 'btn primary');\n            const clear = button('ui-clear', '\u6E05\u7A7A', 'Clear');\n            actions.append(submit, clear);\n            error.before(actions);\n            boxes.forEach((box, i) => box.setAttribute('aria-label', en() ? `Digit ${i + 1}` : `\u7B2C ${i + 1} \u4F4D\u53E3\u4EE4`));\n            submit.onclick = () => {\n                const value = boxes.map(n => n.value).join('');\n                if (!/^\\d{6}$/.test(value)) {\n                    error.textContent = en() ? 'Enter all 6 digits.' : '\u8BF7\u8F93\u5165\u5B8C\u6574\u7684 6 \u4F4D\u6570\u5B57\u53E3\u4EE4\u3002';\n                    error.hidden = false;\n                    boxes.find(n => !n.value)?.focus();\n                    return;\n                }\n                boxes[5].dispatchEvent(new Event('input', { bubbles: true }));\n            };\n            clear.onclick = () => { boxes.forEach(n => n.value = ''); error.hidden = true; result.hidden = true; boxes[0].focus(); };\n            const sync = () => { card.hidden = !result.hidden; root.classList.toggle('ui-pickup-found', !result.hidden); };\n            new MutationObserver(sync).observe(result, { attributes: true, attributeFilter: ['hidden'] });\n            sync();\n            const ready = document.createElement('div');\n            ready.className = 'ui-pickup-caption';\n            label(ready, '\u53D6\u4EF6\u6210\u529F', 'Share found');\n            result.before(ready);\n        }\n        const login = q('#admin-login');\n        if (login) {\n            const sync = () => root.classList.toggle('ui-login', !login.hidden);\n            new MutationObserver(sync).observe(login, { attributes: true, attributeFilter: ['hidden'] });\n            sync();\n            const token = q('#admin-token'), field = document.createElement('div');\n            field.className = 'ui-token-field';\n            token.before(field);\n            field.append(token);\n            const toggle = button('ui-token-toggle', '\u663E\u793A', 'Show', 'btn small ghost');\n            toggle.setAttribute('aria-pressed', 'false');\n            toggle.setAttribute('aria-label', '\u663E\u793A\u7BA1\u7406\u4EE4\u724C');\n            field.append(toggle);\n            toggle.onclick = () => { const show = token.type === 'password'; token.type = show ? 'text' : 'password'; toggle.textContent = en() ? (show ? 'Hide' : 'Show') : (show ? '\u9690\u85CF' : '\u663E\u793A'); toggle.setAttribute('aria-pressed', String(show)); toggle.setAttribute('aria-label', en() ? (show ? 'Hide admin token' : 'Show admin token') : (show ? '\u9690\u85CF\u7BA1\u7406\u4EE4\u724C' : '\u663E\u793A\u7BA1\u7406\u4EE4\u724C')); };\n            token.required = true;\n            q('#btn-login').addEventListener('click', e => { if (!token.reportValidity()) {\n                e.preventDefault();\n                e.stopImmediatePropagation();\n            } }, true);\n            const back = document.createElement('a');\n            back.href = '/';\n            back.className = 'ui-entry-back';\n            label(back, '\u8FD4\u56DE\u53D1\u9001\u9875', 'Back to send');\n            login.append(back);\n            const error = q('#login-error');\n            q('#btn-login').before(error);\n            error.setAttribute('role', 'alert');\n        }\n        q('#lang-btn')?.addEventListener('click', () => { for (const [node, zh, english] of words)\n            node.textContent = en() ? english : zh; });\n    }\n}\n", "js/ui.js": `import { initEntry } from './ui-entry.js';
 import { initControls } from './ui-controls.js';
 import { initClassifications } from './ui-classifications.js';
 import { initAuditLayout } from './ui-audit-layout.js';
@@ -4971,563 +4971,582 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
   .settings-dialog .source-body { padding: 0 12px; }
   #file-detail .file-field { grid-column: 1 / -1; grid-template-columns: 88px minmax(0, 1fr); }
 }
-`, "ui.css": `/* Shared responsive layout. Colors, typefaces, textures, buttons and assets stay native. */\r
-.ui-enhanced .flow-strip,.ui-enhanced .feat-band{display:none}\r
-.ui-enhanced .topbar{margin-bottom:16px}\r
-.ui-enhanced .send-grid{gap:26px;align-items:stretch}\r
-/* One shared outer edge for the header, statistics and list. */\r
-.ui-enhanced[data-ui-surface='admin'] .topbar.wide,\r
-.ui-enhanced[data-ui-surface='admin'] .container.wide{width:calc(100% - 64px);max-width:1600px}\r
-.ui-enhanced[data-ui-surface='index'] .topbar.wide,\r
-.ui-enhanced[data-ui-surface='index'] .container.wide{width:calc(100% - 64px);max-width:1200px}\r
-.ui-enhanced[data-ui-surface='admin'] .container.wide,\r
-.ui-enhanced[data-ui-surface='index'] .container.wide{padding-inline:0}\r
-.ui-enhanced[data-ui-surface='index'] main{justify-content:flex-start}\r
-.ui-enhanced .share-filename-line{width:100%;min-width:0}\r
-@media(min-width:1200px){\r
- .ui-enhanced .admin-list-card table{table-layout:fixed}\r
- .ui-enhanced .admin-list-card th:nth-child(1){width:80px}\r
- .ui-enhanced .admin-list-card th:nth-child(3){width:180px}\r
- .ui-enhanced .admin-list-card th:nth-child(4){width:90px}\r
- .ui-enhanced .admin-list-card th:nth-child(5){width:80px}\r
- .ui-enhanced .admin-list-card th:nth-child(6),.ui-enhanced .admin-list-card th:nth-child(8){width:150px}\r
- .ui-enhanced .admin-list-card th:nth-child(7){width:85px}\r
- .ui-enhanced .admin-list-card th:nth-child(9){width:80px}\r
- .ui-enhanced .stats-row{grid-template-columns:minmax(0,1fr) 320px}\r
-}\r
-@media(min-width:601px) and (max-width:1199px){\r
- .ui-enhanced .share-filename-line{width:clamp(160px,20vw,260px)}\r
-}\r
-.ui-enhanced .upload-context{margin-block:14px}\r
-.ui-enhanced .context-fields{grid-template-columns:minmax(120px,.65fr) minmax(0,1.35fr);gap:10px}\r
-.ui-enhanced .context-row{display:grid;grid-template-columns:1fr;align-content:start;gap:5px}\r
-.ui-enhanced .context-fields textarea{min-height:42px;height:42px}\r
-.ui-enhanced .context-label{display:flex;align-items:center;justify-content:space-between;gap:8px}\r
-.ui-enhanced .context-fields>small{grid-column:1/-1;padding:0}\r
-.ui-enhanced .options{gap:14px}\r
-.ui-enhanced .stats-row{gap:10px;margin-bottom:14px}\r
-.ui-enhanced .stat-card{padding:12px;min-height:82px}\r
-.ui-enhanced .stats-counts .stat-card{gap:2px}\r
-.ui-enhanced .stats-counts .stat-card b{font-size:24px}\r
-.ui-enhanced .storage-value{margin:2px 0 4px}\r
-.ui-enhanced .storage-card{padding:10px 14px}\r
-.ui-enhanced .admin-list-card{padding:12px}\r
-.ui-enhanced .list-toolbar{box-shadow:none;margin-bottom:4px;border-width:0 0 1px;border-radius:0;padding:8px 4px 12px}\r
-.ui-enhanced .audit-heading{align-items:center;margin-bottom:12px}\r
-.ui-enhanced .audit-categories{display:flex;align-items:center;gap:6px}\r
-.ui-enhanced .ui-guard-entry{margin-left:auto}\r
-.ui-enhanced .audit-filter{gap:10px;align-items:end;margin-block:12px}\r
-.ui-enhanced #source-identity{display:grid;grid-template-columns:minmax(0,1fr) 280px;align-items:start;gap:12px 20px;padding:2px 0 12px;margin-bottom:12px;border-bottom:1px solid var(--line)}\r
-.ui-enhanced #source-identity[hidden]{display:none}\r
-.ui-enhanced .source-visitor{display:grid;gap:6px;min-width:0}\r
-.ui-enhanced .source-visitor>small{font-size:12px}\r
-.ui-enhanced #source-visitor-id{font-size:12px;line-height:1.6;overflow-wrap:anywhere;padding-block:7px;user-select:text}\r
-.ui-enhanced #source-form{grid-template-columns:minmax(0,1fr) auto;max-width:280px;width:100%;gap:6px 8px;margin:0;align-items:center}\r
-.ui-enhanced #source-form>label{grid-column:1/-1}\r
-.ui-enhanced #source-note,.ui-enhanced #source-save{min-height:36px}\r
-@media(max-width:600px){\r
- .ui-enhanced #source-identity{grid-template-columns:1fr;gap:10px}\r
- .ui-enhanced #source-visitor-id{padding-block:0}\r
- .ui-enhanced #source-form{grid-template-columns:auto minmax(0,1fr) auto;max-width:none;gap:8px}\r
- .ui-enhanced #source-form>label{grid-column:auto}\r
- .ui-enhanced #source-note,.ui-enhanced #source-save{min-height:44px}\r
-}\r
-.ui-enhanced #source-detail .source-field{grid-template-columns:74px minmax(0,1fr);gap:8px}\r
-.ui-enhanced #source-detail{gap:8px 18px}\r
-.ui-enhanced #source-detail .source-field>p{min-width:0;overflow-wrap:anywhere}\r
-.ui-enhanced .source-agent{grid-template-columns:74px minmax(0,1fr)}\r
-.ui-enhanced .source-agent p:focus{left:82px}\r
-.ui-enhanced .source-activity{display:grid;grid-template-columns:minmax(0,1fr);gap:4px 12px;padding-block:9px}\r
-.ui-enhanced .source-activity>small{grid-column:1/-1}\r
-.ui-enhanced .source-activity .source-link{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:100%}\r
-.ui-enhanced #file-dialog{width:min(680px,calc(100vw - 24px))}\r
-.ui-enhanced #file-detail .file-field{grid-template-columns:70px minmax(0,1fr)}\r
-.ui-enhanced #file-edit{margin-right:auto}\r
-.ui-enhanced .share-edit-form{display:grid;gap:14px}\r
-.ui-enhanced .share-edit-filename{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\r
-.ui-enhanced .share-edit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 12px;align-items:start}\r
-.ui-enhanced .share-edit-field{display:grid;gap:7px;min-width:0}\r
-.ui-enhanced .share-edit-field>label,.ui-enhanced .share-edit-field>.ui-help-anchor{font-size:12px;color:var(--muted);min-height:24px;display:flex;align-items:center}\r
-.ui-enhanced .share-edit-field input,.ui-enhanced .share-edit-field select{width:100%;min-width:0;box-sizing:border-box}\r
-.ui-enhanced .share-edit-field select,.ui-enhanced .share-edit-field input[type=datetime-local]{min-height:40px;padding:6px 9px;color:var(--ink);background:var(--bag);border:1px solid var(--line);border-radius:var(--radius-sm);font:inherit}\r
-.ui-enhanced .share-edit-expiry{grid-column:1/-1;grid-template-columns:minmax(0,1fr) auto;align-items:center}\r
-.ui-enhanced .share-edit-expiry>.ui-help-anchor,.ui-enhanced .share-edit-expiry>label:first-child{grid-column:1/-1}\r
-.ui-enhanced .share-edit-check{display:flex;align-items:center;gap:6px;white-space:nowrap;min-height:28px}\r
-.ui-enhanced .share-edit-check input{width:16px;height:16px;accent-color:var(--stamp)}\r
-.ui-enhanced[data-theme=dark] .share-edit-field input[type=datetime-local]{color-scheme:dark}\r
-.ui-enhanced .share-edit-linked{margin:0;font-size:12px;line-height:1.7;overflow-wrap:anywhere}\r
-.ui-enhanced .share-edit-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid var(--line)}\r
-@media(max-width:600px){\r
- .ui-enhanced .share-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}\r
- .ui-enhanced .share-edit-field:has(#share-edit-status){grid-column:1/-1}\r
- .ui-enhanced .share-edit-field select,.ui-enhanced .share-edit-field input[type=datetime-local]{min-height:44px;font-size:16px}\r
- .ui-enhanced .share-edit-actions>.btn{flex:1;min-height:44px}\r
- .ui-enhanced .share-edit-expiry{grid-template-columns:1fr}\r
-}\r
-.ui-enhanced .settings-dialog{width:min(560px,calc(100vw - 24px))}\r
-.ui-enhanced .settings-section{padding-block:12px}\r
-.ui-enhanced .display-options{grid-template-columns:1fr 1fr;gap:16px}\r
-.ui-enhanced .settings-section>.muted{font-size:12px}\r
-@media(max-width:600px){\r
- .ui-enhanced[data-ui-surface='admin'] .topbar.wide,\r
- .ui-enhanced[data-ui-surface='admin'] .container.wide,\r
- .ui-enhanced[data-ui-surface='index'] .topbar.wide,\r
- .ui-enhanced[data-ui-surface='index'] .container.wide{width:calc(100% - 24px)}\r
- .ui-enhanced .send-grid{gap:16px}\r
- .ui-enhanced .context-fields{grid-template-columns:1fr}\r
- .ui-enhanced .stats-counts .stat-card{min-height:60px;padding:8px}\r
- .ui-enhanced .stats-counts{gap:6px}\r
- .ui-enhanced .storage-card{padding:10px 12px}\r
- .ui-enhanced .display-options{grid-template-columns:1fr;gap:4px}\r
- .ui-enhanced .audit-categories{flex-wrap:wrap}\r
- .ui-enhanced .ui-guard-entry{margin-left:0}\r
- .ui-enhanced .list-toolbar .page-summary{width:auto}\r
- .ui-enhanced .admin-list-card>.table-wrap{overflow:visible}\r
- .ui-enhanced #shares-body{display:grid;gap:0}\r
- .ui-enhanced .admin-list-card table{display:block;min-width:0}\r
- .ui-enhanced .admin-list-card thead{display:none}\r
- .ui-enhanced #shares-body tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;padding:12px 2px;border-bottom:1px dashed var(--line)}\r
- .ui-enhanced #shares-body td{padding:0;border:0;min-width:0;white-space:normal;text-align:left}\r
- .ui-enhanced #shares-body td:nth-child(1){grid-area:1/1;color:var(--muted)}\r
- .ui-enhanced #shares-body td:nth-child(2){grid-area:2/1/3/3}\r
- .ui-enhanced #shares-body td:nth-child(3){grid-area:3/1/5/2}\r
- .ui-enhanced #shares-body td:nth-child(4){grid-area:3/2;text-align:right}\r
- .ui-enhanced #shares-body td:nth-child(5){grid-area:4/2;text-align:right}\r
- .ui-enhanced #shares-body td:nth-child(5)::before{content:'\u5DF2\u53D6 ';color:var(--muted)}\r
- .ui-enhanced #shares-body td:nth-child(6){grid-area:5/1;font-size:12px}\r
- .ui-enhanced #shares-body td:nth-child(6)::before{content:'\u5230\u671F ';color:var(--muted)}\r
- .ui-enhanced #shares-body td:nth-child(7){grid-area:1/2;text-align:right}\r
- .ui-enhanced #shares-body td:nth-child(8){grid-area:6/1;font-size:12px;color:var(--muted)}\r
- .ui-enhanced #shares-body td:nth-child(8)::before{content:'\u521B\u5EFA '}\r
- .ui-enhanced #shares-body td:nth-child(9){grid-area:5/2/7/3;align-self:center;text-align:right}\r
- .ui-enhanced #shares-body td[colspan]{grid-area:1/1/2/3}\r
- .ui-enhanced .source-agent p{white-space:normal}\r
- .ui-enhanced #file-detail .file-field{grid-template-columns:80px minmax(0,1fr)}\r
-}\r
-\r
-/* Quiet outer surfaces; native typography, colors and interactive controls remain. */\r
-.ui-soft{--ui-divider:color-mix(in srgb,var(--line) 38%,transparent)}\r
-.ui-soft .ui-header-band{width:100%;background:var(--paper);border-bottom:1px solid var(--ui-divider);margin-bottom:22px}\r
-.ui-soft .ui-header-band .topbar{margin-block:0;border:0;box-shadow:none;background:transparent;padding-block:14px}\r
-.ui-soft .brand .logo{box-shadow:none}\r
-.ui-soft .stats-row{gap:24px;margin-bottom:24px;align-items:center}\r
-.ui-soft .stats-counts{gap:0}\r
-.ui-soft .stat-card{background:transparent;border:0;border-radius:0;box-shadow:none;padding:8px 18px;min-height:72px}\r
-.ui-soft .stats-counts .stat-card{border-right:1px solid var(--ui-divider);align-items:flex-start;text-align:left}\r
-.ui-soft .stats-counts .stat-card:first-child{padding-left:0}\r
-.ui-soft .stats-counts .stat-card:last-child{border-right:0}\r
-.ui-soft .storage-card{padding-inline:0}\r
-.ui-soft .admin-list-card,.ui-soft .audit-card{background:transparent;border:0;border-radius:0;box-shadow:none;padding:0}\r
-.ui-soft .list-toolbar{padding:12px 0;margin-bottom:12px;border:0;border-radius:0;box-shadow:none;background:var(--bag)}\r
-.ui-soft .admin-list-card th,.ui-soft .audit-table th{background:color-mix(in srgb,var(--paper) 75%,transparent);border-bottom:1px solid var(--ui-divider);padding-block:12px}\r
-.ui-soft .admin-list-card td,.ui-soft .audit-table td{border-bottom:1px solid var(--ui-divider);padding-block:14px}\r
-.ui-soft .admin-list-card tbody tr:last-child td,.ui-soft .audit-table tbody tr:last-child td{border-bottom:0}\r
-.ui-soft .audit-heading{margin-bottom:18px}\r
-.ui-soft .audit-filter{padding:14px 0;border-color:var(--ui-divider);background:transparent}\r
-.ui-soft .audit-categories{border-color:var(--ui-divider)}\r
-.ui-soft .form-card{border:1px solid var(--ui-divider);box-shadow:none}\r
-.ui-soft .result-placeholder{border:1.5px dashed var(--line);border-radius:13px;box-shadow:none}\r
-.ui-soft .ph-fine{border-color:var(--line)}\r
-.ui-soft .source-heading,.ui-soft .source-footer,.ui-soft .settings-section,.ui-soft .source-activity{border-color:var(--ui-divider)}\r
-@media(max-width:600px){\r
- .ui-soft .ui-header-band{margin-bottom:16px}\r
- .ui-soft .ui-header-band .topbar{padding-block:8px}\r
- .ui-soft .stats-row{gap:12px;margin-bottom:12px}\r
- .ui-soft .stats-counts{row-gap:12px}\r
- .ui-soft .stats-counts .stat-card{padding:4px 12px;min-height:56px;align-items:center;text-align:center}\r
- .ui-soft .stats-counts .stat-card:first-child{padding-left:12px}\r
- .ui-soft .stats-counts .stat-card:nth-child(3){border-right:0}\r
- .ui-soft .storage-card{padding:12px 0;border-top:1px solid var(--ui-divider)}\r
- .ui-soft #shares-body tr{padding:14px 0;border-bottom:1px solid var(--ui-divider)}\r
- .ui-soft #shares-body td{padding:0;border:0}\r
- .ui-soft .audit-table td{border:0}\r
-}\r
-\r
-/* Public entry points: shared header, focused forms and quiet boundaries. */\r
-.ui-enhanced a.ui-new-tab::after{content:'\u2197';margin-left:5px;font-size:12px;opacity:.7}\r
-.ui-enhanced .ui-public-header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:24px;align-items:center}\r
-.ui-enhanced .ui-public-nav{display:flex;gap:8px;align-items:center}\r
-.ui-enhanced .ui-public-nav a{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}\r
-.ui-enhanced .ui-public-nav a[aria-current='page']{border-bottom-color:var(--stamp);color:var(--ink)}\r
-.ui-enhanced.ui-pickup .topbar,.ui-enhanced.ui-login .topbar.wide{width:calc(100% - 64px);max-width:1200px}\r
-.ui-enhanced.ui-send .form-card{padding:22px 24px}\r
-.ui-enhanced.ui-send .options{margin-top:18px;margin-bottom:6px}\r
-.ui-enhanced.ui-send .upload-context{margin-block:14px 0}\r
-.ui-enhanced.ui-send .context-fields{gap:12px}\r
-.ui-enhanced.ui-send .context-label{flex-direction:row;align-items:baseline;justify-content:space-between;min-height:24px;padding-top:0}\r
-.ui-enhanced.ui-send .context-row>label{min-height:24px;padding-top:0}\r
-.ui-enhanced.ui-send .context-fields input{min-height:48px}\r
-.ui-enhanced.ui-send .context-fields textarea{height:72px;min-height:48px}\r
-.ui-enhanced.ui-send #upload-policy-hint{line-height:1.6}\r
-.ui-enhanced.ui-send .btn.block{min-height:46px;margin-top:18px}\r
-.ui-enhanced.ui-pickup .container.narrow{width:calc(100% - 48px);max-width:500px;padding:clamp(24px,8vh,80px) 0 40px}\r
-.ui-enhanced #pickup-input-card{padding:30px 24px 24px}\r
-.ui-soft #pickup-input-card{background:transparent;border:0;box-shadow:none}\r
-.ui-enhanced #pickup-input-card .title{margin:0 0 10px;font-size:26px}\r
-.ui-enhanced #pickup-input-card .pk-sub{margin-bottom:26px;font-size:13px}\r
-.ui-enhanced #pickup-input-card .otp-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));width:100%;max-width:360px;gap:8px;margin:0 auto 18px}\r
-.ui-enhanced #pickup-input-card .otp-box{width:100%;min-width:0;height:58px;font-size:28px}\r
-.ui-enhanced .ui-pickup-actions{display:grid;grid-template-columns:1fr auto;gap:10px;max-width:360px;margin:auto}\r
-.ui-enhanced .ui-pickup-actions .btn{min-height:44px}\r
-.ui-enhanced #pickup-error{max-width:360px;margin:16px auto 0;text-align:left}\r
-.ui-enhanced #pickup-result{padding:24px;border-color:var(--ui-divider,var(--line));box-shadow:none;overflow-wrap:anywhere}\r
-.ui-enhanced #pickup-result .share-card{margin-top:0}\r
-.ui-enhanced #pickup-result .sc-meta{min-width:0}\r
-.ui-enhanced #pickup-result .sc-meta b{overflow-wrap:anywhere}\r
-.ui-enhanced #pickup-result .btn.primary{min-height:46px}\r
-.ui-enhanced .ui-pickup-caption{display:none;font-family:var(--serif);font-size:24px;text-align:center;margin-bottom:22px;font-weight:700}\r
-.ui-enhanced.ui-pickup-found .ui-pickup-caption{display:block}\r
-.ui-enhanced.ui-login .container.wide{width:calc(100% - 48px);max-width:440px;padding:clamp(24px,8vh,80px) 0 40px}\r
-.ui-enhanced #admin-login{padding:28px 26px;border-color:var(--ui-divider,var(--line));box-shadow:none}\r
-.ui-soft #admin-login{background:transparent;border:0}\r
-.ui-enhanced #admin-login .title{margin:0 0 26px;font-size:26px}\r
-.ui-enhanced #admin-login>label{display:block;text-align:left;font-size:13px;margin-bottom:8px}\r
-.ui-enhanced .ui-token-field{position:relative;display:flex;align-items:center;gap:8px}\r
-.ui-enhanced .ui-token-field .token-input{margin:0;min-height:48px;padding-right:74px;font-size:16px}\r
-.ui-enhanced #ui-token-toggle{position:absolute;right:4px;min-height:40px;padding-inline:10px;box-shadow:none;border-color:transparent}\r
-.ui-enhanced #admin-login #btn-login{margin-top:18px;min-height:46px}\r
-.ui-enhanced #admin-login .error-box{margin:12px 0 0;text-align:left}\r
-.ui-enhanced .ui-entry-back{display:inline-block;margin-top:18px;color:var(--muted);font-size:13px;text-underline-offset:4px}\r
-@media(max-width:600px){\r
- .ui-enhanced .ui-public-header{grid-template-columns:minmax(0,1fr) auto;gap:6px;padding-inline:12px}\r
- .ui-enhanced .ui-public-header .actions{grid-column:2;grid-row:1}\r
- .ui-enhanced .ui-public-nav{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:1fr 1fr}\r
- .ui-enhanced.ui-pickup .topbar,.ui-enhanced.ui-login .topbar.wide{width:calc(100% - 24px)}\r
- .ui-enhanced.ui-pickup .container.narrow,.ui-enhanced.ui-login .container.wide{width:calc(100% - 32px);padding-top:28px}\r
- .ui-enhanced.ui-send .form-card{padding:16px}\r
- .ui-enhanced #pickup-input-card,.ui-enhanced #admin-login{padding:18px 0}\r
- .ui-enhanced #pickup-input-card .title,.ui-enhanced #admin-login .title{font-size:24px}\r
- .ui-enhanced #pickup-input-card .otp-row{gap:6px}\r
- .ui-enhanced #pickup-input-card .otp-box{height:52px;font-size:24px}\r
- .ui-enhanced #pickup-result{padding:18px}\r
-}\r
-/* Default desktop state fits the viewport; long queues and small screens grow naturally. */\r
-.ui-enhanced.ui-send{--send-gutter:32px;--send-max-width:1200px}\r
-.ui-enhanced.ui-send :is(.topbar.wide,main.container.wide,.ui-footer-inner){width:calc(100% - 2 * var(--send-gutter));max-width:var(--send-max-width);margin-inline:auto}\r
-.ui-enhanced.ui-send .topbar.wide{padding-inline:0}\r
-.ui-enhanced.ui-send .ui-header-band{margin-bottom:12px}\r
-.ui-enhanced.ui-send main.container.wide{padding-block:0 12px;flex:1 0 auto;justify-content:center}\r
-.ui-enhanced.ui-send .form-card{padding:16px 20px}\r
-.ui-enhanced.ui-send .card-cap{margin:0 0 10px}\r
-.ui-enhanced.ui-send .tabs{margin-bottom:12px}\r
-.ui-enhanced.ui-send .dropzone{padding:16px;min-height:112px}\r
-.ui-enhanced.ui-send .dz-icon{font-size:28px;line-height:1.2;margin-bottom:6px}\r
-.ui-enhanced.ui-send .dropzone p{margin-bottom:3px}\r
-.ui-enhanced.ui-send #text-input{height:132px;min-height:96px;flex:1 0 auto}\r
-.ui-enhanced.ui-send .upload-context{margin-top:10px;padding-top:6px}\r
-.ui-enhanced.ui-send .upload-context summary{min-height:28px;padding-block:3px}\r
-.ui-enhanced.ui-send .upload-context summary>small{float:right;font-size:11px;font-weight:400;line-height:22px}\r
-.ui-enhanced.ui-send .context-fields{padding:6px 0 0;gap:8px 12px}\r
-.ui-enhanced.ui-send .context-label,.ui-enhanced.ui-send .context-row>label{min-height:20px}\r
-.ui-enhanced.ui-send .context-fields input{min-height:44px}\r
-.ui-enhanced.ui-send .context-fields textarea{height:48px;min-height:44px}\r
-.ui-enhanced.ui-send .options{margin-top:12px;margin-bottom:4px}\r
-.ui-enhanced.ui-send #upload-policy-hint{margin-bottom:0}\r
-.ui-enhanced.ui-send .btn.block{min-height:42px;margin-top:12px}\r
-.ui-enhanced.ui-send .result-placeholder{min-height:0;padding:22px 20px}\r
-.ui-enhanced.ui-send .ph-route{margin-top:18px}\r
-.ui-enhanced.ui-send .ph-dash{height:18px}\r
-.ui-enhanced.ui-send .ph-fine{margin-top:18px;padding-top:10px}\r
-.ui-enhanced.ui-send .ui-send-footer{width:100%;max-width:none;margin:0;padding:0;border-top:0;background:transparent;text-align:left;letter-spacing:0;flex-shrink:0}\r
-.ui-enhanced.ui-send .ui-footer-inner{display:flex;align-items:center;gap:24px;padding:8px 0;border-top:1px solid var(--ui-divider,var(--line))}\r
-.ui-enhanced .ui-footer-about{margin-right:auto;color:var(--muted)}\r
-.ui-enhanced .ui-send-footer small{display:block;font-size:12px;line-height:1.7}\r
-.ui-enhanced .ui-footer-contact{display:flex;align-items:center;gap:8px;padding-left:24px;border-left:1px solid var(--ui-divider,var(--line))}\r
-.ui-enhanced .ui-footer-contact::before{content:"";width:14px;height:14px;flex-shrink:0;background:var(--muted);mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cpath d='m3 6 9 7 9-7' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E") center/contain no-repeat}\r
-.ui-enhanced .ui-footer-links{display:flex;align-items:center;gap:18px;flex-wrap:wrap}\r
-.ui-enhanced .ui-footer-link{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0;border:0;border-radius:3px;background:transparent;color:var(--muted);font-family:inherit;font-size:12px;line-height:1.5;text-decoration:none;cursor:pointer;box-shadow:none}\r
-.ui-enhanced .ui-footer-link:hover{color:var(--stamp);text-decoration:underline;text-underline-offset:4px}\r
-.ui-enhanced .ui-footer-link:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}\r
-.ui-enhanced .ui-send-help-dialog{width:min(480px,calc(100vw - 24px))}\r
-.ui-enhanced .ui-send-help-body{display:grid;gap:16px;padding:16px}\r
-.ui-enhanced .ui-send-help-body h4{font-size:14px;margin:0 0 6px}\r
-.ui-enhanced .ui-send-help-body p{font-size:13px;line-height:1.7;color:var(--muted);margin:0}\r
-.ui-enhanced .ui-footer-contact a{display:inline-flex;align-items:center;min-height:36px;color:var(--muted);font-size:12px;line-height:1.7;text-decoration:none;text-underline-offset:3px}\r
-.ui-enhanced .ui-footer-contact a:hover{text-decoration:underline;color:var(--stamp)}\r
-.ui-enhanced .ui-footer-contact a:focus-visible{outline:2px solid var(--stamp);outline-offset:4px;border-radius:3px}\r
-@media(min-width:881px) and (max-height:740px){\r
- .ui-enhanced.ui-send .ui-header-band{margin-bottom:8px}\r
- .ui-enhanced.ui-send .ui-header-band .topbar{padding-block:8px}\r
- .ui-enhanced.ui-send .form-card{padding:12px 18px}\r
- .ui-enhanced.ui-send .card-cap{margin-bottom:6px}\r
- .ui-enhanced.ui-send .tabs{margin-bottom:8px}\r
- .ui-enhanced.ui-send .dropzone{min-height:94px;padding-block:10px}\r
- .ui-enhanced.ui-send #text-input{height:96px}\r
- .ui-enhanced.ui-send .upload-context{margin-top:8px;padding-top:4px}\r
- .ui-enhanced.ui-send .options{margin-top:8px}\r
- .ui-enhanced.ui-send .btn.block{margin-top:8px}\r
- .ui-enhanced.ui-send .result-placeholder{padding-block:16px}\r
- .ui-enhanced.ui-send .ui-footer-inner{padding-block:8px}\r
-}\r
-@media(max-width:880px){\r
- .ui-enhanced.ui-send main.container.wide{justify-content:flex-start}\r
-}\r
-@media(max-width:600px){\r
- .ui-enhanced.ui-send{--send-gutter:12px}\r
- .ui-enhanced.ui-send .form-card{padding:14px}\r
- .ui-enhanced.ui-send .upload-context summary{min-height:40px;padding-block:6px}\r
- .ui-enhanced.ui-send .upload-context summary>small{float:none;display:block;padding-left:14px;line-height:1.5}\r
- .ui-enhanced.ui-send .context-fields{gap:10px}\r
- .ui-enhanced.ui-send .context-fields textarea{height:64px}\r
- .ui-enhanced.ui-send .btn.block{min-height:44px}\r
- .ui-enhanced.ui-send .ui-footer-inner{flex-wrap:wrap;justify-content:flex-start;gap:0 20px;padding-block:10px 12px}\r
- .ui-enhanced .ui-footer-about{width:100%;margin-bottom:4px}\r
- .ui-enhanced .ui-footer-links{gap:18px}\r
- .ui-enhanced .ui-footer-link{min-height:44px}\r
- .ui-enhanced .ui-footer-contact{padding-left:0;border-left:0}\r
- .ui-enhanced .ui-footer-contact a{min-height:44px}\r
-}\r
-\r
-.ui-enhanced #security-view{padding:8px 0 32px}\r
-.ui-enhanced .sec-heading,.ui-enhanced .sec-toolbar,.ui-enhanced .sec-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}\r
-.ui-enhanced .sec-heading h2{margin:0 0 4px;font:700 22px/1.4 var(--serif)}\r
-.ui-enhanced .sec-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}\r
-.ui-enhanced .sec-summary{display:grid;grid-template-columns:minmax(0,1fr) 140px 140px;gap:24px;padding:18px 0;margin:0 0 12px;border-bottom:1px solid var(--ui-divider,var(--line));align-items:center}\r
-.ui-enhanced .sec-summary small,.ui-enhanced .sec-table small{display:block;margin-top:4px;font-size:12px}\r
-.ui-enhanced .sec-summary>div:not(:first-child)>b{font:700 24px var(--serif)}\r
-.ui-enhanced .sec-enabled{color:var(--ok)}\r
-.ui-enhanced .sec-warning{color:var(--danger)}\r
-.ui-enhanced .sec-tabs{display:flex;gap:8px;margin:0;min-width:0;flex-wrap:wrap}\r
-.ui-enhanced .sec-tabs .btn{box-shadow:none;border:0;border-radius:0;border-bottom:2px solid transparent;background:transparent}\r
-.ui-enhanced .sec-tabs .btn[aria-pressed=true]{border-bottom-color:var(--stamp);color:var(--ink)}\r
-.ui-enhanced .sec-list-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}\r
-.ui-enhanced .sec-toolbar{justify-content:flex-start;margin-bottom:8px;gap:12px}\r
-.ui-enhanced .sec-filter-actions{gap:8px}\r
-.ui-enhanced #sec-export{margin-left:8px}\r
-.ui-enhanced .sec-filter-pending{display:block;color:var(--warn);font-size:12px;margin:8px 0}\r
-.ui-enhanced .sec-filter-pending[hidden]{display:none}\r
-.ui-enhanced .sec-rule-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:12px;max-width:780px}\r
-.ui-enhanced .sec-summary .sec-rule-summary{display:block;min-width:0}\r
-.ui-enhanced .sec-rule-summary>.ui-help-anchor{gap:2px}\r
-.ui-enhanced .sec-rule-summary b{font-size:13px;font-weight:500}\r
-.ui-enhanced .sec-rule-inactive{color:var(--muted)}\r
-.ui-enhanced .sec-metric{border-left:1px solid var(--ui-divider,var(--line));padding-left:24px}\r
-.ui-enhanced .sec-auto-summary>b{font-size:12px;font-weight:500}\r
-.ui-enhanced .sec-selection-count{font-size:12px;color:var(--muted);border-left:1px solid var(--line);padding-left:12px}\r
-.ui-enhanced .sec-toolbar input,.ui-enhanced .sec-toolbar select,.ui-enhanced .sec-field input,.ui-enhanced .sec-field select{min-width:0;max-width:100%;min-height:38px;padding:7px 10px;font:inherit;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius-sm)}\r
-.ui-enhanced #sec-search{width:260px}\r
-.ui-enhanced #sec-feedback{position:fixed;z-index:1000;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;width:max-content;max-width:calc(100% - 32px);box-sizing:border-box;padding:12px 18px;margin:0;border:1px solid var(--ui-divider,var(--line));border-radius:var(--radius-sm);background:var(--paper);box-shadow:0 6px 24px #0003;color:var(--ink);font-size:13px;line-height:1.5;overflow-wrap:anywhere;pointer-events:none}\r
-.ui-enhanced #sec-feedback::before{content:'\u2713';display:grid;place-items:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,var(--ok) 14%,var(--paper));color:var(--ok);font-weight:700}\r
-.ui-enhanced #sec-feedback:empty{display:none}\r
-.ui-enhanced .sec-pagination{padding:8px 0 14px}\r
-.ui-enhanced .sec-table-wrap{overflow-x:auto}\r
-.ui-enhanced .sec-table{width:100%;font-size:13px}\r
-.ui-enhanced .sec-table th{background:var(--paper);font-size:12px;letter-spacing:0;white-space:nowrap}\r
-.ui-enhanced .sec-table td,.ui-enhanced .sec-table th{padding:12px 8px;border-bottom:1px solid var(--ui-divider,var(--line));vertical-align:middle}\r
-.ui-enhanced .sec-table td{white-space:normal;overflow-wrap:anywhere}\r
-.ui-enhanced .sec-table .sec-address{min-width:160px;max-width:240px}\r
-.ui-enhanced .sec-row-actions{white-space:nowrap!important}\r
-.ui-enhanced .sec-row-actions .btn{padding:5px 8px;margin-right:4px}\r
-.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]{appearance:none;display:inline-grid;place-content:center;flex:0 0 18px;width:18px;height:18px;min-height:18px;margin:0;padding:0;border:1px solid var(--muted);border-radius:5px;background:var(--paper);vertical-align:middle;cursor:pointer}\r
-.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]::after{content:'';width:9px;height:5px;border:solid #1a2130;border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg);opacity:0}\r
-.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:is(:checked,:indeterminate){background:var(--stamp);border-color:var(--stamp)}\r
-.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:is(:checked,:indeterminate)::after{opacity:1}\r
-.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:indeterminate::after{height:0;border-width:0 0 2px;transform:none}\r
-.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:hover:not(:disabled){border-color:var(--stamp)}\r
-.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:focus-visible{outline:2px solid var(--stamp);outline-offset:3px}\r
-.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:disabled{background:var(--track);border-color:var(--line);cursor:not-allowed;opacity:.65}\r
-.ui-enhanced .sec-check:has(input:disabled){color:var(--muted);opacity:.65;cursor:not-allowed}\r
-.ui-enhanced .sec-number{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;min-width:0;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--paper);overflow:hidden}\r
-.ui-enhanced .sec-number:focus-within{border-color:var(--stamp);outline:2px solid color-mix(in srgb,var(--stamp) 25%,transparent);outline-offset:1px}\r
-.ui-enhanced .sec-field .sec-number input{appearance:textfield;-moz-appearance:textfield;border:0;border-radius:0;box-shadow:none;outline:none;text-align:center;padding-inline:2px;font-variant-numeric:tabular-nums;background:transparent}\r
-.ui-enhanced .sec-number input::-webkit-inner-spin-button,.ui-enhanced .sec-number input::-webkit-outer-spin-button{appearance:none;margin:0}\r
-.ui-enhanced .sec-step{border:0;border-radius:0;background:transparent;color:var(--muted);font:20px/1 system-ui;padding:0;cursor:pointer;min-width:0;box-shadow:none}\r
-.ui-enhanced .sec-step:hover:not(:disabled){background:var(--rowbg);color:var(--stamp)}\r
-.ui-enhanced .sec-step:focus-visible{outline:2px solid var(--stamp);outline-offset:-3px}\r
-.ui-enhanced .sec-step:disabled{opacity:.35;cursor:not-allowed}\r
-.ui-enhanced .sec-number:has(input:disabled){background:var(--track);opacity:.65}\r
-.ui-enhanced .sec-empty{padding:40px 12px;text-align:center;display:flex;gap:16px;justify-content:center;align-items:center;color:var(--muted)}\r
-.ui-enhanced .sec-dialog{width:min(560px,calc(100vw - 24px))}\r
-.ui-enhanced .sec-dialog .source-heading{gap:12px}\r
-.ui-enhanced .sec-dialog-body{display:grid;gap:14px;padding-block:16px}\r
-.ui-enhanced .sec-dialog-body p{margin:0}\r
-.ui-enhanced .sec-field{display:grid;gap:6px;font-size:13px;min-width:0}\r
-.ui-enhanced .sec-field>span{color:var(--muted)}\r
-.ui-enhanced .sec-field input,.ui-enhanced .sec-field select{width:100%}\r
-.ui-enhanced .sec-rule-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}\r
-.ui-enhanced .sec-check{display:flex;gap:8px;align-items:center;font-size:14px}\r
-.ui-enhanced .sec-details{display:grid;gap:12px;margin:0}\r
-.ui-enhanced .sec-details>div{display:grid;grid-template-columns:88px minmax(0,1fr);gap:10px;font-size:13px}\r
-.ui-enhanced .sec-details dd{margin:0;overflow-wrap:anywhere}\r
-.ui-enhanced .sec-ip-list{font:13px/1.7 ui-monospace,Consolas,monospace;overflow-wrap:anywhere}\r
-.ui-enhanced .sec-setting-entry{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}\r
-.ui-enhanced .sec-rule-summary b{min-width:56px;font-weight:500;color:var(--ink)}\r
-.ui-enhanced .sec-scope-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;font-size:11px;line-height:1.6;font-family:var(--sans,system-ui)}\r
-.ui-enhanced .sec-scope-badges span{border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--muted)}\r
-.ui-enhanced .sec-scope-picker{display:flex;flex-wrap:wrap;gap:10px 20px;min-width:0;margin:0;padding:0;border:0}\r
-.ui-enhanced .sec-scope-picker legend{color:var(--muted);font-size:13px;padding:0 0 8px}\r
-.ui-enhanced .sec-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:end}\r
-.ui-enhanced .sec-form-grid>.sec-check{min-height:38px}\r
-.ui-enhanced .sec-rule-section{display:grid;gap:10px;border-bottom:1px solid var(--line);padding-bottom:14px}\r
-.ui-enhanced .sec-rule-section>small{font-size:12px}\r
-.ui-enhanced .sec-rules-dialog{width:min(720px,calc(100vw - 24px))}\r
-.ui-enhanced .sec-rules-dialog .sec-dialog-body{gap:0;padding-block:8px}\r
-.ui-enhanced .sec-rules-columns{display:grid;grid-template-columns:148px repeat(3,minmax(0,1fr));gap:12px;padding:8px 0;color:var(--muted);font-size:12px}\r
-.ui-enhanced .sec-rules-dialog .sec-rule-section{grid-template-columns:148px minmax(0,1fr);align-items:center;gap:12px;padding:14px 0}\r
-.ui-enhanced .sec-rules-dialog .sec-rule-section:last-child{border-bottom:0}\r
-.ui-enhanced .sec-rules-dialog .sec-check{min-height:38px;gap:6px}\r
-.ui-enhanced .sec-rules-dialog .sec-check b{font-size:13px;font-weight:500}\r
-.ui-enhanced .sec-rules-dialog .sec-rule-fields{gap:12px}\r
-@media(min-width:601px){\r
- .ui-enhanced .sec-rules-dialog .sec-field>span:first-child{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}\r
- .ui-enhanced .sec-rules-dialog .sec-field{gap:0}\r
-}\r
-@media(max-width:600px){\r
- .ui-enhanced .sec-rules-columns{display:none}\r
- .ui-enhanced .sec-rules-dialog .sec-rule-section{grid-template-columns:1fr;gap:6px;padding:10px 0}\r
- .ui-enhanced .sec-rules-dialog .sec-rule-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}\r
- .ui-enhanced .sec-rules-dialog .sec-rule-fields .sec-field{grid-template-columns:1fr;font-size:12px;gap:6px}\r
- .ui-enhanced .sec-rules-dialog .sec-number{grid-template-columns:26px minmax(0,1fr) 26px}\r
-}\r
-@media(max-width:380px){\r
- .ui-enhanced .sec-rules-dialog .sec-rule-fields{grid-template-columns:1fr}\r
- .ui-enhanced .sec-rules-dialog .sec-rule-fields .sec-field{grid-template-columns:minmax(0,1fr) 142px}\r
-}\r
-.ui-enhanced .sec-list-help{margin:0 0 16px;font-size:12px;line-height:1.7}\r
-.ui-enhanced .sec-test-result{padding:12px 14px;display:grid;gap:8px;border-left:3px solid var(--ok);background:var(--paper)}\r
-.ui-enhanced .sec-test-result[hidden]{display:none}\r
-.ui-enhanced .sec-test-blocked{border-left-color:var(--danger)}\r
-.ui-enhanced .sec-test-blocked>b{color:var(--danger)}\r
-.ui-enhanced .sec-test-pass>b{color:var(--ok)}\r
-.ui-enhanced .sec-test-result p{font-size:13px}\r
-.ui-enhanced .sec-dialog .source-footer{flex-wrap:wrap}\r
-@media(max-width:900px){.ui-enhanced #admin-navigation:has(#admin-security-tab){grid-template-columns:repeat(3,minmax(0,1fr))}}\r
-@media(max-width:600px){\r
- .ui-enhanced #admin-navigation:has(#admin-security-tab){gap:3px}\r
- .ui-enhanced #admin-navigation:has(#admin-security-tab) .admin-nav-link{padding-inline:3px;font-size:13px}\r
- .ui-enhanced .sec-summary{grid-template-columns:1fr 1fr;gap:16px;padding-block:14px}\r
- .ui-enhanced .sec-summary>div:first-child{grid-column:1/-1}\r
- .ui-enhanced .sec-rule-grid{gap:8px;margin-top:8px}\r
- .ui-enhanced .sec-summary .sec-rule-summary small{font-size:11px}\r
- .ui-enhanced .sec-metric{border-left:0;padding:8px 0 0;border-top:1px solid var(--ui-divider,var(--line));display:flex;gap:10px;align-items:center}\r
- .ui-enhanced .sec-metric small{margin:0}\r
- .ui-enhanced .sec-toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;align-items:stretch}\r
- .ui-enhanced .sec-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%}\r
- .ui-enhanced #sec-search{width:100%;grid-column:1/-1}\r
- .ui-enhanced .sec-filters:not(:has(#sec-kind)){grid-template-columns:minmax(0,1fr) 116px}\r
- .ui-enhanced .sec-filters:not(:has(#sec-kind)) #sec-search{grid-column:auto}\r
- .ui-enhanced .sec-filter-actions{display:grid;grid-template-columns:1fr 1fr 1.6fr}\r
- .ui-enhanced #sec-export{margin-left:0}\r
- .ui-enhanced .sec-filter-actions .btn{min-width:0;white-space:normal;padding-inline:6px;min-height:44px}\r
- .ui-enhanced .sec-list-heading{flex-wrap:wrap;gap:8px;margin-bottom:12px}\r
- .ui-enhanced .sec-tabs{flex:1 0 100%;border-bottom:1px solid var(--ui-divider,var(--line))}\r
- .ui-enhanced #sec-add{margin-left:auto;min-height:44px}\r
- .ui-enhanced .sec-pagination{gap:10px}\r
- .ui-enhanced .sec-pagination>.sec-actions:last-child{margin-left:auto}\r
- .ui-enhanced .sec-table{display:block}\r
- .ui-enhanced .sec-table-wrap{overflow:visible}\r
- .ui-enhanced .sec-table thead{display:none}\r
- .ui-enhanced .sec-table tbody{display:block}\r
- .ui-enhanced .sec-table tr{position:relative;display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:16px 0;border-bottom:1px solid var(--ui-divider,var(--line))}\r
- .ui-enhanced .sec-table td{display:block;padding:0;border:0;min-width:0;max-width:none}\r
- .ui-enhanced .sec-table .sec-address{max-width:none;min-width:0;padding-right:36px}\r
- .ui-enhanced .sec-table .sec-select{position:absolute;top:14px;right:0;padding:8px}\r
- .ui-enhanced .sec-table td[data-label]:not(.sec-address)::before{content:attr(data-label)'\u3000';color:var(--muted);font-size:12px}\r
- .ui-enhanced .sec-row-actions{display:flex!important;gap:8px;white-space:normal!important}\r
- .ui-enhanced .sec-row-actions .btn{margin:0;flex:1;min-height:44px}\r
- .ui-enhanced .sec-toolbar input,.ui-enhanced .sec-toolbar select,.ui-enhanced .sec-field input,.ui-enhanced .sec-field select{min-height:44px;font-size:16px}\r
- .ui-enhanced .sec-rule-fields{grid-template-columns:1fr}\r
- .ui-enhanced .sec-rule-fields .sec-field{grid-template-columns:minmax(0,1fr) 134px;align-items:center}\r
- .ui-enhanced .sec-tabs{gap:2px}\r
- .ui-enhanced .sec-tabs>.btn{flex:1;padding-inline:4px;font-size:13px}\r
- .ui-enhanced .sec-form-grid{grid-template-columns:1fr}\r
- .ui-enhanced .sec-heading>.sec-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:auto}\r
- .ui-enhanced .sec-heading>.sec-actions .btn{min-height:44px}\r
- .ui-enhanced .sec-region-table .sec-row-actions{display:grid!important;grid-template-columns:1fr 1fr}\r
- .ui-enhanced .sec-scope-picker .sec-check{min-height:32px}\r
-}\r
-@media(forced-colors:active){\r
- .ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]{appearance:auto}\r
- .ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]::after{display:none}\r
-}\r
-\r
-.ui-enhanced .sec-number input[type=number]{appearance:textfield;-moz-appearance:textfield;min-width:0;width:100%;min-height:38px;padding:6px 2px;border:0;border-radius:0;box-shadow:none;outline:none;text-align:center;background:transparent;color:var(--ink);font:inherit;font-variant-numeric:tabular-nums}\r
-.ui-enhanced #retention-form,.ui-enhanced #guest-policy-form{grid-template-columns:minmax(0,1fr) 154px auto}\r
-.ui-enhanced .setting-value .sec-number{width:130px;flex:0 1 130px}\r
-.ui-enhanced #retention-form .sec-number input,.ui-enhanced #guest-policy-form .sec-number input{width:100%;min-width:0;border:0;border-radius:0;box-shadow:none;outline:none;background:transparent;padding:6px 2px;text-align:center}\r
-.ui-enhanced .sec-ip-line{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:5px;row-gap:3px}\r
-.ui-enhanced .sec-ip-line>.sec-scope-sup{display:inline-flex;position:relative;top:-.35em;margin:0;font-size:10px;line-height:1.3;gap:3px;vertical-align:super}\r
-.ui-enhanced .sec-scope-sup span{padding:0 3px;white-space:nowrap;border-radius:3px}\r
-.ui-enhanced .sec-table .sec-address:has(.sec-ip-line){min-width:260px;max-width:350px}\r
-.ui-enhanced .ui-help-anchor{display:flex;align-items:center;gap:5px;min-width:0}\r
-.ui-enhanced .ui-help-anchor>h4{margin:0}\r
-.ui-enhanced .settings-section>.ui-help-anchor{margin-bottom:8px}\r
-.ui-enhanced .ui-help-button{position:relative;display:inline-grid;place-items:center;flex:0 0 24px;width:24px;min-height:24px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);font:600 12px/1 system-ui;box-shadow:none;cursor:help}\r
-.ui-enhanced .ui-help-button::before{content:'';position:absolute;inset:4px;border:1px solid currentColor;border-radius:50%}\r
-.ui-enhanced .ui-help-button:hover,.ui-enhanced .ui-help-button[aria-expanded=true]{color:var(--stamp)}\r
-.ui-enhanced .ui-help-button:focus-visible{outline:2px solid var(--stamp);outline-offset:1px}\r
-.ui-enhanced .ui-help-popover{position:fixed;inset:auto;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 24px var(--mask);background:var(--paper);color:var(--ink);font:12px/1.7 system-ui;overflow:auto;overflow-wrap:anywhere}\r
-.ui-enhanced .ui-help-popover small{display:block;color:inherit;font-size:inherit;line-height:inherit}\r
-.ui-enhanced summary>.ui-help-anchor{display:inline-flex;vertical-align:middle}\r
-@media(min-width:601px){.ui-enhanced.ui-send .upload-context summary{padding-block:2px}}\r
-.ui-enhanced .source-heading>.ui-help-anchor{flex-wrap:wrap;row-gap:0}\r
-.ui-enhanced .source-heading .ui-help-anchor>h3{margin:0}\r
-.ui-enhanced .sec-rule-section>.ui-help-anchor{justify-content:flex-start}\r
-.ui-enhanced .sec-field>.ui-help-anchor{min-height:24px}\r
-.ui-enhanced #source-detail .source-field>.ui-help-anchor{gap:2px;align-self:start}\r
-.ui-enhanced #source-history>.ui-help-anchor{margin-bottom:6px}\r
-.ui-enhanced #source-history .ui-help-anchor>h4{margin:0}\r
-@media(max-width:600px){\r
- .ui-enhanced .sec-number input[type=number]{min-height:44px;font-size:16px}\r
- .ui-enhanced #retention-form,.ui-enhanced #guest-policy-form{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}\r
- .ui-enhanced #retention-form>label,.ui-enhanced #guest-policy-form>.ui-help-anchor{grid-column:1/-1}\r
- .ui-enhanced .setting-value .sec-number{width:146px;flex-basis:146px;grid-template-columns:34px minmax(0,1fr) 34px}\r
- .ui-enhanced .sec-table .sec-address:has(.sec-ip-line){min-width:0;max-width:none}\r
- .ui-enhanced .sec-address:has(.sec-ip-line){padding-right:28px}\r
- .ui-enhanced .ui-help-button{flex-basis:32px;width:32px;min-height:32px}\r
- .ui-enhanced .ui-help-button::before{inset:8px}\r
-}\r
-\r
-.ui-enhanced .ui-record-line{display:flex;align-items:baseline;flex-wrap:wrap;gap:3px 6px;min-width:0;white-space:normal;overflow-wrap:anywhere}\r
-.ui-enhanced .ui-record-sup,.ui-enhanced .share-kind.badge{display:inline-block;position:relative;top:-.35em;flex:none;align-self:baseline;vertical-align:super;margin:0;padding:0 4px;border:1px solid var(--line);border-radius:3px;background:transparent;color:var(--muted);font:400 11px/1.4 system-ui;white-space:nowrap;letter-spacing:0;box-shadow:none}\r
-.ui-enhanced .sec-ip-line>.sec-scope-sup{font-size:11px;line-height:1.4}\r
-.ui-enhanced .sec-scope-sup span{padding:0 4px}\r
-.ui-enhanced{--tag-blue:#1b57a3;--tag-teal:#16645c;--tag-amber:#82500a;--tag-orange:#934615;--tag-violet:#7040a0;--tag-slate:#475970}\r
-.ui-enhanced[data-theme='dark']{--tag-blue:#9cc7ff;--tag-teal:#7ddacb;--tag-amber:#f1c479;--tag-orange:#f6ad78;--tag-violet:#d2afff;--tag-slate:#bcc9dd}\r
-.ui-enhanced [data-tone='blue']{--tag-ink:var(--tag-blue)}\r
-.ui-enhanced [data-tone='teal']{--tag-ink:var(--tag-teal)}\r
-.ui-enhanced [data-tone='amber']{--tag-ink:var(--tag-amber)}\r
-.ui-enhanced [data-tone='orange'],.ui-enhanced .share-kind.kind-file{--tag-ink:var(--tag-orange)}\r
-.ui-enhanced [data-tone='violet'],.ui-enhanced .share-kind.kind-text{--tag-ink:var(--tag-violet)}\r
-.ui-enhanced [data-tone='slate']{--tag-ink:var(--tag-slate)}\r
-.ui-enhanced .ui-record-sup,.ui-enhanced .share-kind.badge,.ui-enhanced .sec-scope-badges [data-tone]{color:var(--tag-ink,var(--muted));border-color:color-mix(in srgb,var(--tag-ink,var(--muted)) 42%,var(--line));background:color-mix(in srgb,var(--tag-ink,var(--muted)) 10%,var(--paper))}\r
-.ui-enhanced #audit-body .ui-record-line{max-width:290px}\r
-.ui-enhanced #audit-body .ui-record-line>span{min-width:0}\r
-@media(max-width:600px){\r
- .ui-enhanced #audit-body .ui-record-line{max-width:none;row-gap:4px}\r
- .ui-enhanced .sec-region-table .sec-address{padding-right:0}\r
-}\r
-\r
-.ui-enhanced .audit-heading{margin-bottom:8px}\r
-.ui-enhanced #audit-filter{display:grid;grid-template-columns:120px 150px 150px minmax(160px,1fr) auto;gap:12px;align-items:end;margin-block:16px 10px;padding:0;border:0;background:transparent}\r
-.ui-enhanced #audit-filter .audit-search{min-width:0}\r
-.ui-enhanced #audit-filter>.audit-actions{gap:8px}\r
-.ui-enhanced #audit-export{margin-left:8px}\r
-.ui-enhanced #audit-export[aria-disabled=true]{opacity:.45;cursor:not-allowed}\r
-.ui-enhanced .ui-audit-pending{grid-column:1/-1;color:var(--warn);font-size:12px;line-height:1.5}\r
-.ui-enhanced #audit-pager{padding-block:10px;margin-bottom:12px}\r
-@media(max-width:1199px){\r
- .ui-enhanced #audit-filter{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}\r
- .ui-enhanced #audit-filter .audit-search{grid-column:1/3}\r
- .ui-enhanced #audit-filter>.audit-actions{grid-column:3;justify-content:flex-end;flex-wrap:wrap}\r
- .ui-enhanced #audit-export{margin-left:0}\r
-}\r
-@media(max-width:600px){\r
- .ui-enhanced #audit-filter{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 8px}\r
- .ui-enhanced #audit-filter .audit-search{grid-column:auto}\r
- .ui-enhanced #audit-filter>.audit-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1.6fr}\r
- .ui-enhanced #audit-filter>.audit-actions .btn{min-width:0;padding-inline:6px;white-space:normal}\r
- .ui-enhanced .audit-heading{align-items:flex-start}\r
-}\r
-\r
-.ui-enhanced #sec-feedback.sec-feedback-error{color:var(--danger)}\r
-.ui-enhanced #sec-feedback.sec-feedback-error::before{content:"!";color:var(--danger);background:transparent}\r
-\r
-@media(max-width:600px){\r
- .ui-enhanced[lang=en] #shares-body td:nth-child(5)::before{content:'Picked '}\r
- .ui-enhanced[lang=en] #shares-body td:nth-child(6)::before{content:'Expires '}\r
- .ui-enhanced[lang=en] #shares-body td:nth-child(8)::before{content:'Created '}\r
-}\r
+`, "ui.css": `/* Shared responsive layout. Colors, typefaces, textures, buttons and assets stay native. */
+.ui-enhanced .flow-strip,.ui-enhanced .feat-band{display:none}
+.ui-enhanced .topbar{margin-bottom:16px}
+.ui-enhanced .send-grid{gap:26px;align-items:stretch}
+/* One shared outer edge for the header, statistics and list. */
+.ui-enhanced[data-ui-surface='admin'] .topbar.wide,
+.ui-enhanced[data-ui-surface='admin'] .container.wide{width:calc(100% - 64px);max-width:1600px}
+.ui-enhanced[data-ui-surface='index'] .topbar.wide,
+.ui-enhanced[data-ui-surface='index'] .container.wide{width:calc(100% - 64px);max-width:1200px}
+.ui-enhanced[data-ui-surface='admin'] .container.wide,
+.ui-enhanced[data-ui-surface='index'] .container.wide{padding-inline:0}
+.ui-enhanced[data-ui-surface='index'] main{justify-content:flex-start}
+.ui-enhanced .share-filename-line{width:100%;min-width:0}
+@media(min-width:1200px){
+ .ui-enhanced .admin-list-card table{table-layout:fixed}
+ .ui-enhanced .admin-list-card th:nth-child(1){width:80px}
+ .ui-enhanced .admin-list-card th:nth-child(3){width:180px}
+ .ui-enhanced .admin-list-card th:nth-child(4){width:90px}
+ .ui-enhanced .admin-list-card th:nth-child(5){width:80px}
+ .ui-enhanced .admin-list-card th:nth-child(6),.ui-enhanced .admin-list-card th:nth-child(8){width:150px}
+ .ui-enhanced .admin-list-card th:nth-child(7){width:85px}
+ .ui-enhanced .admin-list-card th:nth-child(9){width:80px}
+ .ui-enhanced .stats-row{grid-template-columns:minmax(0,1fr) 320px}
+}
+@media(min-width:601px) and (max-width:1199px){
+ .ui-enhanced .share-filename-line{width:clamp(160px,20vw,260px)}
+}
+.ui-enhanced .upload-context{margin-block:14px}
+.ui-enhanced .context-fields{grid-template-columns:minmax(120px,.65fr) minmax(0,1.35fr);gap:10px}
+.ui-enhanced .context-row{display:grid;grid-template-columns:1fr;align-content:start;gap:5px}
+.ui-enhanced .context-fields textarea{min-height:42px;height:42px}
+.ui-enhanced .context-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ui-enhanced .context-fields>small{grid-column:1/-1;padding:0}
+.ui-enhanced .options{gap:14px}
+.ui-enhanced .stats-row{gap:10px;margin-bottom:14px}
+.ui-enhanced .stat-card{padding:12px;min-height:82px}
+.ui-enhanced .stats-counts .stat-card{gap:2px}
+.ui-enhanced .stats-counts .stat-card b{font-size:24px}
+.ui-enhanced .storage-value{margin:2px 0 4px}
+.ui-enhanced .storage-card{padding:10px 14px}
+.ui-enhanced .admin-list-card{padding:12px}
+.ui-enhanced .list-toolbar{box-shadow:none;margin-bottom:4px;border-width:0 0 1px;border-radius:0;padding:8px 4px 12px}
+.ui-enhanced .audit-heading{align-items:center;margin-bottom:12px}
+.ui-enhanced .audit-categories{display:flex;align-items:center;gap:6px}
+.ui-enhanced .ui-guard-entry{margin-left:auto}
+.ui-enhanced .audit-filter{gap:10px;align-items:end;margin-block:12px}
+.ui-enhanced #source-identity{display:grid;grid-template-columns:minmax(0,1fr) 280px;align-items:start;gap:12px 20px;padding:2px 0 12px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.ui-enhanced #source-identity[hidden]{display:none}
+.ui-enhanced .source-visitor{display:grid;gap:6px;min-width:0}
+.ui-enhanced .source-visitor>small{font-size:12px}
+.ui-enhanced #source-visitor-id{font-size:12px;line-height:1.6;overflow-wrap:anywhere;padding-block:7px;user-select:text}
+.ui-enhanced #source-form{grid-template-columns:minmax(0,1fr) auto;max-width:280px;width:100%;gap:6px 8px;margin:0;align-items:center}
+.ui-enhanced #source-form>label{grid-column:1/-1}
+.ui-enhanced #source-note,.ui-enhanced #source-save{min-height:36px}
+@media(max-width:600px){
+ .ui-enhanced #source-identity{grid-template-columns:1fr;gap:10px}
+ .ui-enhanced #source-visitor-id{padding-block:0}
+ .ui-enhanced #source-form{grid-template-columns:auto minmax(0,1fr) auto;max-width:none;gap:8px}
+ .ui-enhanced #source-form>label{grid-column:auto}
+ .ui-enhanced #source-note,.ui-enhanced #source-save{min-height:44px}
+}
+.ui-enhanced #source-detail .source-field{grid-template-columns:74px minmax(0,1fr);gap:8px}
+.ui-enhanced #source-detail{gap:8px 18px}
+.ui-enhanced #source-detail .source-field>p{min-width:0;overflow-wrap:anywhere}
+.ui-enhanced .source-agent{grid-template-columns:74px minmax(0,1fr)}
+.ui-enhanced .source-agent p:focus{left:82px}
+.ui-enhanced .source-activity{display:grid;grid-template-columns:minmax(0,1fr);gap:4px 12px;padding-block:9px}
+.ui-enhanced .source-activity>small{grid-column:1/-1}
+.ui-enhanced .source-activity .source-link{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:100%}
+.ui-enhanced #file-dialog{width:min(680px,calc(100vw - 24px))}
+.ui-enhanced #file-detail .file-field{grid-template-columns:70px minmax(0,1fr)}
+.ui-enhanced #file-edit{margin-right:auto}
+.ui-enhanced .share-edit-form{display:grid;gap:14px}
+.ui-enhanced .share-edit-filename{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ui-enhanced .share-edit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 12px;align-items:start}
+.ui-enhanced .share-edit-field{display:grid;gap:7px;min-width:0}
+.ui-enhanced .share-edit-field>label,.ui-enhanced .share-edit-field>.ui-help-anchor{font-size:12px;color:var(--muted);min-height:24px;display:flex;align-items:center}
+.ui-enhanced .share-edit-field input,.ui-enhanced .share-edit-field select{width:100%;min-width:0;box-sizing:border-box}
+.ui-enhanced .share-edit-field select,.ui-enhanced .share-edit-field input[type=datetime-local]{min-height:40px;padding:6px 9px;color:var(--ink);background:var(--bag);border:1px solid var(--line);border-radius:var(--radius-sm);font:inherit}
+.ui-enhanced .share-edit-expiry{grid-column:1/-1;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.ui-enhanced .share-edit-expiry>.ui-help-anchor,.ui-enhanced .share-edit-expiry>label:first-child{grid-column:1/-1}
+.ui-enhanced .share-edit-check{display:flex;align-items:center;gap:6px;white-space:nowrap;min-height:28px}
+.ui-enhanced .share-edit-check input{width:16px;height:16px;accent-color:var(--stamp)}
+.ui-enhanced[data-theme=dark] .share-edit-field input[type=datetime-local]{color-scheme:dark}
+.ui-enhanced .share-edit-linked{margin:0;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.ui-enhanced .share-edit-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid var(--line)}
+@media(max-width:600px){
+ .ui-enhanced .share-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ui-enhanced .share-edit-field:has(#share-edit-status){grid-column:1/-1}
+ .ui-enhanced .share-edit-field select,.ui-enhanced .share-edit-field input[type=datetime-local]{min-height:44px;font-size:16px}
+ .ui-enhanced .share-edit-actions>.btn{flex:1;min-height:44px}
+ .ui-enhanced .share-edit-expiry{grid-template-columns:1fr}
+}
+.ui-enhanced .settings-dialog{width:min(560px,calc(100vw - 24px))}
+.ui-enhanced .settings-section{padding-block:12px}
+.ui-enhanced .display-options{grid-template-columns:1fr 1fr;gap:16px}
+.ui-enhanced .settings-section>.muted{font-size:12px}
+@media(max-width:600px){
+ .ui-enhanced[data-ui-surface='admin'] .topbar.wide,
+ .ui-enhanced[data-ui-surface='admin'] .container.wide,
+ .ui-enhanced[data-ui-surface='index'] .topbar.wide,
+ .ui-enhanced[data-ui-surface='index'] .container.wide{width:calc(100% - 24px)}
+ .ui-enhanced .send-grid{gap:16px}
+ .ui-enhanced .context-fields{grid-template-columns:1fr}
+ .ui-enhanced .stats-counts .stat-card{min-height:60px;padding:8px}
+ .ui-enhanced .stats-counts{gap:6px}
+ .ui-enhanced .storage-card{padding:10px 12px}
+ .ui-enhanced .display-options{grid-template-columns:1fr;gap:4px}
+ .ui-enhanced .audit-categories{flex-wrap:wrap}
+ .ui-enhanced .ui-guard-entry{margin-left:0}
+ .ui-enhanced .list-toolbar .page-summary{width:auto}
+ .ui-enhanced .admin-list-card>.table-wrap{overflow:visible}
+ .ui-enhanced #shares-body{display:grid;gap:0}
+ .ui-enhanced .admin-list-card table{display:block;min-width:0}
+ .ui-enhanced .admin-list-card thead{display:none}
+ .ui-enhanced #shares-body tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;padding:12px 2px;border-bottom:1px dashed var(--line)}
+ .ui-enhanced #shares-body td{padding:0;border:0;min-width:0;white-space:normal;text-align:left}
+ .ui-enhanced #shares-body td:nth-child(1){grid-area:1/1;color:var(--muted)}
+ .ui-enhanced #shares-body td:nth-child(2){grid-area:2/1/3/3}
+ .ui-enhanced #shares-body td:nth-child(3){grid-area:3/1/5/2}
+ .ui-enhanced #shares-body td:nth-child(4){grid-area:3/2;text-align:right}
+ .ui-enhanced #shares-body td:nth-child(5){grid-area:4/2;text-align:right}
+ .ui-enhanced #shares-body td:nth-child(5)::before{content:'\u5DF2\u53D6 ';color:var(--muted)}
+ .ui-enhanced #shares-body td:nth-child(6){grid-area:5/1;font-size:12px}
+ .ui-enhanced #shares-body td:nth-child(6)::before{content:'\u5230\u671F ';color:var(--muted)}
+ .ui-enhanced #shares-body td:nth-child(7){grid-area:1/2;text-align:right}
+ .ui-enhanced #shares-body td:nth-child(8){grid-area:6/1;font-size:12px;color:var(--muted)}
+ .ui-enhanced #shares-body td:nth-child(8)::before{content:'\u521B\u5EFA '}
+ .ui-enhanced #shares-body td:nth-child(9){grid-area:5/2/7/3;align-self:center;text-align:right}
+ .ui-enhanced #shares-body td[colspan]{grid-area:1/1/2/3}
+ .ui-enhanced .source-agent p{white-space:normal}
+ .ui-enhanced #file-detail .file-field{grid-template-columns:80px minmax(0,1fr)}
+}
+
+/* Quiet outer surfaces; native typography, colors and interactive controls remain. */
+.ui-soft{--ui-divider:color-mix(in srgb,var(--line) 38%,transparent)}
+.ui-soft .ui-header-band{width:100%;background:var(--paper);border-bottom:1px solid var(--ui-divider);margin-bottom:22px}
+.ui-soft .ui-header-band .topbar{margin-block:0;border:0;box-shadow:none;background:transparent;padding-block:14px}
+.ui-soft .brand .logo{box-shadow:none}
+.ui-soft .stats-row{gap:24px;margin-bottom:24px;align-items:center}
+.ui-soft .stats-counts{gap:0}
+.ui-soft .stat-card{background:transparent;border:0;border-radius:0;box-shadow:none;padding:8px 18px;min-height:72px}
+.ui-soft .stats-counts .stat-card{border-right:1px solid var(--ui-divider);align-items:flex-start;text-align:left}
+.ui-soft .stats-counts .stat-card:first-child{padding-left:0}
+.ui-soft .stats-counts .stat-card:last-child{border-right:0}
+.ui-soft .storage-card{padding-inline:0}
+.ui-soft .admin-list-card,.ui-soft .audit-card{background:transparent;border:0;border-radius:0;box-shadow:none;padding:0}
+.ui-soft .list-toolbar{padding:12px 0;margin-bottom:12px;border:0;border-radius:0;box-shadow:none;background:var(--bag)}
+.ui-soft .admin-list-card th,.ui-soft .audit-table th{background:color-mix(in srgb,var(--paper) 75%,transparent);border-bottom:1px solid var(--ui-divider);padding-block:12px}
+.ui-soft .admin-list-card td,.ui-soft .audit-table td{border-bottom:1px solid var(--ui-divider);padding-block:14px}
+.ui-soft .admin-list-card tbody tr:last-child td,.ui-soft .audit-table tbody tr:last-child td{border-bottom:0}
+.ui-soft .audit-heading{margin-bottom:18px}
+.ui-soft .audit-filter{padding:14px 0;border-color:var(--ui-divider);background:transparent}
+.ui-soft .audit-categories{border-color:var(--ui-divider)}
+.ui-soft .form-card{border:1px solid var(--ui-divider);box-shadow:none}
+.ui-soft .result-placeholder{border:1.5px dashed var(--line);border-radius:13px;box-shadow:none}
+.ui-soft .ph-fine{border-color:var(--line)}
+.ui-soft .source-heading,.ui-soft .source-footer,.ui-soft .settings-section,.ui-soft .source-activity{border-color:var(--ui-divider)}
+@media(max-width:600px){
+ .ui-soft .ui-header-band{margin-bottom:16px}
+ .ui-soft .ui-header-band .topbar{padding-block:8px}
+ .ui-soft .stats-row{gap:12px;margin-bottom:12px}
+ .ui-soft .stats-counts{row-gap:12px}
+ .ui-soft .stats-counts .stat-card{padding:4px 12px;min-height:56px;align-items:center;text-align:center}
+ .ui-soft .stats-counts .stat-card:first-child{padding-left:12px}
+ .ui-soft .stats-counts .stat-card:nth-child(3){border-right:0}
+ .ui-soft .storage-card{padding:12px 0;border-top:1px solid var(--ui-divider)}
+ .ui-soft #shares-body tr{padding:14px 0;border-bottom:1px solid var(--ui-divider)}
+ .ui-soft #shares-body td{padding:0;border:0}
+ .ui-soft .audit-table td{border:0}
+}
+
+/* Public entry points: shared header, focused forms and quiet boundaries. */
+.ui-enhanced a.ui-new-tab::after{content:'\u2197';margin-left:5px;font-size:12px;opacity:.7}
+.ui-enhanced .ui-public-header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:24px;align-items:center}
+.ui-enhanced .ui-public-nav{display:flex;gap:8px;align-items:center}
+.ui-enhanced .ui-public-nav a{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.ui-enhanced .ui-public-nav a[aria-current='page']{border-bottom-color:var(--stamp);color:var(--ink)}
+.ui-enhanced.ui-pickup .topbar,.ui-enhanced.ui-login .topbar.wide{width:calc(100% - 64px);max-width:1200px}
+.ui-enhanced.ui-send .form-card{padding:22px 24px}
+.ui-enhanced.ui-send .options{margin-top:18px;margin-bottom:6px}
+.ui-enhanced.ui-send .upload-context{margin-block:14px 0}
+.ui-enhanced.ui-send .context-fields{gap:12px}
+.ui-enhanced.ui-send .context-label{flex-direction:row;align-items:baseline;justify-content:space-between;min-height:24px;padding-top:0}
+.ui-enhanced.ui-send .context-row>label{min-height:24px;padding-top:0}
+.ui-enhanced.ui-send .context-fields input{min-height:48px}
+.ui-enhanced.ui-send .context-fields textarea{height:72px;min-height:48px}
+.ui-enhanced.ui-send #upload-policy-hint{line-height:1.6}
+.ui-enhanced.ui-send .btn.block{min-height:46px;margin-top:18px}
+.ui-enhanced.ui-pickup .container.narrow{width:calc(100% - 48px);max-width:500px;padding:clamp(24px,8vh,80px) 0 40px}
+.ui-enhanced #pickup-input-card{padding:30px 24px 24px}
+.ui-soft #pickup-input-card{background:transparent;border:0;box-shadow:none}
+.ui-enhanced #pickup-input-card .title{margin:0 0 10px;font-size:26px}
+.ui-enhanced #pickup-input-card .pk-sub{margin-bottom:26px;font-size:13px}
+.ui-enhanced #pickup-input-card .otp-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));width:100%;max-width:360px;gap:8px;margin:0 auto 18px}
+.ui-enhanced #pickup-input-card .otp-box{width:100%;min-width:0;height:58px;font-size:28px}
+.ui-enhanced .ui-pickup-actions{display:grid;grid-template-columns:1fr auto;gap:10px;max-width:360px;margin:auto}
+.ui-enhanced .ui-pickup-actions .btn{min-height:44px}
+.ui-enhanced #pickup-error{max-width:360px;margin:16px auto 0;text-align:left}
+.ui-enhanced #pickup-result{padding:24px;border-color:var(--ui-divider,var(--line));box-shadow:none;overflow-wrap:anywhere}
+.ui-enhanced #pickup-result .share-card{margin-top:0}
+.ui-enhanced #pickup-result .sc-meta{min-width:0}
+.ui-enhanced #pickup-result .sc-meta b{overflow-wrap:anywhere}
+.ui-enhanced #pickup-result .btn.primary{min-height:46px}
+.ui-enhanced .ui-pickup-caption{display:none;font-family:var(--serif);font-size:24px;text-align:center;margin-bottom:22px;font-weight:700}
+.ui-enhanced.ui-pickup-found .ui-pickup-caption{display:block}
+.ui-enhanced.ui-login .container.wide{width:calc(100% - 48px);max-width:440px;padding:clamp(24px,8vh,80px) 0 40px}
+.ui-enhanced #admin-login{padding:28px 26px;border-color:var(--ui-divider,var(--line));box-shadow:none}
+.ui-soft #admin-login{background:transparent;border:0}
+.ui-enhanced #admin-login .title{margin:0 0 26px;font-size:26px}
+.ui-enhanced #admin-login>label{display:block;text-align:left;font-size:13px;margin-bottom:8px}
+.ui-enhanced .ui-token-field{position:relative;display:flex;align-items:center;gap:8px}
+.ui-enhanced .ui-token-field .token-input{margin:0;min-height:48px;padding-right:74px;font-size:16px}
+.ui-enhanced #ui-token-toggle{position:absolute;right:4px;min-height:40px;padding-inline:10px;box-shadow:none;border-color:transparent}
+.ui-enhanced #admin-login #btn-login{margin-top:18px;min-height:46px}
+.ui-enhanced #admin-login .error-box{margin:12px 0 0;text-align:left}
+.ui-enhanced .ui-entry-back{display:inline-block;margin-top:18px;color:var(--muted);font-size:13px;text-underline-offset:4px}
+@media(max-width:600px){
+ .ui-enhanced .ui-public-header{grid-template-columns:minmax(0,1fr) auto;gap:6px;padding-inline:12px}
+ .ui-enhanced .ui-public-header .actions{grid-column:2;grid-row:1}
+ .ui-enhanced .ui-public-nav{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:1fr 1fr}
+ .ui-enhanced.ui-pickup .topbar,.ui-enhanced.ui-login .topbar.wide{width:calc(100% - 24px)}
+ .ui-enhanced.ui-pickup .container.narrow,.ui-enhanced.ui-login .container.wide{width:calc(100% - 32px);padding-top:28px}
+ .ui-enhanced.ui-send .form-card{padding:16px}
+ .ui-enhanced #pickup-input-card,.ui-enhanced #admin-login{padding:18px 0}
+ .ui-enhanced #pickup-input-card .title,.ui-enhanced #admin-login .title{font-size:24px}
+ .ui-enhanced #pickup-input-card .otp-row{gap:6px}
+ .ui-enhanced #pickup-input-card .otp-box{height:52px;font-size:24px}
+ .ui-enhanced #pickup-result{padding:18px}
+}
+/* Default desktop state fits the viewport; long queues and small screens grow naturally. */
+.ui-enhanced.ui-send{--send-gutter:32px;--send-max-width:1200px}
+.ui-enhanced.ui-send :is(.topbar.wide,main.container.wide,.ui-footer-inner){width:calc(100% - 2 * var(--send-gutter));max-width:var(--send-max-width);margin-inline:auto}
+.ui-enhanced.ui-send .topbar.wide{padding-inline:0}
+.ui-enhanced.ui-send .ui-header-band{margin-bottom:12px}
+.ui-enhanced.ui-send main.container.wide{padding-block:0 12px;flex:1 0 auto;justify-content:center}
+.ui-enhanced.ui-send .form-card{padding:16px 20px}
+.ui-enhanced.ui-send .card-cap{margin:0 0 10px}
+.ui-enhanced.ui-send .tabs{margin-bottom:12px}
+.ui-enhanced.ui-send .dropzone{padding:16px;min-height:112px}
+.ui-enhanced.ui-send .dz-icon{font-size:28px;line-height:1.2;margin-bottom:6px}
+.ui-enhanced.ui-send .dropzone p{margin-bottom:3px}
+.ui-enhanced.ui-send #text-input{height:132px;min-height:96px;flex:1 0 auto}
+.ui-enhanced.ui-send .upload-context{margin-top:10px;padding-top:6px}
+.ui-enhanced.ui-send .upload-context summary{min-height:28px;padding-block:3px}
+.ui-enhanced.ui-send .upload-context summary>small{float:right;font-size:11px;font-weight:400;line-height:22px}
+.ui-enhanced.ui-send .context-fields{padding:6px 0 0;gap:8px 12px}
+.ui-enhanced.ui-send .context-label,.ui-enhanced.ui-send .context-row>label{min-height:20px}
+.ui-enhanced.ui-send .context-fields input{min-height:44px}
+.ui-enhanced.ui-send .context-fields textarea{height:48px;min-height:44px}
+.ui-enhanced.ui-send .options{margin-top:12px;margin-bottom:4px}
+.ui-enhanced.ui-send #upload-policy-hint{margin-bottom:0}
+.ui-enhanced.ui-send .btn.block{min-height:42px;margin-top:12px}
+.ui-enhanced.ui-send .result-placeholder{min-height:0;padding:22px 20px}
+.ui-enhanced.ui-send .ph-route{margin-top:18px}
+.ui-enhanced.ui-send .ph-dash{height:18px}
+.ui-enhanced.ui-send .ph-fine{margin-top:18px;padding-top:10px}
+.ui-enhanced .ui-send-footer{width:100%;max-width:none;margin:0;padding:0;border-top:0;background:transparent;text-align:left;letter-spacing:0;flex-shrink:0}
+.ui-enhanced .ui-footer-inner{display:flex;align-items:center;gap:24px;padding:8px 0;border-top:1px solid var(--ui-divider,var(--line))}
+.ui-enhanced.ui-pickup .ui-footer-inner{width:calc(100% - 64px);max-width:1200px;margin-inline:auto}
+.ui-enhanced .ui-footer-about{margin-right:auto;color:var(--muted)}
+.ui-enhanced .ui-send-footer small{display:block;font-size:12px;line-height:1.7}
+.ui-enhanced .ui-footer-contact{display:flex;align-items:center;gap:8px;padding-left:24px;border-left:1px solid var(--ui-divider,var(--line))}
+.ui-enhanced .ui-footer-contact::before{content:"";width:14px;height:14px;flex-shrink:0;background:var(--muted);mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' fill='none' stroke='black' stroke-width='1.5'/%3E%3Cpath d='m3 6 9 7 9-7' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E") center/contain no-repeat}
+.ui-enhanced .ui-footer-links{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.ui-enhanced .ui-footer-link{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0;border:0;border-radius:3px;background:transparent;color:var(--muted);font-family:inherit;font-size:12px;line-height:1.5;text-decoration:none;cursor:pointer;box-shadow:none}
+.ui-enhanced .ui-footer-link:hover{color:var(--stamp);text-decoration:underline;text-underline-offset:4px}
+.ui-enhanced .ui-footer-link:focus-visible{outline:2px solid var(--stamp);outline-offset:4px}
+.ui-enhanced .ui-send-help-dialog{width:min(480px,calc(100vw - 24px))}
+.ui-enhanced .ui-send-help-body{display:grid;gap:16px;padding:16px}
+.ui-enhanced .ui-send-help-body h4{font-size:14px;margin:0 0 6px}
+.ui-enhanced .ui-send-help-body p{font-size:13px;line-height:1.7;color:var(--muted);margin:0}
+.ui-enhanced .ui-footer-contact a{display:inline-flex;align-items:center;min-height:36px;color:var(--muted);font-size:12px;line-height:1.7;text-decoration:none;text-underline-offset:3px}
+.ui-enhanced .ui-footer-contact a:hover{text-decoration:underline;color:var(--stamp)}
+.ui-enhanced .ui-footer-contact a:focus-visible{outline:2px solid var(--stamp);outline-offset:4px;border-radius:3px}
+@media(min-width:881px) and (max-height:740px){
+ .ui-enhanced.ui-send .ui-header-band{margin-bottom:8px}
+ .ui-enhanced.ui-send .ui-header-band .topbar{padding-block:8px}
+ .ui-enhanced.ui-send .form-card{padding:12px 18px}
+ .ui-enhanced.ui-send .card-cap{margin-bottom:6px}
+ .ui-enhanced.ui-send .tabs{margin-bottom:8px}
+ .ui-enhanced.ui-send .dropzone{min-height:94px;padding-block:10px}
+ .ui-enhanced.ui-send #text-input{height:96px}
+ .ui-enhanced.ui-send .upload-context{margin-top:8px;padding-top:4px}
+ .ui-enhanced.ui-send .options{margin-top:8px}
+ .ui-enhanced.ui-send .btn.block{margin-top:8px}
+ .ui-enhanced.ui-send .result-placeholder{padding-block:16px}
+ .ui-enhanced.ui-send .ui-footer-inner{padding-block:8px}
+}
+@media(max-width:880px){
+ .ui-enhanced.ui-send main.container.wide{justify-content:flex-start}
+}
+@media(max-width:600px){
+ .ui-enhanced.ui-send{--send-gutter:12px}
+ .ui-enhanced.ui-send .form-card{padding:14px}
+ .ui-enhanced.ui-send .upload-context summary{min-height:40px;padding-block:6px}
+ .ui-enhanced.ui-send .upload-context summary>small{float:none;display:block;padding-left:14px;line-height:1.5}
+ .ui-enhanced.ui-send .context-fields{gap:10px}
+ .ui-enhanced.ui-send .context-fields textarea{height:64px}
+ .ui-enhanced.ui-send .btn.block{min-height:44px}
+ .ui-enhanced .ui-footer-inner{flex-wrap:wrap;justify-content:flex-start;gap:0 20px;padding-block:10px 12px}
+ .ui-enhanced.ui-pickup .ui-footer-inner{width:calc(100% - 24px)}
+ .ui-enhanced .ui-footer-about{width:100%;margin-bottom:4px}
+ .ui-enhanced .ui-footer-links{gap:18px}
+ .ui-enhanced .ui-footer-link{min-height:44px}
+ .ui-enhanced .ui-footer-contact{padding-left:0;border-left:0}
+ .ui-enhanced .ui-footer-contact a{min-height:44px}
+}
+
+.ui-enhanced #security-view{padding:8px 0 32px}
+.ui-enhanced .sec-heading,.ui-enhanced .sec-toolbar,.ui-enhanced .sec-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.ui-enhanced .sec-heading h2{margin:0 0 4px;font:700 22px/1.4 var(--serif)}
+.ui-enhanced .sec-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ui-enhanced .sec-summary{display:grid;grid-template-columns:minmax(0,1fr) 140px 140px;gap:24px;padding:18px 0;margin:0 0 12px;border-bottom:1px solid var(--ui-divider,var(--line));align-items:center}
+.ui-enhanced .sec-summary small,.ui-enhanced .sec-table small{display:block;margin-top:4px;font-size:12px}
+.ui-enhanced .sec-summary>div:not(:first-child)>b{font:700 24px var(--serif)}
+.ui-enhanced .sec-enabled{color:var(--ok)}
+.ui-enhanced .sec-warning{color:var(--danger)}
+.ui-enhanced .sec-tabs{display:flex;gap:8px;margin:0;min-width:0;flex-wrap:wrap}
+.ui-enhanced .sec-tabs .btn{box-shadow:none;border:0;border-radius:0;border-bottom:2px solid transparent;background:transparent}
+.ui-enhanced .sec-tabs .btn[aria-pressed=true]{border-bottom-color:var(--stamp);color:var(--ink)}
+.ui-enhanced .sec-list-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.ui-enhanced .sec-toolbar{justify-content:flex-start;margin-bottom:8px;gap:12px}
+.ui-enhanced .sec-filter-actions{gap:8px}
+.ui-enhanced #sec-export{margin-left:8px}
+.ui-enhanced .sec-filter-pending{display:block;color:var(--warn);font-size:12px;margin:8px 0}
+.ui-enhanced .sec-filter-pending[hidden]{display:none}
+.ui-enhanced .sec-rule-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:12px;max-width:780px}
+.ui-enhanced .sec-summary .sec-rule-summary{display:block;min-width:0}
+.ui-enhanced .sec-rule-summary>.ui-help-anchor{gap:2px}
+.ui-enhanced .sec-rule-summary b{font-size:13px;font-weight:500}
+.ui-enhanced .sec-rule-inactive{color:var(--muted)}
+.ui-enhanced .sec-metric{border-left:1px solid var(--ui-divider,var(--line));padding-left:24px}
+.ui-enhanced .sec-auto-summary>b{font-size:12px;font-weight:500}
+.ui-enhanced .sec-selection-count{font-size:12px;color:var(--muted);border-left:1px solid var(--line);padding-left:12px}
+.ui-enhanced .sec-toolbar input,.ui-enhanced .sec-toolbar select,.ui-enhanced .sec-field input,.ui-enhanced .sec-field select{min-width:0;max-width:100%;min-height:38px;padding:7px 10px;font:inherit;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius-sm)}
+.ui-enhanced #sec-search{width:260px}
+.ui-enhanced #sec-feedback{position:fixed;z-index:1000;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;width:max-content;max-width:calc(100% - 32px);box-sizing:border-box;padding:12px 18px;margin:0;border:1px solid var(--ui-divider,var(--line));border-radius:var(--radius-sm);background:var(--paper);box-shadow:0 6px 24px #0003;color:var(--ink);font-size:13px;line-height:1.5;overflow-wrap:anywhere;pointer-events:none}
+.ui-enhanced #sec-feedback::before{content:'\u2713';display:grid;place-items:center;flex:0 0 20px;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,var(--ok) 14%,var(--paper));color:var(--ok);font-weight:700}
+.ui-enhanced #sec-feedback:empty{display:none}
+.ui-enhanced .sec-pagination{padding:8px 0 14px}
+.ui-enhanced .sec-table-wrap{overflow-x:auto}
+.ui-enhanced .sec-table{width:100%;font-size:13px}
+.ui-enhanced .sec-table th{background:var(--paper);font-size:12px;letter-spacing:0;white-space:nowrap}
+.ui-enhanced .sec-table td,.ui-enhanced .sec-table th{padding:12px 8px;border-bottom:1px solid var(--ui-divider,var(--line));vertical-align:middle}
+.ui-enhanced .sec-table td{white-space:normal;overflow-wrap:anywhere}
+.ui-enhanced .sec-table .sec-address{min-width:160px;max-width:240px}
+.ui-enhanced .sec-row-actions{white-space:nowrap!important}
+.ui-enhanced .sec-row-actions .btn{padding:5px 8px;margin-right:4px}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]{appearance:none;display:inline-grid;place-content:center;flex:0 0 18px;width:18px;height:18px;min-height:18px;margin:0;padding:0;border:1px solid var(--muted);border-radius:5px;background:var(--paper);vertical-align:middle;cursor:pointer}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]::after{content:'';width:9px;height:5px;border:solid #1a2130;border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg);opacity:0}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:is(:checked,:indeterminate){background:var(--stamp);border-color:var(--stamp)}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:is(:checked,:indeterminate)::after{opacity:1}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:indeterminate::after{height:0;border-width:0 0 2px;transform:none}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:hover:not(:disabled){border-color:var(--stamp)}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:focus-visible{outline:2px solid var(--stamp);outline-offset:3px}
+.ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]:disabled{background:var(--track);border-color:var(--line);cursor:not-allowed;opacity:.65}
+.ui-enhanced .sec-check:has(input:disabled){color:var(--muted);opacity:.65;cursor:not-allowed}
+.ui-enhanced .sec-number{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;min-width:0;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--paper);overflow:hidden}
+.ui-enhanced .sec-number:focus-within{border-color:var(--stamp);outline:2px solid color-mix(in srgb,var(--stamp) 25%,transparent);outline-offset:1px}
+.ui-enhanced .sec-field .sec-number input{appearance:textfield;-moz-appearance:textfield;border:0;border-radius:0;box-shadow:none;outline:none;text-align:center;padding-inline:2px;font-variant-numeric:tabular-nums;background:transparent}
+.ui-enhanced .sec-number input::-webkit-inner-spin-button,.ui-enhanced .sec-number input::-webkit-outer-spin-button{appearance:none;margin:0}
+.ui-enhanced .sec-step{border:0;border-radius:0;background:transparent;color:var(--muted);font:20px/1 system-ui;padding:0;cursor:pointer;min-width:0;box-shadow:none}
+.ui-enhanced .sec-step:hover:not(:disabled){background:var(--rowbg);color:var(--stamp)}
+.ui-enhanced .sec-step:focus-visible{outline:2px solid var(--stamp);outline-offset:-3px}
+.ui-enhanced .sec-step:disabled{opacity:.35;cursor:not-allowed}
+.ui-enhanced .sec-number:has(input:disabled){background:var(--track);opacity:.65}
+.ui-enhanced .sec-empty{padding:40px 12px;text-align:center;display:flex;gap:16px;justify-content:center;align-items:center;color:var(--muted)}
+.ui-enhanced .sec-dialog{width:min(560px,calc(100vw - 24px))}
+.ui-enhanced .sec-dialog .source-heading{gap:12px}
+.ui-enhanced .sec-dialog-body{display:grid;gap:14px;padding-block:16px}
+.ui-enhanced .sec-dialog-body p{margin:0}
+.ui-enhanced .sec-field{display:grid;gap:6px;font-size:13px;min-width:0}
+.ui-enhanced .sec-field>span{color:var(--muted)}
+.ui-enhanced .sec-field input,.ui-enhanced .sec-field select{width:100%}
+.ui-enhanced .sec-rule-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ui-enhanced .sec-check{display:flex;gap:8px;align-items:center;font-size:14px}
+.ui-enhanced .sec-details{display:grid;gap:12px;margin:0}
+.ui-enhanced .sec-details>div{display:grid;grid-template-columns:88px minmax(0,1fr);gap:10px;font-size:13px}
+.ui-enhanced .sec-details dd{margin:0;overflow-wrap:anywhere}
+.ui-enhanced .sec-ip-list{font:13px/1.7 ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+.ui-enhanced .sec-setting-entry{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ui-enhanced .sec-rule-summary b{min-width:56px;font-weight:500;color:var(--ink)}
+.ui-enhanced .sec-scope-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;font-size:11px;line-height:1.6;font-family:var(--sans,system-ui)}
+.ui-enhanced .sec-scope-badges span{border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--muted)}
+.ui-enhanced .sec-scope-picker{display:flex;flex-wrap:wrap;gap:10px 20px;min-width:0;margin:0;padding:0;border:0}
+.ui-enhanced .sec-scope-picker legend{color:var(--muted);font-size:13px;padding:0 0 8px}
+.ui-enhanced .sec-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:end}
+.ui-enhanced .sec-form-grid>.sec-check{min-height:38px}
+.ui-enhanced .sec-rule-section{display:grid;gap:10px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.ui-enhanced .sec-rule-section>small{font-size:12px}
+.ui-enhanced .sec-rules-dialog{width:min(720px,calc(100vw - 24px))}
+.ui-enhanced .sec-rules-dialog .sec-dialog-body{gap:0;padding-block:8px}
+.ui-enhanced .sec-rules-columns{display:grid;grid-template-columns:148px repeat(3,minmax(0,1fr));gap:12px;padding:8px 0;color:var(--muted);font-size:12px}
+.ui-enhanced .sec-rules-dialog .sec-rule-section{grid-template-columns:148px minmax(0,1fr);align-items:center;gap:12px;padding:14px 0}
+.ui-enhanced .sec-rules-dialog .sec-rule-section:last-child{border-bottom:0}
+.ui-enhanced .sec-rules-dialog .sec-check{min-height:38px;gap:6px}
+.ui-enhanced .sec-rules-dialog .sec-check b{font-size:13px;font-weight:500}
+.ui-enhanced .sec-rules-dialog .sec-rule-fields{gap:12px}
+@media(min-width:601px){
+ .ui-enhanced .sec-rules-dialog .sec-field>span:first-child{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .ui-enhanced .sec-rules-dialog .sec-field{gap:0}
+}
+@media(max-width:600px){
+ .ui-enhanced .sec-rules-columns{display:none}
+ .ui-enhanced .sec-rules-dialog .sec-rule-section{grid-template-columns:1fr;gap:6px;padding:10px 0}
+ .ui-enhanced .sec-rules-dialog .sec-rule-fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ .ui-enhanced .sec-rules-dialog .sec-rule-fields .sec-field{grid-template-columns:1fr;font-size:12px;gap:6px}
+ .ui-enhanced .sec-rules-dialog .sec-number{grid-template-columns:26px minmax(0,1fr) 26px}
+}
+@media(max-width:380px){
+ .ui-enhanced .sec-rules-dialog .sec-rule-fields{grid-template-columns:1fr}
+ .ui-enhanced .sec-rules-dialog .sec-rule-fields .sec-field{grid-template-columns:minmax(0,1fr) 142px}
+}
+.ui-enhanced .sec-list-help{margin:0 0 16px;font-size:12px;line-height:1.7}
+.ui-enhanced .sec-test-result{padding:12px 14px;display:grid;gap:8px;border-left:3px solid var(--ok);background:var(--paper)}
+.ui-enhanced .sec-test-result[hidden]{display:none}
+.ui-enhanced .sec-test-blocked{border-left-color:var(--danger)}
+.ui-enhanced .sec-test-blocked>b{color:var(--danger)}
+.ui-enhanced .sec-test-pass>b{color:var(--ok)}
+.ui-enhanced .sec-test-result p{font-size:13px}
+.ui-enhanced .sec-dialog .source-footer{flex-wrap:wrap}
+@media(max-width:900px){.ui-enhanced #admin-navigation:has(#admin-security-tab){grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){
+ .ui-enhanced #admin-navigation:has(#admin-security-tab){gap:3px}
+ .ui-enhanced #admin-navigation:has(#admin-security-tab) .admin-nav-link{padding-inline:3px;font-size:13px}
+ .ui-enhanced .sec-summary{grid-template-columns:1fr 1fr;gap:16px;padding-block:14px}
+ .ui-enhanced .sec-summary>div:first-child{grid-column:1/-1}
+ .ui-enhanced .sec-rule-grid{gap:8px;margin-top:8px}
+ .ui-enhanced .sec-summary .sec-rule-summary small{font-size:11px}
+ .ui-enhanced .sec-metric{border-left:0;padding:8px 0 0;border-top:1px solid var(--ui-divider,var(--line));display:flex;gap:10px;align-items:center}
+ .ui-enhanced .sec-metric small{margin:0}
+ .ui-enhanced .sec-toolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;align-items:stretch}
+ .ui-enhanced .sec-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%}
+ .ui-enhanced #sec-search{width:100%;grid-column:1/-1}
+ .ui-enhanced .sec-filters:not(:has(#sec-kind)){grid-template-columns:minmax(0,1fr) 116px}
+ .ui-enhanced .sec-filters:not(:has(#sec-kind)) #sec-search{grid-column:auto}
+ .ui-enhanced .sec-filter-actions{display:grid;grid-template-columns:1fr 1fr 1.6fr}
+ .ui-enhanced #sec-export{margin-left:0}
+ .ui-enhanced .sec-filter-actions .btn{min-width:0;white-space:normal;padding-inline:6px;min-height:44px}
+ .ui-enhanced .sec-list-heading{flex-wrap:wrap;gap:8px;margin-bottom:12px}
+ .ui-enhanced .sec-tabs{flex:1 0 100%;border-bottom:1px solid var(--ui-divider,var(--line))}
+ .ui-enhanced #sec-add{margin-left:auto;min-height:44px}
+ .ui-enhanced .sec-pagination{gap:10px}
+ .ui-enhanced .sec-pagination>.sec-actions:last-child{margin-left:auto}
+ .ui-enhanced .sec-table{display:block}
+ .ui-enhanced .sec-table-wrap{overflow:visible}
+ .ui-enhanced .sec-table thead{display:none}
+ .ui-enhanced .sec-table tbody{display:block}
+ .ui-enhanced .sec-table tr{position:relative;display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:16px 0;border-bottom:1px solid var(--ui-divider,var(--line))}
+ .ui-enhanced .sec-table td{display:block;padding:0;border:0;min-width:0;max-width:none}
+ .ui-enhanced .sec-table .sec-address{max-width:none;min-width:0;padding-right:36px}
+ .ui-enhanced .sec-table .sec-select{position:absolute;top:14px;right:0;padding:8px}
+ .ui-enhanced .sec-table td[data-label]:not(.sec-address)::before{content:attr(data-label)'\u3000';color:var(--muted);font-size:12px}
+ .ui-enhanced .sec-row-actions{display:flex!important;gap:8px;white-space:normal!important}
+ .ui-enhanced .sec-row-actions .btn{margin:0;flex:1;min-height:44px}
+ .ui-enhanced .sec-toolbar input,.ui-enhanced .sec-toolbar select,.ui-enhanced .sec-field input,.ui-enhanced .sec-field select{min-height:44px;font-size:16px}
+ .ui-enhanced .sec-rule-fields{grid-template-columns:1fr}
+ .ui-enhanced .sec-rule-fields .sec-field{grid-template-columns:minmax(0,1fr) 134px;align-items:center}
+ .ui-enhanced .sec-tabs{gap:2px}
+ .ui-enhanced .sec-tabs>.btn{flex:1;padding-inline:4px;font-size:13px}
+ .ui-enhanced .sec-form-grid{grid-template-columns:1fr}
+ .ui-enhanced .sec-heading>.sec-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:auto}
+ .ui-enhanced .sec-heading>.sec-actions .btn{min-height:44px}
+ .ui-enhanced .sec-region-table .sec-row-actions{display:grid!important;grid-template-columns:1fr 1fr}
+ .ui-enhanced .sec-scope-picker .sec-check{min-height:32px}
+}
+@media(forced-colors:active){
+ .ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]{appearance:auto}
+ .ui-enhanced :is(#security-view,#security-dialog,#share-edit-form) input[type=checkbox]::after{display:none}
+}
+
+.ui-enhanced .sec-number input[type=number]{appearance:textfield;-moz-appearance:textfield;min-width:0;width:100%;min-height:38px;padding:6px 2px;border:0;border-radius:0;box-shadow:none;outline:none;text-align:center;background:transparent;color:var(--ink);font:inherit;font-variant-numeric:tabular-nums}
+.ui-enhanced #retention-form,.ui-enhanced #guest-policy-form{grid-template-columns:minmax(0,1fr) 154px auto}
+.ui-enhanced .setting-value .sec-number{width:130px;flex:0 1 130px}
+.ui-enhanced #retention-form .sec-number input,.ui-enhanced #guest-policy-form .sec-number input{width:100%;min-width:0;border:0;border-radius:0;box-shadow:none;outline:none;background:transparent;padding:6px 2px;text-align:center}
+.ui-enhanced .sec-ip-line{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:5px;row-gap:3px}
+.ui-enhanced .sec-ip-line>.sec-scope-sup{display:inline-flex;position:relative;top:-.35em;margin:0;font-size:10px;line-height:1.3;gap:3px;vertical-align:super}
+.ui-enhanced .sec-scope-sup span{padding:0 3px;white-space:nowrap;border-radius:3px}
+.ui-enhanced .sec-table .sec-address:has(.sec-ip-line){min-width:260px;max-width:350px}
+.ui-enhanced .ui-help-anchor{display:flex;align-items:center;gap:5px;min-width:0}
+.ui-enhanced .ui-help-anchor>h4{margin:0}
+.ui-enhanced .settings-section>.ui-help-anchor{margin-bottom:8px}
+.ui-enhanced .ui-help-button{position:relative;display:inline-grid;place-items:center;flex:0 0 24px;width:24px;min-height:24px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);font:600 12px/1 system-ui;box-shadow:none;cursor:help}
+.ui-enhanced .ui-help-button::before{content:'';position:absolute;inset:4px;border:1px solid currentColor;border-radius:50%}
+.ui-enhanced .ui-help-button:hover,.ui-enhanced .ui-help-button[aria-expanded=true]{color:var(--stamp)}
+.ui-enhanced .ui-help-button:focus-visible{outline:2px solid var(--stamp);outline-offset:1px}
+.ui-enhanced .ui-help-popover{position:fixed;inset:auto;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 24px var(--mask);background:var(--paper);color:var(--ink);font:12px/1.7 system-ui;overflow:auto;overflow-wrap:anywhere}
+.ui-enhanced .ui-help-popover small{display:block;color:inherit;font-size:inherit;line-height:inherit}
+.ui-enhanced summary>.ui-help-anchor{display:inline-flex;vertical-align:middle}
+@media(min-width:601px){.ui-enhanced.ui-send .upload-context summary{padding-block:2px}}
+.ui-enhanced .source-heading>.ui-help-anchor{flex-wrap:wrap;row-gap:0}
+.ui-enhanced .source-heading .ui-help-anchor>h3{margin:0}
+.ui-enhanced .sec-rule-section>.ui-help-anchor{justify-content:flex-start}
+.ui-enhanced .sec-field>.ui-help-anchor{min-height:24px}
+.ui-enhanced #source-detail .source-field>.ui-help-anchor{gap:2px;align-self:start}
+.ui-enhanced #source-history>.ui-help-anchor{margin-bottom:6px}
+.ui-enhanced #source-history .ui-help-anchor>h4{margin:0}
+@media(max-width:600px){
+ .ui-enhanced .sec-number input[type=number]{min-height:44px;font-size:16px}
+ .ui-enhanced #retention-form,.ui-enhanced #guest-policy-form{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}
+ .ui-enhanced #retention-form>label,.ui-enhanced #guest-policy-form>.ui-help-anchor{grid-column:1/-1}
+ .ui-enhanced .setting-value .sec-number{width:146px;flex-basis:146px;grid-template-columns:34px minmax(0,1fr) 34px}
+ .ui-enhanced .sec-table .sec-address:has(.sec-ip-line){min-width:0;max-width:none}
+ .ui-enhanced .sec-address:has(.sec-ip-line){padding-right:28px}
+ .ui-enhanced .ui-help-button{flex-basis:32px;width:32px;min-height:32px}
+ .ui-enhanced .ui-help-button::before{inset:8px}
+}
+
+.ui-enhanced .ui-record-line{display:flex;align-items:baseline;flex-wrap:wrap;gap:3px 6px;min-width:0;white-space:normal;overflow-wrap:anywhere}
+.ui-enhanced .ui-record-sup,.ui-enhanced .share-kind.badge{display:inline-block;position:relative;top:-.35em;flex:none;align-self:baseline;vertical-align:super;margin:0;padding:0 4px;border:1px solid var(--line);border-radius:3px;background:transparent;color:var(--muted);font:400 11px/1.4 system-ui;white-space:nowrap;letter-spacing:0;box-shadow:none}
+.ui-enhanced .sec-ip-line>.sec-scope-sup{font-size:11px;line-height:1.4}
+.ui-enhanced .sec-scope-sup span{padding:0 4px}
+.ui-enhanced{--tag-blue:#1b57a3;--tag-teal:#16645c;--tag-amber:#82500a;--tag-orange:#934615;--tag-violet:#7040a0;--tag-slate:#475970}
+.ui-enhanced[data-theme='dark']{--tag-blue:#9cc7ff;--tag-teal:#7ddacb;--tag-amber:#f1c479;--tag-orange:#f6ad78;--tag-violet:#d2afff;--tag-slate:#bcc9dd}
+.ui-enhanced [data-tone='blue']{--tag-ink:var(--tag-blue)}
+.ui-enhanced [data-tone='teal']{--tag-ink:var(--tag-teal)}
+.ui-enhanced [data-tone='amber']{--tag-ink:var(--tag-amber)}
+.ui-enhanced [data-tone='orange'],.ui-enhanced .share-kind.kind-file{--tag-ink:var(--tag-orange)}
+.ui-enhanced [data-tone='violet'],.ui-enhanced .share-kind.kind-text{--tag-ink:var(--tag-violet)}
+.ui-enhanced [data-tone='slate']{--tag-ink:var(--tag-slate)}
+.ui-enhanced .ui-record-sup,.ui-enhanced .share-kind.badge,.ui-enhanced .sec-scope-badges [data-tone]{color:var(--tag-ink,var(--muted));border-color:color-mix(in srgb,var(--tag-ink,var(--muted)) 42%,var(--line));background:color-mix(in srgb,var(--tag-ink,var(--muted)) 10%,var(--paper))}
+.ui-enhanced #audit-body .ui-record-line{max-width:290px}
+.ui-enhanced #audit-body .ui-record-line>span{min-width:0}
+@media(max-width:600px){
+ .ui-enhanced #audit-body .ui-record-line{max-width:none;row-gap:4px}
+ .ui-enhanced .sec-region-table .sec-address{padding-right:0}
+}
+
+.ui-enhanced .audit-heading{margin-bottom:8px}
+.ui-enhanced #audit-filter{display:grid;grid-template-columns:120px 150px 150px minmax(160px,1fr) auto;gap:12px;align-items:end;margin-block:16px 10px;padding:0;border:0;background:transparent}
+.ui-enhanced #audit-filter .audit-search{min-width:0}
+.ui-enhanced #audit-filter>.audit-actions{gap:8px}
+.ui-enhanced #audit-export{margin-left:8px}
+.ui-enhanced #audit-export[aria-disabled=true]{opacity:.45;cursor:not-allowed}
+.ui-enhanced .ui-audit-pending{grid-column:1/-1;color:var(--warn);font-size:12px;line-height:1.5}
+.ui-enhanced #audit-pager{padding-block:10px;margin-bottom:12px}
+@media(max-width:1199px){
+ .ui-enhanced #audit-filter{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+ .ui-enhanced #audit-filter .audit-search{grid-column:1/3}
+ .ui-enhanced #audit-filter>.audit-actions{grid-column:3;justify-content:flex-end;flex-wrap:wrap}
+ .ui-enhanced #audit-export{margin-left:0}
+}
+@media(max-width:600px){
+ .ui-enhanced #audit-filter{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 8px}
+ .ui-enhanced #audit-filter .audit-search{grid-column:auto}
+ .ui-enhanced #audit-filter>.audit-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1.6fr}
+ .ui-enhanced #audit-filter>.audit-actions .btn{min-width:0;padding-inline:6px;white-space:normal}
+ .ui-enhanced .audit-heading{align-items:flex-start}
+}
+
+.ui-enhanced #sec-feedback.sec-feedback-error{color:var(--danger)}
+.ui-enhanced #sec-feedback.sec-feedback-error::before{content:"!";color:var(--danger);background:transparent}
+
+@media(max-width:600px){
+ .ui-enhanced[lang=en] #shares-body td:nth-child(5)::before{content:'Picked '}
+ .ui-enhanced[lang=en] #shares-body td:nth-child(6)::before{content:'Expires '}
+ .ui-enhanced[lang=en] #shares-body td:nth-child(8)::before{content:'Created '}
+}
+.ui-enhanced .security-feedback{margin-top:18px;padding:18px;border:1px solid color-mix(in srgb,var(--warn) 45%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--warn-soft) 25%,var(--paper));text-align:left;min-width:0}
+.security-feedback:focus{outline:none}.security-feedback-head{display:flex;gap:12px;align-items:flex-start}
+.security-feedback-icon{flex:0 0 32px;width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--warn);border-radius:50%;color:var(--warn);font-weight:700}
+.security-feedback h3{margin:0 0 6px;font-size:16px}.security-feedback p{margin:0;color:var(--muted);font-size:13px;line-height:1.8}
+.security-feedback-time{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:14px;padding-top:10px;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.security-feedback-actions{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;margin-top:16px}.security-feedback-actions .btn{min-height:44px}
+.security-feedback-fallback{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:10px}
+.security-text-button{border:0;background:none;color:var(--muted);font:inherit;font-size:12px;padding:6px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.security-text-button:focus-visible,.security-help:focus-visible{outline:2px solid var(--stamp);outline-offset:3px}
+.security-help-wrap{position:relative;display:inline-flex}.security-help{width:28px;height:28px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--muted);cursor:help}
+.security-help-text{display:none;position:absolute;bottom:34px;right:0;width:min(240px,65vw);padding:10px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:8px;font-size:12px;z-index:5}
+.security-help:hover+.security-help-text,.security-help:focus-visible+.security-help-text,.security-help[aria-expanded=true]+.security-help-text{display:block}
+.security-feedback-reference{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-top:1px solid var(--line);padding-top:10px;margin-top:12px;color:var(--muted);font-size:11px;overflow-wrap:anywhere}.security-feedback-reference>span{min-width:0;flex:1 1 160px}
+.security-feedback .security-feedback-status:empty{display:none}.security-feedback .security-feedback-status{margin-top:8px;color:var(--ok)}
+.security-copy-dialog{width:min(480px,calc(100vw - 24px));padding:18px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:12px}.security-copy-dialog::backdrop{background:var(--mask)}
+.security-copy-dialog textarea{width:100%;height:160px;margin-bottom:12px;background:var(--bag);color:var(--ink);border:1px solid var(--line);padding:8px}
+@media(max-width:600px){.ui-enhanced .security-feedback{padding:14px}.security-feedback-actions .btn{flex:1;font-size:13px;padding-inline:8px}.security-text-button{min-height:44px}}
 ` });
 
 // src/settings.ts
@@ -5578,19 +5597,37 @@ async function writeSetting(env, key, value) {
 }
 __name(writeSetting, "writeSetting");
 
+// src/security-feedback.ts
+function securityDownloadPage(data) {
+  const payload = JSON.stringify(data).replace(/</g, "\\u003c");
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>\u6587\u4EF6\u4E0B\u8F7D \xB7 \u6587\u4EF6\u4E2D\u8F6C\u7AD9</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/ui.css">
+<script type="module" src="/js/security-download.js"><\/script></head><body>
+<header class="topbar"><div class="brand"><span class="logo">\u{1F4E6}</span><b>\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b></div>
+<div class="actions"><button id="lang-btn" class="icon-btn">EN</button><button id="theme-btn" class="icon-btn" aria-label="\u5207\u6362\u4E3B\u9898">\u{1F317}</button></div></header>
+<main class="container narrow"><section id="download-feedback"></section>
+<noscript><p>\u5F53\u524D\u65E0\u6CD5\u4E0B\u8F7D\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u6216\u8054\u7CFB\u7AD9\u957F\u3002</p><a href="mailto:iblykk@gmail.com">\u8054\u7CFB\u7AD9\u957F</a></noscript>
+<p><a id="back-pickup" href="/pickup">\u8FD4\u56DE\u53D6\u4EF6\u9875</a></p></main>
+<script type="application/json" id="security-data">${payload}<\/script></body></html>`;
+}
+__name(securityDownloadPage, "securityDownloadPage");
+
 // src/security.ts
 var SECURITY_KEY = "__file-relay/security-v1.json";
 var SCOPES = ["login", "upload", "pickup"];
 var SecurityError = class extends Error {
-  constructor(status, message, retryAt, newBan = false) {
+  constructor(status, message, retryAt, newBan = false, reason = status === 503 ? "service_unavailable" : status === 429 ? "rate_limit" : "access_rule") {
     super(message);
     this.status = status;
     this.retryAt = retryAt;
     this.newBan = newBan;
+    this.reason = reason;
   }
   status;
   retryAt;
   newBan;
+  reason;
   static {
     __name(this, "SecurityError");
   }
@@ -5601,7 +5638,15 @@ function securityResponse(c, e) {
   c.header("Cache-Control", "no-store");
   if (e.retryAt)
     c.header("Retry-After", String(Math.max(1, Math.ceil((e.retryAt - Date.now()) / 1e3))));
-  return c.json({ error: e.status === 503 ? "security_unavailable" : e.status === 409 ? "security_conflict" : e.status === 400 ? "bad_request" : "security_blocked", message: e.message, retryAt: e.retryAt }, e.status);
+  const data = { error: e.status === 503 ? "security_unavailable" : e.status === 409 ? "security_conflict" : e.status === 400 ? "bad_request" : "security_blocked", message: e.message, retryAt: e.retryAt, reason: e.reason, serverTime: Date.now(), requestId: crypto.randomUUID() };
+  c.header("X-Request-ID", data.requestId);
+  console.warn("security_rejection", { requestId: data.requestId, reason: data.reason, status: e.status });
+  if (["GET", "HEAD"].includes(c.req.method) && /^\/api\/pickup\/[^/]+\/download$/.test(c.req.path) && (c.req.header("Accept") || "").includes("text/html")) {
+    c.header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    c.header("Referrer-Policy", "no-referrer");
+    return c.html(securityDownloadPage(data), e.status);
+  }
+  return c.json(data, e.status);
 }
 __name(securityResponse, "securityResponse");
 var securityEnabled = /* @__PURE__ */ __name((env) => !!(env.BUCKET || env.DB), "securityEnabled");
@@ -5711,10 +5756,10 @@ __name(exempt, "exempt");
 function evaluate(d, ip, scope, country = "", region = "", now = Date.now()) {
   const ban = d.bans.find((b) => b.ip === ip && b.scopes.includes(scope) && (b.until === null || b.until > now) && (b.kind === "manual" || !exempt(d, ip, scope)));
   if (ban)
-    return { blocked: true, reason: ban.reason, retryAt: ban.until ?? void 0, status: ban.kind === "auto" ? 429 : 403 };
+    return { blocked: true, reason: ban.reason, publicReason: ban.kind === "auto" ? "rate_limit" : "access_rule", retryAt: ban.until ?? void 0, status: ban.kind === "auto" ? 429 : 403 };
   const geo = scope === "login" ? void 0 : d.regions.find((r) => r.enabled && r.scopes.includes(scope) && (r.until === null || r.until > now) && country !== "" && r.country === country && (!r.region || r.region === region));
   if (geo)
-    return { blocked: true, reason: "\u547D\u4E2D\u5730\u533A\u5C01\u7981\u89C4\u5219", retryAt: geo.until ?? void 0, status: 403 };
+    return { blocked: true, reason: "\u547D\u4E2D\u5730\u533A\u5C01\u7981\u89C4\u5219", publicReason: "region", retryAt: geo.until ?? void 0, status: 403 };
   return { blocked: false, reason: exempt(d, ip, scope) ? "\u547D\u4E2D\u5141\u8BB8\u540D\u5355" : "\u9632\u62A4\u653E\u884C", retryAt: void 0 };
 }
 __name(evaluate, "evaluate");
@@ -5724,7 +5769,7 @@ async function enforceSecurity(env, ip, scope, country = "", region = "", count 
   const check = /* @__PURE__ */ __name((d) => {
     const result = evaluate(d, ip, scope, country, region);
     if (result.blocked)
-      throw new SecurityError(result.status || 403, "\u5F53\u524D\u8BF7\u6C42\u53D7\u8BBF\u95EE\u89C4\u5219\u9650\u5236", result.retryAt);
+      throw new SecurityError(result.status || 403, "\u5F53\u524D\u8BF7\u6C42\u53D7\u8BBF\u95EE\u89C4\u5219\u9650\u5236", result.retryAt, false, result.publicReason);
   }, "check");
   if (!count) {
     check(await securityState(env));

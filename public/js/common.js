@@ -33,13 +33,17 @@ export async function api(path, opts = {}) {
   let data = null;
   try { data = await res.json(); } catch { /* 非 JSON 响应 */ }
   if (!res.ok) {
-    const e = new Error(data?.message || t('req.fail', res.status));
-    e.code = data?.error || 'unknown';
-    e.status = res.status;
-    e.remainingBytes = data?.remainingBytes;
-    throw e;
+    throw responseError(data, res.status);
   }
   return data;
+}
+
+/** Shared by fetch and XHR so security errors survive multipart/direct uploads. */
+export function responseError(data, status) {
+  const error = new Error(data?.message || t('req.fail', status));
+  return Object.assign(error, { code: data?.error || 'unknown', status,
+    remainingBytes: data?.remainingBytes, retryAt: data?.retryAt,
+    serverTime: data?.serverTime, reason: data?.reason, requestId: data?.requestId });
 }
 
 export function fmtBytes(n) {

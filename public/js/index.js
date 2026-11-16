@@ -1,5 +1,6 @@
 import { initUi } from './ui.js';
-import { $, $$, api, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme, el } from './common.js';
+import { $, $$, api, responseError, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme, el } from './common.js';
+import { createSecurityFeedback, isSecurityError } from './security-feedback.js';
 import { t, onLangChange, initI18n } from './i18n.js';
 
 initTheme();
@@ -37,6 +38,8 @@ let currentXhr = null;
 let cancelled = false;
 let uploading = false;
 let lastResults = [];
+const securityFeedback = createSecurityFeedback($('.form-card'), 'upload', () =>
+  $('#panel-text').hidden ? startUpload() : submitText());
 
 /* 服务端配置:决定走分片上传(R2 大存储)还是单请求直传(KV 小存储) */
 function canUploadFiles() {
@@ -258,10 +261,8 @@ function xhrPut(url, blob, onProgress) {
       let etag = null;
       try {
         const result = JSON.parse(xhr.responseText);
-        if (result.error === 'capacity_exceeded' || (xhr.status >= 400 && xhr.status < 500) || result.error?.startsWith('upload_policy')) {
-          const error = new Error(result.message);
-          error.code = result.error;
-          error.remainingBytes = result.remainingBytes;
+        if (result.error === 'capacity_exceeded' || (xhr.status >= 400 && xhr.status < 500) || result.error?.startsWith('upload_policy') || isSecurityError({ code: result.error })) {
+          const error = responseError(result, xhr.status);
           reject(error);
           return;
         }
@@ -297,12 +298,10 @@ function xhrJson(method, url, blob, onProgress, context) {
       if (xhr.status >= 200 && xhr.status < 300) {
         try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }
       }
-      if (xhr.status >= 400 && xhr.status < 500) {
-        let data;
-        try { data = JSON.parse(xhr.responseText); } catch { /* Use status below. */ }
-        const error = new Error(data?.message || t('req.fail', xhr.status));
-        error.code = data?.error;
-        reject(error);
+      let data;
+      try { data = JSON.parse(xhr.responseText); } catch { /* Use status below. */ }
+      if ((xhr.status >= 400 && xhr.status < 500) || isSecurityError({ code: data?.error })) {
+        reject(responseError(data, xhr.status));
         return;
       }
       resolve(null);
@@ -341,15 +340,19 @@ function setPending(on) {
 }
 
 async function startUpload() {
-  if (!files.length || uploading || !canUploadFiles()) return;
+  if (!files.length || uploading || !canUploadFiles() || !securityFeedback.canRetry()) return;
+  // A retry must not re-upload files already accepted earlier in the batch.
+  const pendingFiles = files.filter(file => !queueState.get(file)?.done);
+  if (!pendingFiles.length) return;
+  securityFeedback.clear();
   uploading = true;
   cancelled = false;
   speedState = { t: 0, loaded: 0, speed: 0 };
   curFileIdx = 0;
-  curFileTotal = files.length;
+  curFileTotal = pendingFiles.length;
   const opts = readOptions();
   const responses = [];
-  const totalBytes = files.reduce((s, f) => s + f.size, 0);
+  const totalBytes = pendingFiles.reduce((s, f) => s + f.size, 0);
   let baseBytes = 0;
   setBusy(true);
   els.progress.hidden = false;
@@ -357,10 +360,11 @@ async function startUpload() {
   setPending(false);
   els.progressText.textContent = t('prog.preparing');
 
-  for (let i = 0; i < files.length; i++) {
+  for (let i = 0; i < pendingFiles.length; i++) {
     if (cancelled) break;
-    const f = files[i];
+    const f = pendingFiles[i];
     const ui = queueUI.get(f);
+    ui.row.classList.remove('fail');
     curFileIdx = i + 1;
     ui.row.classList.add('uploading');
     els.progressText.textContent = t('prog.uploading');
@@ -387,7 +391,7 @@ async function startUpload() {
         window.alert(Number.isSafeInteger(e.remainingBytes) && e.remainingBytes >= 0
           ? t('err.capacityRemaining', (e.remainingBytes / 1e9).toFixed(3), e.remainingBytes.toLocaleString())
           : t('err.capacity'));
-      } else if (!cancelled) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');
+      } else if (!cancelled && !securityFeedback.show(e)) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');
       break; // 一个失败即停,保留队列便于处理
     }
   }
@@ -397,7 +401,7 @@ async function startUpload() {
   setPending(false);
   setBusy(false);
   if (cancelled) toast(t('toast.cancelled'));
-  if (responses.length) showResults(responses);
+  if (responses.length) showResults([...lastResults, ...responses]);
   await refreshPolicy();
 }
 
@@ -495,13 +499,14 @@ window.addEventListener('pagehide', () => {
 /* ---------- 文本分享 ---------- */
 async function submitText() {
   const text = els.textInput.value;
-  if (!text.trim() || !policyReady) return;
+  if (!text.trim() || !policyReady || !securityFeedback.canRetry()) return;
+  securityFeedback.clear();
   setBusy(true);
   try {
     const res = await api('/api/shares/text', { method: 'POST', body: { text, ...readOptions() } });
     showResults([res]);
   } catch (e) {
-    toast(e.message || t('err.submit'), 'error');
+    if (!securityFeedback.show(e)) toast(e.message || t('err.submit'), 'error');
   } finally {
     setBusy(false);
   }

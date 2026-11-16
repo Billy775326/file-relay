@@ -1,4 +1,5 @@
 import { initUi } from './ui.js';
+import { createSecurityFeedback } from './security-feedback.js';
 import { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js';
 import { t, onLangChange, initI18n } from './i18n.js';
 
@@ -11,6 +12,7 @@ const errorBox = $('#pickup-error');
 const resultCard = $('#pickup-result');
 let querying = false;
 let last = null; // { res, code } 语言切换时重渲染
+const securityFeedback = createSecurityFeedback($('#pickup-input-card'), 'pickup', submit);
 
 onLangChange(() => {
   if (last && !resultCard.hidden) render(last.res, last.code);
@@ -73,6 +75,8 @@ function hideError() {
 
 async function submit() {
   const code = value();
+  if (querying || !/^\d{6}$/.test(code) || !securityFeedback.canRetry()) return;
+  securityFeedback.clear();
   querying = true;
   hideError();
   resultCard.hidden = true;
@@ -80,7 +84,7 @@ async function submit() {
     const res = await api('/api/pickup', { method: 'POST', body: { code } });
     render(res, code);
   } catch (e) {
-    showError(e.message || t('pk.fail'));
+    if (!securityFeedback.show(e)) showError(e.message || t('pk.fail'));
   } finally {
     querying = false;
   }
@@ -124,7 +128,6 @@ function render(res, code) {
       el('a', {
         class: 'btn primary block',
         href: `/api/pickup/${code}/download`,
-        download: res.filename || 'file',
       }, t('pk.download')),
     );
   }

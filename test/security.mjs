@@ -21,7 +21,13 @@ for(const mode of ['kv-r2','d1','kv-only']){
   assert.equal((await call('/api/admin/security',{cookie,method:'POST',json:{action:'rules',configRevision:'stale',rules}})).status,409);
   assert.equal((await change('ban',{ip:'010.0.0.1',scopes:['upload'],note:'fixture',minutes:30})).status,400);
   assert.equal((await change('ban',{ip:'192.0.2.2',scopes:['upload'],note:'fixture',minutes:30})).status,200);
-  assert.equal((await call('/api/shares/text',{ip:'192.0.2.2',method:'POST',json:{}})).status,403);
+  const blocked=await call('/api/shares/text',{ip:'192.0.2.2',method:'POST',json:{}});
+  assert.equal(blocked.status,403);
+  const blockedData=await blocked.json();
+  assert.equal(blockedData.reason,'access_rule');assert.ok(blockedData.retryAt>blockedData.serverTime);
+  assert.equal(blocked.headers.get('X-Request-ID'),blockedData.requestId);
+  assert.match(blocked.headers.get('Retry-After'),/^\d+$/);assert.equal(blocked.headers.get('Cache-Control'),'no-store');
+  assert.ok(!JSON.stringify(blockedData).includes('fixture'),'private admin notes never returned');
   assert.equal((await call('/api/pickup',{ip:'192.0.2.2',method:'POST',json:{code:'bad'}})).status,400);
   assert.equal((await change('allow',{ip:'192.0.2.2',scopes:['upload'],note:'fixture'})).status,200);
   assert.equal((await call('/api/shares/text',{ip:'192.0.2.2',method:'POST',json:{}})).status,403,'allow does not bypass manual ban');
@@ -37,10 +43,19 @@ for(const mode of ['kv-r2','d1','kv-only']){
   assert.deepEqual(await state(),beforeTest,'rule testing does not change bans or configuration');
   assert.equal((await call('/api/admin/login',{cf:{country:'US'},method:'POST',json:{token:'security-test-only'}})).status,200);
   assert.equal((await call('/api/pickup/123456/download',{cf:{country:'US'}})).status,403,'direct download cannot bypass geography');
+  const geo=await call('/api/pickup/123456/download',{cf:{country:'US'},headers:{Accept:'application/json'}});
+  const geoData=await geo.json();assert.equal(geoData.reason,'region');assert.equal(geoData.retryAt,undefined);
+  const html=await call('/api/pickup/123456/download',{cf:{country:'US'},headers:{Accept:'text/html'}});
+  assert.equal(html.status,403);assert.match(html.headers.get('Content-Type'),/text\/html/);
+  assert.equal(html.headers.get('Cache-Control'),'no-store');assert.ok(html.headers.get('Content-Security-Policy').includes("script-src 'self'"));
+  const htmlBody=await html.text();assert.ok(htmlBody.includes('/js/security-download.js'));assert.ok(!htmlBody.includes('fixture'));
+  const head=await call('/api/pickup/123456/download',{method:'HEAD',cf:{country:'US'},headers:{Accept:'text/html'}});
+  assert.equal(head.status,403);assert.equal(await head.text(),'');
   assert.equal((await call('/api/shares/text',{ip:'192.0.2.2',cf:{country:'',regionCode:''},method:'POST',json:{}})).status,400,'unknown geo never guessed');
   for(let i=0;i<2;i++)assert.equal((await call('/api/shares/text',{ip:'192.0.2.3',method:'POST',json:{}})).status,400);
   const concurrent=await Promise.all(Array.from({length:4},()=>call('/api/shares/text',{ip:'192.0.2.3',method:'POST',json:{}})));
-  assert.ok(concurrent.every(r=>r.status===429),await Promise.all(concurrent.map(r=>r.text())));
+  assert.ok(concurrent.every(r=>r.status===429),await Promise.all(concurrent.map(r=>r.clone().text())));
+  const limited=await concurrent[0].json();assert.equal(limited.reason,'rate_limit');assert.ok(limited.retryAt>limited.serverTime);
   assert.equal((await state()).bans.find(b=>b.ip==='192.0.2.3').failures,3);
   assert.equal((await call('/api/pickup',{ip:'192.0.2.4',method:'POST',json:{code:'wrong'}})).status,400);
   assert.equal((await call('/api/pickup/123456/download',{ip:'192.0.2.4'})).status,429,'invalid direct download shares pickup counter');
@@ -65,10 +80,12 @@ for(const mode of ['kv-r2','d1','kv-only']){
   if(mode==='kv-r2'){
    const url=String(await mf.ready);
    await new Promise((resolve,reject)=>{const child=spawn('python',['test/security_ui.py',url],{stdio:'inherit'});child.on('error',reject);child.on('exit',code=>code===0?resolve():reject(new Error('Security UI '+code)));});
+   await new Promise((resolve,reject)=>{const child=spawn('python',['test/security_feedback_ui.py',url],{stdio:'inherit'});child.on('error',reject);child.on('exit',code=>code===0?resolve():reject(new Error('Security feedback UI '+code)));});
   }
   const bucket=mode==='kv-r2'?await mf.getR2Bucket('BUCKET'):null,db=mode==='d1'?await mf.getD1Database('DB'):null;
   if(bucket)await bucket.put('__file-relay/security-v1.json','{}');else await db.prepare('UPDATE app_settings SET value=? WHERE key=?').bind('{}','__file-relay/security-v1.json').run();
-  assert.equal((await call('/api/shares/text',{method:'POST',json:{}})).status,503,'corruption fails closed');
+  const unavailable=await call('/api/shares/text',{method:'POST',json:{}});
+  assert.equal(unavailable.status,503,'corruption fails closed');assert.equal((await unavailable.json()).reason,'service_unavailable');
   console.log('PASS security '+mode+': persistence, scope, region, allow precedence, concurrency, auth, CSRF, revision, login compatibility, fail-closed');
  }finally{await mf.dispose();}
 }

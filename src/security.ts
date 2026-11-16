@@ -1,6 +1,7 @@
 import type { Context } from 'hono';
 import type { Env } from './types';
 import { CREATE_SETTINGS } from './settings';
+import { securityDownloadPage } from './security-feedback';
 export const SECURITY_KEY = '__file-relay/security-v1.json';
 export const SCOPES = ['login', 'upload', 'pickup'] as const;
 export type Scope = typeof SCOPES[number];
@@ -51,7 +52,8 @@ export type SecurityState = {
     counters: Counter[];
 };
 export class SecurityError extends Error {
-    constructor(public status: 400 | 403 | 409 | 429 | 503, message: string, public retryAt?: number, public newBan = false) { super(message); }
+    constructor(public status: 400 | 403 | 409 | 429 | 503, message: string, public retryAt?: number, public newBan = false,
+        public reason: 'rate_limit' | 'access_rule' | 'region' | 'service_unavailable' = status === 503 ? 'service_unavailable' : status === 429 ? 'rate_limit' : 'access_rule') { super(message); }
 }
 export function securityResponse(c: Context<{
     Bindings: Env;
@@ -61,7 +63,16 @@ export function securityResponse(c: Context<{
     c.header('Cache-Control', 'no-store');
     if (e.retryAt)
         c.header('Retry-After', String(Math.max(1, Math.ceil((e.retryAt - Date.now()) / 1000))));
-    return c.json({ error: e.status === 503 ? 'security_unavailable' : e.status === 409 ? 'security_conflict' : e.status === 400 ? 'bad_request' : 'security_blocked', message: e.message, retryAt: e.retryAt }, e.status);
+    const data = { error: e.status === 503 ? 'security_unavailable' : e.status === 409 ? 'security_conflict' : e.status === 400 ? 'bad_request' : 'security_blocked', message: e.message, retryAt: e.retryAt, reason: e.reason, serverTime: Date.now(), requestId: crypto.randomUUID() };
+    c.header('X-Request-ID', data.requestId);
+    // Correlate feedback in Worker logs without recording codes, filenames, IPs or admin notes.
+    console.warn('security_rejection', { requestId: data.requestId, reason: data.reason, status: e.status });
+    if (['GET', 'HEAD'].includes(c.req.method) && /^\/api\/pickup\/[^/]+\/download$/.test(c.req.path) && (c.req.header('Accept') || '').includes('text/html')) {
+        c.header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+        c.header('Referrer-Policy', 'no-referrer');
+        return c.html(securityDownloadPage(data), e.status);
+    }
+    return c.json(data, e.status);
 }
 export const securityEnabled = (env: Env) => !!(env.BUCKET || env.DB);
 export function canonicalIP(value: unknown): string | null {
@@ -166,20 +177,20 @@ async function change(env: Env, edit: (d: SecurityState, now: number) => void | 
 }
 export function exempt(d: SecurityState, ip: string, scope: Scope) { return d.allow.some(a => a.ip === ip && a.scopes.includes(scope)); }
 /** CF-provided country/region codes only. An allow entry never bypasses manual or geographic rules. */
-export function evaluate(d: SecurityState, ip: string, scope: Scope, country = '', region = '', now = Date.now()) {
+export function evaluate(d: SecurityState, ip: string, scope: Scope, country = '', region = '', now = Date.now()): { blocked: boolean; reason: string; publicReason?: 'rate_limit' | 'access_rule' | 'region'; retryAt?: number; status?: 403 | 429 } {
     const ban = d.bans.find(b => b.ip === ip && b.scopes.includes(scope) && (b.until === null || b.until > now) && (b.kind === 'manual' || !exempt(d, ip, scope)));
     if (ban)
-        return { blocked: true, reason: ban.reason, retryAt: ban.until ?? undefined, status: ban.kind === 'auto' ? 429 as const : 403 as const };
+        return { blocked: true, reason: ban.reason, publicReason: ban.kind === 'auto' ? 'rate_limit' as const : 'access_rule' as const, retryAt: ban.until ?? undefined, status: ban.kind === 'auto' ? 429 as const : 403 as const };
     const geo = scope === 'login' ? undefined : d.regions.find(r => r.enabled && r.scopes.includes(scope) && (r.until === null || r.until > now) && country !== '' && r.country === country && (!r.region || r.region === region));
     if (geo)
-        return { blocked: true, reason: '命中地区封禁规则', retryAt: geo.until ?? undefined, status: 403 as const };
+        return { blocked: true, reason: '命中地区封禁规则', publicReason: 'region' as const, retryAt: geo.until ?? undefined, status: 403 as const };
     return { blocked: false, reason: exempt(d, ip, scope) ? '命中允许名单' : '防护放行', retryAt: undefined };
 }
 export async function enforceSecurity(env: Env, ip: string, scope: Scope, country = '', region = '', count = false) {
     if (!securityEnabled(env))
         return;
     const check = (d: SecurityState) => { const result = evaluate(d, ip, scope, country, region); if (result.blocked)
-        throw new SecurityError(result.status || 403, '当前请求受访问规则限制', result.retryAt); };
+        throw new SecurityError(result.status || 403, '当前请求受访问规则限制', result.retryAt, false, result.publicReason); };
     if (!count) {
         check(await securityState(env));
         return;
