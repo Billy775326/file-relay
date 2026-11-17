@@ -80,44 +80,15 @@ export function initSecurity() {
             window.attachHelp(node.querySelector('label > span'), el('span', {}, t('使用 Cloudflare 的国家与省州代码，如 CN / ZJ、US / TX。省州留空表示整个国家；可选择常用代码或自行输入。', 'Use Cloudflare country/subdivision codes, e.g. CN / ZJ or US / TX. A blank subdivision covers the country. Select a suggestion or enter a code.')));
             return { country: countryInput, region: regionInput, node };
         }
-        /** Shared IP/region duration control; elapsed minutes are the API contract. */
-        function durationPicker(id, initial = '30', keep = false) {
-            const maxMinutes = 30 * 24 * 60;
-            const presets = [['5', '5 分钟', '5 minutes'], ['15', '15 分钟', '15 minutes'],
-                ['30', '30 分钟', '30 minutes'], ['60', '1 小时', '1 hour'],
-                ['360', '6 小时', '6 hours'], ['720', '12 小时', '12 hours'],
-                ['1440', '1 天', '1 day'], ['4320', '3 天', '3 days'],
-                ['10080', '7 天', '7 days'], [String(maxMinutes), '30 天', '30 days'],
-                ['0', '永久', 'Permanent'], ['custom', '自定义', 'Custom']];
+        /** Four intent-based choices; existing region rules may retain their expiry. */
+        function durationPicker(id, initial = '60', keep = false) {
+            const presets = [['60', '1 小时', '1 hour'], ['1440', '1 天', '1 day'],
+                ['10080', '7 天', '7 days'], ['0', '永久', 'Permanent']];
             const select = el('select', { id }, ...(keep ? [el('option', { value: 'keep' }, t('保持原到期时间', 'Keep current expiry'))] : []),
                 ...presets.map(([value, zh, en]) => el('option', { value }, t(zh, en))));
             select.value = initial;
-            const amount = input(id + '-amount', 1, { type: 'number', min: 1, max: maxMinutes / 60, step: 1 });
-            const unit = el('select', { id: id + '-unit' },
-                ...[['1', '分钟', 'Minutes'], ['60', '小时', 'Hours'], ['1440', '天', 'Days']]
-                    .map(([value, zh, en]) => el('option', { value }, t(zh, en))));
-            unit.value = '60';
-            const custom = el('div', { class: 'sec-duration-custom', hidden: '' },
-                field('数值', 'Value', amount), field('单位', 'Unit', unit));
-            const node = el('div', { class: 'sec-duration-picker' }, field('封禁时长', 'Ban duration', select), custom);
-            queueMicrotask(() => { if (node.isConnected) window.attachHelp(node.querySelector('label>span'), el('span', {}, t('自定义时长为 1 分钟至 30 天。', 'Custom durations range from 1 minute to 30 days.'))); });
-            function sync() {
-                const active = select.value === 'custom';
-                custom.hidden = !active;
-                amount.disabled = unit.disabled = !active;
-                amount.required = active;
-                amount.max = String(maxMinutes / Number(unit.value));
-            }
-            select.addEventListener('change', sync);
-            unit.addEventListener('change', sync);
-            sync();
-            return { node, minutes() {
-                if (select.value !== 'custom') return select.value === 'keep' ? 'keep' : Number(select.value);
-                if (!amount.reportValidity()) return null;
-                const minutes = Number(amount.value) * Number(unit.value);
-                if (!Number.isSafeInteger(minutes) || minutes < 1 || minutes > maxMinutes) return null;
-                return minutes;
-            } };
+            return { node: field('封禁时长', 'Ban duration', select),
+                minutes: () => select.value === 'keep' ? 'keep' : Number(select.value) };
         }
         let store = { enabled: false, configRevision: '', rules: { login: { enabled: true, limit: 5, window: 10, duration: 30 }, upload: { enabled: true, limit: 20, window: 10, duration: 30 }, pickup: { enabled: true, limit: 10, window: 10, duration: 30 } }, bans: [], allow: [], regions: [] };
         const selected = new Set();
@@ -236,7 +207,6 @@ export function initSecurity() {
                 if (!note.value.trim())
                     return fail(m.error, t('请填写备注或原因，便于后续审计。', 'Enter a note or reason for the audit trail.'));
                 const minutes = allow ? 0 : duration.minutes();
-                if (minutes === null) return;
                 await mutate(allow ? 'allow' : 'ban', { ip: value, scopes: chosen, note: note.value.trim(), minutes });
                 tab = allow ? 'allow' : 'bans';
                 query = '';
@@ -294,7 +264,6 @@ export function initSecurity() {
                 if (!reason.value.trim())
                     return fail(m.error, t('请填写封禁原因。', 'Enter a reason.'));
                 const minutes = duration.minutes();
-                if (minutes === null) return;
                 const until = minutes === 'keep' ? row.until : minutes ? Date.now() + minutes * 60000 : null;
                 if (enabled.checked && until !== null && until <= Date.now())
                     return fail(m.error, t('原规则已过期，请重新选择封禁时长。', 'This rule expired; choose a new duration.'));

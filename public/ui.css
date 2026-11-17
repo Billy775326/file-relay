@@ -591,9 +591,3 @@
 @media(max-width:600px){.ui-enhanced.ui-send .upload-context>summary{min-height:44px}}
 /* Reserve the date's line box before its client-local value is filled in. */
 .ui-send .cap-date:empty::before{content:'\00a0'}
-
-/* Presets and optional duration controls share the existing compact field grid. */
-.ui-enhanced .sec-duration-picker{display:grid;gap:10px;min-width:0}
-.ui-enhanced .sec-duration-custom{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px;align-items:end}
-.ui-enhanced .sec-duration-custom[hidden]{display:none}
-.ui-enhanced .sec-duration-custom .sec-number{width:100%;min-width:0}
