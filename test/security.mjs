@@ -16,6 +16,13 @@ for(const mode of ['kv-r2','d1','kv-only']){
   assert.equal((await change('rules',{rules:(await state()).rules},{headers:{Origin:'https://other.test'}})).status,403);
   if(mode==='kv-only'){assert.equal((await state()).enabled,false);assert.equal((await change('ban',{ip:'192.0.2.2',scopes:['login'],note:'fixture',minutes:30})).status,503);continue;}
   assert.equal((await state()).enabled,true);
+  for(const minutes of [-1,1.5,43201,'30'])assert.equal((await change('ban',{ip:'198.51.100.200',scopes:['upload'],note:'duration boundary fixture',minutes})).status,400);
+  for(const minutes of [1,43200,0]){
+   assert.equal((await change('ban',{ip:'198.51.100.200',scopes:['upload'],note:'duration boundary fixture',minutes})).status,200);
+   const ban=(await state()).bans.find(b=>b.ip==='198.51.100.200');
+   if(minutes)assert.equal(ban.until-ban.at,minutes*60000);else assert.equal(ban.until,null);
+   assert.equal((await change('unban',{ips:['198.51.100.200']})).status,200);
+  }
   const rules=(await state()).rules;rules.upload.limit=3;rules.pickup.limit=2;rules.login.limit=2;
   assert.equal((await change('rules',{rules})).status,200);
   assert.equal((await call('/api/admin/security',{cookie,method:'POST',json:{action:'rules',configRevision:'stale',rules}})).status,409);

@@ -89,6 +89,7 @@ export function canonicalIP(value: unknown): string | null {
         return null;
     }
 }
+const MAX_MANUAL_BAN_MINUTES = 30 * 24 * 60;
 const defaults = (): SecurityState => ({ version: 1, revision: '', configRevision: '', rules: {
         login: { enabled: true, limit: 5, window: 10, duration: 30 },
         upload: { enabled: true, limit: 20, window: 10, duration: 30 },
@@ -249,7 +250,7 @@ export async function editSecurity(env: Env, body: any) {
                     d.allow.push({ ip: ip!, scopes: body.scopes, note: body.note, created: now });
                 }
                 else {
-                    if (d.bans.length >= 1000 || !integer(body.minutes, 0, 10080) || d.bans.some(b => b.ip === ip))
+                    if (d.bans.length >= 1000 || !integer(body.minutes, 0, MAX_MANUAL_BAN_MINUTES) || d.bans.some(b => b.ip === ip))
                         bad();
                     d.bans.push({ ip: ip!, scopes: body.scopes, kind: 'manual', reason: body.note, failures: 0, at: now, until: body.minutes ? now + body.minutes * 60000 : null });
                 }

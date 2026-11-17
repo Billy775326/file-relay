@@ -80,7 +80,45 @@ export function initSecurity() {
             window.attachHelp(node.querySelector('label > span'), el('span', {}, t('使用 Cloudflare 的国家与省州代码，如 CN / ZJ、US / TX。省州留空表示整个国家；可选择常用代码或自行输入。', 'Use Cloudflare country/subdivision codes, e.g. CN / ZJ or US / TX. A blank subdivision covers the country. Select a suggestion or enter a code.')));
             return { country: countryInput, region: regionInput, node };
         }
-        const durationSelect = id => el('select', { id }, ...[['30', '30 分钟', '30 minutes'], ['60', '1 小时', '1 hour'], ['1440', '24 小时', '24 hours'], ['0', '永久', 'Permanent']].map(([v, zh, en]) => el('option', { value: v }, t(zh, en))));
+        /** Shared IP/region duration control; elapsed minutes are the API contract. */
+        function durationPicker(id, initial = '30', keep = false) {
+            const maxMinutes = 30 * 24 * 60;
+            const presets = [['5', '5 分钟', '5 minutes'], ['15', '15 分钟', '15 minutes'],
+                ['30', '30 分钟', '30 minutes'], ['60', '1 小时', '1 hour'],
+                ['360', '6 小时', '6 hours'], ['720', '12 小时', '12 hours'],
+                ['1440', '1 天', '1 day'], ['4320', '3 天', '3 days'],
+                ['10080', '7 天', '7 days'], [String(maxMinutes), '30 天', '30 days'],
+                ['0', '永久', 'Permanent'], ['custom', '自定义', 'Custom']];
+            const select = el('select', { id }, ...(keep ? [el('option', { value: 'keep' }, t('保持原到期时间', 'Keep current expiry'))] : []),
+                ...presets.map(([value, zh, en]) => el('option', { value }, t(zh, en))));
+            select.value = initial;
+            const amount = input(id + '-amount', 1, { type: 'number', min: 1, max: maxMinutes / 60, step: 1 });
+            const unit = el('select', { id: id + '-unit' },
+                ...[['1', '分钟', 'Minutes'], ['60', '小时', 'Hours'], ['1440', '天', 'Days']]
+                    .map(([value, zh, en]) => el('option', { value }, t(zh, en))));
+            unit.value = '60';
+            const custom = el('div', { class: 'sec-duration-custom', hidden: '' },
+                field('数值', 'Value', amount), field('单位', 'Unit', unit));
+            const node = el('div', { class: 'sec-duration-picker' }, field('封禁时长', 'Ban duration', select), custom);
+            queueMicrotask(() => { if (node.isConnected) window.attachHelp(node.querySelector('label>span'), el('span', {}, t('自定义时长为 1 分钟至 30 天。', 'Custom durations range from 1 minute to 30 days.'))); });
+            function sync() {
+                const active = select.value === 'custom';
+                custom.hidden = !active;
+                amount.disabled = unit.disabled = !active;
+                amount.required = active;
+                amount.max = String(maxMinutes / Number(unit.value));
+            }
+            select.addEventListener('change', sync);
+            unit.addEventListener('change', sync);
+            sync();
+            return { node, minutes() {
+                if (select.value !== 'custom') return select.value === 'keep' ? 'keep' : Number(select.value);
+                if (!amount.reportValidity()) return null;
+                const minutes = Number(amount.value) * Number(unit.value);
+                if (!Number.isSafeInteger(minutes) || minutes < 1 || minutes > maxMinutes) return null;
+                return minutes;
+            } };
+        }
         let store = { enabled: false, configRevision: '', rules: { login: { enabled: true, limit: 5, window: 10, duration: 30 }, upload: { enabled: true, limit: 20, window: 10, duration: 30 }, pickup: { enabled: true, limit: 10, window: 10, duration: 30 } }, bans: [], allow: [], regions: [] };
         const selected = new Set();
         let tab = 'bans', query = '', kind = 'all', scopeFilter = 'all', page = 1, open = false, failed = false, empty = false, lastFocus = null, loaded = false, loading = false;
@@ -184,8 +222,8 @@ export function initSecurity() {
         function openAdd(allow = false) {
             const m = modal(allow ? '添加允许 IP' : '手动封禁 IP', allow ? 'Allow IP' : 'Ban IP');
             const ip = input('sec-ip', '', { placeholder: '203.0.113.20 / 2001:db8::1', autocomplete: 'off' }), note = input('sec-note', '', { maxlength: 120, placeholder: t('用途或原因', 'Purpose or reason') });
-            const duration = durationSelect('sec-duration'), scope = scopePicker(allow ? ['login'] : ['login', 'upload', 'pickup']);
-            m.body.prepend(field('IP 地址', 'IP address', ip), scope.node, ...(allow ? [] : [field('封禁时长', 'Ban duration', duration)]), field(allow ? '备注' : '封禁原因', allow ? 'Note' : 'Ban reason', note), el('small', { class: 'muted' }, t(allow ? '仅豁免所选范围的自动封禁，不绕过手动封禁、地区规则或身份校验。' : '在所选范围拦截后续请求；后台登录范围不撤销已登录会话。', allow ? 'Exempts automatic bans in selected scopes, never manual bans, region rules or authentication.' : 'Blocks subsequent requests in selected scopes; login bans do not revoke existing sessions.')));
+            const duration = allow ? null : durationPicker('sec-duration'), scope = scopePicker(allow ? ['login'] : ['login', 'upload', 'pickup']);
+            m.body.prepend(field('IP 地址', 'IP address', ip), scope.node, ...(allow ? [] : [duration.node]), field(allow ? '备注' : '封禁原因', allow ? 'Note' : 'Ban reason', note), el('small', { class: 'muted' }, t(allow ? '仅豁免所选范围的自动封禁，不绕过手动封禁、地区规则或身份校验。' : '在所选范围拦截后续请求；后台登录范围不撤销已登录会话。', allow ? 'Exempts automatic bans in selected scopes, never manual bans, region rules or authentication.' : 'Blocks subsequent requests in selected scopes; login bans do not revoke existing sessions.')));
             window.attachHelp($('#security-dialog-title'), m.body.querySelector(':scope > small'));
             m.foot.append(btn('取消', 'Cancel', close), btn(allow ? '添加允许 IP' : '确认封禁', allow ? 'Allow IP' : 'Ban IP', async () => {
                 const value = canonical(ip.value), chosen = scope.values();
@@ -197,7 +235,9 @@ export function initSecurity() {
                     return fail(m.error, t('该名单已有此 IP，请先移除原记录再调整范围。', 'This list already contains the IP. Remove the existing entry to change its scope.'));
                 if (!note.value.trim())
                     return fail(m.error, t('请填写备注或原因，便于后续审计。', 'Enter a note or reason for the audit trail.'));
-                await mutate(allow ? 'allow' : 'ban', { ip: value, scopes: chosen, note: note.value.trim(), minutes: Number(duration.value) });
+                const minutes = allow ? 0 : duration.minutes();
+                if (minutes === null) return;
+                await mutate(allow ? 'allow' : 'ban', { ip: value, scopes: chosen, note: note.value.trim(), minutes });
                 tab = allow ? 'allow' : 'bans';
                 query = '';
                 kind = 'all';
@@ -243,22 +283,19 @@ export function initSecurity() {
         function editRegion(row = null) {
             const m = modal(row ? '编辑地区封禁' : '添加地区封禁', row ? 'Edit region ban' : 'Add region ban');
             const geo = geoPicker(row?.country || 'CN', row?.region || ''), scope = scopePicker(row?.scopes || ['upload', 'pickup'], 'sec-scope', ['login']), reason = input('sec-region-reason', row?.reason || '', { maxlength: 120, placeholder: t('填写封禁原因', 'Reason for blocking') });
-            const duration = durationSelect('sec-region-duration');
-            duration.value = '0';
-            if (row) {
-                duration.prepend(el('option', { value: 'keep' }, t('保持原到期时间', 'Keep current expiry')));
-                duration.value = 'keep';
-            }
+            const duration = durationPicker('sec-region-duration', row ? 'keep' : '0', !!row);
             const enabled = input('sec-region-enabled', '', { type: 'checkbox' });
             enabled.checked = row?.enabled ?? true;
-            m.body.prepend(geo.node, scope.node, el('div', { class: 'sec-form-grid' }, field('封禁时长', 'Duration', duration), el('label', { class: 'sec-check' }, enabled, t('启用规则', 'Enable rule'))), field('原因', 'Reason', reason));
+            m.body.prepend(geo.node, scope.node, el('div', { class: 'sec-form-grid' }, duration.node, el('label', { class: 'sec-check' }, enabled, t('启用规则', 'Enable rule'))), field('原因', 'Reason', reason));
             m.foot.append(btn('取消', 'Cancel', close), btn('保存规则', 'Save rule', async () => {
                 const chosen = scope.values();
                 if (!chosen.length)
                     return fail(m.error, t('至少选择一个保护范围。', 'Select at least one protected action.'));
                 if (!reason.value.trim())
                     return fail(m.error, t('请填写封禁原因。', 'Enter a reason.'));
-                const until = duration.value === 'keep' ? row.until : Number(duration.value) ? Date.now() + Number(duration.value) * 60000 : null;
+                const minutes = duration.minutes();
+                if (minutes === null) return;
+                const until = minutes === 'keep' ? row.until : minutes ? Date.now() + minutes * 60000 : null;
                 if (enabled.checked && until !== null && until <= Date.now())
                     return fail(m.error, t('原规则已过期，请重新选择封禁时长。', 'This rule expired; choose a new duration.'));
                 const candidate = { country: geo.country.value, region: geo.region.value, scopes: chosen, enabled: enabled.checked, reason: reason.value.trim(), until };

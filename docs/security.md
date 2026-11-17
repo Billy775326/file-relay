@@ -2,6 +2,12 @@
 
 后台顶部的“安全防护”用于管理登录、上传和取件的访问规则。需要绑定 `BUCKET`（R2）或 `DB`（D1）；纯 KV 部署显示未启用，不能保存规则。已有管理员会话仍可管理规则，封禁后台登录不会注销现有会话。
 
+## 手动封禁时长
+
+手动 IP 封禁和地区封禁均可选择 5／15／30 分钟、1／6／12 小时、1／3／7／30 天、永久，或选择“自定义”后输入整数并指定分钟、小时或天；自定义范围为 1 分钟至 30 天。手动 IP 封禁默认 30 分钟，新增地区规则默认永久；保存后按所选时长计算到期时间，到期自动失效。
+
+编辑地区规则默认“保持原到期时间”，不会因修改原因或范围而延长封禁。自动防护规则仍使用原有独立的分钟设置。
+
 ## 默认自动防护
 
 | 范围 | 计数事件 | 默认阈值 | 封禁时长 |
@@ -58,7 +64,7 @@
 | `POST /api/admin/security` | `{ action, configRevision, ...参数 }`；操作为 `rules`、`ban`、`unban`、`allow`、`removeAllow`、`region`、`removeRegion` |
 | `POST /api/admin/security/test` | `{ ip, scope, country, region, count }`；只读计算返回 `{ blocked, reason }` |
 
-`ban` 使用 `{ ip, scopes, note, minutes }`（0 为永久）；`allow` 使用 `{ ip, scopes, note }`；`unban` 使用 `{ ips }`；`region` 使用可选 `id` 与 `rule: { country, region, scopes, enabled, reason, until }`，`until` 为 Unix 毫秒或 `null`。修改规则传完整的 `rules` 对象，各范围包含 `enabled`、`limit`、`window`、`duration`。
+`ban` 使用 `{ ip, scopes, note, minutes }`（整数 1–43200 分钟，0 为永久）；`allow` 使用 `{ ip, scopes, note }`；`unban` 使用 `{ ips }`；`region` 使用可选 `id` 与 `rule: { country, region, scopes, enabled, reason, until }`，`until` 为 Unix 毫秒或 `null`。修改规则传完整的 `rules` 对象，各范围包含 `enabled`、`limit`、`window`、`duration`。
 
 旧 `/login-protection` 接口保留兼容，用于读取/解除原有登录封禁。新界面统一使用安全工作区。
 
