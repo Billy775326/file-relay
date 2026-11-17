@@ -111,7 +111,8 @@ with sync_playwright() as p:
             if width in [1135, 390]:
                 page.screenshot(path=f'.wrangler/admin-layout-{theme}-{width}.png', full_page=True, animations='disabled')
     page.click('#lang-btn')
-    assert page.locator('.storage-card').inner_text().startswith('Storage')
+    assert page.locator('.storage-heading>small').inner_text() == 'R2'
+    assert page.locator('.storage-meter').get_attribute('aria-label').startswith('Storage')
     assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     page.click('#lang-btn')
     page.set_viewport_size({'width': 390, 'height': 900})

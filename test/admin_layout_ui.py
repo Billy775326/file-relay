@@ -141,10 +141,11 @@ with sync_playwright() as p:
                     page.click('#' + tab)
                     page.locator('#' + table + ' tr').first.wait_for()
                     expect(page.locator('#' + tab)).to_have_attribute('aria-pressed', 'true')
-                    active = page.locator('#' + tab).evaluate('(e)=>{const s=getComputedStyle(e);return [s.borderBottomWidth,s.borderBottomColor,s.borderTopWidth]}')
-                    assert active[0] == '3px' and active[1] != 'rgba(0, 0, 0, 0)' and active[2] == '0px', active
+                    active = page.locator('#' + tab).evaluate('(e)=>getComputedStyle(e).boxShadow')
+                    assert 'inset' in active, active
                     inactive = 'admin-audit-tab' if tab == 'admin-files-tab' else 'admin-files-tab'
                     expect(page.locator('#' + inactive)).to_have_attribute('aria-pressed', 'false')
+                    assert page.locator('#' + inactive).evaluate('(e)=>getComputedStyle(e).boxShadow') != active
                     if lang == 'zh' and theme == 'dark' and width in [390, 1135]:
                         page.evaluate('window.scrollTo(0, 0)')
                         page.screenshot(path=f'.wrangler/brand-nav-{tab}-{width}.png', animations='disabled')

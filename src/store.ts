@@ -99,6 +99,11 @@ export function sameShareRules(record: ShareRecord, expected: ShareEditBase): bo
     record.maxPickups === expected.maxPickups && record.expireAt === expected.expireAt;
 }
 
+export interface ShareListFilter {
+  q?: string;
+  kind?: 'file' | 'text';
+  status?: 'active' | 'expired' | 'exhausted';
+}
 export interface ShareStore {
   /** Latest retained shares for one signed visitor; never infer identity from a shared IP. */
   visitorShares(visitorId: string): Promise<ShareRecord[]>;
@@ -115,7 +120,7 @@ export interface ShareStore {
    * textOnly 时口令对应的不是文本分享),具体原因由调用方 getByCode 后分类。
    */
   tryPickup(code: string, opts?: { textOnly?: boolean }): Promise<ShareRecord | null>;
-  listShares(limit: number, offset: number): Promise<{ total: number; rows: ShareListRow[] }>;
+  listShares(limit: number, offset: number, filter?: ShareListFilter): Promise<{ total: number; rows: ShareListRow[] }>;
   stats(todayStart: number): Promise<ShareStats>;
   deleteByCode(code: string): Promise<void>;
   createSession(s: SessionRecord): Promise<void>;

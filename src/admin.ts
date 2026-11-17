@@ -5,11 +5,13 @@ import type { Context } from 'hono';
 import type { Env } from './types';
 import { err, contentDisposition } from './util';
 import { getStore, shareStatusOf } from './store';
+import type { ShareListFilter } from './store';
 import { deleteFile, readFileStream, inspectFile } from './filestore';
 import { previewFile } from './file-preview';
 import { sourceSummary } from './upload-source';
 import { runCleanup } from './cleanup';
 import { getCapacityUsage } from './quota';
+import { getKVUsage } from './kv-usage';
 import { getRetentionDays, setRetentionDays, validRetentionDays, RETENTION_DAY_MS } from './settings';
 import { getGuestLimits, setGuestLimits, validGuestLimits } from './upload-policy';
 import { checkLogin, recordLogin, loginIP, loginProtectionStatus, unblockLogin, unblockLogins } from './login-protection';
@@ -236,7 +238,8 @@ adminRoutes.get('/stats', async (c) => {
     try { storage = await getCapacityUsage(c.env); }
     catch (e) { console.error('Capacity statistics unavailable', e); }
   }
-  return c.json({ ...stats, storage, fileBackend: c.env.BUCKET ? 'r2' : 'kv' });
+  const kv = await getKVUsage(c.env);
+  return c.json({ ...stats, storage, kv, metadataBackend: c.env.fileKV ? 'kv' : 'd1', fileBackend: c.env.BUCKET ? 'r2' : 'kv' });
 });
 
 /** 分享列表(状态惰性计算),?limit=50&offset=0;响应字段沿用 snake_case(前端契约) */
@@ -246,7 +249,12 @@ adminRoutes.get('/shares', async (c) => {
   const now = Date.now();
 
   const store = getStore(c.env);
-  const { total, rows } = await store.listShares(limit, offset);
+  const kind = c.req.query('kind'), status = c.req.query('status'), q = c.req.query('q')?.trim() ?? '';
+  if (q.length > 80 || (kind && !['all', 'file', 'text'].includes(kind)) ||
+      (status && !['all', 'active', 'expired', 'exhausted'].includes(status))) return err(c, 400, 'bad_request', '筛选参数非法');
+  const filter: ShareListFilter = { q, ...(kind && kind !== 'all' ? { kind: kind as 'file' | 'text' } : {}),
+    ...(status && status !== 'all' ? { status: status as 'active' | 'expired' | 'exhausted' } : {}) };
+  const { total, rows } = await store.listShares(limit, offset, filter);
   const ids = [...new Set(rows.flatMap((r) => r.source ? [r.source.visitorId] : []))];
   const notes = await store.getVisitorNotes(ids);
   return c.json({

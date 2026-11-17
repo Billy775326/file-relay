@@ -1,3 +1,5 @@
+import { initCombinedAdmin } from './admin-layout.js';
+import { kvUsageCard, storageHelp } from './storage-overview.js';
 import { initUi } from './ui.js';
 import { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el } from './common.js';
 import { LANG, t, onLangChange, initI18n } from './i18n.js';
@@ -28,6 +30,7 @@ let offset = 0;
 let total = 0;
 let listRequest = 0;
 let listBusy = false;
+let fileFilters = { status: 'all', kind: 'all', q: '' };
 
 /* 语言切换:面板可见时按新语言重拉文案 */
 onLangChange(() => {
@@ -95,7 +98,7 @@ function renderStats(s) {
   ];
   const capacity = s.fileBackend === 'r2' ? s.storage : null;
   const storageCard = el('div', { class: 'stat-card storage-card' },
-    el('small', {}, t(s.fileBackend === 'r2' ? 'ad.storage' : 'ad.shareBytes')),
+    el('div', { class: 'storage-heading' }, el('small', {}, s.fileBackend === 'r2' ? 'R2' : t('ad.shareBytes')), s.fileBackend === 'r2' ? storageHelp('R2', t('ad.storageReserved')) : null),
     capacity
       ? el('div', { class: 'storage-value' },
           el('b', {}, fmtBytes(capacity.usedBytes)),
@@ -104,18 +107,15 @@ function renderStats(s) {
           ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),
   );
   if (capacity) {
-    const ratio = Math.min(1, Math.max(0, capacity.usedBytes / capacity.capacityBytes));
     storageCard.append(
       el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,
         value: capacity.usedBytes, ariaLabel: t('ad.storage') }),
-      el('div', { class: 'storage-caption' },
-        el('small', {}, t('ad.storageReserved')), el('small', {}, `${Math.round(ratio * 100)}%`)),
     );
   }
   statsRow.replaceChildren(
     el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>
       el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),
-    storageCard,
+    el('div', { class: 'storage-overview' }, storageCard, kvUsageCard(s.kv)),
   );
 }
 
@@ -158,7 +158,8 @@ async function loadList() {
   tbody.setAttribute('aria-busy', 'true');
   tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));
   try {
-    const data = await api(`/api/admin/shares?limit=${limit}&offset=${offset}`);
+    const params = new URLSearchParams({ ...fileFilters, limit, offset });
+    const data = await api(`/api/admin/shares?${params}`);
     if (request !== listRequest) return;
     if (!Number.isSafeInteger(data.total) || data.total < 0 || !Array.isArray(data.rows)) throw new Error(t('ad.loadFail'));
     total = data.total;
@@ -677,3 +678,17 @@ async function loadLoginProtection() {
 $('#login-guard-refresh').addEventListener('click', loadLoginProtection);
 
 initUi('admin');
+initCombinedAdmin();
+function applyFileFilters() {
+  fileFilters.q = $('#files-q').value.trim();
+  fileFilters.kind = $('#files-kind').value;
+  offset = 0;
+  loadList();
+}
+$('#files-filter').addEventListener('submit', event => { event.preventDefault(); applyFileFilters(); });
+$('#files-kind').addEventListener('change', applyFileFilters);
+for (const button of document.querySelectorAll('#files-status-tabs button')) button.addEventListener('click', () => {
+  fileFilters.status = button.dataset.status;
+  for (const node of document.querySelectorAll('#files-status-tabs button')) node.setAttribute('aria-pressed', String(node === button));
+  applyFileFilters();
+});

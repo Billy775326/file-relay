@@ -1,5 +1,5 @@
 import { sourceSummary } from './upload-source';
-import { sameShareRules } from './store';
+import { sameShareRules, shareStatusOf } from './store';
 /**
  * Workers KV 实现:免建 D1 的轻量后端(最终一致)。
  * 键空间:s:{口令} = 分享全量 JSON,metadata 携带列表/统计投影(list 免逐键 get);
@@ -161,14 +161,22 @@ export function createKVStore(kv: KVNamespace): ShareStore {
       return v;
     },
 
-    async listShares(limit, offset) {
-      const all = (await scanShareMeta(kv)).sort((a, b) => b.m.t - a.m.t);
+    async listShares(limit, offset, filter = {}) {
+      const scanned = await scanShareMeta(kv);
+      const now = Date.now(), q = filter.q?.trim().toLowerCase();
+      const all = scanned.filter(({ code, m }) => {
+        if (filter.kind && m.k !== filter.kind) return false;
+        if (filter.status && shareStatusOf(m.e, m.m, m.c, now) !== filter.status) return false;
+        if (!q) return true;
+        const source = m.o ? sourceSummary(JSON.parse(b64decode(m.o))) : null;
+        return [code, m.n ? b64decode(m.n) : '', source?.visitorId ?? ''].some(value => value.toLowerCase().includes(q));
+      }).sort((a, b) => b.m.t - a.m.t);
       const page = all.slice(offset, offset + limit);
       // KV 的 list 索引反映删除最长滞后约 60s,而 get 立即可见:刚删的口令会在管理列表
       // "死而复生"。逐行 get 验活滤掉幽灵行(管理页专用路径,≤limit 次读可接受);
       // subrequest 预算吃紧(免费档 50 次/请求)时退化为不校验,60s 后自然收敛。
       let kept = page;
-      const budget = 48 - Math.ceil(all.length / 1000);
+      const budget = 48 - Math.ceil(scanned.length / 1000);
       if (page.length > 0 && page.length <= budget) {
         const alive = await Promise.all(
           page.map((x) => kv.get(SHARE_PREFIX + x.code).then((v) => v !== null)),

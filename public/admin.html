@@ -10,6 +10,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/ui.css">
+<link rel="stylesheet" href="/admin-layout.css">
 <script>
   document.documentElement.dataset.theme =
     localStorage.getItem('theme') ||
@@ -48,8 +49,22 @@
   <section id="admin-panel" hidden>
     <p id="audit-write-warning" class="error-box" hidden role="alert" data-i18n="audit.writeFailed">操作已处理，但审计记录未保存，请检查日志存储。</p>
     <div id="admin-files-view">
+      <div class="admin-page-heading"><h1 data-i18n="audit.files">文件管理</h1><div id="files-refresh-slot"></div></div>
     <div class="stats-row" id="stats-row"></div>
     <div class="card admin-list-card">
+      <div class="admin-collection-top">
+        <div id="files-status-tabs" class="admin-status-tabs" role="group" aria-label="分享状态">
+          <button type="button" data-status="all" aria-pressed="true" data-i18n="ad.allShares">全部</button>
+          <button type="button" data-status="active" aria-pressed="false" data-i18n="ad.activeShares">有效</button>
+          <button type="button" data-status="expired" aria-pressed="false" data-i18n="ad.expiredShares">已过期</button>
+          <button type="button" data-status="exhausted" aria-pressed="false" data-i18n="ad.exhaustedShares">已取完</button>
+        </div>
+        <form id="files-filter" class="admin-query-row">
+          <label class="admin-search-field"><span class="sr-only" data-i18n="ad.searchShares">搜索列表中的文件名、口令或访客标识</span><input id="files-q" type="search" maxlength="80" data-i18n-ph="ad.searchShares" placeholder="搜索列表中的文件名、口令或访客标识"></label>
+          <select id="files-kind" data-i18n-aria="ad.th.content" aria-label="内容类型"><option value="all" data-i18n="ad.allKinds">所有类型</option><option value="file" data-i18n="ad.kind.file">文件</option><option value="text" data-i18n="ad.kind.text">文本</option></select>
+          <button class="btn small ghost" type="submit" data-i18n="ad.searchButton">搜索</button>
+        </form>
+      </div>
       <div id="files-pager" class="list-toolbar" role="group" aria-label="文件分页" data-i18n-aria="ad.filesPagination">
         <small id="page-info" class="page-summary" role="status" aria-live="polite"></small>
         <div class="pager-btns">

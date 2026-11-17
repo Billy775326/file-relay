@@ -24,7 +24,9 @@
     "db:remote": "wrangler d1 execute file-relay --remote --file=./schema/schema.sql",
     "tail": "wrangler tail",
     "test:security": "node test/security.mjs",
-    "test:share-edit": "node test/share_edit.mjs"
+    "test:share-edit": "node test/share_edit.mjs",
+    "test:admin-filters": "node test/admin_filters.mjs",
+    "test:kv-usage": "node test/kv_usage.mjs"
   },
   "dependencies": {
     "hono": "^4.6.0"

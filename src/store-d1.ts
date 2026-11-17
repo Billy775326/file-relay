@@ -171,16 +171,30 @@ export function createD1Store(db: D1Database): ShareStore {
       return r ? toRec(r) : null;
     },
 
-    async listShares(limit, offset) {
+    async listShares(limit, offset, filter = {}) {
+      const clauses: string[] = [], values: (string | number)[] = [];
+      if (filter.kind) { clauses.push('kind = ?'); values.push(filter.kind); }
+      if (filter.status) {
+        clauses.push(`(CASE WHEN expire_at IS NOT NULL AND expire_at <= ? THEN 'expired'
+          WHEN max_pickups IS NOT NULL AND pickup_count >= max_pickups THEN 'exhausted' ELSE 'active' END) = ?`);
+        values.push(Date.now(), filter.status);
+      }
+      const q = filter.q?.trim().toLowerCase();
+      if (q) {
+        clauses.push(`(instr(lower(code), ?) > 0 OR instr(lower(substr(COALESCE(filename, ''), 1, 40)), ?) > 0
+          OR instr(lower(COALESCE(json_extract(source_json, '$.visitorId'), '')), ?) > 0)`);
+        values.push(q, q, q);
+      }
+      const where = clauses.length ? ' WHERE ' + clauses.join(' AND ') : '';
       const total =
-        (await db.prepare('SELECT COUNT(*) AS n FROM shares').first<{ n: number }>())?.n ?? 0;
+        (await db.prepare('SELECT COUNT(*) AS n FROM shares' + where).bind(...values).first<{ n: number }>())?.n ?? 0;
       const rows = await db
         .prepare(
           `SELECT id, code, kind, filename, size, pickup_count, max_pickups, expire_at, created_at, source_json,
                   CASE WHEN kind = 'text' THEN substr(text, 1, 50) ELSE NULL END AS text_preview
-           FROM shares ORDER BY created_at DESC LIMIT ?1 OFFSET ?2`,
+           FROM shares${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
         )
-        .bind(limit, offset)
+        .bind(...values, limit, offset)
         .all<{
           id: string; code: string; kind: 'text' | 'file'; filename: string | null; size: number;
           pickup_count: number; max_pickups: number | null; expire_at: number | null; created_at: number;

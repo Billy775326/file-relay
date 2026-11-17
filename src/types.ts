@@ -7,6 +7,10 @@ export interface Env {
   /** 静态资源绑定;单文件模式(内联资源)下不存在 */
   ASSETS?: Fetcher;
   ADMIN_TOKEN: string;
+  /** Optional read-only Cloudflare analytics for the namespace bound as fileKV. */
+  CF_ACCOUNT_ID?: string;
+  CF_KV_NAMESPACE_ID?: string;
+  CF_ANALYTICS_TOKEN?: string;
   /** 可选 secret:自定义管理后台入口路径(如 /panel-x7k9);设置后 /admin 返回 404 */
   ADMIN_PATH?: string;
   // 以下均为 wrangler.jsonc vars,运行时是 string
