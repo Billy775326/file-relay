@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="ui-enhanced ui-soft ui-pickup" data-ui-surface="pickup">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,17 +16,22 @@
 </script>
 </head>
 <body>
-<header class="topbar">
+<div class="ui-header-band">
+<header class="topbar ui-public-header">
   <div class="brand">
     <span class="logo">📦</span>
     <div><b data-i18n="brand.name">文件中转站</b><small data-i18n="brand.pickup">取件</small></div>
   </div>
+  <nav class="ui-public-nav" aria-label="发送与取件" data-i18n-aria="ui.publicNav">
+    <a href="/" class="admin-nav-link" aria-current="false" data-i18n="nav.send">发送</a>
+    <a href="/pickup" class="admin-nav-link" aria-current="page" data-i18n="nav.pickup">取件</a>
+  </nav>
   <div class="actions">
     <button id="lang-btn" class="icon-btn lang-btn" data-i18n-title="nav.lang">EN</button>
     <button id="theme-btn" class="icon-btn" data-i18n-title="nav.theme">🌗</button>
-    <a class="btn ghost small" href="/" data-i18n="nav.send">发送</a>
   </div>
 </header>
+</div>
 
 <main class="container narrow">
   <section class="card center" id="pickup-input-card">
@@ -40,13 +45,24 @@
       <input class="otp-box" inputmode="numeric" autocomplete="one-time-code" maxlength="1">
       <input class="otp-box" inputmode="numeric" autocomplete="one-time-code" maxlength="1">
     </div>
+    <div class="ui-pickup-actions"><button id="ui-query" class="btn primary" type="button" data-i18n="ui.viewShare">查看分享</button><button id="ui-clear" class="btn ghost" type="button" data-i18n="ui.clear">清空</button></div>
     <div id="pickup-error" class="error-box" hidden></div>
   </section>
 
+  <div class="ui-pickup-caption" data-i18n="ui.shareFound">取件成功</div>
   <section class="card" id="pickup-result" hidden></section>
 </main>
 
-<footer class="foot" data-i18n="foot">见字如面</footer>
+<footer class="foot ui-send-footer">
+  <div class="ui-footer-inner">
+    <div class="ui-footer-about"><small data-i18n="ui.footerAbout">见字如面，让分享简单一点。</small></div>
+    <nav class="ui-footer-links" aria-label="页尾导航" data-i18n-aria="ui.footerNav">
+      <button id="ui-send-help" class="ui-footer-link" type="button" data-i18n="ui.help">使用帮助</button>
+      <a class="ui-footer-link" href="/" data-i18n="ui.toSend">前往发送</a>
+    </nav>
+    <div class="ui-footer-contact"><a href="mailto:iblykk@gmail.com" data-i18n="ad.contact">联系站长</a></div>
+  </div>
+</footer>
 
 <script type="module" src="/js/pickup.js"></script>
 </body>

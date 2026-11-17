@@ -574,3 +574,20 @@
 .security-copy-dialog{width:min(480px,calc(100vw - 24px));padding:18px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:12px}.security-copy-dialog::backdrop{background:var(--mask)}
 .security-copy-dialog textarea{width:100%;height:160px;margin-bottom:12px;background:var(--bag);color:var(--ink);border:1px solid var(--line);padding:8px}
 @media(max-width:600px){.ui-enhanced .security-feedback{padding:14px}.security-feedback-actions .btn{flex:1;font-size:13px;padding-inline:8px}.security-text-button{min-height:44px}}
+
+/* The first paint uses the final templates, even before interaction modules arrive. */
+.ui-send .upload-context summary>[data-i18n="context.visibility"]{display:none}
+.ui-send #upload-policy-hint{min-height:1.6em}
+@media(max-width:600px){
+ .ui-send #upload-policy-hint{min-height:3.2em}
+ .ui-send #dz-hint{display:block;min-height:3.2em}
+}
+
+.ui-send .form-card,.ui-send .result-placeholder,.ui-pickup #pickup-input-card,.ui-combined #admin-login{animation:none}
+.ui-enhanced.ui-send .upload-context>summary{display:flex;align-items:center;gap:6px;list-style:none}
+.ui-send .upload-context>summary::-webkit-details-marker{display:none}
+.ui-send .upload-context>summary::before{content:'▸';transform:rotate(90deg);font-size:12px}
+.ui-send .upload-context:not([open])>summary::before{transform:none}
+@media(max-width:600px){.ui-enhanced.ui-send .upload-context>summary{min-height:44px}}
+/* Reserve the date's line box before its client-local value is filled in. */
+.ui-send .cap-date:empty::before{content:'\00a0'}

@@ -176,3 +176,5 @@
 .ui-combined .sec-rules-dialog .source-heading{padding:10px 18px}
 .ui-combined .sec-rules-dialog .source-footer{padding:8px 18px}
 .ui-combined .storage-overview:not(:has(.kv-storage-card)){grid-template-columns:1fr}
+
+.ui-combined.ui-login[data-ui-surface=admin] .container.wide{width:calc(100% - 48px);max-width:440px}

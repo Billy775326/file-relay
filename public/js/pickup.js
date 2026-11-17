@@ -157,4 +157,4 @@ if (fromUrl && /^\d{1,6}$/.test(fromUrl)) {
   boxes[0].focus();
 }
 
-initUi('pickup');
+initUi();

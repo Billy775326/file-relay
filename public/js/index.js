@@ -1,3 +1,4 @@
+import qrcode from './vendor/qrcode.js';
 import { initUi } from './ui.js';
 import { $, $$, api, responseError, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme, el } from './common.js';
 import { createSecurityFeedback, isSecurityError } from './security-feedback.js';
@@ -47,8 +48,6 @@ function canUploadFiles() {
 }
 function updateHint() {
   els.dzHint.textContent = t('dz.hintMax', fmtBytes(MAX_SIZE));
-  const feature = $('[data-i18n="feat.splitS"]');
-  if (feature) feature.textContent = t('feat.splitS', fmtBytes(MAX_SIZE));
   for (const [id, value, allowed, fallback] of [
     ['seg-expiry', 'forever', cfg.allowPermanent === true, '7d'],
     ['seg-pickups', 'null', cfg.allowUnlimited === true, '5'],
@@ -60,8 +59,6 @@ function updateHint() {
       $(`#${id} [data-v="${fallback}"]`).classList.add('active');
     }
   }
-  $('[data-i18n="feat.ttlS"]').textContent = t(cfg.allowPermanent ? 'feat.ttlS' : 'policy.expiry');
-  $('[data-i18n="feat.limitS"]').textContent = t(cfg.allowUnlimited ? 'feat.limitS' : 'policy.pickups');
   $('#upload-policy-hint').textContent = !policyReady ? t('policy.unavailable')
     : cfg.fileUploadAvailable === false ? t('policy.contact')
     : cfg.weeklyFileLimit !== null && cfg.weeklyFileLimit !== undefined
@@ -514,9 +511,9 @@ async function submitText() {
 
 /* ---------- 结果卡片(多文件时逐张堆叠 + 批量头部) ---------- */
 function qrSvgFor(url) {
-  /* vendored qrcode-generator:全局 window.qrcode(classic script 先于本模块加载) */
+  /* Vendored ES module; no parser-blocking classic script or global dependency. */
   try {
-    const qr = window.qrcode(0, 'M');
+    const qr = qrcode(0, 'M');
     qr.addData(url);
     qr.make();
     const holder = document.createElement('div');
@@ -619,4 +616,4 @@ function hideResult() {
   els.results.replaceChildren();
 }
 
-initUi('index');
+initUi();

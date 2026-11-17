@@ -4,6 +4,12 @@
 
 Choose one method. All methods run the same application and enforce the same upload limits.
 
+## UI startup and update checks
+
+Send, pickup and admin templates contain their initial layout, header, navigation and footer. Shared UI modules attach interactions; only the admin entry loads admin modules. Keep initial layout in HTML rather than moving page sections after scripts load.
+
+All production deployment methods still build `public/` into the same `dist/worker.js`; Pages copies it to `dist/pages/_worker.js`. The build adds a shared revision to CSS/JS links and relative module imports, retains content ETags, and sends browser revalidation and CDN no-store headers. Domain rules may override cache lifetimes; revisioned URLs avoid reusing previous assets on refresh and do not provide historical asset hosting. This fix requires no binding, secret or data migration. Verify the Pages commit and returned HTML/CSS/JS, then run `npm run test:first-paint` after building: it holds script downloads to check the initial layout before resuming interactions.
+
 ## Choose a method
 
 | Method | Best for | Local tools | Updates |

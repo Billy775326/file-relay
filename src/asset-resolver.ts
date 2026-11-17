@@ -10,8 +10,16 @@ import type { Env } from './types';
  *   无需 assets 绑定,整个服务打包成一个 worker.js,粘贴进控制台编辑器即可部署
  */
 let inline: Record<string, string> | null = null;
-export function setInlineAssets(files: Record<string, string>) {
+let revision: string | null = null;
+export function setInlineAssets(files: Record<string, string>, version?: string) {
   inline = files;
+  revision = version ?? null;
+  etags.clear();
+}
+
+/** One build revision for document links and the complete module graph. */
+export function assetUrl(path: string): string {
+  return revision ? `${path}?v=${revision}` : path;
 }
 
 const MIME: Record<string, string> = {
@@ -72,7 +80,9 @@ export async function serveAsset(
   if (key) {
     const body = inline![key];
     const etag = etagOf(key, body);
-    const headers = { etag, 'cache-control': 'no-cache' };
+    const headers: Record<string, string> = { etag, 'cache-control': 'no-cache',
+      'cdn-cache-control': 'no-store', 'cloudflare-cdn-cache-control': 'no-store' };
+    if (revision) headers['x-file-relay-build'] = revision;
     if (!status && c.req.header('if-none-match') === etag) {
       return new Response(null, { status: 304, headers });
     }

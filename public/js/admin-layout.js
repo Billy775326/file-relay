@@ -3,12 +3,8 @@ import { t, onLangChange } from './i18n.js';
 
 /** The approved counter/seal layout; existing APIs and security controllers remain authoritative. */
 export function initCombinedAdmin() {
-  document.documentElement.classList.add('ui-combined');
   const trash = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>';
-  $('#files-refresh-slot').append($('#btn-refresh'));
-  const footer = el('footer', { class: 'admin-footer' }, el('span', {}, ''),
-    el('a', { href: 'mailto:iblykk@gmail.com' }, ''));
-  $('#admin-panel').append(footer);
+  const footer = $('.admin-footer');
   const selects = [];
   for (const [name, selector] of [['files', '#files-pager'], ['audit', '#audit-pager']]) {
     const source = $(`#${name}-page-size`), copy = source.cloneNode(true);

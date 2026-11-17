@@ -2295,3 +2295,6 @@ var qrcode = function() {
 }(function () {
     return qrcode;
 }));
+
+// Local ES-module entry; retain the upstream implementation and license.
+export default qrcode;

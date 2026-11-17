@@ -7,7 +7,7 @@ export const isSecurityError = error => ['security_blocked', 'security_unavailab
 /** One persistent notice per surface. No requests run on countdown expiry. */
 export function createSecurityFeedback(host, operation, retry) {
   let current = null, timer = null, deadline = 0, pending = false;
-  const card = el('section', { class: 'security-feedback', hidden: '', tabindex: '-1', 'aria-label': '访问提示' });
+  const card = el('section', { class: 'security-feedback', hidden: true, tabIndex: -1, ariaLabel: '访问提示' });
   host.append(card);
   const text = (zh, en) => document.documentElement.lang === 'en' ? en : zh;
   const action = () => ({ upload: text('上传', 'upload'), pickup: text('取件', 'pick up'), download: text('下载', 'download') })[operation];

@@ -124,7 +124,8 @@ with sync_playwright() as p:
     page.reload()
     page.wait_for_function("document.querySelector('#dz-hint').textContent.includes('9.9 GB')")
     page.click('#lang-btn')
-    assert page.locator('[data-i18n="feat.selfT"]').inner_text() == 'Easy pickup'
+    assert page.locator('.ui-public-nav a[href="/pickup"]').inner_text() == 'Pick up'
+    assert page.locator('.feat-band').count() == 0
     assert 'Self-hosted' not in page.locator('body').inner_text()
     page.screenshot(path='.wrangler/home-user-copy-desktop.png', full_page=True, animations='disabled')
     browser.close()

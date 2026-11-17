@@ -8,6 +8,18 @@
 
 const DICT = {
   zh: {
+    "ui.footerAbout": "见字如面，让分享简单一点。",
+    "ui.footerNav": "页尾导航",
+    "ui.publicNav": "发送与取件",
+    "ui.help": "使用帮助",
+    "ui.toPickup": "前往取件",
+    "ui.toSend": "前往发送",
+    "ui.viewShare": "查看分享",
+    "ui.clear": "清空",
+    "ui.shareFound": "取件成功",
+    "ui.show": "显示",
+    "ui.showToken": "显示管理令牌",
+    "ui.backSend": "返回发送页",
     'ad.codeCopied': '已复制取件口令',
     'ad.allShares': '全部',
     'ad.activeShares': '有效',
@@ -391,6 +403,18 @@ const DICT = {
   },
 
   en: {
+    "ui.footerAbout": "A simpler way to share files and words.",
+    "ui.footerNav": "Footer navigation",
+    "ui.publicNav": "Send and pick up",
+    "ui.help": "Help",
+    "ui.toPickup": "Pick up a share",
+    "ui.toSend": "Send a share",
+    "ui.viewShare": "View share",
+    "ui.clear": "Clear",
+    "ui.shareFound": "Share found",
+    "ui.show": "Show",
+    "ui.showToken": "Show admin token",
+    "ui.backSend": "Back to send",
     'ad.codeCopied': 'Pickup code copied',
     'ad.allShares': 'All',
     'ad.activeShares': 'Active',

@@ -1,3 +1,6 @@
+import { initClassifications } from './ui-classifications.js';
+import { initAuditLayout } from './ui-audit-layout.js';
+import { initSecurity } from './admin-security.js';
 import { initCombinedAdmin } from './admin-layout.js';
 import { kvUsageCard, storageHelp } from './storage-overview.js';
 import { initUi } from './ui.js';
@@ -677,7 +680,10 @@ async function loadLoginProtection() {
 }
 $('#login-guard-refresh').addEventListener('click', loadLoginProtection);
 
-initUi('admin');
+initUi();
+initClassifications();
+initAuditLayout();
+initSecurity();
 initCombinedAdmin();
 function applyFileFilters() {
   fileFilters.q = $('#files-q').value.trim();

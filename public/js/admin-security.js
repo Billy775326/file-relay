@@ -112,7 +112,7 @@ export function initSecurity() {
             throw new Error(t('操作已保存，但状态刷新失败。请关闭弹窗并刷新，勿重复提交。', 'Saved, but refresh failed. Close and refresh without submitting again.'));
         } }
         const view = el('section', { id: 'security-view', hidden: '', 'aria-labelledby': 'security-title' });
-        $('#admin-panel').append(view);
+        $('#admin-panel').insertBefore(view, $('.admin-footer'));
         const navButton = btn('安全防护', 'Security', () => show(), 'admin-nav-link');
         navButton.id = 'admin-security-tab';
         navButton.setAttribute('aria-controls', 'security-view');

@@ -26,7 +26,9 @@
     "test:security": "node test/security.mjs",
     "test:share-edit": "node test/share_edit.mjs",
     "test:admin-filters": "node test/admin_filters.mjs",
-    "test:kv-usage": "node test/kv_usage.mjs"
+    "test:kv-usage": "node test/kv_usage.mjs",
+    "test:first-paint": "node test/first_paint.mjs",
+    "test:asset-version": "node test/asset_version.mjs"
   },
   "dependencies": {
     "hono": "^4.6.0"

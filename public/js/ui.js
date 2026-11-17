@@ -1,22 +1,8 @@
 import { initEntry } from './ui-entry.js';
 import { initControls } from './ui-controls.js';
-import { initClassifications } from './ui-classifications.js';
-import { initAuditLayout } from './ui-audit-layout.js';
-import { initSecurity } from './admin-security.js';
-export function initUi(surface) {
-    const root = document.documentElement;
-    root.classList.add('ui-enhanced', 'ui-soft');
-    root.dataset.uiSurface = surface;
-    const header = document.querySelector('.topbar'), band = document.createElement('div');
-    band.className = 'ui-header-band';
-    header.before(band);
-    band.append(header);
+export function initUi() {
     initEntry();
     initControls();
-    initClassifications();
-    initAuditLayout();
-    if (surface === 'admin')
-        initSecurity();
     const send = document.querySelector('.topbar a[data-i18n="nav.send"]');
     if (send?.target === '_blank') {
         send.classList.add('ui-new-tab');

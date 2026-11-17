@@ -8,9 +8,8 @@ function dictOf(lang) {
   const m = src.match(new RegExp('  ' + lang + ': \\{([\\s\\S]*?)\\n  \\},'));
   if (!m) throw new Error('dict block not found: ' + lang);
   const d = {};
-  for (const km of m[1].matchAll(/'([a-zA-Z0-9._-]+)':\s*'[^']*'/g)) d[km[1]] = 1;
-  for (const km of m[1].matchAll(/'([a-zA-Z0-9._-]+)':\s*"[^"]*"/g)) d[km[1]] = 1;
-  for (const km of m[1].matchAll(/'([a-zA-Z0-9._-]+)':\s*\[[^\]]*\]/g)) d[km[1]] = 1; // 数组值(页脚随机池)
+  // Keys may use either quote style; importing the module above validates value syntax.
+  for (const km of m[1].matchAll(/(['"])([a-zA-Z0-9._-]+)\1\s*:/g)) d[km[2]] = 1;
   return d;
 }
 const zh = dictOf('zh'), en = dictOf('en');

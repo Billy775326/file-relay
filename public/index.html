@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="ui-enhanced ui-soft ui-send" data-ui-surface="index">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,26 +17,24 @@
 </script>
 </head>
 <body>
-<header class="topbar wide">
+<div class="ui-header-band">
+<header class="topbar wide ui-public-header">
   <div class="brand">
     <span class="logo">📦</span>
     <div><b data-i18n="brand.name">文件中转站</b><small data-i18n="brand.tagline">像取快递一样取文件</small></div>
   </div>
+  <nav class="ui-public-nav" aria-label="发送与取件" data-i18n-aria="ui.publicNav">
+    <a href="/" class="admin-nav-link" aria-current="page" data-i18n="nav.send">发送</a>
+    <a href="/pickup" class="admin-nav-link" aria-current="false" data-i18n="nav.pickup">取件</a>
+  </nav>
   <div class="actions">
     <button id="lang-btn" class="icon-btn lang-btn" data-i18n-title="nav.lang">EN</button>
     <button id="theme-btn" class="icon-btn" data-i18n-title="nav.theme">🌗</button>
-    <a class="btn ghost small" href="/pickup" data-i18n="nav.pickup">取件</a>
   </div>
 </header>
+</div>
 
 <main class="container wide">
-  <section class="flow-strip">
-    <div class="flow-step"><span class="flow-dot">📦</span><div class="flow-tt"><b data-i18n="flow.dropT">寄件</b><small data-i18n="flow.dropS">选择文件或输入文本</small></div></div>
-    <div class="flow-link"></div>
-    <div class="flow-step"><span class="flow-dot">🎫</span><div class="flow-tt"><b data-i18n="flow.tickT">分享口令</b><small data-i18n="flow.tickS">生成 6 位取件口令</small></div></div>
-    <div class="flow-link"></div>
-    <div class="flow-step"><span class="flow-dot">📥</span><div class="flow-tt"><b data-i18n="flow.pickT">取件</b><small data-i18n="flow.pickS">输入口令即可下载或查看</small></div></div>
-  </section>
   <div class="send-grid">
   <section class="card form-card">
     <div class="card-cap">
@@ -63,8 +61,8 @@
       <div class="row-between"><small class="muted" id="text-counter">0 / 65536</small></div>
     </div>
 
-    <details class="upload-context">
-      <summary data-i18n="context.add">补充信息（选填）</summary>
+    <details class="upload-context" open>
+      <summary><span data-i18n="context.add">补充信息（选填）</span><small data-i18n="context.visibility">补充信息仅管理员可见</small></summary>
       <div class="context-fields">
         <div class="context-row">
           <label for="upload-name" data-i18n="context.name">怎么称呼你</label>
@@ -72,9 +70,8 @@
         </div>
         <div id="upload-description-field" class="context-row">
           <div class="context-label"><label for="upload-description" data-i18n="context.description">文件说明</label><small id="description-count" class="muted">0 / 300</small></div>
-          <textarea id="upload-description" rows="3" maxlength="300" aria-describedby="description-count" data-i18n-ph="context.descriptionPh" placeholder="简述文件内容，同批文件共用"></textarea>
+          <textarea id="upload-description" rows="2" maxlength="300" aria-describedby="description-count" data-i18n-ph="context.descriptionPh" placeholder="简述文件内容，同批文件共用"></textarea>
         </div>
-        <small class="muted" data-i18n="context.visibility">补充信息仅管理员可见</small>
       </div>
     </details>
 
@@ -131,17 +128,19 @@
       <div id="results" class="results"></div>
     </aside>
   </div>
-  <section class="feat-band">
-    <div class="feat"><span class="feat-ic">🧩</span><div><b data-i18n="feat.splitT">文件分享</b><small data-i18n="feat.splitS">选择文件后开始分享</small></div></div>
-    <div class="feat"><span class="feat-ic">⏳</span><div><b data-i18n="feat.ttlT">自选有效期</b><small data-i18n="feat.ttlS">1 ~ 30 天或永久</small></div></div>
-    <div class="feat"><span class="feat-ic">🔢</span><div><b data-i18n="feat.limitT">限次取件</b><small data-i18n="feat.limitS">1 次 · 5 次 · 不限</small></div></div>
-    <div class="feat"><span class="feat-ic">🔒</span><div><b data-i18n="feat.selfT">便捷取件</b><small data-i18n="feat.selfS">支持口令、链接和扫码取件</small></div></div>
-  </section>
 </main>
 
-<footer class="foot" data-i18n="foot">见字如面</footer>
+<footer class="foot ui-send-footer">
+  <div class="ui-footer-inner">
+    <div class="ui-footer-about"><small data-i18n="ui.footerAbout">见字如面，让分享简单一点。</small></div>
+    <nav class="ui-footer-links" aria-label="页尾导航" data-i18n-aria="ui.footerNav">
+      <button id="ui-send-help" class="ui-footer-link" type="button" data-i18n="ui.help">使用帮助</button>
+      <a class="ui-footer-link" href="/pickup" data-i18n="ui.toPickup">前往取件</a>
+    </nav>
+    <div class="ui-footer-contact"><a href="mailto:iblykk@gmail.com" data-i18n="ad.contact">联系站长</a></div>
+  </div>
+</footer>
 
-<script src="/js/vendor/qrcode.js"></script>
 <script type="module" src="/js/index.js"></script>
 </body>
 </html>

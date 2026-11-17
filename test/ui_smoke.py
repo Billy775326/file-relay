@@ -42,7 +42,6 @@ def main():
             page.goto(BASE + "/")
             check("语言按钮存在", page.locator("#lang-btn").count() == 1)
             check("初始中文 tab 文案", "发文件" in page.locator(".tab.active").inner_text())
-            check("qr 库已加载", page.evaluate("typeof window.qrcode === 'function'"))
 
             print("== 2. 语言切换 ==")
             page.click("#lang-btn")
