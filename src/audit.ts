@@ -7,7 +7,9 @@ import { loginIP, LoginProtectionError } from './login-protection';
 export const AUDIT_KEY = '__file-relay/audit-v1.json';
 export const AUDIT_DAYS = 30;
 export const AUDIT_LIMIT = 1000;
-export type AuditCategory = 'login' | 'operation' | 'security';
+export const AUDIT_GROUP_MS = 5 * 60_000;
+const CATEGORIES = ['login', 'operation', 'security', 'upload', 'pickup'];
+export type AuditCategory = 'login' | 'operation' | 'security' | 'upload' | 'pickup';
 export type AuditResult = 'success' | 'failed' | 'blocked';
 export type AuditEntry = {
   id: string; at: number; category: AuditCategory; action: string; result: AuditResult;
@@ -31,7 +33,7 @@ function parse(raw: string | null, now: number): Ledger {
   const data = JSON.parse(raw) as Ledger;
   if (data?.version !== 1 || typeof data.revision !== 'string' || !Array.isArray(data.entries) || data.entries.length > AUDIT_LIMIT ||
       data.entries.some(e => !e || typeof e.id !== 'string' || !Number.isSafeInteger(e.at) ||
-        !['login', 'operation', 'security'].includes(e.category) || !['success', 'failed', 'blocked'].includes(e.result) ||
+        !CATEGORIES.includes(e.category) || !['success', 'failed', 'blocked'].includes(e.result) ||
         !['admin', 'token', 'anonymous'].includes(e.actor) || !Number.isInteger(e.status) || !Number.isFinite(e.durationMs) ||
         !['action', 'ip', 'country', 'region', 'city', 'method', 'target', 'agent'].every(k => typeof e[k as keyof AuditEntry] === 'string') ||
         !e.detail || typeof e.detail !== 'object' || Array.isArray(e.detail))) throw new Error('Invalid audit state');
@@ -62,14 +64,28 @@ async function write(env: Env, data: Ledger, previous: string | null) {
 }
 
 /** Separate from the business transaction: never retry a completed user operation for a log failure. */
-export async function appendAudit(env: Env, event: AuditEntry): Promise<boolean> {
+export async function appendAudit(env: Env, event: AuditEntry, aggregate = false): Promise<boolean> {
   if (!auditEnabled(env)) return false;
   try {
     for (let attempt = 0; attempt < 5; attempt++) {
       if (attempt) await new Promise(resolve => setTimeout(resolve, 1100 + Math.random() * 200));
       const { data, previous } = await read(env);
       if (data.entries.some(e => e.id === event.id)) return true;
-      data.entries.push(event);
+      // Aggregate only caller-selected failures/rejections; never merge successful transfers.
+      const grouped = aggregate && data.entries.find(e =>
+        Math.floor(e.at / AUDIT_GROUP_MS) === Math.floor(event.at / AUDIT_GROUP_MS) &&
+        e.category === event.category && e.action === event.action && e.result === event.result &&
+        e.ip === event.ip && e.method === event.method &&
+        (e.target === event.target || event.category === 'pickup' && ['bad_request', 'not_found'].includes(String(event.detail.reason))) &&
+        e.detail.reason === event.detail.reason && e.detail.stage === event.detail.stage &&
+        (e.detail.uploadRef === event.detail.uploadRef || event.detail.reason === 'not_found') && typeof e.detail.count === 'number');
+      if (grouped) {
+        grouped.detail = { ...grouped.detail, ...event.detail, count: Number(grouped.detail.count) + 1,
+          firstAt: Math.min(Number(grouped.detail.firstAt), event.at), lastAt: Math.max(grouped.at, event.at) };
+        grouped.at = Math.max(grouped.at, event.at);
+        grouped.status = event.status;
+        grouped.target = event.target;
+      } else data.entries.push(aggregate ? { ...event, detail: { ...event.detail, count: 1, firstAt: event.at, lastAt: event.at } } : event);
       data.entries.sort((a, b) => b.at - a.at || b.id.localeCompare(a.id));
       data.entries = data.entries.slice(0, AUDIT_LIMIT);
       try { if (await write(env, data, previous)) return true; }
@@ -138,13 +154,13 @@ export async function queryAudit(env: Env, query: Record<string, string>) {
   const offset = query.offset ? Number(query.offset) : 0;
   const limit = query.limit ? Number(query.limit) : 20;
   const q = (query.q || '').trim().toLowerCase();
-  if (!['all', 'login', 'operation', 'security'].includes(category) || !['all', 'success', 'failed', 'blocked'].includes(result) ||
+  if (!(category === 'all' || CATEGORIES.includes(category)) || !['all', 'success', 'failed', 'blocked'].includes(result) ||
       ![from, to, offset, limit].every(Number.isSafeInteger) || from < 0 || to < from || offset < 0 ||
       limit < 1 || limit > AUDIT_LIMIT || q.length > 80) throw new RangeError('Invalid audit filters');
   const enabled = auditEnabled(env);
   const entries = enabled ? (await read(env)).data.entries : [];
   entries.sort((a, b) => b.at - a.at || b.id.localeCompare(a.id));
   const matched = entries.filter(e => (category === 'all' || e.category === category) && (result === 'all' || e.result === result) &&
-    e.at >= from && e.at <= to && (!q || `${e.ip} ${e.target} ${e.action}`.toLowerCase().includes(q)));
+    e.at >= from && e.at <= to && (!q || `${e.ip} ${e.target} ${e.action} ${e.detail.filename ?? ''} ${e.detail.visitorId ?? ''}`.toLowerCase().includes(q)));
   return { enabled, retentionDays: AUDIT_DAYS, maxEntries: AUDIT_LIMIT, total: matched.length, offset, limit, rows: matched.slice(offset, offset + limit) };
 }

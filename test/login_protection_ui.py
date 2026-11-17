@@ -42,6 +42,7 @@ with sync_playwright() as p:
     expect(page.locator('#sec-list')).to_contain_text('No active bans')
     # Exercise actual login errors and lockout on an isolated browser without admin cookies.
     visitor = browser.new_context()
+    visitor.add_init_script("localStorage.setItem('lang', 'zh')")
     login = visitor.new_page()
     login.goto(base + '/admin')
     login.fill('#admin-token', 'wrong')

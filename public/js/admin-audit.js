@@ -10,8 +10,13 @@ export function initAudit() {
   let filters = {}, rows = [], available = false;
   let limit = pageSize('audit');
   const action = row => t(`audit.action.${row.action}`);
-  const actor = row => t(`audit.actor.${row.actor}`);
+  const actor = row => row.actor === 'anonymous' && (['upload', 'pickup'].includes(row.category) || ['upload', 'pickup'].includes(row.detail.scope))
+    ? t('audit.actor.visitor') : t(`audit.actor.${row.actor}`);
   const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;
+  function auditValue(value) {
+    const key = `audit.value.${value}`, translated = t(key);
+    return translated === key ? String(value) : translated;
+  }
   function shareRules(value) {
     try {
       const rules = JSON.parse(value);
@@ -36,10 +41,11 @@ export function initAudit() {
       [t('audit.agent'), row.agent || '—'],
     ];
     for (const [key, value] of Object.entries(row.detail)) {
-      fields.push([t(`audit.detail.${key}`), ['beforeRules','afterRules'].includes(key) ? shareRules(value) : key === 'bannedUntil' ? fmtDate(value)
+      fields.push([t(`audit.detail.${key}`), ['beforeRules','afterRules'].includes(key) ? shareRules(value) : ['bannedUntil', 'firstAt', 'lastAt'].includes(key) ? fmtDate(value)
+        : ['stage', 'scope', 'reason', 'kind'].includes(key) ? auditValue(value)
         : typeof value === 'boolean' ? t(value ? 'audit.yes' : 'audit.no') : String(value)]);
     }
-    if (row.action === 'download') fields.push([t('audit.description'), t('audit.downloadHint')]);
+    if (['download', 'publicDownload'].includes(row.action) && row.result === 'success') fields.push([t('audit.description'), t('audit.downloadHint')]);
     $('#audit-detail').replaceChildren(...fields.map(([label, value]) => el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));
     dialog.showModal();
   }
@@ -47,7 +53,8 @@ export function initAudit() {
     body.replaceChildren(...rows.map(row => el('tr', {},
       el('td', {}, fmtDate(row.at)),
       el('td', {}, el('span', {}, action(row)), el('small', { class: 'muted' }, t(`audit.${row.category}`))),
-      el('td', {}, el('span', { class: `audit-result audit-${row.result}` }, t(`audit.${row.result}`))),
+      el('td', {}, el('span', { class: `audit-result audit-${row.result}` }, t(`audit.${row.result}`)),
+        row.detail.count > 1 ? el('small', { class: 'muted' }, t('audit.repeat', row.detail.count)) : null),
       el('td', { class: 'audit-actor' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.actor')), actor(row)),
       el('td', { class: 'audit-source' }, el('span', { class: 'mono' }, ip(row)),
         row.country || row.region || row.city ? el('small', { class: 'muted' }, place(row)) : null),

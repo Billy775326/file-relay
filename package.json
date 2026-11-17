@@ -6,7 +6,7 @@
   "scripts": {
     "test:preview": "node test/file_preview.mjs",
     "test:admin-layout": "node test/admin_layout.mjs",
-    "test:audit": "node test/audit.mjs",
+    "test:audit": "node test/audit.mjs && node test/public_audit.mjs",
     "test:login-protection": "node test/login_protection.mjs",
     "test:upload-policy": "node test/upload_policy.mjs",
     "test:retention": "node test/retention.mjs",

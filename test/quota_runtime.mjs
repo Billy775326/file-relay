@@ -20,13 +20,17 @@ try {
   assert.equal(reserved.status, 200);
   const reservation = await reserved.json();
   assert.equal(reservation.capacityBytes, 9_990_000_000);
-  assert.ok(reservation.remainingBytes > 89_999_000 && reservation.remainingBytes < 90_000_000);
+  // Audit/protection objects consume real capacity too; verify against the bucket rather than assuming <1 KB of metadata.
+  const reservedObjects = await (await mf.getR2Bucket('BUCKET')).list();
+  assert.equal(reservedObjects.truncated, false);
+  const metadataBytes = reservedObjects.objects.reduce((sum, object) => sum + object.size, 0);
+  assert.equal(reservation.remainingBytes, 9_990_000_000 - 9_900_000_000 - metadataBytes);
   const denied = await call('/api/uploads/init', json({ filename: 'extra', size: 100_000_000, expiry: '1d' }));
   assert.equal(denied.status, 507);
   const rejection = await denied.json();
   assert.equal(rejection.error, 'capacity_exceeded');
   assert.equal(rejection.capacityBytes, 9_990_000_000);
-  assert.ok(rejection.remainingBytes > 89_999_000 && rejection.remainingBytes <= reservation.remainingBytes);
+  assert.ok(rejection.remainingBytes > 0 && rejection.remainingBytes <= reservation.remainingBytes);
   assert.equal((await call(`/api/uploads/${reservation.uploadId}/abort`, json({}))).status, 200);
   const upload = await (await call('/api/uploads/init', json({ filename: 'small', size: 3, expiry: '1d' }))).json();
   const part = await call(`/api/uploads/${upload.uploadId}/parts/1`, { method: 'PUT', body: 'abc' });

@@ -1,4 +1,6 @@
 import { securityResponse } from './security';
+import { auditState } from './audit';
+import { transferAudit } from './public-audit';
 import { uploadAccess, checkUploadOptions, admitFile, policyErrorResponse } from './upload-policy';
 import { Hono } from 'hono';
 import { num, type Env } from './types';
@@ -45,6 +47,9 @@ shareRoutes.post('/shares/text', async (c) => {
     maxPickups: mp,
     expireAt,
   });
+  auditState(c).target = created.code;
+  auditState(c).detail.kind = 'text';
+  auditState(c).detail.textLength = text.length;
 
   return c.json(
     {
@@ -80,6 +85,7 @@ shareRoutes.post('/shares/file', async (c) => {
   const submission = parseSubmission(context);
   if (!submission) return err(c, 400, 'bad_request', '称呼限 40 字，说明限 300 字');
   if (!filename) return err(c, 400, 'bad_request', '缺少 filename 查询参数');
+  auditState(c).detail.filename = filename.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 160);
   const expMs = parseExpiry(c.req.query('expiry'));
   if (expMs === undefined) return err(c, 400, 'bad_request', '有效期参数非法');
   const pkRaw = c.req.query('maxPickups');
@@ -133,6 +139,8 @@ shareRoutes.post('/shares/file', async (c) => {
       maxPickups: mp,
       expireAt,
     });
+    auditState(c).target = created.code;
+    transferAudit(c, { filename, size: bytes.byteLength, kind: 'file' });
     return c.json(
       {
         code: created.code,
@@ -155,11 +163,14 @@ shareRoutes.post('/pickup', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as { code?: unknown };
   const code = String(body?.code ?? '').trim();
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '请输入 6 位取件口令');
+  auditState(c).target = code;
 
   const store = getStore(c.env);
   const now = Date.now();
   const picked = await store.tryPickup(code, { textOnly: true });
   if (picked) {
+    auditState(c).detail.kind = 'text';
+    auditState(c).detail.textLength = picked.size;
     return c.json({
       kind: 'text',
       text: picked.text,
@@ -172,6 +183,7 @@ shareRoutes.post('/pickup', async (c) => {
 
   const row = await store.getByCode(code);
   if (!row) return err(c, 404, 'not_found', '口令不存在');
+  transferAudit(c, { ...row, source: null });
   const st = shareStatusOf(row.expireAt, row.maxPickups, row.pickupCount, now);
   if (st === 'expired') return err(c, 410, 'expired', '分享已过期');
   if (st === 'exhausted') return err(c, 410, 'exhausted', '取件次数已用完');
@@ -190,6 +202,7 @@ shareRoutes.post('/pickup', async (c) => {
 
 /** 下载错误内容协商:浏览器直接点链接时给极简 HTML 页,API 调用给 JSON */
 function downloadError(c: Context, status: 404 | 410, code: string, message: string) {
+  auditState(c).detail.reason = code;
   if ((c.req.header('Accept') || '').includes('text/html')) {
     return c.html(
       `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">` +
@@ -206,6 +219,7 @@ function downloadError(c: Context, status: 404 | 410, code: string, message: str
 /** 文件下载:原子计数 → R2 流式返回 */
 shareRoutes.get('/pickup/:code/download', async (c) => {
   const code = c.req.param('code');
+  if (/^\d{6}$/.test(code)) auditState(c).target = code;
   const store = getStore(c.env);
   const now = Date.now();
 
@@ -213,6 +227,7 @@ shareRoutes.get('/pickup/:code/download', async (c) => {
   if (!row || row.kind !== 'file' || !row.r2Key) {
     const raw = await store.getByCode(code);
     if (!raw) return downloadError(c, 404, 'not_found', '口令不存在');
+    transferAudit(c, { ...raw, source: null });
     const st = shareStatusOf(raw.expireAt, raw.maxPickups, raw.pickupCount, now);
     if (st === 'expired') return downloadError(c, 410, 'expired', '分享已过期');
     if (st === 'exhausted') return downloadError(c, 410, 'exhausted', '取件次数已用完');
@@ -220,6 +235,7 @@ shareRoutes.get('/pickup/:code/download', async (c) => {
   }
 
   // 按存储键前缀路由到 KV(小存储)或 R2(大存储)
+  transferAudit(c, { ...row, source: null });
   const body = await readFileStream(c.env, row.r2Key);
   if (!body) return downloadError(c, 410, 'gone', '文件已被清理');
 

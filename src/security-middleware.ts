@@ -2,7 +2,7 @@ import type { Context } from 'hono';
 import type { Env } from './types';
 import { enforceSecurity, SecurityError, securityResponse, type Scope } from './security';
 import { loginIP } from './login-protection';
-import { appendAudit } from './audit';
+import { publicRejection } from './public-audit';
 /** Check before consuming a body or returning a file; chunks are checked but never counted again. */
 export async function publicSecurity(c: Context<{
     Bindings: Env;
@@ -22,8 +22,7 @@ export async function publicSecurity(c: Context<{
     const reject = async (error: unknown) => {
         if (!(error instanceof SecurityError))
             throw error;
-        if (error.newBan)
-            await appendAudit(c.env, { id: crypto.randomUUID(), at: Date.now(), category: 'security', action: 'ban', result: 'blocked', actor: 'anonymous', ip, country, region, city: '', method, status: 429, target: scope, agent: '', durationMs: 0, detail: { scope, bannedUntil: error.retryAt! } });
+        publicRejection(c, error);
         return securityResponse(c, error)!;
     };
     try {

@@ -1,4 +1,6 @@
 import { securityResponse } from './security';
+import { auditState } from './audit';
+import { transferAudit, uploadSessionAudit } from './public-audit';
 import { captureSource, parseSubmission } from './upload-source';
 import { Hono } from 'hono';
 import type { Env } from './types';
@@ -40,6 +42,7 @@ uploadRoutes.post('/init', async (c) => {
 
   if (typeof filename !== 'string' || !filename.trim()) return err(c, 400, 'bad_request', '文件名不能为空');
   if (typeof size !== 'number' || !Number.isSafeInteger(size) || size < 1) return err(c, 400, 'bad_request', '文件大小非法');
+  transferAudit(c, { filename, size, kind: 'file' });
   if (size > maxSize) {
     return err(c, 413, 'too_large', `文件超过上限 ${maxSize} 字节`);
   }
@@ -97,6 +100,7 @@ uploadRoutes.put('/:id/parts/:n', async (c) => {
   const sess = await getStore(c.env).getSession(id);
   if (!sess) return err(c, 404, 'not_found', '上传会话不存在或已过期');
   await checkUploadSession(c, sess);
+  uploadSessionAudit(c, sess);
   if (sess.size > fileMaxSize(c.env)) return err(c, 413, 'too_large', '文件超过当前单文件上限,请重新上传');
   if (!Number.isInteger(n) || n < 1 || n > sess.parts) return err(c, 400, 'bad_request', '分片序号非法');
 
@@ -137,6 +141,7 @@ uploadRoutes.post('/:id/complete', async (c) => {
   const sess = await store.getSession(id);
   if (!sess) return err(c, 404, 'not_found', '上传会话不存在或已过期');
   await checkUploadSession(c, sess);
+  uploadSessionAudit(c, sess);
   if (sess.size > fileMaxSize(c.env)) return err(c, 413, 'too_large', '文件超过当前单文件上限,请重新上传');
 
   const parts = body?.parts;
@@ -191,6 +196,7 @@ uploadRoutes.post('/:id/complete', async (c) => {
     },
     id,
   );
+  auditState(c).target = created.code;
 
   return c.json({
     code: created.code,
@@ -209,11 +215,13 @@ uploadRoutes.post('/:id/abort', async (c) => {
   if (sess) {
     const source = await captureSource(c);
     if (!sess.source || source.visitorId !== sess.source.visitorId) throw new UploadPolicyError(403, 'upload_session_owner', '上传会话不属于当前访客');
+    uploadSessionAudit(c, sess);
     // Do not release capacity when removal could not be confirmed.
     await c.env.BUCKET!.resumeMultipartUpload(sess.r2Key, sess.uploadId).abort();
     // A completed object may remain if metadata creation failed.
     if (!(await c.env.BUCKET!.head(sess.r2Key))) await releaseCapacity(c.env, [sess.r2Key]);
     await store.deleteSession(sess.id);
+    auditState(c).detail.cancelled = true;
   }
   return c.json({ ok: true });
 });

@@ -94,6 +94,10 @@ for (const mode of ['kv-r2', 'd1', 'kv-only']) {
     if (mode === 'kv-r2') {
       const original = JSON.parse(saved);
       original.entries.push(...entries.slice(0, 24));
+      for (const category of ['upload', 'pickup']) original.entries.push({ ...sample, id: crypto.randomUUID(), at: Date.now(), category,
+        action: category === 'upload' ? 'upload' : 'pickup', result: 'failed', actor: 'anonymous', target: '246810',
+        detail: { filename: '<img src=x onerror=alert(1)>.txt', visitorId: 'fixture-visitor', stage: category === 'upload' ? 'complete' : 'lookup',
+          reason: 'bad_request', count: 3, firstAt: Date.now() - 1000, lastAt: Date.now() } });
       await write(JSON.stringify(original));
       const url = String(await mf.ready);
       await new Promise((resolve, reject) => {

@@ -100,13 +100,15 @@
         <button type="button" data-category="all" aria-pressed="true" data-i18n="audit.all">全部日志</button>
         <button type="button" data-category="login" aria-pressed="false" data-i18n="audit.login">登录日志</button>
         <button type="button" data-category="operation" aria-pressed="false" data-i18n="audit.operation">操作日志</button>
+        <button type="button" data-category="upload" aria-pressed="false" data-i18n="audit.upload">上传日志</button>
+        <button type="button" data-category="pickup" aria-pressed="false" data-i18n="audit.pickup">取件日志</button>
         <button type="button" data-category="security" aria-pressed="false" data-i18n="audit.security">安全事件</button>
       </div>
       <form id="audit-filter" class="audit-filter">
         <label><span data-i18n="audit.result">结果</span><select id="audit-result"><option value="all" data-i18n="audit.anyResult">全部结果</option><option value="success" data-i18n="audit.success">成功</option><option value="failed" data-i18n="audit.failed">失败</option><option value="blocked" data-i18n="audit.blocked">已拦截</option></select></label>
         <label><span data-i18n="audit.from">开始日期</span><input id="audit-from" type="date"></label>
         <label><span data-i18n="audit.to">结束日期</span><input id="audit-to" type="date"></label>
-        <label class="audit-search"><span data-i18n="audit.keyword">IP / 操作对象</span><input id="audit-q" type="search" maxlength="80" placeholder="搜索 IP 或取件码" data-i18n-ph="audit.search"></label>
+        <label class="audit-search"><span data-i18n="audit.keyword">IP / 文件 / 访客</span><input id="audit-q" type="search" maxlength="80" placeholder="搜索 IP、取件码、文件名或访客标识" data-i18n-ph="audit.search"></label>
         <div class="audit-actions"><button class="btn small primary" type="submit" data-i18n="audit.filter">筛选</button><button id="audit-reset" class="btn small ghost" type="button" data-i18n="audit.reset">重置</button></div>
       </form>
       <div id="audit-pager" class="list-toolbar" role="group" aria-label="日志分页" data-i18n-aria="ad.auditPagination">
