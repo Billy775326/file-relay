@@ -1,14 +1,8 @@
 # Deployment guide
 
-[Project overview](../README.en.md) | [简体中文](deployment.md)
+[Project overview](../README.en.md) | [简体中文](deployment.md) | [Documentation index](README.md)
 
-Choose one method. All methods run the same application and enforce the same upload limits.
-
-## UI startup and update checks
-
-Send, pickup and admin templates contain their initial layout, header, navigation and footer. Shared UI modules attach interactions; only the admin entry loads admin modules. Keep initial layout in HTML rather than moving page sections after scripts load.
-
-All production deployment methods still build `public/` into the same `dist/worker.js`; Pages copies it to `dist/pages/_worker.js`. The build adds a shared revision to CSS/JS links and relative module imports, retains content ETags, and sends browser revalidation and CDN no-store headers. Domain rules may override cache lifetimes; revisioned URLs avoid reusing previous assets on refresh and do not provide historical asset hosting. This fix requires no binding, secret or data migration. Verify the Pages commit and returned HTML/CSS/JS, then run `npm run test:first-paint` after building: it holds script downloads to check the initial layout before resuming interactions.
+Choose one method. All methods run the same application; bindings determine file storage, quotas, protection and audit availability. The recommended starting point is Pages with GitHub, KV and R2.
 
 ## Choose a method
 
@@ -35,17 +29,21 @@ In Cloudflare, create a KV namespace, for example `file-relay-meta`. For files l
 | R2 bucket | `file-relay-files` | `BUCKET` | Large-file mode |
 | D1 database | `file-relay` | `DB` | Optional; see D1 steps below |
 
-Start with KV or KV + R2. R2 has a 9.99 GB bucket guard; per-file limits and available capacity both apply. See [upload limits](../README.en.md#upload-and-capacity-limits).
+For a public uploader, start with KV + R2; KV-only has the restrictions below. R2 has a 9.99 GB bucket guard; per-file limits and available capacity both apply. See [upload limits](../README.en.md#upload-and-capacity-limits).
 
-### Prepare the admin token
-
-Generate a strong random string using a password manager. Save it later as the `ADMIN_TOKEN` Secret. It signs in to this application's admin page; **it is not a Cloudflare API Token**.
+### Features by storage binding
 
 Unnoted visitors default to five file-upload attempts per week; file sizes follow the global and storage-backend limits. Concurrent quotas use R2 conditional writes, or D1 when R2 is absent. KV-only deployments accept file uploads only from noted visitors; visitors may submit a finite text share first so an administrator can add a note. Adding D1 for quota accounting preserves KV metadata priority and creates `app_settings` additively. See the [admin guide](admin.md).
 
 R2/D1 bindings automatically enable login protection: five failed logins within ten minutes block new logins from that IP for thirty minutes. KV-only deployments do not enable this protection. The same behavior applies to every deployment method; see the [admin guide](admin.md#登录防护).
 
-R2/D1 also enables admin audit logs without new secrets, across all deployment methods. See [audit logging](admin.md#日志审计) for retention, storage and coverage.
+R2/D1 enables login, operation, upload, pickup and security audit logs without additional secrets. Repeated failures/blocks aggregate over five-minute windows, with a 30-day/1,000-entry limit. See [audit logging (Chinese)](admin.md#日志审计).
+
+KV usage analytics is optional: set `CF_ACCOUNT_ID`, `CF_KV_NAMESPACE_ID` and Secret `CF_ANALYTICS_TOKEN` with Account Analytics Read permission. See [setup and daily-peak semantics (Chinese)](kv-usage.md).
+
+### Prepare the admin token
+
+Generate a strong random string using a password manager. Save it later as the `ADMIN_TOKEN` Secret. It signs in to this application's admin page; **it is not a Cloudflare API Token**.
 
 ## A: Pages with GitHub
 
@@ -180,10 +178,11 @@ Use these checks for every method:
 | `/api/health` | `{"ok":true}` |
 | `/api/config` | `fileBackend` is `kv` or `r2`; limits match your settings |
 | Create and retrieve text | Content matches |
-| Upload and download a small file | File opens correctly |
+| Upload/download a small file | Works with R2 or KV + D1; on KV-only first note the visitor from their text share |
+| Audit and security workspace | Enabled with R2/D1; explicit unavailable state on KV-only |
 | Sign in at `/admin` with `ADMIN_TOKEN` | Share list and deletion work |
 
-Use the custom path if `ADMIN_PATH` is configured. R2 capacity protection is enabled automatically. **Do not upload 9.99 GB just to test it:** developers can run [local quota tests](../README.en.md#development-and-tests).
+The checks create real shares, consume pickups and may delete test data. Use known test files and an isolated Preview environment where practical. Do not repeatedly enter wrong production tokens to test lockout. Use the custom path if `ADMIN_PATH` is configured. R2 capacity protection is enabled automatically. **Do not upload 9.99 GB just to test it:** developers can run [local quota tests](../README.en.md#development-and-tests).
 
 ## Configure cleanup
 
@@ -223,12 +222,18 @@ Changing bindings does not migrate existing KV shares. Migrate records and addre
 | Old limits after code update | Review dashboard `MAX_FILE_SIZE` and `PART_SIZE`; old overrides persist |
 | CLI deployment does not update the public site | Check `--project-name` and production `--branch` |
 | Forgotten admin token | Reset `ADMIN_TOKEN` in project settings |
-| Capacity alert | Delete unneeded shares or cancel unfinished uploads; see overview quota details |
+| Capacity alert | Delete unneeded shares or cancel unfinished uploads; see the operations capacity guide |
 
-See [configuration](../README.en.md#configuration) for variables. Finish old uploads before upgrading and restart uploads after changing part size. Keep the bindings required to read historical files.
+See [configuration](../README.en.md#configuration) for variables and [backup/rollback/troubleshooting (Chinese)](operations.md) for maintenance. Finish old uploads before upgrading and restart uploads after changing part size. Keep the bindings required to read historical files.
 
 ## Existing D1 database upgrade
 
-The security workspace reuses existing R2/D1 bindings and requires no share-table migration. Upload rate protection and invalid pickup-code protection are enabled by default after upgrading; adjust them under **Security → Protection rules**. KV-only deployments do not enable persistent protection. Existing login bans are retained. See the [security guide (Chinese)](security.md).
+Check `source_json` on both share/session tables and `visitor_notes` before running the additive migration. Skip it when those fields already exist. The migration is not an every-upgrade command.
 
-Before deploying upload-source tracking, export a backup and apply [the source migration](../schema/migrations/0001-upload-source.sql) once. Fresh databases use the complete schema; do not also run this migration. KV deployments need no migration. See [upgrade commands and behavior](upload-sources.md).
+The security workspace and audit logs reuse R2/D1 bindings without adding share-table columns. Upload rate protection and invalid pickup-code protection are enabled by default after upgrading; adjust them under **Security → Protection rules**. KV-only deployments do not enable persistent protection. Existing login bans are retained. See the [security guide (Chinese)](security.md).
+
+If the source columns are absent, export a backup and apply [the source migration](../schema/migrations/0001-upload-source.sql) once before deploying source tracking. Fresh databases use the complete schema; do not also run this migration. KV deployments need no migration. See [upgrade commands and behavior](upload-sources.md).
+
+## UI startup and update checks
+
+Verify the production commit and the HTML/CSS/JS `X-File-Relay-Build` values after updating. Cache rules may override response policies. Architecture and regression commands are in the [development guide (Chinese)](development.md#页面启动与资源版本); live troubleshooting is in [operations (Chinese)](operations.md#页面更新与缓存).

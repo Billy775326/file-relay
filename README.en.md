@@ -2,278 +2,145 @@
 
 [简体中文](README.md) | **English**
 
-A file and text sharing service for Cloudflare Workers / Pages. Upload content, receive a **six-digit pickup code**, and share it through a code, link or QR code.
+File and text sharing on Cloudflare Workers / Pages. Senders receive a **six-digit pickup code**; recipients use a code, link or QR code. The admin panel manages files, upload sources, audit logs and access protection.
 
-Designed for the **Cloudflare Free plan**. KV stores text and small files from noted visitors. File uploads from unnoted visitors require R2 or D1 for concurrent quota enforcement. Adding an R2 bucket enables multipart uploads and **9.99 GB bucket-capacity protection**.
+Designed for personal and small-group use within Cloudflare Free-plan constraints. The default file limit is **9.9 GB**, with a **9.99 GB R2 bucket guard**. Neither value guarantees a zero account bill: requests, operations and other account resources also matter.
 
-> Request limits, per-file limits and free storage allowances are separate concepts. Capacity protection covers the bound bucket; it does not guarantee zero charges for the entire account.
-
-[Deploy](#deploy) · [Upload-and-capacity limits](#upload-and-capacity-limits) · [Configuration](#configuration) · [Updating a deployment](#updating-a-deployment) · [Development and tests](#development-and-tests) · [API](#api) · [FAQ](#faq)
+[Deployment](docs/deployment.en.md) · [Admin guide (Chinese)](docs/admin.md) · [Security (Chinese)](docs/security.md) · [Documentation index](docs/README.md)
 
 ## Features
 
-- File and text sharing through pickup codes, links and QR codes.
-- Select up to 10 files, upload sequentially and receive a separate code for each; progress, speed and retries included.
-- Expiry options: 1, 7 or 30 days. Noted visitors can also create permanent or unlimited-pickup shares.
-- Unnoted visitors default to five file-upload attempts per week, editable in the admin page.
-- Direct KV uploads; multipart uploads with cancellation when R2 is bound.
-- A capacity alert stops the upload batch when R2 space is insufficient.
-- Token-protected admin page with statistics, file details and downloads, deletion and an optional custom entry path.
-- Optional uploader name and file description; separate file and source dialogs, with recent uploads available in source details.
-- A dedicated security workspace for login/upload/pickup rate limits, IP and region bans, allow entries and read-only rule testing. Requires R2 or D1; existing login bans are preserved. See the [security guide (Chinese)](docs/security.md).
-- Admin audit logs include login, operation, upload, pickup and security categories with filtering, details and JSON export.
-- Expiry cleanup, Chinese and English UI, dark mode and mobile layouts.
+- File and text sharing; select up to ten files, upload sequentially and generate a separate code for each. Progress, cancellation and failed-upload retries are supported.
+- One-, seven- or thirty-day expiry. Unnoted visitors default to five file-upload admissions per week; noted visitors may create permanent or unlimited-pickup shares.
+- Direct small-file uploads to KV and multipart large-file uploads to R2, with file-size and capacity checks.
+- Admin filtering, file details, bounded previews, downloads, share-rule editing and deletion. Admin downloads do not consume public pickup counts.
+- Upload-source dialogs show visitor IDs or admin notes, network exit IPs and approximate locations. Optional uploader names and file descriptions are admin-only.
+- Separate security workspace for login/upload/pickup rate limits, IP/region bans, allow entries and rule testing.
+- Login, operation, upload, pickup and security audit categories, with filters, details and JSON export.
+- Configurable cleanup after expiry, Chinese/English UI, light/dark themes and mobile layouts.
 
 ## Deploy
 
-Choose a method, then follow the [deployment guide](docs/deployment.en.md).
+Recommended: **Pages + GitHub + KV + R2**. Connect the repository, build with `npm run build:pages`, output to `dist/pages`, bind `fileKV` and `BUCKET`, add Secret `ADMIN_TOKEN`, then redeploy. [Step-by-step instructions](docs/deployment.en.md#a-pages-with-github).
 
 | Method | Local tools | Updates |
 |---|---|---|
-| [Pages + GitHub](docs/deployment.en.md#a-pages-with-github) | None | Automatic builds on push |
-| [Pages CLI](docs/deployment.en.md#b-pages-cli) | Git, Node.js 22+ | `npm run deploy`, which rebuilds before uploading |
-| [Paste a Worker](docs/deployment.en.md#c-paste-a-worker) | None | Replace complete `worker.js` |
-| [Pages drag and drop](docs/deployment.en.md#d-pages-drag-and-drop) | None with a prebuilt file | Upload folder containing `_worker.js` |
+| [Pages with GitHub](docs/deployment.en.md#a-pages-with-github) | None | Push to the production branch |
+| [Pages CLI](docs/deployment.en.md#b-pages-cli) | Git, Node.js 22+ | `npm run deploy` |
+| [Paste a Worker](docs/deployment.en.md#c-paste-a-worker) | None with a prebuilt file | Replace all of `dist/worker.js` |
+| [Pages drag and drop](docs/deployment.en.md#d-pages-drag-and-drop) | None with a prebuilt file | Upload a folder containing `_worker.js` |
 
-Every method needs storage bindings and an `ADMIN_TOKEN` Secret in Cloudflare project settings:
+Each method runs the same code. Bindings determine the available features:
 
-| Use case | Bindings | Details |
-|---|---|---|
-| Small files and text | `fileKV` → KV | Files and metadata share KV; only noted visitors can upload files |
-| Large files | `fileKV` → KV; `BUCKET` → R2 | R2 files with KV metadata |
-| Strict concurrent pickup counting | `DB` → D1; `BUCKET` → R2 | Initialize the database; see the guide's D1 steps |
+| Bindings | File backend | Unnoted visitor file uploads | Persistent protection/audit |
+|---|---|---|---|
+| `fileKV` only | KV, up to 25 MiB | Disabled; send finite text first for an admin to note the visitor | Disabled |
+| `fileKV` + `BUCKET` | R2, default 9.9 GB | Five admissions/week by default | Enabled |
+| `fileKV` + `DB` | KV, up to 25 MiB | Five admissions/week by default | Enabled; D1 stores quota/protection state |
+| `DB` + `BUCKET` | R2, default 9.9 GB | Five admissions/week by default | Enabled; D1 provides atomic pickup counts |
 
-**KV takes priority when both `fileKV` and `DB` are bound.** Adding D1 does not switch backends or migrate records.
-
-To generate files locally without publishing, use `npm run build:pages` or `npm run build:single`.
-
-The admin upload-source column shows a visitor ID and IP location. Open it for the full IP and an admin note; the note replaces that visitor’s list label and grants an exemption from guest upload restrictions until cleared. Old uploads show “Not recorded”. See [source tracking and upgrades](docs/upload-sources.md).
+**KV remains the metadata backend when both `fileKV` and `DB` are bound.** Adding D1 does not migrate shares or switch metadata. D1-only supports text; file uploads additionally need R2. [Resource setup](docs/deployment.en.md#prepare-resources).
 
 ## Upload-and-capacity limits
 
-All applicable limits are enforced together. **MB / GB are decimal; MiB / GiB are binary.**
+MB/GB are decimal; MiB/GiB are binary.
 
-| Limit | Value | Scope |
-|---|---|---|
-| KV file | 25 MiB = 26,214,400 bytes | Raw bytes; share metadata is stored separately |
-| R2 part request | Default 100 MB = 100,000,000 bytes | Upload passes through a Free-plan Worker |
-| Complete file | `MAX_FILE_SIZE`, default 9.9 GB | All parts combined; checked server-side |
-| R2 part count | Default maximum 10,000 | Also constrained by `PART_SIZE` and `MAX_PARTS` |
-| R2 capacity protection | Fixed 9.99 GB = 9,990,000,000 bytes | Objects, upload reservations and ledger in the bound bucket |
+| Project limit | Default |
+|---|---|
+| Complete file | 9.9 GB; KV also has a 25 MiB limit |
+| R2 upload request/part | 100 MB |
+| R2 part count | Up to 10,000 |
+| R2 bucket guard | 9.99 GB, including objects and reservations |
+| Unnoted visitor file quota | Five admissions/week; resets Monday in Asia/Shanghai; cancellation does not refund admission |
 
-All visitors share the global file-size limit: 9.9 GB by default with R2, or 25 MiB with KV. Unnoted visitors default to five accepted file-upload attempts per week. Quotas reset Monday at 00:00 Asia/Shanghai; cancellation does not refund attempts. Available bucket capacity is also checked. See the [admin guide](docs/admin.md).
-
-The upload path is browser → Worker → R2. R2's native single-request limit is not the limit of this Worker path. S3 presigned direct uploads are not implemented.
-
-Official references: [KV limits](https://developers.cloudflare.com/kv/platform/limits/), [Worker request limits](https://developers.cloudflare.com/workers/platform/limits/#request-and-response-limits), [R2 limits](https://developers.cloudflare.com/r2/platform/limits/).
-
-When R2 capacity is insufficient, an alert stops the upload. Delete unneeded files through the admin page or cancel unfinished uploads before trying again.
+All visitors share the global size limit. Notes remove weekly and permanent/unlimited-share restrictions, while size, capacity and security checks still apply. Capacity rejection displays remaining space and stops subsequent batch uploads. [Operations guide (Chinese)](docs/operations.md#容量与免费额度).
 
 ### What the free allowance means
 
-R2 Standard includes **10 GB-month of storage per month**, plus separate Class A and Class B operation allowances. The 9.99 GB threshold is an application policy, not an account billing query. Scans, multipart operations and downloads also consume operation allowances. See [R2 pricing](https://developers.cloudflare.com/r2/pricing/).
+R2 Standard includes **10 GB-month/month** of free storage, with separate operation allowances. The application's guard checks the bound bucket, not the account bill. [Official R2 pricing](https://developers.cloudflare.com/r2/pricing/).
 
 ## Configuration
 
-For dashboard setup, follow the [deployment guide](docs/deployment.en.md).
-
-Configure production variables in Cloudflare project settings. [wrangler.jsonc](wrangler.jsonc) primarily serves local development.
+Configure production bindings and variables in the Cloudflare project, then redeploy. `wrangler.jsonc` is primarily for local development.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `MAX_FILE_SIZE` | `9900000000` | Complete-file byte limit; both modes; cannot override platform limits or remaining R2 capacity |
-| `MAX_TEXT_LENGTH` | `65536` | Server-side text length limit |
-| `PART_SIZE` | `100000000` | R2 part bytes, clamped to 5 MiB–100 MB |
-| `MAX_PARTS` | `10000` | R2 part count, clamped to 1–10,000 |
-| `SESSION_TTL_MS` | `86400000` | Cleanup age for unfinished sessions, default 24 hours |
+| `MAX_FILE_SIZE` | `9900000000` | Complete-file limit in bytes |
+| `MAX_TEXT_LENGTH` | `65536` | Text character limit |
+| `PART_SIZE` | `100000000` | R2 part bytes, bounded to 5 MiB–100 MB |
+| `MAX_PARTS` | `10000` | R2 part count, 1–10,000 |
+| `SESSION_TTL_MS` | `86400000` | Stale upload-session cleanup age in milliseconds |
 
 ### Admin settings
 
-| Secret | Required | Purpose |
-|---|---|---|
-| `ADMIN_TOKEN` | Yes | Admin login token; store as a production Secret |
-| `ADMIN_PATH` | No | Custom entry such as `panel-x7k9`; defaults to `/admin` |
+Secret `ADMIN_TOKEN` is required. Optional `ADMIN_PATH` changes the default `/admin` entry. The admin settings dialog contains retention, weekly visitor quotas and browser-local page sizes. Protection rules live in the separate security workspace. [Admin guide (Chinese)](docs/admin.md#设置与翻页).
 
-Custom paths accept 1–64 letters, digits, hyphens or underscores, with an optional leading slash. `/api` and `/pickup` are reserved. Setting a custom path makes the old `/admin` entry return 404; admin APIs remain authenticated.
+The KV card detects its binding automatically. To display usage, configure `CF_ACCOUNT_ID`, `CF_KV_NAMESPACE_ID` and Secret `CF_ANALYTICS_TOKEN`. [KV analytics setup (Chinese)](docs/kv-usage.md).
 
 ### Adjust the upload limit
 
-For a 1 GB per-file limit:
-
-```text
-MAX_FILE_SIZE=1000000000
-```
-
-The bucket threshold is **not an environment variable**. It is `R2_CAPACITY_MAX` in [src/quota.ts](src/quota.ts). Reducing `MAX_FILE_SIZE` does not delete existing files, but blocks oversized existing upload sessions from continuing.
+Set `MAX_FILE_SIZE=1000000000` for a 1 GB complete-file limit. The R2 total-capacity guard is a code constant, not an environment variable. [Capacity details (Chinese)](docs/operations.md#容量与免费额度).
 
 ## Cleanup
 
-Public pickup stops at expiry. Shares are then retained for **30 days** by default before becoming eligible for cleanup. Change the retention period under Settings → Sharing rules; permanent shares and exhausted pickup limits alone do not trigger cleanup. Click a filename to view details and download a retained file. See the [admin guide](docs/admin.md) for settings and API behavior.
+Public pickup stops at expiry. Expired shares are retained for **30 days** by default and removed on the next successful cleanup. Admins can download retained files. Permanent shares and exhausted shares without an expired date are not automatically removed by this rule.
 
-- **Standalone Workers:** configure Cron Trigger `0 */6 * * *` in the dashboard.
-- **Pages:** homepage visits trigger background cleanup, with an approximate six-hour KV throttle. This is not a strict distributed lock. D1 deployments without KV have no such throttle marker.
-- **External scheduler:** low-traffic sites can call the cleanup API every six hours:
-
-```bash
-curl -X POST 'https://your-domain.example/api/admin/cleanup' \
-  -H 'Authorization: Bearer <ADMIN_TOKEN>'
-```
-
-Response: `{"ok":true,"deletedShares":0,"abortedSessions":0}`. Keep admin tokens out of public repositories.
+Workers can use Cron; Pages uses homepage-triggered cleanup or an external scheduler. [Cleanup setup](docs/deployment.en.md#configure-cleanup).
 
 ## Updating a deployment
 
-1. Finish old in-progress uploads before upgrading. The guard counts existing objects and imports visible legacy sessions.
-2. Review dashboard variables. Old `MAX_FILE_SIZE` and `PART_SIZE` overrides survive code updates. Remove them or set `9900000000` and `100000000` to adopt current defaults.
-3. Rebuild and deploy Pages, or replace the complete `dist/worker.js` in paste mode. Restart uploads after changing part size.
-4. Check `/api/config`, then verify upload, pickup and deletion.
+Keep existing storage bindings and secrets, finish incomplete uploads, then update using your original deployment method. Existing variable overrides persist; check effective limits through `/api/config`.
 
-When changing file storage, retain bindings for historical files. KV file keys start with `f:`; R2 objects use separate keys. Reading old files requires the appropriate binding. **Switching KV / D1 metadata backends requires record migration; there is no automatic migration.**
+Older D1 installations may need the source-field migration; do not rerun it on databases that already have those fields. KV/D1 metadata switching requires a separate migration. [Upgrade, backup and rollback (Chinese)](docs/operations.md#更新已有部署).
 
 ## Development and tests
 
-Use [wrangler.jsonc](wrangler.jsonc) for local development. Enable `BUCKET` to test R2. To test D1, configure `DB`, remove `fileKV`, and initialize the schema. Production bindings remain in project settings.
-
 ```bash
 npm ci
+# Copy .dev.vars.example to .dev.vars and set a local admin token.
 npm run dev
 ```
 
-Copy [.dev.vars.example](.dev.vars.example) to `.dev.vars` and replace the local token. `.dev.vars` is Git-ignored:
-
-```text
-ADMIN_TOKEN=your-local-test-token
-```
-
-Checks and build:
-
-```bash
-npx tsc --noEmit
-node tools/check-i18n.mjs
-npm run test:limits
-npm run test:quota
-npm run build:pages
-```
-
-Browser testing requires Python, Playwright and Chromium:
-
-```bash
-python -m pip install playwright
-python -m playwright install chromium
-npm run test:quota-runtime
-npm run test:preview
-npm run test:source
-npm run test:admin-download
-npm run test:retention
-npm run test:upload-policy
-```
-
-The quota runtime test starts a local emulator using the build output. It covers admission, upload/download, cancellation, deletion and the browser alert without Cloudflare credentials.
-
-For a running local server:
-
-```bash
-# Set FILE_RELAY_VISITOR_COOKIE to a noted visitor cookie first
-python test/e2e_test.py http://localhost:8787
-python test/ui_smoke.py http://localhost:8787
-```
-
-These tests create shares and files. The R2 API test uses a file larger than one configured part. Do not treat them as read-only checks against production.
+Requires Node.js 22+. Isolated integration/browser tests also use Python, Playwright and Chromium. [Development guide (Chinese)](docs/development.md) documents setup, architecture and tests by module.
 
 ## API
 
-`expiry`: `1d`, `7d`, `30d` or `forever`. `maxPickups`: an integer from 1–999, or `null` for unlimited pickups. `forever` and `null` require a noted visitor. Multipart clients must retain the visitor cookie returned during initialization.
-
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/api/health` | Health check; requires a metadata binding |
-| GET | `/api/config` | File backend, per-file/text limits and part size; does not return bucket usage |
-| POST | `/api/shares/text` | Create text share |
-| POST | `/api/shares/file` | Raw KV file upload; metadata in query parameters |
-| POST | `/api/pickup` | Retrieve and count text; return file metadata without counting |
-| GET | `/api/pickup/:code/download` | Download and count file pickup |
-| POST | `/api/uploads/init` | Reserve capacity and initialize multipart upload |
-| PUT | `/api/uploads/:id/parts/:n` | Upload one R2 part |
-| POST | `/api/uploads/:id/complete` | Complete upload and create share |
-| POST | `/api/uploads/:id/abort` | Cancel and release reclaimable reservations |
-| POST | `/api/admin/login`, `/api/admin/logout` | Manage admin session |
-| GET | `/api/admin/stats`, `/api/admin/shares` | Share statistics and list; R2 capacity includes bucket objects and upload reservations |
-| GET / PUT | `/api/admin/upload-policy` | Read or save unnoted visitor upload limits |
-| GET / PUT | `/api/admin/settings` | Read or save retention days after expiry |
-| GET | `/api/admin/shares/:code` | Full file details and earliest cleanup time |
-| GET | `/api/admin/shares/:code/preview` | Admin text, CSV and small-image preview without counting pickups |
-| GET | `/api/admin/shares/:code/download` | Admin file download without counting pickups; retained expired files are allowed |
-| DELETE | `/api/admin/shares/:code` | Delete share and file |
-| POST | `/api/admin/cleanup` | Clean expired shares and stale upload sessions |
-
-Admin APIs use a signed Cookie. Cleanup also accepts `Authorization: Bearer <ADMIN_TOKEN>`.
+Use finite pickup counts for an unnoted visitor:
 
 ```bash
 curl -X POST 'https://your-domain.example/api/shares/text' \
   -H 'Content-Type: application/json' \
-  -d '{"text":"hello file-relay","expiry":"7d","maxPickups":null}'
-
-curl -X POST 'https://your-domain.example/api/pickup' \
-  -H 'Content-Type: application/json' \
-  -d '{"code":"376966"}'
+  -d '{"text":"hello file-relay","expiry":"7d","maxPickups":5}'
 ```
 
-Insufficient R2 capacity returns HTTP `507`:
-
-```json
-{"error":"capacity_exceeded","message":"容量超出免费额度","remainingBytes":123456789,"capacityBytes":9990000000}
-```
-
-Capacity-service failures return `503`. Per-file size violations return `413`.
-
-The remaining amount above is an example. `remainingBytes` reports available bytes: after reserving the file on successful initialization, or available for the attempted upload on rejection.
+Public responses omit upload provenance. Multipart clients must retain their visitor cookie. [API reference (Chinese)](docs/api.md) covers routes, authentication, payloads, errors and audit filters.
 
 ## Command reference
 
-| Purpose | Command | Publishes? |
+| Purpose | Command | Deploys? |
 |---|---|---|
 | Local development | `npm run dev` | No |
-| Build standalone file | `npm run build:single` | No |
-| Build Pages output | `npm run build:pages` | No |
-| Preview Pages locally | `npm run dev:pages` (build first) | No |
-| Deploy Pages | `npm run deploy -- --project-name file-relay --branch main` | Yes, rebuilds first |
-
-Local Static Assets can affect routing in `dev:pages`. Use `npm run test:quota-runtime` to check the embedded routing and quota alert.
+| Build standalone Worker | `npm run build:single` | No |
+| Build Pages | `npm run build:pages` | No |
+| Preview Pages | `npm run dev:pages` after building | No |
+| Deploy Pages | `npm run deploy -- --project-name file-relay --branch main` | Yes |
 
 ## FAQ
 
-**Why is capacity rejected below 9.99 GB?** The next file, unfinished reservations and ledger bytes also count. Cancel unfinished uploads or delete files through the admin page. Cleanup failures may retain reservations.
+**Does the KV card show free space?** No. It shows the namespace daily peak against the account-shared 1 GB allowance, not remaining account capacity.
 
-**Does adding D1 enable strict counting?** No. KV wins when both are bound. D1 uses atomic updates; KV read-modify-write counting can exceed pickup limits under concurrency, and code allocation has a collision window. There is no guarantee that over-pickups stop at one or two.
+**Does a source IP identify the uploader?** No. It describes a network exit. Proxies, shared networks and cookie changes affect association. [Source limitations (Chinese)](docs/upload-sources.md#识别范围).
 
-**Can exhausted KV writes affect downloads?** Yes. Pickup counting writes to KV, so new shares, text pickups and file downloads may fail.
+**Can uploads resume after a refresh?** Not currently. Closing the page attempts cancellation; subsequent cleanup handles stale sessions.
 
-**Can uploads resume after refresh?** Not currently. The page tries to cancel on close; remaining sessions depend on cleanup.
+**Does cancelling a download refund its count?** No. Counting happens when the file starts returning. An audit success does not prove the browser finished downloading.
 
-**Does cancelling a download refund a pickup?** No. Files count when download starts; text counts when viewed.
-
-**Forgot the admin token?** Reset `ADMIN_TOKEN` in project settings. Existing admin sessions become invalid.
-
-**Missing metadata database error?** Check the current environment's `fileKV` or `DB` binding and its spelling.
-
-**Cannot access the site?** Check deployment logs, bindings and network access to the domain. Default-domain availability depends on your network; configure a custom domain if appropriate.
+**Can exhausted KV writes affect pickup?** Yes: pickup counting writes metadata. KV counts also lack D1's atomic guarantees. [Troubleshooting (Chinese)](docs/operations.md#常见问题).
 
 ## Layout
 
-```text
-docs/       Chinese and English deployment guides
-src/        Routes, KV/D1 metadata, files, limits, R2 quota ledger and cleanup
-public/     Send, pickup and admin pages with vanilla JavaScript
-schema/     D1 initialization SQL
-tools/      Build and translation checks
-test/       Boundary, quota, runtime, API and browser tests
-dist/       worker.js; Pages output at pages/_worker.js
-```
-
-See [src/quota.ts](src/quota.ts) for capacity accounting, [src/limits.ts](src/limits.ts) for upload limits and [package.json](package.json) for commands.
+`public/` holds pages/styles; `src/` holds Worker logic; `schema/` holds D1 tables/migrations; `test/` holds tests; `tools/` holds build tools; `dist/worker.js` is the prebuilt pasteable artifact. [Code structure (Chinese)](docs/development.md#代码结构).
 
 ## Credits and license
 
-Inspired by [FileCodeBox](https://github.com/vastsa/FileCodeBox). Built with [Hono](https://github.com/honojs/hono) and Cloudflare Workers / Pages, KV, R2 and D1.
-
-[MIT License](LICENSE)
+Inspired by [FileCodeBox](https://github.com/vastsa/FileCodeBox), built with [Hono](https://github.com/honojs/hono) and Cloudflare. [MIT License](LICENSE).

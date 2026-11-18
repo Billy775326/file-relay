@@ -2,278 +2,145 @@
 
 **简体中文** | [English](README.en.md)
 
-基于 Cloudflare Workers / Pages 的文件与文本分享服务。发送方上传内容，获得 **6 位取件码**；接收方输入取件码，或扫描二维码取件。
+运行在 Cloudflare Workers / Pages 上的文件与文本分享服务。发送方上传内容后获得 **6 位取件码**，接收方通过口令、链接或二维码取件；管理员在后台管理文件、查看来源与日志、设置访问防护。
 
-项目按 **Cloudflare 免费套餐**设计。KV 可保存文本和已备注访客的小文件；面向未备注访客开放文件上传需要 R2 或 D1。添加 R2 桶后支持大文件分片上传，并提供 **9.99 GB 桶容量保护**。
+适合个人和小范围分享，按 Cloudflare 免费套餐的限制设计。默认单文件 **9.9 GB**，R2 桶容量保护为 **9.99 GB**；这些限制不等于账户账单保证，使用量还受请求、读写操作及账户其他资源影响。
 
-> 免费套餐的请求限制、单文件上限和免费存储额度是不同概念。R2 容量保护仅覆盖当前绑定桶，不保证整个账户零费用。
-
-[快速部署](#快速部署) · [上传与容量限制](#上传与容量限制) · [配置](#配置) · [更新已有部署](#更新已有部署) · [开发与测试](#开发与测试) · [API](#api) · [常见问题](#常见问题)
+[部署](docs/deployment.md) · [后台使用](docs/admin.md) · [安全防护](docs/security.md) · [全部文档](docs/README.md)
 
 ## 功能
 
-- 文件与文本分享，支持取件码、取件链接和二维码。
-- 一次选择最多 10 个文件，顺序上传，分别生成取件码；提供进度、速度和失败重试。
-- 有效期支持 1 天、7 天、30 天；已备注访客还可选择永久有效、不限次取件。
-- 未备注访客默认每周 5 次文件上传，次数可在后台调整，首页显示剩余额度。
-- KV 文件直传；绑定 R2 后自动改为分片上传，支持取消。
-- R2 容量不足时弹出“容量超出免费额度”，停止后续批量上传。
-- 管理后台支持令牌登录、统计、文件详情与下载、删除，可自定义入口。
-- 上传时可选填称呼和文件说明；后台分别查看文件详情与上传来源，来源内可展开近期上传。
-- 独立安全防护页面：登录、上传与取件限流，IP／地区封禁、允许名单与规则测试；需要 R2 或 D1，详见 [安全防护](docs/security.md)。
-- 后台日志审计支持登录、操作、上传、取件和安全事件分类，提供筛选、详情和导出。
-- 自动清理过期分享，中英文界面、深色模式和移动端适配。
+- 文件、文本分享；一次最多选择 10 个文件，顺序上传并分别生成取件码，支持进度、取消与失败重试。
+- 有效期可选 1 天、7 天、30 天；未备注访客默认每周 5 次文件上传，已备注访客可创建永久、不限次分享。
+- KV 小文件直传、R2 大文件分片上传；上传前校验单文件大小与可用容量。
+- 文件管理支持筛选、详情、有限内容预览、下载、编辑分享规则与删除。管理员下载不消耗公开取件次数。
+- 上传来源显示访客标识或备注、请求出口 IP 与大致属地；可选称呼和文件说明仅管理员可见。
+- 独立安全防护：后台登录、上传与取件限流，IP／地区封禁、允许名单、规则测试。
+- 日志审计覆盖登录、后台操作、上传、取件和安全事件，支持筛选、详情与 JSON 导出。
+- 默认保留过期分享 30 天后清理，可在后台调整；支持中英文、明暗主题和手机布局。
 
 ## 快速部署
 
-先选择适合自己的方式，完整步骤见 [部署指南](docs/deployment.md)。
+推荐 **Pages + GitHub + KV + R2**：连接仓库，构建命令填写 `npm run build:pages`，输出目录填写 `dist/pages`，绑定 `fileKV`、`BUCKET`，添加管理员 Secret `ADMIN_TOKEN`，再重新部署。[按步骤操作](docs/deployment.md#a-pages-连接-github)。
 
-| 方式 | 本地环境 | 更新方式 |
+| 方式 | 需要本地环境吗 | 更新方式 |
 |---|---|---|
-| [Pages + GitHub](docs/deployment.md#a-pages-连接-github) | 无需安装 | 推送代码后自动构建 |
-| [命令行部署 Pages](docs/deployment.md#b-命令行部署-pages) | Git、Node.js 22+ | `npm run deploy`，自动先构建再上传 |
-| [Workers 单文件粘贴](docs/deployment.md#c-workers-单文件粘贴) | 无需安装 | 替换完整 `worker.js` |
-| [Pages 拖放上传](docs/deployment.md#d-pages-拖放上传) | 使用预构建文件时无需安装 | 上传含 `_worker.js` 的文件夹 |
+| [Pages 连接 GitHub](docs/deployment.md#a-pages-连接-github) | 不需要 | 推送生产分支后自动构建部署 |
+| [命令行部署 Pages](docs/deployment.md#b-命令行部署-pages) | Git、Node.js 22+ | `npm run deploy` |
+| [Workers 单文件粘贴](docs/deployment.md#c-workers-单文件粘贴) | 使用预构建文件时不需要 | 替换完整 `dist/worker.js` |
+| [Pages 拖放上传](docs/deployment.md#d-pages-拖放上传) | 使用预构建文件时不需要 | 上传含 `_worker.js` 的目录 |
 
-所有方式都需要在 Cloudflare 项目中绑定资源，并添加管理员 Secret `ADMIN_TOKEN`：
+所有方式使用同一套程序，能力取决于绑定：
 
-| 用途 | 绑定 | 说明 |
-|---|---|---|
-| 小文件与文本 | `fileKV` → KV 命名空间 | 文件与元数据共用 KV；文件上传仅对已备注访客开放 |
-| 大文件分享 | `fileKV` → KV；`BUCKET` → R2 桶 | R2 文件 + KV 元数据 |
-| 严格控制并发取件次数 | `DB` → D1；`BUCKET` → R2 桶 | 先初始化数据库，见指南 D1 步骤 |
+| 绑定 | 文件模式 | 未备注访客文件上传 | 安全防护与审计 |
+|---|---|---|---|
+| 仅 `fileKV` | KV，最多 25 MiB | 不开放；可先发限时、限次文本供管理员备注 | 不启用持久化防护与审计 |
+| `fileKV` + `BUCKET` | R2，默认最多 9.9 GB | 默认每周 5 次 | 启用 |
+| `fileKV` + `DB` | KV，最多 25 MiB | 默认每周 5 次 | 启用，D1 保存配额与防护状态 |
+| `DB` + `BUCKET` | R2，默认最多 9.9 GB | 默认每周 5 次 | 启用，D1 提供原子取件计数 |
 
-**同时绑定 `fileKV` 和 `DB` 时优先使用 KV。** 添加 D1 不会自动切换后端或迁移记录。
-
-只在本地生成部署文件，使用 `npm run build:pages` 或 `npm run build:single`；这两个命令不会发布到 Cloudflare。
-
-后台的“上传来源”显示访客标识和 IP 属地；点击可查看完整 IP、编辑管理员备注。备注会替代该访客的列表标识，并解除访客上传限制；清空后恢复限制。历史上传显示“未记录”；城市信息不可用时仅显示已有地区。访客标识关联浏览器，不代表实名身份。详见 [上传来源与升级说明](docs/upload-sources.md)。
+**同时绑定 `fileKV` 和 `DB` 时，分享元数据优先使用 KV。** 添加 D1 不会迁移旧记录或自动切换元数据后端；仅绑定 D1 时可分享文本，文件上传还需要 R2。[部署资源选择](docs/deployment.md#部署前准备)。
 
 ## 上传与容量限制
 
-以下限制同时生效，实际可上传大小以最严格的一项为准。**MB / GB 使用十进制；MiB / GiB 使用二进制。**
+MB / GB 为十进制，MiB / GiB 为二进制。
 
-| 限制 | 当前值 | 作用范围 |
-|---|---|---|
-| KV 单文件 | 25 MiB，即 26,214,400 字节 | 原始文件字节，不含另存的分享元数据 |
-| R2 单次分片请求 | 默认 100 MB，即 100,000,000 字节 | 上传经过免费套餐 Worker |
-| 单个完整文件 | `MAX_FILE_SIZE`，默认 9.9 GB | 包含全部分片，服务端校验 |
-| R2 分片数 | 默认最多 10,000 片 | 还受 `PART_SIZE` 与 `MAX_PARTS` 配置限制 |
-| R2 总容量保护 | 固定 9.99 GB，即 9,990,000,000 字节 | 当前桶的对象、上传预留和容量台账 |
+| 项目限制 | 默认值 |
+|---|---|
+| 单个完整文件 | 9.9 GB；KV 模式还受 25 MiB 上限约束 |
+| R2 单次分片请求 | 100 MB |
+| R2 分片数 | 最多 10,000 片 |
+| R2 桶容量保护 | 9.99 GB，包含现有对象与上传预留 |
+| 未备注访客文件数 | 每周 5 次，北京时间周一重置；取消不退回已接纳次数 |
 
-所有访客统一使用全局单文件上限，R2 默认最多 9.9 GB，KV 最多 25 MiB；未备注访客默认每周 5 次。上传前会检查桶剩余空间。次数按北京时间周一重置，已接纳上传即计次，取消不退回。详见 [后台管理说明](docs/admin.md#未备注访客限制)。
-
-本项目采用“浏览器 → Worker → R2”路径。R2 原生接口的单次上传上限不能直接作为此路径的请求上限；本项目未实现 S3 预签名直传。
-
-官方参考：[KV 限制](https://developers.cloudflare.com/kv/platform/limits/)、[Workers 请求限制](https://developers.cloudflare.com/workers/platform/limits/#request-and-response-limits)、[R2 限制](https://developers.cloudflare.com/r2/platform/limits/)。
-
-R2 容量不足时，页面会弹出“容量超出免费额度”并停止上传。可通过管理后台删除不需要的文件，或取消未完成的上传后重试。
+所有访客共用全局文件大小上限。备注只解除周次数和永久／不限次分享限制，不绕过大小、容量或安全防护。上传容量不足时显示剩余额度并停止后续批量上传。[容量与清理说明](docs/operations.md#容量与免费额度)。
 
 ### 免费额度的含义
 
-R2 Standard 免费存储按 **10 GB-month/月**计量，另有 Class A、Class B 操作额度。9.99 GB 是本项目设置的实时容量阈值，不是 Cloudflare 账户账单查询结果。容量扫描、分片上传和下载也会消耗操作额度，详见 [R2 官方计费](https://developers.cloudflare.com/r2/pricing/)。
+R2 Standard 的免费存储按 **10 GB-month/月**计量，另外限制操作用量；项目的 9.99 GB 保护只检查当前桶，不统计整个账户的账单。[官方 R2 计费](https://developers.cloudflare.com/r2/pricing/)。
 
 ## 配置
 
-部署位置与操作步骤见 [部署指南](docs/deployment.md)。
+生产绑定和变量在 Cloudflare 项目设置中配置，保存后重新部署；`wrangler.jsonc` 主要用于本地开发。
 
-生产环境在 Cloudflare 项目设置中配置；[wrangler.jsonc](wrangler.jsonc) 主要用于本地开发。
-
-| 变量 | 默认值 | 说明 |
+| 变量 | 默认值 | 用途 |
 |---|---|---|
-| `MAX_FILE_SIZE` | `9900000000` | 单个完整文件上限，单位字节；两种文件模式都生效，不能突破各自平台上限或 R2 剩余容量 |
-| `MAX_TEXT_LENGTH` | `65536` | 服务端文本长度上限 |
-| `PART_SIZE` | `100000000` | R2 分片字节数，自动限制在 5 MiB 至 100 MB |
-| `MAX_PARTS` | `10000` | R2 分片数量，自动限制在 1–10,000 |
-| `SESSION_TTL_MS` | `86400000` | 未完成上传会话的清理期限，默认 24 小时 |
+| `MAX_FILE_SIZE` | `9900000000` | 单个完整文件上限，字节 |
+| `MAX_TEXT_LENGTH` | `65536` | 文本字符数上限 |
+| `PART_SIZE` | `100000000` | R2 分片字节数，限制在 5 MiB–100 MB |
+| `MAX_PARTS` | `10000` | R2 分片数量上限，1–10,000 |
+| `SESSION_TTL_MS` | `86400000` | 遗留上传会话清理期限，毫秒 |
 
 ### 管理设置
 
-| Secret | 是否必填 | 说明 |
-|---|---|---|
-| `ADMIN_TOKEN` | 是 | 管理员登录令牌；在生产控制台保存为 Secret |
-| `ADMIN_PATH` | 否 | 自定义入口，如 `panel-x7k9`；默认 `/admin` |
+`ADMIN_TOKEN` 是必填管理员 Secret；可选 `ADMIN_PATH` 自定义后台入口，默认 `/admin`。后台设置可修改过期保留天数、访客周次数和当前浏览器的每页条数；防护规则在独立的“安全防护”页面管理。[配置与设置区别](docs/admin.md#设置与翻页)。
 
-自定义入口支持 1–64 位字母、数字、`-`、`_`，可带前导 `/`，不能使用 `/api` 或 `/pickup`。设置后旧 `/admin` 入口返回 404，管理 API 仍需要令牌鉴权。
+KV 卡片自动识别绑定。需要显示具体用量时，再配置 `CF_ACCOUNT_ID`、`CF_KV_NAMESPACE_ID` 和 Secret `CF_ANALYTICS_TOKEN`。[KV 统计配置](docs/kv-usage.md)。
 
 ### 调整上传上限
 
-例如，将单文件限制为 1 GB：
-
-```text
-MAX_FILE_SIZE=1000000000
-```
-
-**桶总容量阈值不是环境变量**，固定定义在 [src/quota.ts](src/quota.ts) 的 `R2_CAPACITY_MAX`。降低 `MAX_FILE_SIZE` 不会删除已有文件，但会阻止超过新上限的旧会话继续上传。
+例如将 `MAX_FILE_SIZE` 设为 `1000000000`，即可限制完整文件为 1 GB。R2 总容量阈值是代码常量，不是同名环境变量；调整方法与边界见[运维说明](docs/operations.md#容量与免费额度)。
 
 ## 自动清理
 
-过期后立即停止公开取件，默认再保留 **30 天**后进入自动清理范围。后台“设置 → 分享规则”可修改保留天数；永久分享不会自动清理，次数用完也不会单独触发清理。点击文件名打开详情，可下载尚未清理的文件。设置范围、清理时机与接口见 [后台管理说明](docs/admin.md)。
+公开分享到期后立即停止取件，默认再保留 **30 天**，到下一次成功清理时删除。保留期内管理员仍可下载；永久分享、仅次数用完的分享不因该条件自动清理。
 
-- **Workers 单文件部署**：在控制台配置 Cron Trigger：`0 */6 * * *`。
-- **Pages 部署**：首页访问触发后台清理，KV 标记提供约 6 小时的节流窗口；这不是严格的分布式锁。未绑定 KV 的 D1 模式没有该节流标记。
-- **外部定时器**：低访问量站点可每 6 小时调用一次管理清理接口：
-
-```bash
-curl -X POST 'https://your-domain.example/api/admin/cleanup' \
-  -H 'Authorization: Bearer <ADMIN_TOKEN>'
-```
-
-接口返回 `{"ok":true,"deletedShares":0,"abortedSessions":0}`。不要把管理令牌写入公开仓库。
+Workers 可配置 Cron，Pages 使用首页触发或外部定时器。[清理配置](docs/deployment.md#清理配置) · [后台保留设置](docs/admin.md#过期保留天数)。
 
 ## 更新已有部署
 
-1. 结束旧版本未完成的上传，再部署新版本。容量保护会统计已有对象，并兼容可见的旧上传会话。
-2. 检查控制台环境变量。旧的 `MAX_FILE_SIZE`、`PART_SIZE` 不会因更新代码而消失；要使用当前默认值，删除覆盖值或分别设置为 `9900000000`、`100000000`。
-3. Pages 重新构建部署；粘贴模式替换完整 `dist/worker.js`。修改分片大小后重新开始上传。
-4. 通过 `/api/config` 检查生效的单文件上限和分片大小，再测试上传、取件和删除。
+保留原有存储绑定与管理员 Secret，结束未完成上传，再按原部署方式更新。旧环境变量覆盖值不会随代码更新自动删除；升级后通过 `/api/config` 检查有效上限。
 
-切换文件存储时，保留历史文件所在资源的绑定。KV 文件键以 `f:` 开头，R2 对象使用独立键；保留相应绑定才能读取旧文件。**切换 KV / D1 元数据后端需要迁移记录，代码不会自动完成迁移。**
+较早的 D1 数据库可能需要来源字段迁移；已支持来源字段的数据库不重复迁移。切换 KV / D1 元数据后端须另外迁移记录。[升级、备份与回退](docs/operations.md#更新已有部署)。
 
 ## 开发与测试
 
-本地开发使用 [wrangler.jsonc](wrangler.jsonc)。测试 R2 时启用其中的 `BUCKET` 绑定；测试 D1 时配置 `DB`、移除 `fileKV` 并初始化表。生产资源绑定仍在项目控制台管理。
-
 ```bash
 npm ci
+# 复制 .dev.vars.example 为 .dev.vars，并设置本地管理员令牌
 npm run dev
 ```
 
-将 [.dev.vars.example](.dev.vars.example) 复制为 `.dev.vars`，修改本地管理令牌。`.dev.vars` 已被 Git 忽略：
-
-```text
-ADMIN_TOKEN=your-local-test-token
-```
-
-常用检查命令：
-
-```bash
-npx tsc --noEmit
-node tools/check-i18n.mjs
-npm run test:limits
-npm run test:quota
-npm run build:pages
-```
-
-浏览器测试需要 Python、Playwright 和 Chromium：
-
-```bash
-python -m pip install playwright
-python -m playwright install chromium
-npm run test:quota-runtime
-npm run test:preview
-npm run test:source
-npm run test:admin-download
-npm run test:retention
-npm run test:upload-policy
-```
-
-`test:quota-runtime` 使用构建产物启动本地模拟环境，验证容量拦截、上传下载、取消删除及浏览器弹窗，不需要 Cloudflare 凭据。
-
-对已启动的本地服务进行 API / 页面测试：
-
-```bash
-# 需通过 FILE_RELAY_VISITOR_COOKIE 提供已备注访客的 Cookie
-python test/e2e_test.py http://localhost:8787
-python test/ui_smoke.py http://localhost:8787
-```
-
-这些测试会创建分享和测试文件；R2 API 测试使用超过一个分片大小的文件。不要把生产地址当作无副作用的检查目标。
+需要 Node.js 22+。隔离集成测试还需要 Python、Playwright 与 Chromium。安装、构建、模块测试和界面架构见[开发指南](docs/development.md)。
 
 ## API
 
-`expiry`：`1d` / `7d` / `30d` / `forever`。`maxPickups`：1–999 的整数，或 `null` 表示不限次。`forever` 与 `null` 仅供已备注访客使用；分片后续请求必须保留初始化时的访客 Cookie。
-
-| 方法 | 路径 | 用途 |
-|---|---|---|
-| GET | `/api/health` | 健康检查，需要元数据绑定 |
-| GET | `/api/config` | 当前文件模式、单文件上限、文本上限和分片大小；不返回桶总占用 |
-| POST | `/api/shares/text` | 创建文本分享 |
-| POST | `/api/shares/file` | KV 原始字节直传，文件名等通过查询参数传入 |
-| POST | `/api/pickup` | 文本查看并计数；文件只返回元数据 |
-| GET | `/api/pickup/:code/download` | 下载文件并计数 |
-| POST | `/api/uploads/init` | R2 容量预留与上传初始化 |
-| PUT | `/api/uploads/:id/parts/:n` | 上传一个 R2 分片 |
-| POST | `/api/uploads/:id/complete` | 合并分片并创建分享 |
-| POST | `/api/uploads/:id/abort` | 取消上传并释放可回收的预留 |
-| POST | `/api/admin/login`、`/api/admin/logout` | 管理会话登录、退出 |
-| GET | `/api/admin/stats`、`/api/admin/shares` | 分享统计与列表；R2 容量包含桶内对象与上传预留 |
-| GET / PUT | `/api/admin/upload-policy` | 读取或保存未备注访客的周次数和单文件大小 |
-| GET / PUT | `/api/admin/settings` | 读取或保存过期保留天数 |
-| GET | `/api/admin/shares/:code` | 完整文件详情及最早清理时间 |
-| GET | `/api/admin/shares/:code/preview` | 管理员预览文本、CSV 或小图片，不消耗取件次数 |
-| GET | `/api/admin/shares/:code/download` | 管理员下载文件，不消耗取件次数；支持尚未清理的过期文件 |
-| DELETE | `/api/admin/shares/:code` | 删除分享及对应文件 |
-| POST | `/api/admin/cleanup` | 清理过期分享和遗留上传会话 |
-
-管理接口使用签名 Cookie；清理接口额外支持 `Authorization: Bearer <ADMIN_TOKEN>`。
+最小示例使用未备注访客也允许的有限取件次数：
 
 ```bash
 curl -X POST 'https://your-domain.example/api/shares/text' \
   -H 'Content-Type: application/json' \
-  -d '{"text":"hello file-relay","expiry":"7d","maxPickups":null}'
-
-curl -X POST 'https://your-domain.example/api/pickup' \
-  -H 'Content-Type: application/json' \
-  -d '{"code":"376966"}'
+  -d '{"text":"hello file-relay","expiry":"7d","maxPickups":5}'
 ```
 
-R2 容量不足返回：
-
-```json
-{"error":"capacity_exceeded","message":"容量超出免费额度","remainingBytes":123456789,"capacityBytes":9990000000}
-```
-
-HTTP 状态为 `507`；容量服务不可用时返回 `503`，单文件超限为 `413`。
-
-以上剩余额度为示例。`remainingBytes` 为剩余可用字节数；初始化成功时返回预留本次文件后的额度，容量不足时返回本次申请可用的额度。
+公开接口不返回上传来源；分片客户端必须保留访客 Cookie。完整路径、输入输出、错误、管理鉴权和日志筛选见[API 参考](docs/api.md)。
 
 ## 命令速查
 
-| 目的 | 命令 | 是否发布 |
+| 目的 | 命令 | 是否部署 |
 |---|---|---|
 | 本地开发 | `npm run dev` | 否 |
 | 构建单文件 | `npm run build:single` | 否 |
 | 构建 Pages | `npm run build:pages` | 否 |
 | 本地预览 Pages | `npm run dev:pages`（先构建） | 否 |
-| 部署 Pages | `npm run deploy -- --project-name file-relay --branch main` | 是，先构建后发布 |
-
-`dev:pages` 可能受到本地 Static Assets 优先路由影响；需要验证完整内联路由和容量弹窗时，使用 `npm run test:quota-runtime`。
+| 部署 Pages | `npm run deploy -- --project-name file-relay --branch main` | 是 |
 
 ## 常见问题
 
-**桶中还不到 9.99 GB，为什么提示容量不足？** 还需计算新文件、未完成上传预留和台账本身。取消遗留上传或通过后台删除文件后重试；清理失败可能保留预留。
+**KV 卡片显示的是剩余空间吗？** 不是。分子是当前命名空间的日峰值，1 GB 分母是账户共享免费额度，不能据此判断账户剩余容量。
 
-**加上 D1 就能严格计数吗？** 不能。当前同时绑定 KV 和 D1 时优先 KV。D1 使用原子更新限制取件次数；KV 使用读改写，存在并发超取和口令碰撞窗口，没有“最多只多取一两次”的保证。
+**来源 IP 能证明上传者是谁吗？** 不能。它反映网络出口；代理、共享网络、Cookie 更换均会影响关联。[来源识别范围](docs/upload-sources.md#识别范围)。
 
-**KV 写额度耗尽会影响下载吗？** 会。取件计数需要写回 KV，因此新分享、文本取件和文件下载都可能失败。
+**刷新后能继续上传吗？** 当前不支持断点续传，页面关闭时尽力取消，会话由后续清理回收。
 
-**刷新后能继续上传吗？** 当前不支持断点续传。页面关闭时尽力取消会话，未完成会话由后续清理处理。
+**下载取消会返还次数吗？** 不会。文件开始返回即计数，日志中的成功也不能证明浏览器完成下载。
 
-**下载取消会返还次数吗？** 不会，文件开始下载即计数；文本查看即计数。
-
-**忘记管理令牌怎么办？** 在项目设置中重设 `ADMIN_TOKEN`，旧管理会话随之失效。
-
-**部署后提示没有元数据库？** 检查当前环境是否绑定 `fileKV` 或 `DB`，以及绑定名称是否一致。
-
-**如何排查访问失败？** 先检查部署日志、绑定和域名网络连通性。默认域名的可达性取决于所在网络，可根据需要绑定自定义域名。
+**KV 写额度耗尽会影响取件吗？** 会，公开取件计数需要写回元数据。KV 并发计数也不具备 D1 的原子保证。[排障表](docs/operations.md#常见问题)。
 
 ## 项目结构
 
-```text
-docs/       中英文部署指南
-src/        路由、KV/D1 元数据、文件存储、上传限制、R2 容量台账及清理
-public/     发送、取件、管理页面和原生 JavaScript
-schema/     D1 初始化 SQL
-tools/     构建和翻译检查脚本
-test/      边界、容量、运行时、API 和浏览器测试
-dist/      worker.js；Pages 产物位于 pages/_worker.js
-```
-
-容量逻辑见 [src/quota.ts](src/quota.ts)，上传限制见 [src/limits.ts](src/limits.ts)，部署与测试命令见 [package.json](package.json)。
+`public/` 为页面和样式，`src/` 为 Worker 业务，`schema/` 为 D1 表及迁移，`test/` 为测试，`tools/` 为构建工具，`dist/worker.js` 为可粘贴产物。目录职责见[开发指南](docs/development.md#代码结构)。
 
 ## 致谢与许可
 
-灵感来自 [FileCodeBox](https://github.com/vastsa/FileCodeBox)。基于 [Hono](https://github.com/honojs/hono) 和 Cloudflare Workers / Pages、KV、R2、D1 构建。
-
-[MIT License](LICENSE)
+灵感来自 [FileCodeBox](https://github.com/vastsa/FileCodeBox)，基于 [Hono](https://github.com/honojs/hono) 与 Cloudflare 构建。[MIT License](LICENSE)。
