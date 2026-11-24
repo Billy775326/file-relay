@@ -5,7 +5,7 @@ import type { Env } from './types';
 import { num } from './types';
 import { getStore, shareStatusOf, type ShareRecord, type ShareUpdate, type ShareListFilter } from './store';
 import { getRetentionDays, RETENTION_DAY_MS } from './settings';
-import { validShareRules } from './share-edit';
+import { validShareRules, shareVersion as version } from './share-edit';
 import { deleteFile, inspectFile, isKvFileKey } from './filestore';
 import { createTextShare, createKVFileShare } from './share';
 import { downloadShare } from './admin';
@@ -51,13 +51,6 @@ function view(record: ShareRecord) {
     expireAt: record.expireAt, createdAt: record.createdAt,
     status: shareStatusOf(record.expireAt, record.maxPickups, record.pickupCount, Date.now()),
     pickupUrl: `/pickup?code=${record.code}`, downloadUrl: record.kind === 'file' ? `/api/v1/shares/${record.code}/download` : null };
-}
-async function version(record: ShareRecord) {
-  // Exclude time-derived status: the concurrency version represents persisted editable fields.
-  const bytes = new TextEncoder().encode(JSON.stringify([record.id, record.kind, record.filename, record.text, record.size,
-    record.pickupCount, record.maxPickups, record.expireAt]));
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return '"' + Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('') + '"';
 }
 async function reply(c: Context<{ Bindings: Env }>, record: ShareRecord) {
   c.header('ETag', await version(record));

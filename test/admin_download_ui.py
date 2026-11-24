@@ -19,7 +19,12 @@ with sync_playwright() as p:
     name = row.locator('.file-detail-link')
     link = page.locator('#file-download')
     expect(page.locator('#shares-body a[download]')).to_have_count(0)
-    expect(page.locator('#shares-body tr').filter(has=page.locator('td.mono', has_text='100005')).locator('.file-detail-link')).to_have_count(0)
+    text_row = page.locator('#shares-body tr').filter(has=page.locator('td.mono', has_text='100005'))
+    text_row.locator('.file-detail-link').click()
+    expect(page.locator('#file-title')).to_have_text('文本详情')
+    expect(page.locator('.text-share-body')).to_have_text('hello')
+    expect(link).to_be_hidden()
+    page.locator('#file-close').click()
     for lang in ['zh', 'en']:
         if lang == 'en':
             page.click('#lang-btn')

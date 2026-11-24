@@ -1,4 +1,12 @@
-import type { ShareEditBase, ShareRules } from './store';
+import type { ShareEditBase, ShareRules, ShareRecord } from './store';
+
+/** Persisted content and rules only: elapsed time must not invalidate an edit snapshot. */
+export async function shareVersion(record: ShareRecord) {
+  const bytes = new TextEncoder().encode(JSON.stringify([record.id, record.kind, record.filename, record.text, record.size,
+    record.pickupCount, record.maxPickups, record.expireAt]));
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return '"' + Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('') + '"';
+}
 
 export const MAX_PICKUP_COUNT = 2_147_483_647;
 export const MAX_EXPIRY_TIME = 253_402_300_799_999; // 9999-12-31, Unix milliseconds.

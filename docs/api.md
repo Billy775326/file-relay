@@ -151,8 +151,8 @@ R2 `storage` 为 `{ usedBytes, capacityBytes }`，包含对象、系统状态及
 
 | 方法 / 路径 | 行为 |
 |---|---|
-| `GET /api/admin/shares/:code` | 文件详情；文本分享返回 400 |
-| `PUT /api/admin/shares/:code` | 修改文件分享规则，校验原快照与最终状态 |
+| `GET /api/admin/shares/:code` | 文件或文本完整详情，不消耗取件次数 |
+| `PUT /api/admin/shares/:code` | 修改分享规则及文本正文，校验原快照与最终状态 |
 | `GET /api/admin/shares/:code/preview` | 管理员有限预览，不增加公开取件次数 |
 | `GET /api/admin/shares/:code/download` | 管理员下载，不增加公开取件次数；支持仍保留的过期文件 |
 | `DELETE /api/admin/shares/:code` | 删除分享与可访问的对应文件；记录不存在也返回成功 |
@@ -164,11 +164,17 @@ R2 `storage` 为 `{ usedBytes, capacityBytes }`，包含对象、系统状态及
 
 文件详情主要字段：`id`、`code`、`filename`、`size`、`mime`、`description`、`displayName`、`createdAt`、`expireAt`、`pickupCount`、`maxPickups`、`status`、`source`、`downloadUrl`。
 
+详情新增 `kind` 区分 `file|text`。文本还包含完整 `text`、用于修改校验的 `version` 与 `maxTextLength`，`size` 为 JavaScript 字符串长度，`storage` / `downloadUrl` 为 `null`；文本仍不支持文件下载及预览接口。详情响应禁止缓存，不增加取件次数。
+
 另含诊断字段：`cleanupAfter`、`retentionDays`、`evaluatedAt`、`cleanupStatus`（`permanent|active|retained|pending`）、`storage.state`（`available|missing|unknown`）和可取得的存储大小/时间。界面不展示清理日期，但接口仍返回这些字段。完整 IP、浏览器与存储键不放进文件详情。
 
 ### 编辑分享请求
 
 提交 `expected: { id, pickupCount, maxPickups, expireAt }` 和 `rules: { pickupCount, maxPickups, expireAt, status }`。
+
+文本分享还必须在 `expected` 中携带详情返回的 **`version`**；可选顶层 `text` 修改正文，省略则仅修改规则。`text` 必须非空且不超过 `MAX_TEXT_LENGTH`，文件分享不接受该字段。保存同步更新字符数与列表摘要；正文或取件状态被后台/API 修改后，旧版本返回 `409 share_conflict`，缺版本返回 400。D1 原子条件更新正文与规则，KV 仍是尽力校验。
+
+PUT 的 JSON 请求最多 **1 MiB**，支持默认字符上限下的多字节正文。文件规则编辑的原有请求格式不变。修改审计记录前后规则，正文变化仅记录字段名与前后字符数，不保存正文。
 
 - `pickupCount`：0–2,147,483,647；有限 `maxPickups`：1–2,147,483,647，或 `null`。
 - `expireAt`：非负整数毫秒，最大 253,402,300,799,999，或 `null`；`status` 为 `active|expired|exhausted`。

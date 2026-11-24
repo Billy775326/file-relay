@@ -85,7 +85,7 @@ for (const [metadata, backend] of [['kv', 'kv'], ['kv', 'r2'], ['d1', 'r2']]) {
     assert.equal(updatedExpiry.cleanupAfter, records[2].expireAt);
     assert.equal(updatedExpiry.storage.state, 'available'); // Reading details does not clean a file.
     await call('/api/admin/settings', { method: 'PUT', headers: { Cookie: cookie, 'Content-Type': 'application/json' }, body: JSON.stringify({ expiredRetentionDays: 30 }) });
-    for (const [code, status] of [['bad',400],['999999',404],['100005',400]]) {
+    for (const [code, status] of [['bad',400],['999999',404],['100005',200]]) {
       assert.equal((await call(`/api/admin/shares/${code}`, { headers: { Cookie: cookie } })).status, status);
     }
     for (const code of ['100001','100002','100003']) {

@@ -1,11 +1,12 @@
 import { safeEqual } from './auth';
 import { securityEnabled, securityState, enforceSecurity, editSecurity, SecurityError, canonicalIP, evaluate, exempt, SCOPES, type Scope } from './security';
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import type { Context } from 'hono';
-import type { Env } from './types';
+import { num, type Env } from './types';
 import { err, contentDisposition } from './util';
-import { getStore, shareStatusOf } from './store';
+import { getStore, shareStatusOf, sameShareRules } from './store';
 import type { ShareListFilter } from './store';
 import { deleteFile, readFileStream, inspectFile } from './filestore';
 import { previewFile } from './file-preview';
@@ -17,7 +18,7 @@ import { getRetentionDays, setRetentionDays, validRetentionDays, RETENTION_DAY_M
 import { getGuestLimits, setGuestLimits, validGuestLimits } from './upload-policy';
 import { checkLogin, recordLogin, loginIP, loginProtectionStatus, unblockLogin, unblockLogins } from './login-protection';
 import { auditRequest, auditState, queryAudit } from './audit';
-import { validShareBase, validShareRules } from './share-edit';
+import { validShareBase, validShareRules, shareVersion } from './share-edit';
 
 export const adminRoutes = new Hono<{ Bindings: Env }>();
 adminRoutes.use('*', auditRequest);
@@ -261,23 +262,24 @@ adminRoutes.get('/shares', async (c) => {
   });
 });
 
-/** Full filenames are loaded on demand; the KV list uses shortened metadata. */
+/** Full file names and text bodies are loaded privately on demand, without pickup. */
 adminRoutes.get('/shares/:code', async (c) => {
   const code = c.req.param('code');
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
   const store = getStore(c.env);
   const record = await store.getByCode(code);
   if (!record) return err(c, 404, 'not_found', '分享不存在');
-  if (record.kind !== 'file') return err(c, 400, 'bad_request', '此分享不是文件');
   const [days, storage, note] = await Promise.all([
-    getRetentionDays(c.env), inspectFile(c.env, record.r2Key),
+    getRetentionDays(c.env), record.kind === 'file' ? inspectFile(c.env, record.r2Key) : Promise.resolve(null),
     record.source ? store.getVisitorNote(record.source.visitorId) : Promise.resolve(''),
   ]);
   const evaluatedAt = Date.now();
   const cleanupAfter = record.expireAt === null ? null : record.expireAt + days * RETENTION_DAY_MS;
   const cleanupStatus = cleanupAfter === null ? 'permanent' : record.expireAt! > evaluatedAt ? 'active'
     : cleanupAfter > evaluatedAt ? 'retained' : 'pending';
-  return c.json({ id: record.id, code, filename: record.filename, size: record.size, mime: record.mime,
+  c.header('Cache-Control', 'no-store');
+  return c.json({ id: record.id, code, kind: record.kind, filename: record.filename, size: record.size, mime: record.mime,
+    ...(record.kind === 'text' ? { text: record.text, version: await shareVersion(record), maxTextLength: num(c.env.MAX_TEXT_LENGTH, 65_536) } : {}),
     description: record.source?.submission?.description || null,
     displayName: record.source?.submission?.displayName || null,
     createdAt: record.createdAt, expireAt: record.expireAt,
@@ -285,40 +287,53 @@ adminRoutes.get('/shares/:code', async (c) => {
     source: record.source ? { ...sourceSummary(record.source), note } : null,
     pickupCount: record.pickupCount, maxPickups: record.maxPickups,
     status: shareStatusOf(record.expireAt, record.maxPickups, record.pickupCount, evaluatedAt),
-    downloadUrl: `/api/admin/shares/${code}/download`,
+    downloadUrl: record.kind === 'file' ? `/api/admin/shares/${code}/download` : null,
   });
 });
 
-/** Administrative correction preserves the file and refuses a stale edit snapshot. */
-adminRoutes.put('/shares/:code', async c => {
+/** Text edits compare the content version as well as rules; file edits preserve bytes. */
+adminRoutes.put('/shares/:code', bodyLimit({ maxSize: 1_048_576,
+  onError: c => err(c, 400, 'bad_request', '请求超过 1 MiB 上限') }), async c => {
   const origin = c.req.header('Origin');
   if (origin && origin !== new URL(c.req.url).origin) return err(c, 403, 'forbidden', '请求来源不匹配');
   if (!c.req.header('Content-Type')?.startsWith('application/json')) return err(c, 415, 'bad_request', '请使用 JSON');
   const code = c.req.param('code');
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
-  if (Number(c.req.header('Content-Length') || 0) > 4096) return err(c, 400, 'bad_request', '请求过大');
   const raw = await c.req.text();
-  if (raw.length > 4096) return err(c, 400, 'bad_request', '请求过大');
   let body; try { body = JSON.parse(raw); } catch { return err(c, 400, 'bad_request', 'JSON 格式无效'); }
   if (!validShareRules(body?.rules) || !validShareBase(body?.expected)) return err(c, 400, 'bad_request', '次数、有效期或状态参数无效');
   const store = getStore(c.env), record = await store.getByCode(code);
   if (!record) return err(c, 404, 'not_found', '分享不存在');
-  if (record.kind !== 'file') return err(c, 400, 'bad_request', '此分享不是文件');
+  const isText = record.kind === 'text';
+  if (isText && typeof body.expected.version !== 'string') return err(c, 400, 'bad_request', '缺少文本版本，请重新打开详情');
+  if (isText && (!sameShareRules(record, body.expected) || body.expected.version !== await shareVersion(record))) return err(c, 409, 'share_conflict', '记录已被取件或修改，请重新加载后编辑');
+  if ('text' in body && (!isText || typeof body.text !== 'string' || !body.text.trim() || body.text.length > num(c.env.MAX_TEXT_LENGTH, 65_536)))
+    return err(c, 400, 'bad_request', '文本不能为空或超过字符上限，仅文本分享可修改正文');
   const cutoff = Date.now() - (await getRetentionDays(c.env)) * RETENTION_DAY_MS;
   if (record.expireAt !== null && record.expireAt <= cutoff)
-    return err(c, 409, 'cleanup_pending', '此文件已进入清理期，不能修改；如仍可下载，请先备份后重新上传');
-  const storage = await inspectFile(c.env, record.r2Key);
-  if (storage.state === 'missing') return err(c, 410, 'gone', '文件已被清理');
-  if (storage.state !== 'available') return err(c, 503, 'storage_unavailable', '无法确认文件存储状态，请稍后重试');
-  // Explicit projection: callers cannot change filenames, storage keys or provenance.
+    return err(c, 409, 'cleanup_pending', '分享已进入清理期，不能修改；请先备份内容后重新分享');
+  if (!isText) {
+    const storage = await inspectFile(c.env, record.r2Key);
+    if (storage.state === 'missing') return err(c, 410, 'gone', '文件已被清理');
+    if (storage.state !== 'available') return err(c, 503, 'storage_unavailable', '无法确认文件存储状态，请稍后重试');
+  }
+  // Explicit projection: callers cannot change storage keys, identity or provenance.
   const { pickupCount, maxPickups, expireAt, status } = body.rules;
   const rules = { pickupCount, maxPickups, expireAt };
   if (shareStatusOf(expireAt, maxPickups, pickupCount, Date.now()) !== status)
     return c.json({ error: 'status_mismatch', message: '状态与次数或过期时间不一致，请检查后保存' }, 400);
-  const updated = await store.updateRules(code, body.expected, rules, cutoff);
+  const text = 'text' in body ? body.text as string : record.text;
+  const updated = isText ? await store.updateShare(code, record, {
+    filename: record.filename, text, size: text?.length ?? 0, ...rules,
+  }, cutoff) : await store.updateRules(code, body.expected, rules, cutoff);
   if (!updated) return err(c, 409, 'share_conflict', '记录已被取件或修改，请重新加载后编辑');
   auditState(c).detail.beforeRules = JSON.stringify({ pickupCount: record.pickupCount, maxPickups: record.maxPickups, expireAt: record.expireAt });
   auditState(c).detail.afterRules = JSON.stringify(rules);
+  if (isText && text !== record.text) {
+    auditState(c).detail.changedFields = 'text';
+    auditState(c).detail.beforeTextLength = record.text?.length ?? 0;
+    auditState(c).detail.afterTextLength = text?.length ?? 0;
+  }
   return c.json({ ok: true, code, ...rules, status: shareStatusOf(expireAt, maxPickups, pickupCount, Date.now()) });
 });
 

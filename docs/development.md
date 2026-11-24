@@ -105,6 +105,7 @@ npm run test:quota
 | 文件下载与状态 | `npm run test:admin-download` | 存储检查、管理员下载、不消耗取件次数 |
 | 文件预览 | `npm run test:preview` | 有限读取、编码/图片边界、权限与界面 |
 | 编辑分享 | `npm run test:share-edit` | 状态联动、快照冲突、时区与失败输入保留 |
+| 后台文本管理 | `npm run test:admin-text` | 全文/复制、正文编辑、字符上限、API/后台并发、审计隐私、来源导航和手机布局 |
 | KV 用量 | `npm run test:kv-usage` | GraphQL 响应、状态、缓存及展示 |
 
 多数集成脚本使用隔离的 Miniflare/workerd、KV、R2、D1，其中包含界面的脚本还会启动 Python Playwright。它们不会读取生产凭据，也不把模拟器通过当作线上验收。

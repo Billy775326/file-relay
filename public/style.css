@@ -972,6 +972,15 @@ td.wrap { white-space: normal; min-width: 140px; max-width: 260px; overflow: hid
 .file-field-value { min-width: 0; font-variant-numeric: tabular-nums; }
 .file-field .badge { white-space: normal; }
 .file-source-link { max-width: 100%; text-align: left; overflow-wrap: anywhere; }
+.text-share-body { margin: 0; padding: 12px; min-width: 0; max-height: min(42vh, 360px); overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--rowbg); font: 13px/1.65 ui-monospace, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
+.text-share-body:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
+.text-edit-field { display: grid; gap: 6px; min-width: 0; }
+.text-edit-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.text-edit-heading small { font-variant-numeric: tabular-nums; white-space: nowrap; }
+#share-edit-text { box-sizing: border-box; width: 100%; min-height: 160px; height: clamp(160px, 28vh, 240px); resize: vertical; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--rowbg); color: var(--ink); font: 14px/1.65 ui-monospace, Consolas, monospace; }
+#share-edit-text:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
+#share-edit-text:disabled { opacity: .65; }
+@media (max-width: 600px) { #share-edit-text { font-size: 16px; } }
 #file-dialog .source-body { padding-top: 8px; padding-bottom: 8px; }
 .retention-settings { padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px dashed var(--line); }
 #retention-form { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; }

@@ -31,6 +31,15 @@ function localDateTime(value) {
 
 export function createShareEditor(detail, { onSaved, onCancel, onBusy }) {
   const form = el('form', { id: 'share-edit-form', class: 'share-edit-form' });
+  const isText = detail.kind === 'text';
+  const text = isText ? el('textarea', { id: 'share-edit-text', value: detail.text ?? '',
+    maxLength: detail.maxTextLength, required: true, spellcheck: false }) : null;
+  const textCount = el('small', { id: 'share-edit-text-count', class: 'muted' });
+  if (text) {
+    text.setAttribute('aria-describedby', textCount.id);
+    const countText = () => { textCount.textContent = `${text.value.length.toLocaleString()} / ${detail.maxTextLength.toLocaleString()}`; };
+    text.addEventListener('input', countText); countText();
+  }
   const number = (id, value, min) => el('input', { id, type: 'number', value, min, max: MAX_COUNT, step: 1, required: true });
   const count = number('share-edit-count', detail.pickupCount, 0);
   const limit = number('share-edit-limit', detail.maxPickups ?? Math.max(1, detail.pickupCount+1), 1);
@@ -56,7 +65,9 @@ export function createShareEditor(detail, { onSaved, onCancel, onBusy }) {
   const reload = el('button', { type: 'button', class: 'btn small ghost', hidden: true, onclick: onCancel }, t('ad.editReload'));
   const save = el('button', { type: 'submit', class: 'btn primary' }, t('ad.editSave'));
   const cancel = el('button', { type: 'button', class: 'btn ghost', onclick: onCancel }, t('ad.editCancel'));
-  form.append(el('strong', { class: 'share-edit-filename', title: detail.filename || '' }, detail.filename || t('ad.unnamed')),
+  form.append(isText ? el('div', { class: 'text-edit-field' },
+    el('div', { class: 'text-edit-heading' }, el('label', { htmlFor: text.id }, t('ad.textContent')), textCount), text)
+    : el('strong', { class: 'share-edit-filename', title: detail.filename || '' }, detail.filename || t('ad.unnamed')),
     el('div', { class: 'share-edit-grid' }, field(t('ad.editCount'), count), limitField, field(t('ad.th.status'), status), expiryField),
     linked, error, reload, el('div', { class: 'share-edit-actions' }, cancel, save));
   function values() {
@@ -89,16 +100,18 @@ export function createShareEditor(detail, { onSaved, onCancel, onBusy }) {
     event.preventDefault();
     if (busy || !form.reportValidity()) return;
     const rules = values();
+    if (text && (!text.value.trim() || text.value.length > detail.maxTextLength)) { error.textContent = t('ad.textInvalid', detail.maxTextLength); error.hidden = false; text.focus(); return; }
     if (!valid(rules)) { error.textContent = t('ad.editInvalid'); error.hidden = false; return; }
     if (status.value !== ruleStatus(rules)) { status.value = ruleStatus(rules); error.textContent = t('ad.editTimeChanged'); error.hidden = false; return; }
     busy = true; onBusy(true); error.hidden = reload.hidden = true;
-    const controls = [...form.querySelectorAll('input,button,select')].map(node => [node,node.disabled]);
+    const controls = [...form.querySelectorAll('input,button,select,textarea')].map(node => [node,node.disabled]);
     for (const [node] of controls) node.disabled = true;
     let saved = false;
     try {
       await api(`/api/admin/shares/${detail.code}`, { method: 'PUT', body: { expected: {
         id: detail.id, pickupCount: detail.pickupCount, maxPickups: detail.maxPickups, expireAt: detail.expireAt,
-      }, rules: { ...rules, status: status.value } } });
+        ...(isText ? { version: detail.version } : {}),
+      }, rules: { ...rules, status: status.value }, ...(text ? { text: text.value } : {}) } });
       saved = true;
     } catch (e) {
       error.textContent = e.message; error.hidden = false; reload.hidden = e.code !== 'share_conflict';
@@ -113,6 +126,7 @@ export function createShareEditor(detail, { onSaved, onCancel, onBusy }) {
     const help = el('span', {}, t('ad.editHint', Intl.DateTimeFormat().resolvedOptions().timeZone));
     window.attachHelp(expiryField.querySelector('label'), help);
     window.attachHelp(form.querySelector('label[for="share-edit-status"]'), el('span', {}, t('ad.editStatusHint')));
-    count.focus();
+    (text || count).focus();
+    if (text) { text.setSelectionRange(0, 0); text.scrollTop = 0; }
   } };
 }

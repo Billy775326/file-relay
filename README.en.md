@@ -14,6 +14,7 @@ Designed for personal and small-group use within Cloudflare Free-plan constraint
 - One-, seven- or thirty-day expiry. Unnoted visitors default to five file-upload admissions per week; noted visitors may create permanent or unlimited-pickup shares.
 - Direct small-file uploads to KV and multipart large-file uploads to R2, with file-size and capacity checks.
 - Admin filtering, file details, bounded previews, downloads, share-rule editing and deletion. Admin downloads do not consume public pickup counts.
+- Text details show the full body with copy, content editing and share-rule controls, without consuming public pickup counts.
 - Upload-source dialogs show visitor IDs or admin notes, network exit IPs and approximate locations. Optional uploader names and file descriptions are admin-only.
 - Separate security workspace for login/upload/pickup rate limits, IP/region bans, allow entries and rule testing.
 - Login, operation, upload, pickup and security audit categories, with filters, details and JSON export.

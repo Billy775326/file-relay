@@ -176,9 +176,7 @@ async function loadList() {
           el('td', { class: 'mono' }, r.code),
           el('td', { class: 'share-content-cell' },
             el('div', { class: 'share-filename-line' },
-              r.kind === 'file'
-                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)
-                : el('span', { class: 'share-filename', title: content }, content),
+              el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content),
               el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),
           sourceCell(r),
           el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),
@@ -398,10 +396,9 @@ async function loadSourceHistory() {
     const { rows } = await api(`/api/admin/shares/${activeSource.code}/source/activity`);
     if (request !== sourceRequest || !sourceDialog.open) return;
     list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },
-      el('div', { class: 'activity-head' }, row.kind === 'file'
-        ? el('button', { type: 'button', class: 'source-link', title: row.filename || t('ad.unnamed'),
-          onclick: () => { closeSource(); openFileDetails(row.code); } }, row.filename || t('ad.unnamed'))
-        : el('span', {}, t('ad.textFallback')),
+      el('div', { class: 'activity-head' },
+        el('button', { type: 'button', class: 'source-link', title: row.kind === 'file' ? row.filename || t('ad.unnamed') : t('ad.textDetails'),
+          onclick: () => { closeSource(); openFileDetails(row.code); } }, row.kind === 'file' ? row.filename || t('ad.unnamed') : t('ad.textFallback')),
         el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),
       el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} · ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} · ${row.code}`),
       row.ip || row.country || row.region || row.city
@@ -440,10 +437,11 @@ sourceForm.addEventListener('submit', async (e) => {
   }
 });
 
-/* File details use their own request generation so closed dialogs stay empty. */
+/* Share details use their own request generation so closed dialogs stay empty. */
 const fileDialog = $('#file-dialog');
 const fileDetail = $('#file-detail');
 const fileDownload = $('#file-download');
+const textCopy = $('#text-copy');
 let fileRequest = 0;
 let activePreview = null;
 let activeFileDetail = null;
@@ -453,7 +451,7 @@ function resetShareEditor() {
   $('#file-editor').replaceChildren();
   fileDetail.hidden = false;
   fileDialog.querySelector('.source-footer').hidden = false;
-  $('#file-title').textContent = t('ad.fileDetails');
+  $('#file-title').textContent = t(activeFileDetail?.kind === 'text' ? 'ad.textDetails' : 'ad.fileDetails');
 }
 function fileField(label, value, secondary) {
   return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),
@@ -468,6 +466,7 @@ async function openFileDetails(code) {
   activePreview?.dispose(); activePreview = null;
   const request = ++fileRequest;
   fileDownload.hidden = true;
+  textCopy.hidden = true;
   fileDownload.removeAttribute('href');
   fileDownload.removeAttribute('download');
   $('#file-context').textContent = `${t('ad.th.code')} ${code}`;
@@ -477,34 +476,45 @@ async function openFileDetails(code) {
     const detail = await api(`/api/admin/shares/${code}`);
     if (request !== fileRequest || !fileDialog.open) return;
     activeFileDetail = detail;
+    const isText = detail.kind === 'text';
+    $('#file-title').textContent = t(isText ? 'ad.textDetails' : 'ad.fileDetails');
     const state = detail.storage?.state || 'unknown';
     const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };
     const source = detail.source;
     const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',
-      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }, code); },
+      title: t('ad.source'), onclick: () => {
+        closeFileDetails(); openSource({ code }, code);
+        $('#source-back').textContent = t(isText ? 'ad.backText' : 'ad.backFile');
+      },
     }, sourceLabel(source)) : t('ad.sourceUnrecorded');
     if (source) sourceButton.dataset.visitor = source.visitorId;
     fileDetail.replaceChildren(
       el('div', { class: 'file-identity file-wide' },
-        el('strong', {}, detail.filename || t('ad.unnamed')),
+        !isText ? el('strong', {}, detail.filename || t('ad.unnamed')) : null,
         el('div', { class: 'file-summary' },
-          el('span', { title: t('ad.exactBytes', detail.size.toLocaleString()) }, fmtBytes(detail.size)),
+          isText ? el('span', {}, t('ad.chars', detail.size))
+            : el('span', { title: t('ad.exactBytes', detail.size.toLocaleString()) }, fmtBytes(detail.size)),
           el('span', { class: `badge ${detail.status}`, title: t('ad.shareState') }, t(STATUS_KEY[detail.status])),
-          state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),
+          !isText && state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),
+      ...(isText ? [el('pre', { class: 'text-share-body file-wide', tabIndex: 0,
+        ariaLabel: t('ad.textContent') }, detail.text ?? '')] : []),
       ...(detail.description ? [el('div', { class: 'file-description file-wide' },
-        el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),
-      ...(state === 'available' ? [(activePreview = createFilePreview(code, detail.filename || '')).element] : []),
+        el('small', { class: 'muted' }, t(isText ? 'ad.textDescription' : 'ad.fileDescription')), el('p', {}, detail.description))] : []),
+      ...(!isText && state === 'available' ? [(activePreview = createFilePreview(code, detail.filename || '')).element] : []),
       fileField(t('ad.source'), sourceButton),
       fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '∞'}`),
       fileField(t('ad.th.created'), fmtDate(detail.createdAt)),
       fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)),
 
     );
-    fileDownload.href = `/api/admin/shares/${code}/download`;
-    fileDownload.download = detail.filename || 'file';
-    fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');
-    fileDownload.hidden = state === 'missing';
-    $('#file-edit').hidden = state !== 'available';
+    if (!isText) {
+      fileDownload.href = `/api/admin/shares/${code}/download`;
+      fileDownload.download = detail.filename || 'file';
+      fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');
+      fileDownload.hidden = state === 'missing';
+    }
+    textCopy.hidden = !isText;
+    $('#file-edit').hidden = !isText && state !== 'available';
     $('#file-edit').disabled = detail.cleanupStatus === 'pending';
     $('#file-edit').title = detail.cleanupStatus === 'pending' ? t('ad.editCleanupPending') : '';
   } catch (error) {
@@ -521,11 +531,18 @@ function closeFileDetails() {
   fileDetail.replaceChildren();
   $('#file-context').textContent = '';
   fileDownload.hidden = true;
+  textCopy.hidden = true;
   fileDownload.removeAttribute('href');
   fileDownload.removeAttribute('download');
   fileDialog.close();
 }
 $('#file-close').addEventListener('click', closeFileDetails);
+textCopy.addEventListener('click', async () => {
+  const detail = activeFileDetail;
+  if (detail?.kind !== 'text') return;
+  const copied = await copyText(detail.text ?? '');
+  toast(t(copied ? 'copied.text' : 'ad.copyFailed'));
+});
 $('#file-edit').addEventListener('click', () => {
   if (!activeFileDetail || shareEditBusy) return;
   const detail = activeFileDetail;

@@ -56,7 +56,7 @@ for (const mode of ['kv','kv-r2','d1-r2']) {
     await seed('500003',{missing:true});assert.equal((await put('500003',await get('500003'),active)).status,410);
     assert.equal((await put('599999',original,active)).status,404);
     const text=await seed('500005',{kind:'text',r2Key:null,text:'hello'});
-    assert.equal((await put('500005',text,active)).status,400,'file editor does not mutate text shares');
+    assert.equal((await put('500005',text,active)).status,400,'text editing requires a content version');
     if(db){
       await seed('500004');const snapshot=await get('500004');
       const outcomes=await Promise.all([put('500004',snapshot,{...active,maxPickups:7}),put('500004',snapshot,{...active,maxPickups:9})]);
