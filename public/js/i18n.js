@@ -8,6 +8,16 @@
 
 const DICT = {
   zh: {
+    "audit.action.apiAuth": "API 鉴权",
+    "audit.action.apiList": "API 查询列表",
+    "audit.action.apiRead": "API 查询详情",
+    "audit.action.apiEdit": "API 修改分享",
+    "audit.action.apiDelete": "API 删除分享",
+    "audit.action.apiDownload": "API 下载文件",
+    "audit.detail.changedFields": "修改字段",
+    "audit.value.api_disabled": "脚本接口未配置",
+    "audit.value.unauthorized": "API Token 无效或缺失",
+
     "audit.upload": "上传日志",
     "audit.actor.visitor": "访客",
     "audit.pickup": "取件日志",
@@ -458,6 +468,16 @@ const DICT = {
   },
 
   en: {
+    "audit.action.apiAuth": "API authentication",
+    "audit.action.apiList": "API list shares",
+    "audit.action.apiRead": "API read share",
+    "audit.action.apiEdit": "API edit share",
+    "audit.action.apiDelete": "API delete share",
+    "audit.action.apiDownload": "API download",
+    "audit.detail.changedFields": "Changed fields",
+    "audit.value.api_disabled": "Script API not configured",
+    "audit.value.unauthorized": "Missing or invalid API Token",
+
     "audit.upload": "Uploads",
     "audit.actor.visitor": "Visitor",
     "audit.pickup": "Pickups",

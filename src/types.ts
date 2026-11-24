@@ -7,6 +7,8 @@ export interface Env {
   /** 静态资源绑定;单文件模式(内联资源)下不存在 */
   ASSETS?: Fetcher;
   ADMIN_TOKEN: string;
+  /** Optional independent secret for authenticated external share CRUD; unset disables /api/v1. */
+  API_TOKEN?: string;
   /** Optional read-only Cloudflare analytics for the namespace bound as fileKV. */
   CF_ACCOUNT_ID?: string;
   CF_KV_NAMESPACE_ID?: string;

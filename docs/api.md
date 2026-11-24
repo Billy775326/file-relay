@@ -4,6 +4,8 @@
 
 所有路径相对站点根地址。以下示例中的域名、口令、文件和 ID 为示意；时间均为 Unix 毫秒，文件大小为字节。文本的 `size` / `textLength` 为 JavaScript 字符串长度，不是 UTF-8 字节数。
 
+外部脚本建议使用独立 Token 的 [`/api/v1` 增删查改接口](script-api.md)，无须后台 Cookie。本文继续说明原有网页与后台接口。
+
 ## 通用约定
 
 - 至少绑定 `fileKV` 或 `DB`，否则 API 前置检查返回配置错误。
@@ -25,7 +27,7 @@
 
 | 字段 | 含义 |
 |---|---|
-| `fileBackend` | `r2`、`kv`；仅 D1 且无文件后端时为 `null` |
+| `fileBackend` | `r2`、`kv`；仅 D1 且无文件后端时为 `none` |
 | `metadataBackend` | `kv` 或 `d1`；同时绑定时为 `kv` |
 | `maxFileSize`、`maxTextLength`、`partSize` | 有效文件上限、文本字符上限、分片字节数 |
 | `allowPermanent`、`allowUnlimited` | 当前访客能否创建永久／不限次分享 |

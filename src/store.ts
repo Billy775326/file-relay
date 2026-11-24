@@ -99,6 +99,11 @@ export function sameShareRules(record: ShareRecord, expected: ShareEditBase): bo
     record.maxPickups === expected.maxPickups && record.expireAt === expected.expireAt;
 }
 
+export type ShareUpdate = Pick<ShareRecord, 'filename' | 'text' | 'size' | 'pickupCount' | 'maxPickups' | 'expireAt'>;
+export function sameShareContent(record: ShareRecord, expected: ShareRecord): boolean {
+  return sameShareRules(record, expected) && record.filename === expected.filename && record.text === expected.text && record.size === expected.size;
+}
+
 export interface ShareListFilter {
   q?: string;
   kind?: 'file' | 'text';
@@ -115,6 +120,8 @@ export interface ShareStore {
   getByCode(code: string): Promise<ShareRecord | null>;
   /** Reject stale edits, including downloads since the form was opened. KV remains best-effort. */
   updateRules(code: string, expected: ShareEditBase, rules: ShareRules, cleanupCutoff: number): Promise<ShareRecord | null>;
+  /** Conditional content/rule update; preserve identity, provenance and file storage keys. */
+  updateShare(code: string, expected: ShareRecord, update: ShareUpdate, cleanupCutoff: number): Promise<ShareRecord | null>;
   /**
    * 取件计数并返回记录(已 +1);返回 null = 未取走(口令不存在 / 已失效 /
    * textOnly 时口令对应的不是文本分享),具体原因由调用方 getByCode 后分类。

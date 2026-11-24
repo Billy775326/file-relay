@@ -12,6 +12,7 @@
 | 理解访客标识、备注权限、IP 与属地 | [上传来源](upload-sources.md) |
 | 给 KV 卡片接入具体用量 | [KV 统计](kv-usage.md) |
 | 更新、备份、清理、容量与故障排查 | [运维说明](operations.md) |
+| 外部脚本用 Token 增删查改 | [脚本 API](script-api.md) · [OpenAPI](openapi.json) |
 | 调用上传、取件、管理和审计接口 | [API 参考](api.md) |
 | 本地开发、构建和选择回归测试 | [开发指南](development.md) |
 | 查看面向用户的功能变化 | [更新日志](../CHANGELOG.md) |

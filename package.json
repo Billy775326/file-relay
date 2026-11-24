@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:api": "node test/api_crud.mjs",
     "test:preview": "node test/file_preview.mjs",
     "test:admin-layout": "node test/admin_layout.mjs",
     "test:audit": "node test/audit.mjs && node test/public_audit.mjs",

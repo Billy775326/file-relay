@@ -113,7 +113,7 @@ curl -X POST 'https://your-domain.example/api/shares/text' \
   -d '{"text":"hello file-relay","expiry":"7d","maxPickups":5}'
 ```
 
-Public responses omit upload provenance. Multipart clients must retain their visitor cookie. [API reference (Chinese)](docs/api.md) covers routes, authentication, payloads, errors and audit filters.
+Public responses omit upload provenance. Multipart clients must retain their visitor cookie. External scripts can use the independent `API_TOKEN` and [`/api/v1` CRUD API (Chinese)](docs/script-api.md) without admin cookies; [OpenAPI](docs/openapi.json) is included. The [existing API reference (Chinese)](docs/api.md) covers web/admin routes and audit filters.
 
 ## Command reference
 

@@ -19,7 +19,7 @@ shareRoutes.onError((error, c) => {
 });
 
 /** 创建文本分享 */
-shareRoutes.post('/shares/text', async (c) => {
+export async function createTextShare(c: Context<{ Bindings: Env }>) {
   const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
   if (!body) return err(c, 400, 'bad_request', '请求体必须是 JSON');
   const submission = parseSubmission(body);
@@ -62,14 +62,15 @@ shareRoutes.post('/shares/text', async (c) => {
     },
     201,
   );
-});
+}
+shareRoutes.post('/shares/text', createTextShare);
 
 /**
  * 小存储模式(KV)直传:整个文件作为请求体一次性上传(≤25 MiB,远低于 100MB 请求体限制)。
  * 元数据走查询参数(文件名等需 URL 编码,中文友好)。
  * 大存储模式(R2)请走 /api/uploads 分片流程,此端点返回 400。
  */
-shareRoutes.post('/shares/file', async (c) => {
+export async function createKVFileShare(c: Context<{ Bindings: Env }>) {
   if (fileMode(c.env) !== 'kv') {
     return err(c, 400, 'config', '当前为 R2 大存储模式,请使用分片上传(/api/uploads/init)');
   }
@@ -156,7 +157,8 @@ shareRoutes.post('/shares/file', async (c) => {
     await deleteFile(c.env, storageKey);
     throw e;
   }
-});
+}
+shareRoutes.post('/shares/file', createKVFileShare);
 
 /** 取件:文本查看即计数;文件只返回元数据(下载时才计数) */
 shareRoutes.post('/pickup', async (c) => {

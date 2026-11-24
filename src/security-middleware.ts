@@ -1,3 +1,4 @@
+import { transferPath } from './api-auth';
 import type { Context } from 'hono';
 import type { Env } from './types';
 import { enforceSecurity, SecurityError, securityResponse, type Scope } from './security';
@@ -7,7 +8,7 @@ import { publicRejection } from './public-audit';
 export async function publicSecurity(c: Context<{
     Bindings: Env;
 }>, next: () => Promise<void>) {
-    const path = c.req.path, method = c.req.method;
+    const path = transferPath(c.req.path, c.req.method), method = c.req.method;
     const upload = path.startsWith('/api/uploads/') || path === '/api/shares/file' || path === '/api/shares/text';
     const pickup = path === '/api/pickup' || /^\/api\/pickup\/[^/]+\/download$/.test(path);
     if (!upload && !pickup)

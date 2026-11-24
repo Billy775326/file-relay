@@ -1,3 +1,4 @@
+import { apiIdentity } from './api-auth';
 import type { Context } from 'hono';
 import { getSignedCookie, setSignedCookie } from 'hono/cookie';
 import type { Env } from './types';
@@ -10,6 +11,8 @@ const visitors = new WeakMap<Context, string>();
 
 /** Signed browser association. Notes grant upload privileges, not proof of real identity. */
 export async function ensureVisitor(c: Context<{ Bindings: Env }>): Promise<string> {
+  const api = apiIdentity(c);
+  if (api) return api;
   const existing = visitors.get(c);
   if (existing) return existing;
   const id = await resolveVisitor(c);

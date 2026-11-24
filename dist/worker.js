@@ -4,9 +4,9 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
 // src/asset-resolver.ts
 var inline = null;
 var revision = null;
-function setInlineAssets(files, version) {
+function setInlineAssets(files, version2) {
   inline = files;
-  revision = version ?? null;
+  revision = version2 ?? null;
   etags.clear();
 }
 __name(setInlineAssets, "setInlineAssets");
@@ -95,7 +95,7 @@ setInlineAssets({ "404.html": `<!doctype html>
 <meta name="theme-color" content="#efe8d8">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\u{1F4E6}</text></svg>">
 <title data-i18n="doc.404">404 - \u6587\u4EF6\u4E2D\u8F6C\u7AD9</title>
-<link rel="stylesheet" href="/style.css?v=4fceee008cffd8b6">
+<link rel="stylesheet" href="/style.css?v=9b8843adbff8575d">
 <script>
   document.documentElement.dataset.theme =
     localStorage.getItem('theme') ||
@@ -133,9 +133,9 @@ setInlineAssets({ "404.html": `<!doctype html>
 <meta name="theme-color" content="#efe8d8">
 <title data-i18n="doc.admin">\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u7BA1\u7406</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\u{1F4E6}</text></svg>">
-<link rel="stylesheet" href="/style.css?v=4fceee008cffd8b6">
-<link rel="stylesheet" href="/ui.css?v=4fceee008cffd8b6">
-<link rel="stylesheet" href="/admin-layout.css?v=4fceee008cffd8b6">
+<link rel="stylesheet" href="/style.css?v=9b8843adbff8575d">
+<link rel="stylesheet" href="/ui.css?v=9b8843adbff8575d">
+<link rel="stylesheet" href="/admin-layout.css?v=9b8843adbff8575d">
 <script>
   document.documentElement.dataset.theme =
     localStorage.getItem('theme') ||
@@ -370,7 +370,7 @@ setInlineAssets({ "404.html": `<!doctype html>
     <button id="settings-close" class="btn primary" type="button" data-i18n="ad.sourceClose">\u5173\u95ED</button>
   </div>
 </dialog>
-<script type="module" src="/js/admin.js?v=4fceee008cffd8b6"><\/script>
+<script type="module" src="/js/admin.js?v=9b8843adbff8575d"><\/script>
 </body>
 </html>
 `, "index.html": `<!doctype html>
@@ -382,8 +382,8 @@ setInlineAssets({ "404.html": `<!doctype html>
 <meta name="theme-color" content="#efe8d8">
 <title data-i18n="doc.send">\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D1\u9001</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\u{1F4E6}</text></svg>">
-<link rel="stylesheet" href="/style.css?v=4fceee008cffd8b6">
-<link rel="stylesheet" href="/ui.css?v=4fceee008cffd8b6">
+<link rel="stylesheet" href="/style.css?v=9b8843adbff8575d">
+<link rel="stylesheet" href="/ui.css?v=9b8843adbff8575d">
 <script>
   // \u9632 FOUC:\u6E32\u67D3\u524D\u5B9A\u4E3B\u9898
   document.documentElement.dataset.theme =
@@ -516,11 +516,11 @@ setInlineAssets({ "404.html": `<!doctype html>
   </div>
 </footer>
 
-<script type="module" src="/js/index.js?v=4fceee008cffd8b6"><\/script>
+<script type="module" src="/js/index.js?v=9b8843adbff8575d"><\/script>
 </body>
 </html>
-`, "js/admin-audit.js": "import { $, api, el, fmtDate } from './common.js?v=4fceee008cffd8b6';\nimport { t, LANG, onLangChange } from './i18n.js?v=4fceee008cffd8b6';\nimport { pageSize, scrollToList } from './admin-preferences.js?v=4fceee008cffd8b6';\n\nexport function initAudit() {\n  const view = $('#admin-audit-view');\n  const body = $('#audit-body');\n  const dialog = $('#audit-dialog');\n  let category = 'all', offset = 0, total = 0, request = 0;\n  let filters = {}, rows = [], available = false;\n  let limit = pageSize('audit');\n  const action = row => t(`audit.action.${row.action}`);\n  const actor = row => row.actor === 'anonymous' && (['upload', 'pickup'].includes(row.category) || ['upload', 'pickup'].includes(row.detail.scope))\n    ? t('audit.actor.visitor') : t(`audit.actor.${row.actor}`);\n  const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;\n  function auditValue(value) {\n    const key = `audit.value.${value}`, translated = t(key);\n    return translated === key ? String(value) : translated;\n  }\n  function shareRules(value) {\n    try {\n      const rules = JSON.parse(value);\n      if (!Number.isSafeInteger(rules?.pickupCount) || !(rules.maxPickups === null || Number.isSafeInteger(rules.maxPickups)) ||\n          !(rules.expireAt === null || Number.isSafeInteger(rules.expireAt))) return String(value);\n      return `${t('ad.th.pickups')} ${rules.pickupCount} / ${rules.maxPickups ?? '\u221E'} \xB7 ${t('ad.th.expire')} ${rules.expireAt === null ? t('ad.forever') : fmtDate(rules.expireAt)}`;\n    } catch { return String(value); } // Older/external records may not contain a rule snapshot.\n  }\n  function place(row) {\n    let country = row.country;\n    if (/^[A-Z]{2}$/.test(country)) country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n    return [...new Set([country, row.region, row.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n  }\n  function close() { dialog.close(); $('#audit-detail').replaceChildren(); }\n  function details(row) {\n    const fields = [\n      [t('audit.time'), fmtDate(row.at)], [t('audit.action'), action(row)],\n      [t('audit.result'), t(`audit.${row.result}`)], [t('audit.actor'), actor(row)],\n      ['IP', ip(row)], [t('ad.sourceLocation'), place(row)],\n      [t('audit.target'), row.target || '\u2014'], [t('audit.http'), `${row.method} \xB7 ${row.status}`],\n      [t('audit.duration'), `${row.durationMs} ms`], [t('audit.id'), row.id],\n      [t('audit.agent'), row.agent || '\u2014'],\n    ];\n    for (const [key, value] of Object.entries(row.detail)) {\n      fields.push([t(`audit.detail.${key}`), ['beforeRules','afterRules'].includes(key) ? shareRules(value) : ['bannedUntil', 'firstAt', 'lastAt'].includes(key) ? fmtDate(value)\n        : ['stage', 'scope', 'reason', 'kind'].includes(key) ? auditValue(value)\n        : typeof value === 'boolean' ? t(value ? 'audit.yes' : 'audit.no') : String(value)]);\n    }\n    if (['download', 'publicDownload'].includes(row.action) && row.result === 'success') fields.push([t('audit.description'), t('audit.downloadHint')]);\n    $('#audit-detail').replaceChildren(...fields.map(([label, value]) => el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));\n    dialog.showModal();\n  }\n  function render() {\n    body.replaceChildren(...rows.map(row => el('tr', {},\n      el('td', {}, fmtDate(row.at)),\n      el('td', {}, el('span', {}, action(row)), el('small', { class: 'muted' }, t(`audit.${row.category}`))),\n      el('td', {}, el('span', { class: `audit-result audit-${row.result}` }, t(`audit.${row.result}`)),\n        row.detail.count > 1 ? el('small', { class: 'muted' }, t('audit.repeat', row.detail.count)) : null),\n      el('td', { class: 'audit-actor' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.actor')), actor(row)),\n      el('td', { class: 'audit-source' }, el('span', { class: 'mono' }, ip(row)),\n        row.country || row.region || row.city ? el('small', { class: 'muted' }, place(row)) : null),\n      el('td', { class: 'audit-target' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.target')), row.target || '\u2014'),\n      el('td', {}, el('button', { type: 'button', class: 'btn small ghost', onclick: () => details(row) }, t('audit.details'))),\n    )));\n    $('#audit-page').textContent = t('audit.page', Math.floor(offset / limit) + 1, Math.max(1, Math.ceil(total / limit)), total);\n    $('#audit-prev').disabled = offset === 0;\n    $('#audit-next').disabled = offset + limit >= total;\n  }\n  async function load() {\n    const ticket = ++request;\n    available = false;\n    $('#audit-error').hidden = true;\n    $('#audit-state').textContent = t('ad.loading');\n    $('#audit-page').textContent = '';\n    body.replaceChildren();\n    for (const id of ['audit-prev', 'audit-next', 'audit-export', 'audit-refresh']) $('#' + id).disabled = true;\n    try {\n      const params = new URLSearchParams({ ...filters, category, offset, limit });\n      const data = await api(`/api/admin/audit-logs?${params}`);\n      if (ticket !== request || view.hidden) return;\n      if (typeof data.enabled !== 'boolean' || !Array.isArray(data.rows) || !Number.isSafeInteger(data.total)) throw new Error(t('ad.loadFail'));\n      available = data.enabled;\n      rows = data.rows; total = data.total;\n      if (available && offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return load(); }\n      $('#audit-state').textContent = !available ? t('audit.disabled') : !total ? t('audit.empty') : '';\n      render();\n      $('#audit-export').disabled = !available || total === 0;\n    } catch (e) {\n      if (ticket !== request || view.hidden) return;\n      $('#audit-state').textContent = '';\n      $('#audit-error').textContent = e.message || t('ad.loadFail');\n      $('#audit-error').hidden = false;\n    } finally { if (ticket === request) $('#audit-refresh').disabled = false; }\n  }\n  function selectView(audit) {\n    view.hidden = !audit;\n    $('#admin-files-view').hidden = audit;\n    for (const [id, active] of [['admin-files-tab', !audit], ['admin-audit-tab', audit]]) {\n      $('#' + id).setAttribute('aria-pressed', String(active));\n    }\n    if (audit) load(); else { request++; close(); }\n  }\n  $('#admin-files-tab').addEventListener('click', () => selectView(false));\n  $('#admin-audit-tab').addEventListener('click', () => selectView(true));\n  $('#audit-filter').addEventListener('submit', e => {\n    e.preventDefault();\n    const from = $('#audit-from').value, to = $('#audit-to').value;\n    if (from && to && from > to) {\n      $('#audit-error').textContent = t('audit.dateError'); $('#audit-error').hidden = false; return;\n    }\n    filters = { result: $('#audit-result').value, q: $('#audit-q').value.trim() };\n    if (from) filters.from = new Date(`${from}T00:00:00`).getTime();\n    if (to) { const end = new Date(`${to}T00:00:00`); end.setDate(end.getDate() + 1); filters.to = end.getTime() - 1; }\n    offset = 0; load();\n  });\n  $('#audit-reset').addEventListener('click', () => { $('#audit-filter').reset(); filters = {}; offset = 0; load(); });\n  for (const button of document.querySelectorAll('.audit-categories button')) button.addEventListener('click', () => {\n    category = button.dataset.category; offset = 0;\n    for (const item of document.querySelectorAll('.audit-categories button')) item.setAttribute('aria-pressed', String(item === button));\n    load();\n  });\n  $('#audit-prev').addEventListener('click', async () => { offset = Math.max(0, offset - limit); await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\n  $('#audit-next').addEventListener('click', async () => { offset += limit; await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\n  $('#audit-refresh').addEventListener('click', load);\n  window.addEventListener('admin-page-size', event => {\n    if (event.detail.name !== 'audit') return;\n    limit = event.detail.value; offset = 0;\n    if (!view.hidden) load();\n  });\n  $('#audit-export').addEventListener('click', async () => {\n    $('#audit-export').disabled = true;\n    $('#audit-error').hidden = true;\n    const exportFilters = { ...filters, category };\n    try {\n      const params = new URLSearchParams({ ...exportFilters, offset: 0, limit: 1000 });\n      const data = await api(`/api/admin/audit-logs/export?${params}`);\n      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), filters: exportFilters, ...data }, null, 2)], { type: 'application/json' });\n      const url = URL.createObjectURL(blob);\n      const link = el('a', { href: url, download: `audit-${new Date().toISOString().slice(0, 10)}.json` });\n      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);\n    } catch (e) { $('#audit-error').textContent = e.message || t('ad.loadFail'); $('#audit-error').hidden = false; }\n    finally { $('#audit-export').disabled = !available || total === 0; }\n  });\n  $('#audit-close').addEventListener('click', close);\n  dialog.addEventListener('cancel', e => { e.preventDefault(); close(); });\n  window.addEventListener('audit-write-failed', () => { $('#audit-write-warning').hidden = false; });\n  onLangChange(() => { close(); if (!view.hidden) load(); });\n}\n", "js/admin-layout.js": `import { $, el, copyText, toast } from './common.js?v=4fceee008cffd8b6';
-import { t, onLangChange } from './i18n.js?v=4fceee008cffd8b6';
+`, "js/admin-audit.js": "import { $, api, el, fmtDate } from './common.js?v=9b8843adbff8575d';\nimport { t, LANG, onLangChange } from './i18n.js?v=9b8843adbff8575d';\nimport { pageSize, scrollToList } from './admin-preferences.js?v=9b8843adbff8575d';\n\nexport function initAudit() {\n  const view = $('#admin-audit-view');\n  const body = $('#audit-body');\n  const dialog = $('#audit-dialog');\n  let category = 'all', offset = 0, total = 0, request = 0;\n  let filters = {}, rows = [], available = false;\n  let limit = pageSize('audit');\n  const action = row => t(`audit.action.${row.action}`);\n  const actor = row => row.actor === 'anonymous' && (['upload', 'pickup'].includes(row.category) || ['upload', 'pickup'].includes(row.detail.scope))\n    ? t('audit.actor.visitor') : t(`audit.actor.${row.actor}`);\n  const ip = row => row.ip === 'unknown' ? t('ad.sourceUnknown') : row.ip;\n  function auditValue(value) {\n    const key = `audit.value.${value}`, translated = t(key);\n    return translated === key ? String(value) : translated;\n  }\n  function shareRules(value) {\n    try {\n      const rules = JSON.parse(value);\n      if (!Number.isSafeInteger(rules?.pickupCount) || !(rules.maxPickups === null || Number.isSafeInteger(rules.maxPickups)) ||\n          !(rules.expireAt === null || Number.isSafeInteger(rules.expireAt))) return String(value);\n      return `${t('ad.th.pickups')} ${rules.pickupCount} / ${rules.maxPickups ?? '\u221E'} \xB7 ${t('ad.th.expire')} ${rules.expireAt === null ? t('ad.forever') : fmtDate(rules.expireAt)}`;\n    } catch { return String(value); } // Older/external records may not contain a rule snapshot.\n  }\n  function place(row) {\n    let country = row.country;\n    if (/^[A-Z]{2}$/.test(country)) country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n    return [...new Set([country, row.region, row.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n  }\n  function close() { dialog.close(); $('#audit-detail').replaceChildren(); }\n  function details(row) {\n    const fields = [\n      [t('audit.time'), fmtDate(row.at)], [t('audit.action'), action(row)],\n      [t('audit.result'), t(`audit.${row.result}`)], [t('audit.actor'), actor(row)],\n      ['IP', ip(row)], [t('ad.sourceLocation'), place(row)],\n      [t('audit.target'), row.target || '\u2014'], [t('audit.http'), `${row.method} \xB7 ${row.status}`],\n      [t('audit.duration'), `${row.durationMs} ms`], [t('audit.id'), row.id],\n      [t('audit.agent'), row.agent || '\u2014'],\n    ];\n    for (const [key, value] of Object.entries(row.detail)) {\n      fields.push([t(`audit.detail.${key}`), ['beforeRules','afterRules'].includes(key) ? shareRules(value) : ['bannedUntil', 'firstAt', 'lastAt'].includes(key) ? fmtDate(value)\n        : ['stage', 'scope', 'reason', 'kind'].includes(key) ? auditValue(value)\n        : typeof value === 'boolean' ? t(value ? 'audit.yes' : 'audit.no') : String(value)]);\n    }\n    if (['download', 'publicDownload'].includes(row.action) && row.result === 'success') fields.push([t('audit.description'), t('audit.downloadHint')]);\n    $('#audit-detail').replaceChildren(...fields.map(([label, value]) => el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label), el('span', {}, value))));\n    dialog.showModal();\n  }\n  function render() {\n    body.replaceChildren(...rows.map(row => el('tr', {},\n      el('td', {}, fmtDate(row.at)),\n      el('td', {}, el('span', {}, action(row)), el('small', { class: 'muted' }, t(`audit.${row.category}`))),\n      el('td', {}, el('span', { class: `audit-result audit-${row.result}` }, t(`audit.${row.result}`)),\n        row.detail.count > 1 ? el('small', { class: 'muted' }, t('audit.repeat', row.detail.count)) : null),\n      el('td', { class: 'audit-actor' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.actor')), actor(row)),\n      el('td', { class: 'audit-source' }, el('span', { class: 'mono' }, ip(row)),\n        row.country || row.region || row.city ? el('small', { class: 'muted' }, place(row)) : null),\n      el('td', { class: 'audit-target' }, el('small', { class: 'audit-mobile-label muted' }, t('audit.target')), row.target || '\u2014'),\n      el('td', {}, el('button', { type: 'button', class: 'btn small ghost', onclick: () => details(row) }, t('audit.details'))),\n    )));\n    $('#audit-page').textContent = t('audit.page', Math.floor(offset / limit) + 1, Math.max(1, Math.ceil(total / limit)), total);\n    $('#audit-prev').disabled = offset === 0;\n    $('#audit-next').disabled = offset + limit >= total;\n  }\n  async function load() {\n    const ticket = ++request;\n    available = false;\n    $('#audit-error').hidden = true;\n    $('#audit-state').textContent = t('ad.loading');\n    $('#audit-page').textContent = '';\n    body.replaceChildren();\n    for (const id of ['audit-prev', 'audit-next', 'audit-export', 'audit-refresh']) $('#' + id).disabled = true;\n    try {\n      const params = new URLSearchParams({ ...filters, category, offset, limit });\n      const data = await api(`/api/admin/audit-logs?${params}`);\n      if (ticket !== request || view.hidden) return;\n      if (typeof data.enabled !== 'boolean' || !Array.isArray(data.rows) || !Number.isSafeInteger(data.total)) throw new Error(t('ad.loadFail'));\n      available = data.enabled;\n      rows = data.rows; total = data.total;\n      if (available && offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return load(); }\n      $('#audit-state').textContent = !available ? t('audit.disabled') : !total ? t('audit.empty') : '';\n      render();\n      $('#audit-export').disabled = !available || total === 0;\n    } catch (e) {\n      if (ticket !== request || view.hidden) return;\n      $('#audit-state').textContent = '';\n      $('#audit-error').textContent = e.message || t('ad.loadFail');\n      $('#audit-error').hidden = false;\n    } finally { if (ticket === request) $('#audit-refresh').disabled = false; }\n  }\n  function selectView(audit) {\n    view.hidden = !audit;\n    $('#admin-files-view').hidden = audit;\n    for (const [id, active] of [['admin-files-tab', !audit], ['admin-audit-tab', audit]]) {\n      $('#' + id).setAttribute('aria-pressed', String(active));\n    }\n    if (audit) load(); else { request++; close(); }\n  }\n  $('#admin-files-tab').addEventListener('click', () => selectView(false));\n  $('#admin-audit-tab').addEventListener('click', () => selectView(true));\n  $('#audit-filter').addEventListener('submit', e => {\n    e.preventDefault();\n    const from = $('#audit-from').value, to = $('#audit-to').value;\n    if (from && to && from > to) {\n      $('#audit-error').textContent = t('audit.dateError'); $('#audit-error').hidden = false; return;\n    }\n    filters = { result: $('#audit-result').value, q: $('#audit-q').value.trim() };\n    if (from) filters.from = new Date(`${from}T00:00:00`).getTime();\n    if (to) { const end = new Date(`${to}T00:00:00`); end.setDate(end.getDate() + 1); filters.to = end.getTime() - 1; }\n    offset = 0; load();\n  });\n  $('#audit-reset').addEventListener('click', () => { $('#audit-filter').reset(); filters = {}; offset = 0; load(); });\n  for (const button of document.querySelectorAll('.audit-categories button')) button.addEventListener('click', () => {\n    category = button.dataset.category; offset = 0;\n    for (const item of document.querySelectorAll('.audit-categories button')) item.setAttribute('aria-pressed', String(item === button));\n    load();\n  });\n  $('#audit-prev').addEventListener('click', async () => { offset = Math.max(0, offset - limit); await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\n  $('#audit-next').addEventListener('click', async () => { offset += limit; await load(); if (!view.hidden) scrollToList('#admin-audit-view'); });\n  $('#audit-refresh').addEventListener('click', load);\n  window.addEventListener('admin-page-size', event => {\n    if (event.detail.name !== 'audit') return;\n    limit = event.detail.value; offset = 0;\n    if (!view.hidden) load();\n  });\n  $('#audit-export').addEventListener('click', async () => {\n    $('#audit-export').disabled = true;\n    $('#audit-error').hidden = true;\n    const exportFilters = { ...filters, category };\n    try {\n      const params = new URLSearchParams({ ...exportFilters, offset: 0, limit: 1000 });\n      const data = await api(`/api/admin/audit-logs/export?${params}`);\n      const blob = new Blob([JSON.stringify({ exportedAt: new Date().toISOString(), filters: exportFilters, ...data }, null, 2)], { type: 'application/json' });\n      const url = URL.createObjectURL(blob);\n      const link = el('a', { href: url, download: `audit-${new Date().toISOString().slice(0, 10)}.json` });\n      document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);\n    } catch (e) { $('#audit-error').textContent = e.message || t('ad.loadFail'); $('#audit-error').hidden = false; }\n    finally { $('#audit-export').disabled = !available || total === 0; }\n  });\n  $('#audit-close').addEventListener('click', close);\n  dialog.addEventListener('cancel', e => { e.preventDefault(); close(); });\n  window.addEventListener('audit-write-failed', () => { $('#audit-write-warning').hidden = false; });\n  onLangChange(() => { close(); if (!view.hidden) load(); });\n}\n", "js/admin-layout.js": `import { $, el, copyText, toast } from './common.js?v=9b8843adbff8575d';
+import { t, onLangChange } from './i18n.js?v=9b8843adbff8575d';
 
 /** The approved counter/seal layout; existing APIs and security controllers remain authoritative. */
 export function initCombinedAdmin() {
@@ -573,7 +573,7 @@ export function initCombinedAdmin() {
   onLangChange(labels);
   labels();
 }
-`, "js/admin-preferences.js": "import { $ } from './common.js?v=4fceee008cffd8b6';\nimport { t } from './i18n.js?v=4fceee008cffd8b6';\n\nconst options = { files: [10, 20, 40], audit: [20, 50, 100] };\nconst values = { files: 20, audit: 20 };\nfor (const name of Object.keys(values)) {\n  try {\n    const saved = Number(localStorage.getItem(`admin-page-size-${name}`));\n    if (options[name].includes(saved)) values[name] = saved;\n  } catch { /* Browser preferences are optional when persistent storage is blocked. */ }\n}\nexport function pageSize(name) { return values[name]; }\n\nexport function scrollToList(selector) {\n  const list = $(selector);\n  const top = list.querySelector('.table-wrap').getBoundingClientRect().top + window.scrollY\n    - list.querySelector('.list-toolbar').getBoundingClientRect().height - 20;\n  window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });\n}\n\nexport function initAdminPreferences() {\n  const dialog = $('#settings-dialog');\n  $('#admin-settings-btn').addEventListener('click', () => dialog.showModal());\n  $('#settings-close').addEventListener('click', () => dialog.close());\n  for (const name of Object.keys(values)) {\n    const select = $(`#${name}-page-size`);\n    select.value = String(values[name]);\n    select.addEventListener('change', () => {\n      const value = Number(select.value);\n      if (!options[name].includes(value)) return;\n      values[name] = value;\n      $('#preferences-error').hidden = true;\n      try { localStorage.setItem(`admin-page-size-${name}`, String(value)); }\n      catch {\n        $('#preferences-error').textContent = t('ad.preferenceNotSaved');\n        $('#preferences-error').hidden = false;\n      }\n      window.dispatchEvent(new CustomEvent('admin-page-size', { detail: { name, value } }));\n    });\n  }\n  window.addEventListener('audit-write-failed', () => { $('#settings-audit-warning').hidden = false; });\n}\n", "js/admin-preview.js": "import { el } from './common.js?v=4fceee008cffd8b6';\nimport { t } from './i18n.js?v=4fceee008cffd8b6';\n\n/** CSV excerpt, preserving quoted commas/newlines and omitting an incomplete last record. */\nexport function csvExcerpt(text, truncated) {\n  const rows = []; let row = [], cell = '', quoted = false, afterQuote = false, clipped = truncated;\n  const pushCell = () => { row.push(cell); cell = ''; afterQuote = false; };\n  const pushRow = () => { pushCell(); rows.push(row.slice(0, 20)); if (row.length > 20) clipped = true; row = []; };\n  for (let i = 0; i < text.length; i++) {\n    const c = text[i];\n    if (quoted) {\n      if (c === '\"') { if (text[i + 1] === '\"') { cell += '\"'; i++; } else { quoted = false; afterQuote = true; } }\n      else cell += c;\n    } else if (c === ',' || c === '\\n' || c === '\\r') {\n      if (c === ',') pushCell();\n      else { if (c === '\\r' && text[i + 1] === '\\n') i++; pushRow(); }\n    } else if (c === '\"' && !cell && !afterQuote) quoted = true;\n    else { if (afterQuote || c === '\"') return null; cell += c; }\n    if (rows.length >= 50) { clipped ||= i < text.length - 1; return { rows, clipped }; }\n  }\n  if (!truncated) {\n    if (quoted) return null;\n    if (cell || row.length || afterQuote) pushRow();\n  }\n  return { rows, clipped };\n}\n\nexport function createFilePreview(code, filename) {\n  const scope = el('small', { class: 'muted' });\n  const body = el('div', { class: 'file-preview-body' });\n  const element = el('section', { class: 'file-preview file-wide', 'aria-label': t('preview.title') },\n    el('div', { class: 'file-preview-heading' }, el('b', {}, t('preview.title')), scope), body);\n  let controller, objectUrl, closed = false;\n  function release() { if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null; }\n  async function load() {\n    controller?.abort(); release();\n    const current = new AbortController(); controller = current;\n    const timeout = setTimeout(() => current.abort(), 15000);\n    body.textContent = t('ad.loading'); scope.textContent = '';\n    try {\n      const response = await fetch(`/api/admin/shares/${code}/preview`, { signal: current.signal });\n      if (response.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n      if (!response.ok) throw new Error(t(response.status === 410 || response.status === 404 ? 'ad.fileState.missing' : 'ad.loadFail'));\n      if (response.headers.get('Content-Type')?.startsWith('image/')) {\n        const blob = await response.blob();\n        if (closed || controller !== current) return;\n        if (blob.size > 2 * 1024 * 1024) throw new Error(t('preview.size'));\n        objectUrl = URL.createObjectURL(blob);\n        const img = el('img', { src: objectUrl, alt: filename, class: 'file-preview-image' });\n        img.addEventListener('error', () => { if (!closed && controller === current) { release(); body.textContent = t('preview.image'); } });\n        body.replaceChildren(img);\n        scope.textContent = `${response.headers.get('X-Preview-Width')} \xD7 ${response.headers.get('X-Preview-Height')}`;\n      } else {\n        const data = await response.json();\n        if (closed || controller !== current) return;\n        if (data.kind === 'unsupported') {\n          body.textContent = t(['type', 'size', 'encoding', 'image'].includes(data.reason) ? `preview.${data.reason}` : 'preview.type');\n        } else {\n          if (!['text', 'csv'].includes(data.kind) || typeof data.text !== 'string' || data.text.length > 65536) throw new Error(t('ad.loadFail'));\n          const csv = data.kind === 'csv' ? csvExcerpt(data.text, data.truncated) : null;\n          scope.textContent = t(data.truncated || csv?.clipped ? 'preview.partial' : 'preview.complete');\n          if (csv?.rows.length) {\n            const table = el('table', { class: 'file-preview-table', 'aria-label': t('preview.title') });\n            table.append(el('tbody', {}, ...csv.rows.map(row => el('tr', {}, ...row.map(cell => el('td', {}, cell))))));\n            body.replaceChildren(table);\n          } else body.replaceChildren(el('pre', {}, data.text || t('preview.empty')));\n        }\n      }\n    } catch (error) {\n      if (!closed && controller === current) body.replaceChildren(\n        el('span', { role: 'alert' }, current.signal.aborted ? t('preview.timeout') : error.message || t('ad.loadFail')),\n        el('button', { type: 'button', class: 'btn small ghost', onclick: load }, t('ad.retry')));\n    } finally { clearTimeout(timeout); }\n  }\n  load();\n  return { element, dispose() { closed = true; controller?.abort(); release(); body.replaceChildren(); } };\n}\n", "js/admin-security.js": "import { api } from './common.js?v=4fceee008cffd8b6';\nexport function initSecurity() {\n    /* Security workspace backed by authenticated, persistent server actions. */\n    (() => {\n        if (!document.querySelector('#admin-panel'))\n            return;\n        const $ = s => document.querySelector(s), nav = $('#admin-navigation');\n        const t = (zh, en) => document.documentElement.lang === 'en' ? en : zh;\n        const el = (tag, attrs = {}, ...children) => { const n = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) {\n            if (k === 'class')\n                n.className = v;\n            else if (k === 'click')\n                n.addEventListener('click', v);\n            else\n                n.setAttribute(k, v);\n        } for (const c of children.flat())\n            if (c != null)\n                n.append(c instanceof Node ? c : document.createTextNode(String(c))); return n; };\n        let pendingAction = false;\n        const btn = (zh, en, fn, cls = 'btn small ghost') => el('button', { type: 'button', class: cls, click: async (event) => {\n                const button = event.currentTarget;\n                if (button.disabled)\n                    return;\n                let controls = [];\n                try {\n                    const result = fn();\n                    if (result && typeof result.then === 'function') {\n                        controls = [...dialog.querySelectorAll('button,input,select')].map(n => [n, n.disabled]);\n                        for (const [n] of controls)\n                            n.disabled = true;\n                        button.disabled = true;\n                        pendingAction = true;\n                        await result;\n                    }\n                }\n                catch (error) {\n                    if (dialog.open)\n                        fail($('#sec-form-error'), error.message);\n                    else {\n                        toast(error.message);\n                        feedback.classList.add('sec-feedback-error');\n                    }\n                }\n                finally {\n                    pendingAction = false;\n                    if (button.isConnected)\n                        button.disabled = false;\n                    for (const [n, disabled] of controls)\n                        if (n.isConnected)\n                            n.disabled = disabled;\n                }\n            } }, t(zh, en));\n        const input = (id, value = '', attrs = {}) => el('input', { id, value, ...attrs });\n        const field = (zh, en, node) => el('label', { class: 'sec-field', for: node.id }, el('span', {}, t(zh, en)), node.type === 'number' ? numberControl(node, t(zh, en)) : node);\n        const numberControl = (node, label) => window.numberControl(node, label);\n        const date = n => new Intl.DateTimeFormat(document.documentElement.lang === 'en' ? 'en-GB' : 'zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(n);\n        const liveBans = () => store.bans.filter(b => b.until === null || b.until > Date.now());\n        const scopes = [['login', '\u540E\u53F0\u767B\u5F55', 'Admin login'], ['upload', '\u4E0A\u4F20', 'Upload'], ['pickup', '\u53D6\u4EF6', 'Pickup']];\n        const scopeName = key => { const s = scopes.find(s => s[0] === key); return t(s[1], s[2]); };\n        const scopeText = list => list.map(scopeName).join(' / ');\n        const scopeBadges = (list, sup = false) => el(sup ? 'sup' : 'div', { class: 'sec-scope-badges' + (sup ? ' sec-scope-sup' : '') }, ...list.map(s => el('span', { 'data-tone': { login: 'blue', upload: 'orange', pickup: 'teal' }[s] }, scopeName(s))));\n        const ipLine = row => el('div', { class: 'sec-ip-line' }, el('b', { class: 'mono' }, row.ip), scopeBadges(row.scopes, true));\n        function scopePicker(values = ['login'], prefix = 'sec-scope', disabled = []) {\n            const checks = scopes.map(([key, zh, en]) => { const n = input(prefix + '-' + key, '', { type: 'checkbox' }); n.disabled = disabled.includes(key); n.checked = !n.disabled && values.includes(key); return { key, n, label: el('label', { class: 'sec-check' }, n, t(zh, en)) }; });\n            return { node: el('fieldset', { class: 'sec-scope-picker' }, el('legend', {}, t('\u4FDD\u62A4\u8303\u56F4', 'Protected actions')), ...checks.map(c => c.label)), values: () => checks.filter(c => c.n.checked && !c.n.disabled && !disabled.includes(c.key)).map(c => c.key) };\n        }\n        const geography = { CN: { label: ['\u4E2D\u56FD', 'China'], regions: { ZJ: ['\u6D59\u6C5F', 'Zhejiang'], GX: ['\u5E7F\u897F', 'Guangxi'], GD: ['\u5E7F\u4E1C', 'Guangdong'], SH: ['\u4E0A\u6D77', 'Shanghai'], BJ: ['\u5317\u4EAC', 'Beijing'] } }, US: { label: ['\u7F8E\u56FD', 'United States'], regions: { CA: ['\u52A0\u5229\u798F\u5C3C\u4E9A', 'California'], NY: ['\u7EBD\u7EA6\u5DDE', 'New York'] } }, SG: { label: ['\u65B0\u52A0\u5761', 'Singapore'], regions: {} }, JP: { label: ['\u65E5\u672C', 'Japan'], regions: { '13': ['\u4E1C\u4EAC\u90FD', 'Tokyo'] } }, DE: { label: ['\u5FB7\u56FD', 'Germany'], regions: {} } };\n        const regionName = r => [geography[r.country] ? t(...geography[r.country].label) : r.country, r.region ? (geography[r.country]?.regions[r.region] ? t(...geography[r.country].regions[r.region]) : r.region) : t('\u5168\u90E8\u5730\u533A', 'All regions')].join(' \xB7 ');\n        const activeRegions = () => store.regions.filter(r => r.enabled && (r.until === null || r.until > Date.now()));\n        const overlaps = (a, b) => a.some(s => b.includes(s));\n        function geoPicker(country = 'CN', region = '', unknown = false) {\n            const countryInput = input('sec-country', country, { list: 'sec-country-options', maxlength: 2, placeholder: unknown ? t('\u7559\u7A7A\u8868\u793A\u672A\u77E5', 'Blank for unknown') : 'CN', autocomplete: 'off' });\n            const countries = el('datalist', { id: 'sec-country-options' }, ...Object.entries(geography).map(([key, g]) => el('option', { value: key }, t(...g.label))));\n            const regionInput = input('sec-region', region, { list: 'sec-region-options', maxlength: 10, placeholder: t('\u5168\u90E8\u7701\u5DDE\uFF08\u53EF\u586B\u4EE3\u7801\uFF09', 'All subdivisions (or enter code)'), autocomplete: 'off' }), regions = el('datalist', { id: 'sec-region-options' });\n            const update = () => { countryInput.value = countryInput.value.toUpperCase(); regions.replaceChildren(...Object.entries(geography[countryInput.value]?.regions || {}).map(([key, label]) => el('option', { value: key }, t(...label)))); };\n            countryInput.addEventListener('input', () => { regionInput.value = ''; update(); });\n            regionInput.addEventListener('input', () => { regionInput.value = regionInput.value.toUpperCase(); });\n            update();\n            const node = el('div', { class: 'sec-form-grid' }, field('\u56FD\u5BB6 / \u5730\u533A\u4EE3\u7801', 'Country code', countryInput), field('\u7701 / \u5DDE\u4EE3\u7801', 'Subdivision code', regionInput), countries, regions);\n            window.attachHelp(node.querySelector('label > span'), el('span', {}, t('\u4F7F\u7528 Cloudflare \u7684\u56FD\u5BB6\u4E0E\u7701\u5DDE\u4EE3\u7801\uFF0C\u5982 CN / ZJ\u3001US / TX\u3002\u7701\u5DDE\u7559\u7A7A\u8868\u793A\u6574\u4E2A\u56FD\u5BB6\uFF1B\u53EF\u9009\u62E9\u5E38\u7528\u4EE3\u7801\u6216\u81EA\u884C\u8F93\u5165\u3002', 'Use Cloudflare country/subdivision codes, e.g. CN / ZJ or US / TX. A blank subdivision covers the country. Select a suggestion or enter a code.')));\n            return { country: countryInput, region: regionInput, node };\n        }\n        /** Four intent-based choices; existing region rules may retain their expiry. */\n        function durationPicker(id, initial = '60', keep = false) {\n            const presets = [['60', '1 \u5C0F\u65F6', '1 hour'], ['1440', '1 \u5929', '1 day'],\n                ['10080', '7 \u5929', '7 days'], ['0', '\u6C38\u4E45', 'Permanent']];\n            const select = el('select', { id }, ...(keep ? [el('option', { value: 'keep' }, t('\u4FDD\u6301\u539F\u5230\u671F\u65F6\u95F4', 'Keep current expiry'))] : []),\n                ...presets.map(([value, zh, en]) => el('option', { value }, t(zh, en))));\n            select.value = initial;\n            return { node: field('\u5C01\u7981\u65F6\u957F', 'Ban duration', select),\n                minutes: () => select.value === 'keep' ? 'keep' : Number(select.value) };\n        }\n        let store = { enabled: false, configRevision: '', rules: { login: { enabled: true, limit: 5, window: 10, duration: 30 }, upload: { enabled: true, limit: 20, window: 10, duration: 30 }, pickup: { enabled: true, limit: 10, window: 10, duration: 30 } }, bans: [], allow: [], regions: [] };\n        const selected = new Set();\n        let tab = 'bans', query = '', kind = 'all', scopeFilter = 'all', page = 1, open = false, failed = false, empty = false, lastFocus = null, loaded = false, loading = false;\n        function validateState(data) {\n            if (!data || typeof data.enabled !== 'boolean' || typeof data.configRevision !== 'string' || !scopes.every(([k]) => data.rules?.[k] && typeof data.rules[k].enabled === 'boolean' && ['limit', 'window', 'duration'].every(n => Number.isInteger(data.rules[k][n]) && data.rules[k][n] > 0)) || !['bans', 'allow', 'regions'].every(k => Array.isArray(data[k]) && data[k].every(r => r && Array.isArray(r.scopes) && r.scopes.every(v => scopes.some(([s]) => s === v)))))\n                throw new Error(t('\u9632\u62A4\u72B6\u6001\u683C\u5F0F\u65E0\u6548', 'Invalid protection response'));\n            return data;\n        }\n        async function refresh() { if (loading)\n            return; loading = true; render(); try {\n            store = validateState(await api('/api/admin/security'));\n            loaded = true;\n            failed = false;\n        }\n        catch (error) {\n            failed = true;\n            throw error;\n        }\n        finally {\n            loading = false;\n            render();\n        } }\n        async function mutate(action, data = {}) { await api('/api/admin/security', { method: 'POST', body: { action, configRevision: store.configRevision, ...data } }); try {\n            store = validateState(await api('/api/admin/security'));\n            failed = false;\n        }\n        catch {\n            failed = true;\n            throw new Error(t('\u64CD\u4F5C\u5DF2\u4FDD\u5B58\uFF0C\u4F46\u72B6\u6001\u5237\u65B0\u5931\u8D25\u3002\u8BF7\u5173\u95ED\u5F39\u7A97\u5E76\u5237\u65B0\uFF0C\u52FF\u91CD\u590D\u63D0\u4EA4\u3002', 'Saved, but refresh failed. Close and refresh without submitting again.'));\n        } }\n        const view = el('section', { id: 'security-view', hidden: '', 'aria-labelledby': 'security-title' });\n        $('#admin-panel').insertBefore(view, $('.admin-footer'));\n        const navButton = btn('\u5B89\u5168\u9632\u62A4', 'Security', () => show(), 'admin-nav-link');\n        navButton.id = 'admin-security-tab';\n        navButton.setAttribute('aria-controls', 'security-view');\n        navButton.setAttribute('aria-pressed', 'false');\n        nav.append(navButton);\n        const dialog = el('dialog', { id: 'security-dialog', class: 'source-dialog sec-dialog', 'aria-labelledby': 'security-dialog-title' });\n        document.body.append(dialog);\n        const old = $('#login-protection');\n        old.hidden = true;\n        const shortcut = el('section', { class: 'settings-section sec-setting-entry' }, el('h4', {}, t('\u5B89\u5168\u9632\u62A4', 'Security')), btn('\u7BA1\u7406\u8BBF\u95EE\u89C4\u5219\u4E0E\u5C01\u7981 \u2192', 'Manage access rules and bans \u2192', () => { $('#settings-dialog').close(); show(); }));\n        old.before(shortcut);\n        const auditEntry = $('.ui-guard-entry');\n        if (auditEntry) {\n            auditEntry.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            auditEntry.onclick = () => show();\n        }\n        function show() { open = true; $('#admin-files-view').hidden = true; $('#admin-audit-view').hidden = true; view.hidden = false; for (const n of nav.querySelectorAll('button'))\n            n.setAttribute('aria-pressed', String(n === navButton)); render(); if (!loaded && !loading)\n            refresh().catch(error => toast(error.message)); }\n        for (const id of ['#admin-files-tab', '#admin-audit-tab'])\n            $(id).addEventListener('click', () => { open = false; view.hidden = true; navButton.setAttribute('aria-pressed', 'false'); });\n        const feedback = el('div', { id: 'sec-feedback', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });\n        document.body.append(feedback);\n        let feedbackTimer;\n        function clearFeedback() { clearTimeout(feedbackTimer); feedback.textContent = ''; feedback.classList.remove('sec-feedback-error'); }\n        function toast(msg) { clearFeedback(); feedback.textContent = msg; feedbackTimer = setTimeout(clearFeedback, 4000); }\n        for (const id of ['#admin-files-tab', '#admin-audit-tab'])\n            $(id).addEventListener('click', clearFeedback);\n        dialog.addEventListener('close', () => { if (!open)\n            clearFeedback(); });\n        const auditLabels = { manualBan: ['\u624B\u52A8\u5C01\u7981 IP', 'Manually ban IP'], allowIP: ['\u6DFB\u52A0\u5141\u8BB8 IP', 'Allow IP'], removeAllow: ['\u79FB\u9664\u5141\u8BB8 IP', 'Remove allowed IP'], securityRules: ['\u4FEE\u6539\u9632\u62A4\u89C4\u5219', 'Change protection rules'], regionAdd: ['\u6DFB\u52A0\u5730\u533A\u5C01\u7981', 'Add region ban'], regionEdit: ['\u4FEE\u6539\u5730\u533A\u5C01\u7981', 'Edit region ban'], regionToggle: ['\u5207\u6362\u5730\u533A\u89C4\u5219\u72B6\u6001', 'Toggle region rule'], regionRemove: ['\u79FB\u9664\u5730\u533A\u5C01\u7981', 'Remove region ban'] };\n        function translateAudit() { for (const host of [$('#audit-body'), $('#audit-detail')]) {\n            const walker = document.createTreeWalker(host, NodeFilter.SHOW_TEXT);\n            let n;\n            while (n = walker.nextNode()) {\n                const label = auditLabels[n.textContent.replace('audit.action.', '')];\n                if (label && n.textContent.startsWith('audit.action.'))\n                    n.textContent = t(...label);\n            }\n        } }\n        for (const host of [$('#audit-body'), $('#audit-detail')])\n            new MutationObserver(translateAudit).observe(host, { childList: true, subtree: true });\n        function close() { dialog.close(); if (lastFocus?.isConnected)\n            lastFocus.focus(); }\n        dialog.addEventListener('cancel', e => { e.preventDefault(); if (!pendingAction)\n            close(); });\n        dialog.addEventListener('keydown', e => { if (e.key !== 'Tab')\n            return; const a = [...dialog.querySelectorAll('button,input,select,textarea')].filter(n => !n.disabled && n.getClientRects().length); if (!a.length)\n            return; const first = a[0], last = a.at(-1); if (e.shiftKey && document.activeElement === first) {\n            e.preventDefault();\n            last.focus();\n        }\n        else if (!e.shiftKey && document.activeElement === last) {\n            e.preventDefault();\n            first.focus();\n        } });\n        function modal(zh, en) { clearFeedback(); lastFocus = document.activeElement; dialog.classList.remove('sec-rules-dialog'); dialog.replaceChildren(); const head = el('div', { class: 'source-heading' }, el('h3', { id: 'security-dialog-title' }, t(zh, en)), btn('\u5173\u95ED', 'Close', close)); const body = el('div', { class: 'source-body sec-dialog-body' }), error = el('p', { id: 'sec-form-error', class: 'error-box', hidden: '', role: 'alert' }), foot = el('div', { class: 'source-footer' }); body.append(error); dialog.append(head, body, foot); dialog.showModal(); return { body, foot, error }; }\n        function fail(node, msg) { node.textContent = msg; node.hidden = false; }\n        function canonical(value) { const s = value.trim(); if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(s) && s.split('.').every(x => Number(x) <= 255 && !/^0\\d/.test(x)))\n            return s; if (s.includes(':') && !/[\\s/%\\[\\]]/.test(s)) {\n            try {\n                return new URL('http://[' + s + ']/').hostname.slice(1, -1).toLowerCase();\n            }\n            catch { }\n        } return null; }\n        function logLink(ip) { $('#admin-audit-tab').click(); $('#audit-reset').click(); $('#audit-q').value = ip; $('#audit-filter').requestSubmit(); }\n        function confirmUnban(ips) { const current = liveBans().filter(b => ips.includes(b.ip)); if (!current.length)\n            return; const m = modal('\u89E3\u9664 IP \u5C01\u7981', 'Unban IPs'); m.body.prepend(el('p', {}, t(`\u89E3\u9664 ${current.length} \u4E2A IP \u7684\u5C01\u7981\uFF1F`, `Remove bans for ${current.length} IP addresses?`)), ...current.map(b => el('div', {}, el('b', { class: 'mono' }, b.ip), scopeBadges(b.scopes))), el('small', { class: 'muted' }, t('\u5730\u533A\u5C01\u7981\u53CA\u5176\u4ED6\u8BBF\u95EE\u9650\u5236\u4ECD\u7136\u751F\u6548\u3002', 'Region bans and other access restrictions still apply.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u786E\u8BA4\u89E3\u5C01', 'Unban', async () => { await mutate('unban', { ips }); selected.clear(); close(); render(); toast(t('\u5DF2\u89E3\u9664\u5C01\u7981', 'Bans removed')); }, 'btn primary')); }\n        function openAdd(allow = false) {\n            const m = modal(allow ? '\u6DFB\u52A0\u5141\u8BB8 IP' : '\u624B\u52A8\u5C01\u7981 IP', allow ? 'Allow IP' : 'Ban IP');\n            const ip = input('sec-ip', '', { placeholder: '203.0.113.20 / 2001:db8::1', autocomplete: 'off' }), note = input('sec-note', '', { maxlength: 120, placeholder: t('\u7528\u9014\u6216\u539F\u56E0', 'Purpose or reason') });\n            const duration = allow ? null : durationPicker('sec-duration'), scope = scopePicker(allow ? ['login'] : ['login', 'upload', 'pickup']);\n            m.body.prepend(field('IP \u5730\u5740', 'IP address', ip), scope.node, ...(allow ? [] : [duration.node]), field(allow ? '\u5907\u6CE8' : '\u5C01\u7981\u539F\u56E0', allow ? 'Note' : 'Ban reason', note), el('small', { class: 'muted' }, t(allow ? '\u4EC5\u8C41\u514D\u6240\u9009\u8303\u56F4\u7684\u81EA\u52A8\u5C01\u7981\uFF0C\u4E0D\u7ED5\u8FC7\u624B\u52A8\u5C01\u7981\u3001\u5730\u533A\u89C4\u5219\u6216\u8EAB\u4EFD\u6821\u9A8C\u3002' : '\u5728\u6240\u9009\u8303\u56F4\u62E6\u622A\u540E\u7EED\u8BF7\u6C42\uFF1B\u540E\u53F0\u767B\u5F55\u8303\u56F4\u4E0D\u64A4\u9500\u5DF2\u767B\u5F55\u4F1A\u8BDD\u3002', allow ? 'Exempts automatic bans in selected scopes, never manual bans, region rules or authentication.' : 'Blocks subsequent requests in selected scopes; login bans do not revoke existing sessions.')));\n            window.attachHelp($('#security-dialog-title'), m.body.querySelector(':scope > small'));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn(allow ? '\u6DFB\u52A0\u5141\u8BB8 IP' : '\u786E\u8BA4\u5C01\u7981', allow ? 'Allow IP' : 'Ban IP', async () => {\n                const value = canonical(ip.value), chosen = scope.values();\n                if (!value)\n                    return fail(m.error, t('\u8BF7\u8F93\u5165\u5355\u4E2A\u6709\u6548 IPv4 \u6216 IPv6 \u5730\u5740\u3002', 'Enter one valid IPv4 or IPv6 address.'));\n                if (!chosen.length)\n                    return fail(m.error, t('\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u4FDD\u62A4\u8303\u56F4\u3002', 'Select at least one protected action.'));\n                if ((allow ? store.allow : liveBans()).some(b => b.ip === value))\n                    return fail(m.error, t('\u8BE5\u540D\u5355\u5DF2\u6709\u6B64 IP\uFF0C\u8BF7\u5148\u79FB\u9664\u539F\u8BB0\u5F55\u518D\u8C03\u6574\u8303\u56F4\u3002', 'This list already contains the IP. Remove the existing entry to change its scope.'));\n                if (!note.value.trim())\n                    return fail(m.error, t('\u8BF7\u586B\u5199\u5907\u6CE8\u6216\u539F\u56E0\uFF0C\u4FBF\u4E8E\u540E\u7EED\u5BA1\u8BA1\u3002', 'Enter a note or reason for the audit trail.'));\n                const minutes = allow ? 0 : duration.minutes();\n                await mutate(allow ? 'allow' : 'ban', { ip: value, scopes: chosen, note: note.value.trim(), minutes });\n                tab = allow ? 'allow' : 'bans';\n                query = '';\n                kind = 'all';\n                scopeFilter = 'all';\n                page = 1;\n                empty = false;\n                close();\n                render();\n                toast(t('\u8BB0\u5F55\u5DF2\u6DFB\u52A0', 'Entry added'));\n            }, 'btn primary'));\n            ip.focus();\n        }\n        function removeAllow(row) { const m = modal('\u79FB\u9664\u5141\u8BB8 IP', 'Remove allowed IP'); m.body.prepend(el('p', { class: 'mono' }, row.ip), scopeBadges(row.scopes), el('p', {}, t('\u79FB\u9664\u540E\uFF0C\u8BE5 IP \u5C06\u91CD\u65B0\u9002\u7528\u6240\u9009\u8303\u56F4\u7684\u81EA\u52A8\u5C01\u7981\u89C4\u5219\u3002', 'Automatic ban rules will apply again in these scopes.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u79FB\u9664', 'Remove', async () => { await mutate('removeAllow', { ip: row.ip }); close(); render(); toast(t('\u5DF2\u79FB\u9664\u5141\u8BB8 IP', 'Allow entry removed')); }, 'btn primary')); }\n        function editRules() {\n            const m = modal('\u81EA\u52A8\u9632\u62A4\u89C4\u5219', 'Automatic protection rules'), controls = [];\n            dialog.classList.add('sec-rules-dialog');\n            m.body.prepend(el('div', { class: 'sec-rules-columns', 'aria-hidden': 'true' },\n                el('span', {}, t('\u4FDD\u62A4\u8303\u56F4', 'Protection')),\n                el('span', {}, t('\u7EDF\u8BA1\u7A97\u53E3 / \u5206\u949F', 'Window / min')),\n                el('span', {}, t('\u89E6\u53D1\u6B21\u6570', 'Threshold')),\n                el('span', {}, t('\u5C01\u7981\u65F6\u957F / \u5206\u949F', 'Ban / min'))));\n            for (const [key, zh, en] of scopes) {\n                const rule = store.rules[key], suffix = key === 'login' ? '' : '-' + key;\n                const enabled = input('sec-enabled' + suffix, '', { type: 'checkbox' });\n                enabled.checked = rule.enabled;\n                const limit = input('sec-threshold' + suffix, rule.limit, { type: 'number', min: 1, max: 10000, step: 1 }), minutes = input('sec-window' + suffix, rule.window, { type: 'number', min: 1, max: 1440, step: 1 }), duration = input('sec-ban-minutes' + suffix, rule.duration, { type: 'number', min: 1, max: 10080, step: 1 });\n                const toggle = () => { for (const n of [limit, minutes, duration])\n                    n.disabled = !enabled.checked; };\n                enabled.onchange = toggle;\n                toggle();\n                const descriptions = { login: ['\u7BA1\u7406\u4EE4\u724C\u6821\u9A8C\u5931\u8D25\u6B21\u6570', 'Failed admin-token checks'], upload: ['\u53D1\u8D77\u5206\u4EAB\u6B21\u6570\uFF1B\u6587\u4EF6\u548C\u6587\u672C\u5747\u8BA1\u5165\uFF0C\u5206\u7247\u4E0D\u91CD\u590D\u8BA1\u6570', 'Share creation attempts; files and text count, chunks do not'], pickup: ['\u65E0\u6548\u53D6\u4EF6\u53E3\u4EE4\u6B21\u6570\uFF1B\u6210\u529F\u53D6\u4EF6\u4E0D\u8BA1\u5165', 'Invalid pickup-code attempts; successful pickups do not count'] };\n                m.body.append(el('section', { class: 'sec-rule-section', 'aria-labelledby': 'sec-rule-label-' + key }, el('label', { class: 'sec-check', id: 'sec-rule-label-' + key }, enabled, el('b', {}, t(zh, en))), el('small', { class: 'muted' }, t(...descriptions[key])), el('div', { class: 'sec-rule-fields' }, field('\u7A97\u53E3\uFF08\u5206\u949F\uFF09', 'Window (min)', minutes), field('\u89E6\u53D1\u6B21\u6570', 'Threshold', limit), field('\u5C01\u7981\uFF08\u5206\u949F\uFF09', 'Ban (min)', duration))));\n                controls.push({ key, enabled, limit, minutes, duration });\n                const section = m.body.lastElementChild;\n                window.attachHelp(section.querySelector('.sec-check'), section.querySelector(':scope > small'));\n            }\n            m.body.append(el('small', { class: 'muted' }, t('\u6309 IP \u72EC\u7ACB\u8BA1\u6570\uFF0C\u4EC5\u5C01\u7981\u89E6\u53D1\u7684\u8303\u56F4\u3002\u505C\u7528\u89C4\u5219\u4E0D\u4F1A\u89E3\u9664\u5DF2\u6709\u5C01\u7981\u3002', 'Counters are per IP and scope. Pausing a rule does not remove existing bans.')));\n            window.attachHelp($('#security-dialog-title'), m.body.lastElementChild);\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u4FDD\u5B58\u89C4\u5219', 'Save rules', async () => { if (controls.some(c => c.enabled.checked && [c.limit, c.minutes, c.duration].some(n => !n.value || !n.reportValidity())))\n                return; const rules = structuredClone(store.rules); for (const c of controls)\n                rules[c.key] = { ...rules[c.key], enabled: c.enabled.checked, ...(c.enabled.checked ? { limit: Number(c.limit.value), window: Number(c.minutes.value), duration: Number(c.duration.value) } : {}) }; await mutate('rules', { rules }); close(); render(); toast(t('\u89C4\u5219\u5DF2\u4FDD\u5B58', 'Rules saved')); }, 'btn primary'));\n        }\n        function editRegion(row = null) {\n            const m = modal(row ? '\u7F16\u8F91\u5730\u533A\u5C01\u7981' : '\u6DFB\u52A0\u5730\u533A\u5C01\u7981', row ? 'Edit region ban' : 'Add region ban');\n            const geo = geoPicker(row?.country || 'CN', row?.region || ''), scope = scopePicker(row?.scopes || ['upload', 'pickup'], 'sec-scope', ['login']), reason = input('sec-region-reason', row?.reason || '', { maxlength: 120, placeholder: t('\u586B\u5199\u5C01\u7981\u539F\u56E0', 'Reason for blocking') });\n            const duration = durationPicker('sec-region-duration', row ? 'keep' : '0', !!row);\n            const enabled = input('sec-region-enabled', '', { type: 'checkbox' });\n            enabled.checked = row?.enabled ?? true;\n            m.body.prepend(geo.node, scope.node, el('div', { class: 'sec-form-grid' }, duration.node, el('label', { class: 'sec-check' }, enabled, t('\u542F\u7528\u89C4\u5219', 'Enable rule'))), field('\u539F\u56E0', 'Reason', reason));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u4FDD\u5B58\u89C4\u5219', 'Save rule', async () => {\n                const chosen = scope.values();\n                if (!chosen.length)\n                    return fail(m.error, t('\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u4FDD\u62A4\u8303\u56F4\u3002', 'Select at least one protected action.'));\n                if (!reason.value.trim())\n                    return fail(m.error, t('\u8BF7\u586B\u5199\u5C01\u7981\u539F\u56E0\u3002', 'Enter a reason.'));\n                const minutes = duration.minutes();\n                const until = minutes === 'keep' ? row.until : minutes ? Date.now() + minutes * 60000 : null;\n                if (enabled.checked && until !== null && until <= Date.now())\n                    return fail(m.error, t('\u539F\u89C4\u5219\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u5C01\u7981\u65F6\u957F\u3002', 'This rule expired; choose a new duration.'));\n                const candidate = { country: geo.country.value, region: geo.region.value, scopes: chosen, enabled: enabled.checked, reason: reason.value.trim(), until };\n                if (store.regions.some(r => r !== row && r.country === candidate.country && r.region === candidate.region && overlaps(r.scopes, chosen)))\n                    return fail(m.error, t('\u8BE5\u5730\u533A\u5DF2\u6709\u91CD\u53E0\u8303\u56F4\u7684\u89C4\u5219\uFF0C\u8BF7\u7F16\u8F91\u73B0\u6709\u89C4\u5219\u3002', 'This region has an overlapping rule. Edit that rule instead.'));\n                await mutate('region', { id: row?.id, rule: candidate });\n                tab = 'regions';\n                query = '';\n                scopeFilter = 'all';\n                page = 1;\n                empty = false;\n                close();\n                render();\n                toast(t('\u5730\u533A\u89C4\u5219\u5DF2\u4FDD\u5B58', 'Region rule saved'));\n            }, 'btn primary'));\n        }\n        function toggleRegion(row) {\n            if (row.until !== null && row.until <= Date.now()) {\n                editRegion(row);\n                $('#sec-region-enabled').checked = true;\n                return;\n            }\n            const m = modal(row.enabled ? '\u505C\u7528\u5730\u533A\u89C4\u5219' : '\u542F\u7528\u5730\u533A\u89C4\u5219', row.enabled ? 'Pause region rule' : 'Enable region rule');\n            m.body.prepend(el('b', {}, regionName(row)), scopeBadges(row.scopes), el('p', {}, t(row.enabled ? '\u505C\u7528\u540E\uFF0C\u8BE5\u5730\u533A\u4E0D\u518D\u53D7\u6B64\u89C4\u5219\u9650\u5236\u3002' : '\u542F\u7528\u540E\uFF0C\u5C06\u62E6\u622A\u6B64\u5730\u533A\u5728\u6240\u9009\u8303\u56F4\u7684\u8BF7\u6C42\u3002', row.enabled ? 'This rule will stop blocking the region.' : 'Requests from this region will be blocked in selected scopes.')));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u786E\u8BA4', 'Confirm', async () => { await mutate('region', { id: row.id, rule: { ...row, enabled: !row.enabled } }); close(); render(); toast(t('\u89C4\u5219\u72B6\u6001\u5DF2\u66F4\u65B0', 'Rule status updated')); }, 'btn primary'));\n        }\n        function removeRegion(row) { const m = modal('\u79FB\u9664\u5730\u533A\u89C4\u5219', 'Remove region rule'); m.body.prepend(el('b', {}, regionName(row)), scopeBadges(row.scopes), el('p', {}, t('\u79FB\u9664\u540E\u4E0D\u518D\u6309\u6B64\u89C4\u5219\u62E6\u622A\uFF1B\u5176\u4ED6\u89C4\u5219\u4ECD\u751F\u6548\u3002', 'This rule will be removed; other rules remain active.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u79FB\u9664', 'Remove', async () => { await mutate('removeRegion', { id: row.id }); close(); render(); toast(t('\u5730\u533A\u89C4\u5219\u5DF2\u79FB\u9664', 'Region rule removed')); }, 'btn primary')); }\n        function testRules() {\n            const m = modal('\u89C4\u5219\u6D4B\u8BD5', 'Test rules'), ip = input('sec-test-ip', '203.0.113.20', { autocomplete: 'off' }), geo = geoPicker('US', '', true), scope = el('select', { id: 'sec-test-scope' }, ...scopes.map(([key, zh, en]) => el('option', { value: key }, t(zh, en))));\n            const count = input('sec-test-count', '0', { type: 'number', min: 0, max: 100000, step: 1 }), hint = el('small', { class: 'muted' }), result = el('div', { id: 'sec-test-result', role: 'status', 'aria-live': 'polite', hidden: '' });\n            const update = () => { const key = scope.value, r = store.rules[key]; hint.textContent = t(`\u586B\u5165\u8BE5 IP \u6700\u8FD1 ${r.window} \u5206\u949F\u7684${key === 'upload' ? '\u53D1\u8D77\u5206\u4EAB' : '\u6821\u9A8C\u5931\u8D25'}\u603B\u6B21\u6570\uFF08\u542B\u672C\u6B21\uFF09\uFF1B\u6D4B\u8BD5\u4E0D\u4F1A\u5199\u5165\u5C01\u7981\u3002`, `Enter ${key === 'upload' ? 'share attempts' : 'failed checks'} in the last ${r.window} min, including this request. Testing does not create a ban.`); result.hidden = true; };\n            scope.onchange = update;\n            update();\n            m.body.prepend(el('div', { class: 'sec-form-grid' }, field('\u6A21\u62DF\u8BF7\u6C42 IP', 'Simulated request IP', ip), field('\u8BF7\u6C42\u8303\u56F4', 'Request scope', scope)), geo.node, field('\u7A97\u53E3\u5185\u6B21\u6570\uFF08\u542B\u672C\u6B21\uFF09', 'Count in window (including this request)', count), hint, el('small', { class: 'muted' }, t('\u5C5E\u5730\u7531\u4F60\u624B\u52A8\u6307\u5B9A\uFF0C\u4E0D\u67E5\u8BE2\u6B64 IP \u7684\u5B9E\u9645\u4F4D\u7F6E\u3002\u653E\u884C\u4EC5\u4EE3\u8868\u901A\u8FC7\u9632\u62A4\uFF0C\u4ECD\u9700\u6EE1\u8DB3\u767B\u5F55\u3001\u5206\u4EAB\u53CA\u53D6\u4EF6\u6821\u9A8C\u3002', 'Location is entered manually, not looked up. Passing protection does not bypass authentication or share permissions.')), result);\n            window.attachHelp(m.body.querySelector('label[for=\"sec-test-count\"] > span'), hint);\n            window.attachHelp($('#security-dialog-title'), m.body.querySelector(':scope > small'));\n            for (const n of [ip, geo.country, geo.region, count])\n                n.addEventListener('input', () => { result.hidden = true; });\n            m.foot.append(btn('\u5173\u95ED', 'Close', close), btn('\u6D4B\u8BD5\u89C4\u5219', 'Test rules', async () => {\n                result.hidden = true;\n                const address = canonical(ip.value);\n                if (!address)\n                    return fail(m.error, t('\u8BF7\u8F93\u5165\u6709\u6548 IP \u5730\u5740\u3002', 'Enter a valid IP address.'));\n                if (!count.value || !count.reportValidity())\n                    return;\n                m.error.hidden = true;\n                const key = scope.value;\n                const { blocked, reason } = await api('/api/admin/security/test', { method: 'POST', body: { ip: address, scope: key, country: geo.country.value, region: geo.region.value, count: Number(count.value) } });\n                result.className = 'sec-test-result ' + (blocked ? 'sec-test-blocked' : 'sec-test-pass');\n                result.replaceChildren(el('b', {}, t(blocked ? '\u62E6\u622A' : '\u9632\u62A4\u653E\u884C', blocked ? 'Blocked' : 'Passes protection') + ' \xB7 ' + scopeName(key)), el('p', {}, reason), ...(!geo.country.value ? [el('small', { class: 'muted' }, t('\u5C5E\u5730\u672A\u77E5\uFF0C\u672A\u5339\u914D\u5730\u533A\u89C4\u5219\uFF1BIP \u4E0E\u81EA\u52A8\u9632\u62A4\u4ECD\u53C2\u4E0E\u5224\u65AD\u3002', 'Unknown location: region rules skipped; IP and automatic rules still apply.'))] : []));\n                result.hidden = false;\n            }, 'btn primary'));\n        }\n        function details(row) { const m = modal('\u5C01\u7981\u8BE6\u60C5', 'Ban details'); const pairs = [[t('IP \u5730\u5740', 'IP address'), row.ip], [t('\u4FDD\u62A4\u8303\u56F4', 'Scope'), scopeText(row.scopes)], [t('\u65B9\u5F0F', 'Type'), row.kind === 'auto' ? t('\u81EA\u52A8\u5C01\u7981', 'Automatic') : t('\u624B\u52A8\u5C01\u7981', 'Manual')], [t('\u539F\u56E0', 'Reason'), row.reason], [t('\u89E6\u53D1\u6B21\u6570', 'Trigger count'), row.kind === 'auto' ? row.failures : '\u2014'], [t('\u5C01\u7981\u65F6\u95F4', 'Banned at'), date(row.at)], [t('\u89E3\u5C01\u65F6\u95F4', 'Expires'), row.until === null ? t('\u6C38\u4E45', 'Never') : date(row.until)]]; m.body.prepend(el('dl', { class: 'sec-details' }, ...pairs.map(([k, v]) => el('div', {}, el('dt', { class: 'muted' }, k), el('dd', {}, v))))); m.foot.append(btn('\u67E5\u770B\u65E5\u5FD7', 'View logs', () => { close(); logLink(row.ip); }), btn('\u5173\u95ED', 'Close', close), btn('\u89E3\u5C01', 'Unban', () => { close(); confirmUnban([row.ip]); }, 'btn primary')); }\n        function rows() { if (empty)\n            return []; return (tab === 'bans' ? liveBans() : tab === 'regions' ? store.regions : store.allow).filter(b => (tab !== 'bans' || kind === 'all' || b.kind === kind) && (scopeFilter === 'all' || b.scopes.includes(scopeFilter)) && (!query || [b.ip, b.note || b.reason, b.country ? regionName(b) : '', scopeText(b.scopes)].join(' ').toLowerCase().includes(query.toLowerCase()))); }\n        function exportRows() { if (failed || loading || !store.enabled || filtersDirty())\n            return; const items = rows(), data = tab === 'regions' ? [['Country', 'Subdivision', 'Scope', 'Enabled', 'Reason', 'Expires'], ...items.map(r => [r.country, r.region, r.scopes.join('|'), r.enabled, r.reason, r.until === null ? 'Never' : new Date(r.until).toISOString()])] : [['IP', 'Scope', tab === 'bans' ? 'Type' : 'Note', tab === 'bans' ? 'Reason' : 'Created', ...(tab === 'bans' ? ['Expires'] : [])], ...items.map(b => tab === 'bans' ? [b.ip, b.scopes.join('|'), b.kind, b.reason, b.until === null ? 'Never' : new Date(b.until).toISOString()] : [b.ip, b.scopes.join('|'), b.note, new Date(b.created).toISOString()])]; const csv = '\\uFEFF' + data.map(r => r.map(v => '\"' + String(v).replace(/^[=+\\-@]/, \"'$&\").replaceAll('\"', '\"\"') + '\"').join(',')).join('\\r\\n'); const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); const a = el('a', { href: url, download: 'security-' + tab + '.csv' }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast(t('\u5DF2\u5BFC\u51FA\u5168\u90E8\u5339\u914D\u8BB0\u5F55', 'All matching records exported')); }\n        function filtersDirty() { return $('#sec-search') && ($('#sec-search').value.trim() !== query || ($('#sec-kind')?.value || 'all') !== kind || $('#sec-scope-filter').value !== scopeFilter); }\n        function syncExport() {\n            const dirty = filtersDirty(), exportButton = $('#sec-export'), pending = $('#sec-filter-pending');\n            if (exportButton)\n                exportButton.disabled = failed || loading || !store.enabled || dirty || !rows().length;\n            if (pending)\n                pending.hidden = !dirty;\n        }\n        function render() {\n            const focusId = view.contains(document.activeElement) ? document.activeElement.id : null;\n            clearFeedback();\n            const active = liveBans();\n            for (const ip of selected)\n                if (!active.some(b => b.ip === ip))\n                    selected.delete(ip);\n            navButton.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            view.replaceChildren();\n            const actions = el('div', { class: 'sec-actions' }, btn('\u9632\u62A4\u89C4\u5219', 'Rules', editRules), btn('\u89C4\u5219\u6D4B\u8BD5', 'Test rules', testRules));\n            actions.children[0].id = 'sec-rules';\n            actions.children[1].id = 'sec-test';\n            if (failed || loading || !store.enabled)\n                for (const n of actions.children)\n                    n.disabled = true;\n            const title = el('h2', { id: 'security-title' }, t('\u5B89\u5168\u9632\u62A4', 'Security'));\n            view.append(el('div', { class: 'sec-heading' }, title, actions));\n            window.attachHelp(title, el('span', {}, t('\u4FDD\u62A4\u540E\u53F0\u767B\u5F55\u3001\u4E0A\u4F20\u548C\u53D6\u4EF6\u3002\u5730\u533A\u5C01\u7981\u4EC5\u4F5C\u7528\u4E8E\u4E0A\u4F20\u548C\u53D6\u4EF6\uFF1B\u5141\u8BB8\u540D\u5355\u53EA\u8C41\u514D\u81EA\u52A8\u5C01\u7981\u3002', 'Protects admin login, uploads and pickups. Region bans apply only to uploads and pickups; allowed IPs bypass automatic bans only.')));\n            const enabled = (!failed && !loading && store.enabled) ? Object.values(store.rules).filter(r => r.enabled).length : 0;\n            const summary = el('div', { class: 'sec-summary' }, el('div', { class: 'sec-auto-summary' }, el('b', { class: failed ? 'sec-warning' : enabled ? 'sec-enabled' : 'muted' }, failed || loading || !store.enabled ? t(loading ? '\u6B63\u5728\u8BFB\u53D6' : failed ? '\u72B6\u6001\u672A\u77E5' : '\u672A\u542F\u7528', loading ? 'Loading' : failed ? 'Status unknown' : 'Unavailable') : enabled ? t(`\u81EA\u52A8\u9632\u62A4 ${enabled} / 3 \u5DF2\u542F\u7528`, `${enabled} / 3 automatic rules enabled`) : t('\u81EA\u52A8\u9632\u62A4\u5DF2\u6682\u505C', 'Automatic protection paused'))), el('div', { class: 'sec-metric' }, el('b', { id: 'sec-ip-total' }, failed || loading || !store.enabled ? '\u2014' : empty ? 0 : active.length), el('small', { class: 'muted' }, t('\u5F53\u524D\u5C01\u7981 IP', 'Active IP bans'))), el('div', { class: 'sec-metric' }, el('b', { id: 'sec-region-total' }, failed || loading || !store.enabled ? '\u2014' : empty ? 0 : activeRegions().length), el('small', { class: 'muted' }, t('\u751F\u6548\u5730\u533A\u89C4\u5219', 'Active region rules'))));\n            const ruleGrid = el('div', { class: 'sec-rule-grid' }), triggers = { login: ['\u4EE4\u724C\u6821\u9A8C\u5931\u8D25', 'Failed token checks'], upload: ['\u53D1\u8D77\u6587\u4EF6\u6216\u6587\u672C\u5206\u4EAB\uFF0C\u5206\u7247\u4E0D\u91CD\u590D\u8BA1\u6570', 'File or text share attempts; chunks do not count'], pickup: ['\u65E0\u6548\u53E3\u4EE4\uFF0C\u6210\u529F\u53D6\u4EF6\u4E0D\u8BA1\u5165', 'Invalid codes; successful pickups do not count'] };\n            if (failed || loading || !store.enabled)\n                summary.firstChild.append(el('small', { class: 'muted' }, t('\u65E0\u6CD5\u8BFB\u53D6\u9632\u62A4\u72B6\u6001\uFF0C\u8BF7\u5237\u65B0\u91CD\u8BD5', 'Unable to read protection status; refresh to retry')));\n            else {\n                for (const [key] of scopes) {\n                    const r = store.rules[key], name = el('b', {}, scopeName(key));\n                    const rule = el('div', { class: 'sec-rule-summary' }, name, el('small', { class: 'muted' }, r.enabled ? t(`${r.window} \u5206\u949F ${r.limit} \u6B21`, `${r.limit} in ${r.window} min`) : t('\u5DF2\u6682\u505C', 'Paused')), el('small', { class: r.enabled ? 'muted' : 'sec-rule-inactive' }, r.enabled ? t(`\u5C01\u7981 ${r.duration} \u5206\u949F`, `${r.duration} min ban`) : t('\u4E0D\u89E6\u53D1\u81EA\u52A8\u5C01\u7981', 'No automatic ban')));\n                    ruleGrid.append(rule);\n                    window.attachHelp(name, el('span', {}, t(...triggers[key])));\n                }\n                summary.firstChild.append(ruleGrid);\n            }\n            view.append(summary);\n            const tabs = el('div', { class: 'sec-tabs', role: 'group', 'aria-label': t('\u9632\u62A4\u540D\u5355', 'Protection lists') });\n            for (const [key, zh, en] of [['bans', '\u5C01\u7981 IP', 'Banned IPs'], ['regions', '\u5730\u533A\u5C01\u7981', 'Region bans'], ['allow', '\u5141\u8BB8\u540D\u5355', 'Allowed IPs']]) {\n                const b = btn(zh, en, () => { tab = key; page = 1; query = ''; kind = 'all'; scopeFilter = 'all'; selected.clear(); render(); });\n                b.setAttribute('aria-pressed', String(tab === key));\n                b.dataset.secTab = key;\n                tabs.append(b);\n            }\n            const add = tab === 'bans' ? btn('\u624B\u52A8\u5C01\u7981', 'Ban IP', () => openAdd(false), 'btn small primary') : tab === 'regions' ? btn('\u6DFB\u52A0\u5730\u533A', 'Add region', () => editRegion(), 'btn small primary') : btn('\u6DFB\u52A0\u5141\u8BB8 IP', 'Allow IP', () => openAdd(true), 'btn small primary');\n            add.id = 'sec-add';\n            add.disabled = failed || loading || !store.enabled;\n            view.append(el('div', { class: 'sec-list-heading' }, tabs, add));\n            const search = input('sec-search', query, { type: 'search', placeholder: t(tab === 'regions' ? '\u641C\u7D22\u5730\u533A / \u539F\u56E0' : tab === 'allow' ? '\u641C\u7D22 IP / \u5907\u6CE8' : '\u641C\u7D22 IP / \u539F\u56E0', tab === 'regions' ? 'Search region / reason' : tab === 'allow' ? 'Search IP / note' : 'Search IP / reason'), 'aria-label': t('\u641C\u7D22\u540D\u5355', 'Search list') });\n            const filter = el('select', { id: 'sec-kind', 'aria-label': t('\u5C01\u7981\u65B9\u5F0F', 'Ban type') }, el('option', { value: 'all' }, t('\u5168\u90E8\u65B9\u5F0F', 'All types')), el('option', { value: 'auto' }, t('\u81EA\u52A8\u5C01\u7981', 'Automatic')), el('option', { value: 'manual' }, t('\u624B\u52A8\u5C01\u7981', 'Manual')));\n            filter.value = kind;\n            const scope = el('select', { id: 'sec-scope-filter', 'aria-label': t('\u4FDD\u62A4\u8303\u56F4', 'Protected action') }, el('option', { value: 'all' }, t('\u5168\u90E8\u8303\u56F4', 'All scopes')), ...scopes.filter(([key]) => tab !== 'regions' || key !== 'login').map(([key, zh, en]) => el('option', { value: key }, t(zh, en))));\n            scope.value = scopeFilter;\n            const apply = () => { query = search.value.trim(); kind = filter.value; scopeFilter = scope.value; page = 1; selected.clear(); draw(); };\n            search.addEventListener('input', syncExport);\n            filter.onchange = syncExport;\n            scope.onchange = syncExport;\n            const exportButton = btn('\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C', 'Export results', exportRows);\n            exportButton.id = 'sec-export';\n            exportButton.title = t('\u5BFC\u51FA\u5F53\u524D\u7C7B\u522B\u548C\u7B5B\u9009\u6761\u4EF6\u4E0B\u7684\u5168\u90E8\u8BB0\u5F55\uFF0C\u5305\u542B\u6240\u6709\u5206\u9875\u3002', 'Export all matching records in this category across pages.');\n            const submit = btn('\u7B5B\u9009', 'Filter', () => { });\n            submit.type = 'submit';\n            const form = el('form', { class: 'sec-toolbar', id: 'sec-filter' }, el('div', { class: 'sec-actions sec-filters' }, search, scope, ...(tab === 'bans' ? [filter] : [])), el('div', { class: 'sec-actions sec-filter-actions' }, submit, btn('\u91CD\u7F6E', 'Reset', () => { query = ''; kind = 'all'; scopeFilter = 'all'; page = 1; selected.clear(); render(); }), exportButton));\n            form.onsubmit = e => { e.preventDefault(); apply(); };\n            view.append(form, el('small', { id: 'sec-filter-pending', class: 'sec-filter-pending', role: 'status', hidden: '' }, t('\u7B5B\u9009\u6761\u4EF6\u5DF2\u66F4\u6539\uFF0C\u8BF7\u5148\u70B9\u51FB\u201C\u7B5B\u9009\u201D\u3002', 'Filters changed. Apply them before exporting.')), el('div', { id: 'sec-list' }));\n            draw();\n            if (focusId)\n                document.getElementById(focusId)?.focus();\n        }\n        function draw() {\n            const host = $('#sec-list');\n            if (!host)\n                return;\n            if (loading || (!store.enabled && !failed)) {\n                host.replaceChildren(el('div', { class: 'sec-empty', role: 'status' }, loading ? t('\u6B63\u5728\u8BFB\u53D6\u9632\u62A4\u72B6\u6001\u2026', 'Loading protection\u2026') : t('\u5B89\u5168\u9632\u62A4\u672A\u542F\u7528\uFF0C\u9700\u8981\u7ED1\u5B9A R2 \u6216 D1\u3002', 'Protection unavailable. Bind R2 or D1.')));\n                syncExport();\n                return;\n            }\n            const focusId = document.activeElement?.id;\n            host.replaceChildren();\n            if (failed) {\n                syncExport();\n                host.append(el('div', { class: 'sec-empty', role: 'alert' }, t('\u9632\u62A4\u6570\u636E\u52A0\u8F7D\u5931\u8D25', 'Failed to load protection data'), btn('\u91CD\u8BD5', 'Retry', () => refresh())));\n                return;\n            }\n            $('#sec-ip-total').textContent = empty ? 0 : liveBans().length;\n            $('#sec-region-total').textContent = empty ? 0 : activeRegions().length;\n            for (const ip of selected)\n                if (!liveBans().some(b => b.ip === ip))\n                    selected.delete(ip);\n            const items = rows(), max = Math.max(1, Math.ceil(items.length / 5));\n            page = Math.min(page, max);\n            const visible = items.slice((page - 1) * 5, page * 5);\n            const prev = btn('\u4E0A\u4E00\u9875', 'Previous', () => { page--; draw(); }), next = btn('\u4E0B\u4E00\u9875', 'Next', () => { page++; draw(); });\n            prev.disabled = page <= 1;\n            next.disabled = page >= max;\n            const bulk = btn(t(`\u89E3\u5C01\u6240\u9009\uFF08${selected.size}\uFF09`, `Unban selected (${selected.size})`), `Unban selected (${selected.size})`, () => confirmUnban([...selected]));\n            bulk.id = 'sec-bulk';\n            bulk.disabled = !selected.size;\n            host.append(el('div', { class: 'sec-pagination' }, el('div', { class: 'sec-actions' }, el('small', { class: 'muted' }, t(`\u5171 ${items.length} \u6761 \xB7 \u7B2C ${page} / ${max} \u9875`, `${items.length} entries \xB7 Page ${page} / ${max}`)), ...(tab === 'bans' && selected.size ? [el('span', { class: 'sec-selection-count' }, t(`\u5DF2\u9009 ${selected.size} \u9879`, `Selected ${selected.size}`)), bulk, btn('\u53D6\u6D88\u9009\u62E9', 'Clear selection', () => { selected.clear(); draw(); })] : [])), el('div', { class: 'sec-actions' }, prev, next, btn('\u5237\u65B0', 'Refresh', async () => { await refresh(); toast(t('\u5DF2\u5237\u65B0', 'Refreshed')); }))));\n            syncExport();\n            if (!items.length) {\n                host.append(el('div', { class: 'sec-empty' }, query ? t('\u6CA1\u6709\u5339\u914D\u7684\u8BB0\u5F55', 'No matching records') : tab === 'bans' ? t('\u5F53\u524D\u6CA1\u6709\u5C01\u7981 IP', 'No active bans') : tab === 'regions' ? t('\u5C1A\u672A\u6DFB\u52A0\u5730\u533A\u89C4\u5219', 'No region rules') : t('\u5C1A\u672A\u6DFB\u52A0\u5141\u8BB8 IP', 'No allowed IPs')));\n                return;\n            }\n            if (tab === 'regions') {\n                drawRegions(host, visible);\n                return;\n            }\n            const table = el('table', { class: 'sec-table', 'aria-label': t(tab === 'bans' ? '\u5C01\u7981\u5217\u8868' : '\u5141\u8BB8\u540D\u5355', tab === 'bans' ? 'Banned IPs' : 'Allowed IPs') });\n            const header = el('tr');\n            if (tab === 'bans') {\n                const all = input('sec-select-page', '', { type: 'checkbox', 'aria-label': t('\u9009\u62E9\u672C\u9875', 'Select this page') });\n                all.checked = visible.every(r => selected.has(r.ip));\n                all.indeterminate = !all.checked && visible.some(r => selected.has(r.ip));\n                all.onchange = () => { for (const r of visible)\n                    all.checked ? selected.add(r.ip) : selected.delete(r.ip); draw(); };\n                header.append(el('th', {}, all));\n            }\n            const cols = tab === 'bans' ? [[\"IP / \u4FDD\u62A4\u8303\u56F4\", \"IP / scope\"], [\"\u539F\u56E0\", \"Reason\"], [\"\u89E6\u53D1\u6B21\u6570\", \"Count\"], [\"\u5C01\u7981\u65F6\u95F4\", \"Banned at\"], [\"\u81EA\u52A8\u89E3\u5C01\", \"Expires\"], [\"\u64CD\u4F5C\", \"Actions\"]] : [[\"IP / \u8C41\u514D\u8303\u56F4\", \"IP / exempt scope\"], [\"\u5907\u6CE8\", \"Note\"], [\"\u6DFB\u52A0\u65F6\u95F4\", \"Added\"], [\"\u64CD\u4F5C\", \"Actions\"]];\n            for (const [zh, en] of cols)\n                header.append(el('th', {}, t(zh, en)));\n            table.append(el('thead', {}, header));\n            const body = el('tbody');\n            for (const r of visible) {\n                const row = el('tr');\n                if (tab === 'bans') {\n                    const check = input('sec-select-' + r.ip, '', { type: 'checkbox', 'aria-label': t('\u9009\u62E9 ' + r.ip, 'Select ' + r.ip) });\n                    check.checked = selected.has(r.ip);\n                    check.onchange = () => { check.checked ? selected.add(r.ip) : selected.delete(r.ip); draw(); };\n                    row.append(el('td', { class: 'sec-select' }, check));\n                    const remaining = r.until === null ? t('\u6C38\u4E45', 'Permanent') : t(`\u5269\u4F59 ${Math.max(1, Math.ceil((r.until - Date.now()) / 60000))} \u5206\u949F`, `${Math.max(1, Math.ceil((r.until - Date.now()) / 60000))} min left`);\n                    row.append(el('td', { 'data-label': 'IP', class: 'sec-address' }, ipLine(r)), el('td', { 'data-label': t('\u539F\u56E0', 'Reason') }, el('div', { class: 'ui-record-line' }, el('span', {}, r.reason), el('sup', { class: 'ui-record-sup', 'data-tone': r.kind === 'auto' ? 'violet' : 'slate' }, r.kind === 'auto' ? t('\u81EA\u52A8\u5C01\u7981', 'Automatic') : t('\u624B\u52A8\u5C01\u7981', 'Manual')))), el('td', { 'data-label': t('\u89E6\u53D1\u6B21\u6570', 'Count') }, r.kind === 'auto' ? r.failures : '\u2014'), el('td', { 'data-label': t('\u5C01\u7981\u65F6\u95F4', 'Banned at') }, date(r.at)), el('td', { 'data-label': t('\u81EA\u52A8\u89E3\u5C01', 'Expires') }, remaining, ...(r.until === null ? [] : [el('small', { class: 'muted' }, date(r.until))])), el('td', { class: 'sec-row-actions' }, btn('\u8BE6\u60C5', 'Details', () => details(r)), btn('\u65E5\u5FD7', 'Logs', () => logLink(r.ip)), btn('\u89E3\u5C01', 'Unban', () => confirmUnban([r.ip]))));\n                }\n                else\n                    row.append(el('td', { 'data-label': 'IP', class: 'sec-address' }, ipLine(r)), el('td', { 'data-label': t('\u5907\u6CE8', 'Note') }, r.note), el('td', { 'data-label': t('\u6DFB\u52A0\u65F6\u95F4', 'Added') }, date(r.created)), el('td', { class: 'sec-row-actions' }, btn('\u65E5\u5FD7', 'Logs', () => logLink(r.ip)), btn('\u79FB\u9664', 'Remove', () => removeAllow(r))));\n                body.append(row);\n            }\n            table.append(body);\n            host.append(el('div', { class: 'sec-table-wrap' }, table));\n            if (focusId?.startsWith('sec-select'))\n                document.getElementById(focusId)?.focus();\n        }\n        function drawRegions(host, items) {\n            const table = el('table', { class: 'sec-table sec-region-table', 'aria-label': t('\u5730\u533A\u5C01\u7981\u89C4\u5219', 'Region ban rules') }), head = el('tr');\n            for (const [zh, en] of [['\u5730\u533A / \u8303\u56F4', 'Region / scope'], ['\u539F\u56E0', 'Reason'], ['\u72B6\u6001', 'Status'], ['\u5230\u671F\u65F6\u95F4', 'Expires'], ['\u64CD\u4F5C', 'Actions']])\n                head.append(el('th', {}, t(zh, en)));\n            table.append(el('thead', {}, head));\n            const body = el('tbody');\n            for (const r of items) {\n                const expired = r.until !== null && r.until <= Date.now(), active = r.enabled && !expired;\n                body.append(el('tr', {}, el('td', { class: 'sec-address' }, el('div', { class: 'sec-ip-line' }, el('b', {}, regionName(r)), scopeBadges(r.scopes, true))), el('td', { 'data-label': t('\u539F\u56E0', 'Reason') }, r.reason), el('td', { 'data-label': t('\u72B6\u6001', 'Status') }, el('span', { class: active ? 'sec-enabled' : 'muted' }, expired ? t('\u5DF2\u8FC7\u671F', 'Expired') : r.enabled ? t('\u751F\u6548\u4E2D', 'Active') : t('\u5DF2\u505C\u7528', 'Paused'))), el('td', { 'data-label': t('\u5230\u671F\u65F6\u95F4', 'Expires') }, r.until === null ? t('\u6C38\u4E45', 'Never') : date(r.until)), el('td', { class: 'sec-row-actions' }, btn('\u7F16\u8F91', 'Edit', () => editRegion(r)), btn(r.enabled && !expired ? '\u505C\u7528' : '\u542F\u7528', r.enabled && !expired ? 'Pause' : 'Enable', () => toggleRegion(r)), btn('\u65E5\u5FD7', 'Logs', () => logLink(r.id)), btn('\u79FB\u9664', 'Remove', () => removeRegion(r)))));\n            }\n            table.append(body);\n            host.append(el('div', { class: 'sec-table-wrap' }, table));\n        }\n        $('#lang-btn').addEventListener('click', () => { navButton.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            shortcut.querySelector('h4').textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            shortcut.querySelector('button').textContent = t('\u7BA1\u7406\u8BBF\u95EE\u89C4\u5219\u4E0E\u5C01\u7981 \u2192', 'Manage access rules and bans \u2192'); if (open)\n            render(); });\n        setInterval(() => { if (open && !document.hidden && !dialog.open && !loading && $('#sec-list') && !filtersDirty())\n            refresh().catch(error => toast(error.message)); }, 60000);\n    })();\n}\n", "js/admin-share-editor.js": "import { api, el, fmtDate } from './common.js?v=4fceee008cffd8b6';\nimport { t } from './i18n.js?v=4fceee008cffd8b6';\n\nconst MAX_COUNT = 2147483647;\nconst WEEK = 7 * 86400000;\nexport function ruleStatus(rules, now = Date.now()) {\n  if (rules.expireAt !== null && rules.expireAt <= now) return 'expired';\n  if (rules.maxPickups !== null && rules.pickupCount >= rules.maxPickups) return 'exhausted';\n  return 'active';\n}\n/** Selecting a status changes visible values; the server still derives the saved status. */\nexport function linkStatus(rules, status, now = Date.now()) {\n  const next = { ...rules };\n  if (status === 'expired') next.expireAt = now;\n  else {\n    if (next.expireAt !== null && next.expireAt <= now) next.expireAt = now + WEEK;\n    if (status === 'active' && next.maxPickups !== null && next.pickupCount >= next.maxPickups)\n      next.maxPickups = next.pickupCount < MAX_COUNT ? next.pickupCount + 1 : null;\n    if (status === 'exhausted') {\n      next.maxPickups ??= Math.max(1, next.pickupCount);\n      next.pickupCount = Math.max(next.pickupCount, next.maxPickups);\n    }\n  }\n  return next;\n}\nfunction localDateTime(value) {\n  const date = new Date(value);\n  const pad = n => String(n).padStart(2, '0');\n  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;\n}\n\nexport function createShareEditor(detail, { onSaved, onCancel, onBusy }) {\n  const form = el('form', { id: 'share-edit-form', class: 'share-edit-form' });\n  const number = (id, value, min) => el('input', { id, type: 'number', value, min, max: MAX_COUNT, step: 1, required: true });\n  const count = number('share-edit-count', detail.pickupCount, 0);\n  const limit = number('share-edit-limit', detail.maxPickups ?? Math.max(1, detail.pickupCount+1), 1);\n  const unlimited = el('input', { id: 'share-edit-unlimited', type: 'checkbox' });\n  unlimited.checked = detail.maxPickups === null;\n  const permanent = el('input', { id: 'share-edit-permanent', type: 'checkbox' });\n  permanent.checked = detail.expireAt === null;\n  const expiry = el('input', { id: 'share-edit-expiry', type: 'datetime-local', step: 60, min: '1970-01-01T00:00', max: '9999-12-31T23:59', required: true });\n  let exactExpiry = detail.expireAt;\n  let displayedExpiry = localDateTime(exactExpiry ?? Date.now()+WEEK);\n  expiry.value = displayedExpiry;\n  const status = el('select', { id: 'share-edit-status' }, ...['active','expired','exhausted'].map(value => el('option', { value }, t('ad.st.'+value))));\n  status.value = detail.status;\n  const field = (label, control) => el('div', { class: 'share-edit-field' }, el('label', { htmlFor: control.id }, label), control);\n  const check = (label, control) => el('label', { class: 'share-edit-check' }, control, label);\n  const limitField = field(t('ad.editLimit'), limit);\n  limitField.append(check(t('ad.editUnlimited'), unlimited));\n  const expiryField = field(t('ad.th.expire'), expiry);\n  expiryField.classList.add('share-edit-expiry');\n  expiryField.append(check(t('ad.forever'), permanent));\n  const linked = el('p', { class: 'share-edit-linked muted', role: 'status', hidden: true });\n  const error = el('p', { id: 'share-edit-error', class: 'error-box', role: 'alert', hidden: true });\n  const reload = el('button', { type: 'button', class: 'btn small ghost', hidden: true, onclick: onCancel }, t('ad.editReload'));\n  const save = el('button', { type: 'submit', class: 'btn primary' }, t('ad.editSave'));\n  const cancel = el('button', { type: 'button', class: 'btn ghost', onclick: onCancel }, t('ad.editCancel'));\n  form.append(el('strong', { class: 'share-edit-filename', title: detail.filename || '' }, detail.filename || t('ad.unnamed')),\n    el('div', { class: 'share-edit-grid' }, field(t('ad.editCount'), count), limitField, field(t('ad.th.status'), status), expiryField),\n    linked, error, reload, el('div', { class: 'share-edit-actions' }, cancel, save));\n  function values() {\n    return { pickupCount: count.valueAsNumber, maxPickups: unlimited.checked ? null : limit.valueAsNumber,\n      expireAt: permanent.checked ? null : expiry.value === displayedExpiry && exactExpiry !== null ? exactExpiry : new Date(expiry.value).getTime() };\n  }\n  function sync() { limit.disabled = unlimited.checked; expiry.disabled = permanent.checked; }\n  const valid = rules => Number.isSafeInteger(rules.pickupCount) && rules.pickupCount >= 0 && rules.pickupCount <= MAX_COUNT &&\n    (rules.maxPickups === null || (Number.isSafeInteger(rules.maxPickups) && rules.maxPickups >= 1 && rules.maxPickups <= MAX_COUNT)) &&\n    (rules.expireAt === null || Number.isFinite(rules.expireAt));\n  for (const control of [count, limit, unlimited, expiry, permanent]) {\n    control.addEventListener('input', () => { sync(); linked.hidden = true; const rules = values(); if (valid(rules)) status.value = ruleStatus(rules); });\n  }\n  status.addEventListener('change', () => {\n    const before = values();\n    if (!valid(before)) { error.textContent = t('ad.editInvalid'); error.hidden = false; return; }\n    const next = linkStatus(before, status.value), changes = [];\n    if (before.pickupCount !== next.pickupCount) changes.push(`${t('ad.editCount')} \u2192 ${next.pickupCount}`);\n    if (before.maxPickups !== next.maxPickups) changes.push(`${t('ad.editLimit')} \u2192 ${next.maxPickups ?? '\u221E'}`);\n    if (before.expireAt !== next.expireAt) changes.push(`${t('ad.th.expire')} \u2192 ${fmtDate(next.expireAt)}`);\n    count.value = next.pickupCount; unlimited.checked = next.maxPickups === null;\n    if (next.maxPickups !== null) limit.value = next.maxPickups;\n    permanent.checked = next.expireAt === null;\n    exactExpiry = next.expireAt;\n    displayedExpiry = localDateTime(next.expireAt ?? Date.now()+WEEK); expiry.value = displayedExpiry;\n    sync(); linked.textContent = changes.join('\uFF1B'); linked.hidden = !changes.length;\n  });\n  let busy = false;\n  form.addEventListener('submit', async event => {\n    event.preventDefault();\n    if (busy || !form.reportValidity()) return;\n    const rules = values();\n    if (!valid(rules)) { error.textContent = t('ad.editInvalid'); error.hidden = false; return; }\n    if (status.value !== ruleStatus(rules)) { status.value = ruleStatus(rules); error.textContent = t('ad.editTimeChanged'); error.hidden = false; return; }\n    busy = true; onBusy(true); error.hidden = reload.hidden = true;\n    const controls = [...form.querySelectorAll('input,button,select')].map(node => [node,node.disabled]);\n    for (const [node] of controls) node.disabled = true;\n    let saved = false;\n    try {\n      await api(`/api/admin/shares/${detail.code}`, { method: 'PUT', body: { expected: {\n        id: detail.id, pickupCount: detail.pickupCount, maxPickups: detail.maxPickups, expireAt: detail.expireAt,\n      }, rules: { ...rules, status: status.value } } });\n      saved = true;\n    } catch (e) {\n      error.textContent = e.message; error.hidden = false; reload.hidden = e.code !== 'share_conflict';\n    } finally {\n      busy = false; onBusy(false);\n      for (const [node,disabled] of controls) node.disabled = disabled;\n    }\n    if (saved) onSaved();\n  });\n  sync();\n  return { element: form, enhance() {\n    const help = el('span', {}, t('ad.editHint', Intl.DateTimeFormat().resolvedOptions().timeZone));\n    window.attachHelp(expiryField.querySelector('label'), help);\n    window.attachHelp(form.querySelector('label[for=\"share-edit-status\"]'), el('span', {}, t('ad.editStatusHint')));\n    count.focus();\n  } };\n}\n", "js/admin.js": "import { initClassifications } from './ui-classifications.js?v=4fceee008cffd8b6';\nimport { initAuditLayout } from './ui-audit-layout.js?v=4fceee008cffd8b6';\nimport { initSecurity } from './admin-security.js?v=4fceee008cffd8b6';\nimport { initCombinedAdmin } from './admin-layout.js?v=4fceee008cffd8b6';\nimport { kvUsageCard, storageHelp } from './storage-overview.js?v=4fceee008cffd8b6';\nimport { initUi } from './ui.js?v=4fceee008cffd8b6';\nimport { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el } from './common.js?v=4fceee008cffd8b6';\nimport { LANG, t, onLangChange, initI18n } from './i18n.js?v=4fceee008cffd8b6';\nimport { initAudit } from './admin-audit.js?v=4fceee008cffd8b6';\nimport { createFilePreview } from './admin-preview.js?v=4fceee008cffd8b6';\nimport { createShareEditor } from './admin-share-editor.js?v=4fceee008cffd8b6';\nimport { pageSize, scrollToList, initAdminPreferences } from './admin-preferences.js?v=4fceee008cffd8b6';\n\ninitTheme();\ninitI18n();\ninitDialogs();\ninitAdminPreferences();\ninitAudit();\n\nconst loginCard = $('#admin-login');\nconst panel = $('#admin-panel');\nconst loginError = $('#login-error');\nconst tokenInput = $('#admin-token');\nconst statsRow = $('#stats-row');\nconst tbody = $('#shares-body');\nconst btnPrev = $('#btn-prev');\nconst btnNext = $('#btn-next');\nconst btnRefresh = $('#btn-refresh');\nconst pageInfo = $('#page-info');\n\nlet limit = pageSize('files'); // Bounded to 40 to leave room for KV reads on the free plan.\nlet offset = 0;\nlet total = 0;\nlet listRequest = 0;\nlet listBusy = false;\nlet fileFilters = { status: 'all', kind: 'all', q: '' };\n\n/* \u8BED\u8A00\u5207\u6362:\u9762\u677F\u53EF\u89C1\u65F6\u6309\u65B0\u8BED\u8A00\u91CD\u62C9\u6587\u6848 */\nonLangChange(() => {\n  if ($('#source-dialog').open) closeSource();\n  if ($('#file-dialog').open) closeFileDetails();\n  if (!panel.hidden) {\n    loadStats();\n    loadList();\n    loadLoginProtection();\n  }\n});\n\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\n(async () => {\n  try {\n    await api('/api/admin/stats');\n    showPanel();\n  } catch {\n    loginCard.hidden = false;\n    tokenInput.focus();\n  }\n})();\n\nasync function login() {\n  const token = tokenInput.value.trim();\n  if (!token || $('#btn-login').disabled) return;\n  $('#btn-login').disabled = true;\n  loginError.hidden = true;\n  try {\n    await api('/api/admin/login', { method: 'POST', body: { token } });\n    showPanel();\n  } catch (e) {\n    loginError.textContent = e.code === 'login_blocked' ? t('ad.loginBlocked')\n      : e.code === 'login_protection_unavailable' ? t('ad.guardUnavailable') : e.message || t('ad.badToken');\n    loginError.hidden = false;\n  } finally { $('#btn-login').disabled = false; }\n}\n$('#btn-login').addEventListener('click', login);\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\n\nfunction showPanel() {\n  loginCard.hidden = true;\n  panel.hidden = false;\n  $('#admin-navigation').hidden = false;\n  $('#admin-settings-btn').hidden = false;\n  loadStats();\n  loadList();\n  loadSettings();\n  loadGuestPolicy();\n  loadLoginProtection();\n}\n\n$('#btn-logout').addEventListener('click', async () => {\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\n  location.reload();\n});\n\n/* ---------- \u7EDF\u8BA1 ---------- */\nlet lastStats = null; // \u5220\u9664\u540E\u672C\u5730\u9012\u51CF\u7528,\u907F\u514D\u7ACB\u5373\u91CD\u62C9\u649E\u4E0A KV \u6700\u7EC8\u4E00\u81F4\u7A97\u53E3\n\nfunction renderStats(s) {\n  const counts = [\n    [s.total, 'ad.total'], [s.active, 'ad.active'], [s.files, 'ad.files'],\n    [s.texts, 'ad.texts'], [s.todayCreated, 'ad.today'],\n  ];\n  const capacity = s.fileBackend === 'r2' ? s.storage : null;\n  const storageCard = el('div', { class: 'stat-card storage-card' },\n    el('div', { class: 'storage-heading' }, el('small', {}, s.fileBackend === 'r2' ? 'R2' : t('ad.shareBytes')), s.fileBackend === 'r2' ? storageHelp('R2', t('ad.storageReserved')) : null),\n    capacity\n      ? el('div', { class: 'storage-value' },\n          el('b', {}, fmtBytes(capacity.usedBytes)),\n          el('span', { class: 'storage-total' }, ` / ${fmtBytes(capacity.capacityBytes)}`))\n      : el('div', { class: 'storage-value' }, el('b', {}, s.fileBackend === 'r2'\n          ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),\n  );\n  if (capacity) {\n    storageCard.append(\n      el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,\n        value: capacity.usedBytes, ariaLabel: t('ad.storage') }),\n    );\n  }\n  statsRow.replaceChildren(\n    el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>\n      el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),\n    el('div', { class: 'storage-overview' }, storageCard, kvUsageCard(s.kv)),\n  );\n}\n\nasync function loadStats() {\n  try {\n    lastStats = await api('/api/admin/stats');\n    renderStats(lastStats);\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\n}\n\n/** \u5220\u9664\u6210\u529F\u540E\u672C\u5730\u540C\u6B65\u7EDF\u8BA1(\u670D\u52A1\u7AEF KV \u7D22\u5F15\u6700\u957F 60s \u624D\u53CD\u6620\u5220\u9664,\u91CD\u62C9\u4F1A\u770B\u5230\u65E7\u6570) */\nasync function statsAfterDelete(r) {\n  if (!lastStats) return;\n  const s = { ...lastStats };\n  s.total = Math.max(0, s.total - 1);\n  if (r.kind === 'file') s.files = Math.max(0, s.files - 1);\n  else s.texts = Math.max(0, s.texts - 1);\n  s.totalBytes = Math.max(0, s.totalBytes - r.size);\n  if (r.status === 'active') s.active = Math.max(0, s.active - 1);\n  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);\n  if (r.created_at >= todayStart.getTime()) s.todayCreated = Math.max(0, s.todayCreated - 1);\n  lastStats = s;\n  renderStats(s);\n  if (s.fileBackend === 'r2') {\n    try { s.storage = (await api('/api/admin/stats')).storage; }\n    catch { s.storage = null; } // Do not present stale capacity as current after deletion.\n    if (lastStats === s) renderStats(s);\n  }\n}\n\n/* ---------- \u5217\u8868 ---------- */\nconst STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };\nconst KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };\n\nasync function loadList() {\n  const request = ++listRequest;\n  listBusy = true;\n  btnPrev.disabled = btnNext.disabled = btnRefresh.disabled = true;\n  pageInfo.textContent = t('ad.loading');\n  tbody.setAttribute('aria-busy', 'true');\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));\n  try {\n    const params = new URLSearchParams({ ...fileFilters, limit, offset });\n    const data = await api(`/api/admin/shares?${params}`);\n    if (request !== listRequest) return;\n    if (!Number.isSafeInteger(data.total) || data.total < 0 || !Array.isArray(data.rows)) throw new Error(t('ad.loadFail'));\n    total = data.total;\n    if (offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return loadList(); }\n    const rows = data.rows ?? [];\n    tbody.replaceChildren();\n    for (const r of rows) {\n      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n      tbody.append(\n        el('tr', {},\n          el('td', { class: 'mono' }, r.code),\n          el('td', { class: 'share-content-cell' },\n            el('div', { class: 'share-filename-line' },\n              r.kind === 'file'\n                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)\n                : el('span', { class: 'share-filename', title: content }, content),\n              el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),\n          sourceCell(r),\n          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),\n          el('td', {}, fmtDate(r.created_at)),\n          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),\n        ),\n      );\n    }\n    if (rows.length === 0) {\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));\n    }\n    listBusy = false;\n    updatePager();\n  } catch (e) {\n    if (request !== listRequest) return;\n    pageInfo.textContent = t('ad.loadFail');\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));\n  } finally {\n    if (request === listRequest) {\n      listBusy = false;\n      btnRefresh.disabled = false;\n      tbody.setAttribute('aria-busy', 'false');\n    }\n  }\n}\n\nfunction updatePager() {\n  const page = Math.floor(offset / limit) + 1;\n  const pages = Math.max(1, Math.ceil(total / limit));\n  pageInfo.textContent = t('ad.page', page, pages, total);\n  btnPrev.disabled = listBusy || offset <= 0;\n  btnNext.disabled = listBusy || offset + limit >= total;\n}\nbtnPrev.addEventListener('click', async () => { offset = Math.max(0, offset - limit); await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\nbtnNext.addEventListener('click', async () => { offset += limit; await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\nbtnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });\nwindow.addEventListener('admin-page-size', event => {\n  if (event.detail.name !== 'files') return;\n  limit = event.detail.value; offset = 0;\n  if (!panel.hidden) loadList();\n});\n\n/* ---------- \u5220\u9664:\u7968\u636E\u98CE\u786E\u8BA4\u5F39\u7A97 + \u672C\u5730\u540C\u6B65(KV \u6700\u7EC8\u4E00\u81F4,\u5220\u9664\u540E\u7ACB\u5373\u91CD\u62C9\u4F1A\u770B\u5230\u6B8B\u7559\u7D22\u5F15) ---------- */\nconst delMask = $('#del-mask');\nconst delTarget = $('#del-target');\nlet delResolve = null;\n\nfunction confirmDelete(r) {\n  const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n  delTarget.replaceChildren(\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.code')), el('b', { class: 'mono' }, r.code)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.content')), el('span', {}, content)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),\n      el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),\n  );\n  delMask.showModal();\n  $('#del-cancel').focus();\n  return new Promise((resolve) => { delResolve = resolve; });\n}\n\nfunction closeDelModal(v) {\n  if (!delResolve) return;\n  delMask.close();\n  const resolve = delResolve;\n  delResolve = null;\n  resolve(v);\n}\n$('#del-cancel').addEventListener('click', () => closeDelModal(false));\n$('#del-ok').addEventListener('click', () => closeDelModal(true));\ndelMask.addEventListener('click', (e) => e.target === delMask && closeDelModal(false));\ndelMask.addEventListener('cancel', e => { e.preventDefault(); closeDelModal(false); });\n\nasync function remove(r, tr) {\n  if (!(await confirmDelete(r))) return;\n  try {\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\n    toast(t('ad.deleted'), 'ok');\n    statsAfterDelete(r);\n    total = Math.max(0, total - 1);\n    tr?.remove();\n    // \u5F53\u524D\u9875\u5220\u7A7A\u4E14\u4E0D\u5728\u7B2C\u4E00\u9875:\u9000\u56DE\u4E0A\u4E00\u9875\u91CD\u62C9,\u907F\u514D\u505C\u5728\u7A7A\u9875\n    if (tbody.rows.length === 0 && offset > 0) {\n      offset = Math.max(0, offset - limit);\n      loadList();\n    } else {\n      updatePager();\n    }\n  } catch (e) {\n    toast(e.message || t('ad.deleteFail'), 'error');\n  }\n}\n\n/* Upload source details: source labels are text nodes, never interpolated HTML. */\nconst sourceDialog = $('#source-dialog');\nconst sourceForm = $('#source-form');\nconst sourceNote = $('#source-note');\nconst sourceSave = $('#source-save');\nconst sourceError = $('#source-error');\nconst noteOverrides = new Map(); // Read-your-write while KV propagation completes.\nlet sourceRequest = 0;\nlet activeSource = null;\nlet sourceReturnCode = null;\nlet sourceHistoryLoaded = false;\n\nfunction sourceField(label, value, className = '', hint = '') {\n  return el('div', { class: `source-field ${className}` },\n    el('small', { class: 'muted', ...(hint ? { title: hint } : {}) }, label), el('span', {}, value));\n}\nfunction browserLabel(ua) {\n  if (!ua) return t('ad.sourceUnrecorded');\n  const browser = /Edg\\//.test(ua) ? 'Edge' : /Firefox\\//.test(ua) ? 'Firefox'\n    : /Chrome\\//.test(ua) ? 'Chrome' : /Safari\\//.test(ua) ? 'Safari' : t('ad.sourceUnknown');\n  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS'\n    : /Windows/.test(ua) ? 'Windows' : /Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';\n  return [browser, os].filter(Boolean).join(' \xB7 ');\n}\n\nfunction visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }\nfunction sourceLabel(source) {\n  const override = noteOverrides.get(source.visitorId);\n  return (override !== undefined ? override : source.note) || visitorLabel(source.visitorId);\n}\nfunction locationLabel(source) {\n  let country = source.country;\n  if (country && /^[A-Z]{2}$/.test(country)) {\n    country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n  }\n  return [...new Set([country, source.region, source.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n}\nfunction sourceCell(row) {\n  if (!row.source) return el('td', { class: 'source-cell muted' }, t('ad.sourceUnrecorded'));\n  const button = el('button', { class: 'source-link', type: 'button', onclick: () => openSource(row) }, sourceLabel(row.source));\n  button.dataset.visitor = row.source.visitorId;\n  button.title = t('ad.source');\n  return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));\n}\nasync function openSource(row, returnCode = null) {\n  const request = ++sourceRequest;\n  activeSource = null;\n  sourceReturnCode = returnCode;\n  $('#source-back').hidden = !returnCode;\n  $('#source-history').hidden = true;\n  $('#source-history-list').replaceChildren();\n  sourceHistoryLoaded = false;\n  sourceForm.hidden = true;\n  $('#source-identity').hidden = true;\n  $('#source-visitor-id').textContent = '';\n  sourceError.hidden = true;\n  sourceSave.disabled = false;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = `${t('ad.th.code')} ${row.code}`;\n  $('#source-detail').textContent = t('ad.loading');\n  sourceDialog.showModal();\n  try {\n    const { source } = await api(`/api/admin/shares/${row.code}/source`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }\n    activeSource = { code: row.code, visitorId: source.visitorId };\n    $('#source-visitor-id').textContent = source.visitorId;\n    const ip = el('span', { class: 'source-ip' }, source.ip || t('ad.sourceUnknown'));\n    if (source.ip) ip.append(el('button', { class: 'btn small ghost', type: 'button',\n      onclick: async () => toast(t(await copyText(source.ip) ? 'ad.ipCopied' : 'ad.copyFailed')) }, t('ad.copyIP')));\n    $('#source-detail').replaceChildren(\n      ...(source.displayName ? [sourceField(t('ad.submittedName'), source.displayName)] : []),\n      sourceField(t('ad.requestIP'), ip),\n      sourceField(t('ad.sourceLocation'), locationLabel(source)),\n      ...(source.asn || source.organization ? [sourceField(t('ad.network'),\n        [source.organization, source.asn ? `AS${source.asn}` : null].filter(Boolean).join(' \xB7 '))] : []),\n      sourceField(t('ad.browserReported'), browserLabel(source.userAgent), '', t('ad.browserHint')),\n      sourceField(t('ad.sourceTime'), fmtDate(source.capturedAt)),\n      ...(source.userAgent ? [el('div', { class: 'source-agent source-field-wide' }, el('small', { class: 'muted' }, 'User-Agent'),\n        el('p', { class: 'mono', title: source.userAgent, tabIndex: 0 }, source.userAgent))] : []),\n    );\n    $('#source-history').hidden = false;\n    sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';\n    sourceForm.hidden = false;\n    $('#source-identity').hidden = false;\n    sourceSave.hidden = false;\n    loadSourceHistory();\n  } catch (e) {\n    if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');\n  }\n}\nfunction closeSource() {\n  sourceRequest++;\n  activeSource = null;\n  sourceReturnCode = null;\n  $('#source-history').hidden = true;\n  $('#source-history-list').replaceChildren();\n  $('#source-back').hidden = true;\n  sourceNote.value = '';\n  $('#source-identity').hidden = true;\n  $('#source-visitor-id').textContent = '';\n  sourceForm.hidden = true;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = '';\n  $('#source-detail').replaceChildren();\n  sourceDialog.close();\n}\nsourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });\n$('#source-close').addEventListener('click', closeSource);\n$('#source-back').addEventListener('click', () => {\n  const code = sourceReturnCode;\n  closeSource();\n  if (code) openFileDetails(code);\n});\nasync function loadSourceHistory() {\n  if (!activeSource || sourceHistoryLoaded) return;\n  sourceHistoryLoaded = true;\n  const request = sourceRequest;\n  const list = $('#source-history-list');\n  list.textContent = t('ad.loading');\n  try {\n    const { rows } = await api(`/api/admin/shares/${activeSource.code}/source/activity`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },\n      el('div', { class: 'activity-head' }, row.kind === 'file'\n        ? el('button', { type: 'button', class: 'source-link', title: row.filename || t('ad.unnamed'),\n          onclick: () => { closeSource(); openFileDetails(row.code); } }, row.filename || t('ad.unnamed'))\n        : el('span', {}, t('ad.textFallback')),\n        el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),\n      el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} \xB7 ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} \xB7 ${row.code}`),\n      row.ip || row.country || row.region || row.city\n        ? el('small', { class: 'muted' }, [row.ip, row.country || row.region || row.city ? locationLabel(row) : null].filter(Boolean).join(' \xB7 ')) : null,\n    )));\n    if (!rows.length) list.textContent = t('ad.empty');\n  } catch (error) {\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    sourceHistoryLoaded = false;\n    list.replaceChildren(el('p', { class: 'error-box', role: 'alert' }, error.message || t('ad.loadFail')),\n      el('button', { type: 'button', class: 'btn small ghost', onclick: loadSourceHistory }, t('ad.retry')));\n  }\n}\nsourceForm.addEventListener('submit', async (e) => {\n  e.preventDefault();\n  if (!activeSource || sourceSave.disabled) return;\n  const { code } = activeSource;\n  const request = sourceRequest;\n  sourceSave.disabled = true;\n  sourceError.hidden = true;\n  try {\n    const result = await api(`/api/admin/shares/${code}/source`, { method: 'PUT', body: { note: sourceNote.value } });\n    noteOverrides.set(result.visitorId, result.note);\n    document.querySelectorAll('[data-visitor]').forEach((button) => {\n      if (button.dataset.visitor === result.visitorId) button.textContent = result.note || visitorLabel(result.visitorId);\n    });\n    if (request === sourceRequest) closeSource();\n    toast(t('ad.sourceSaved'));\n  } catch (error) {\n    if (request === sourceRequest) {\n      sourceError.textContent = error.message || t('ad.loadFail');\n      sourceError.hidden = false;\n    }\n  } finally {\n    if (request === sourceRequest) sourceSave.disabled = false;\n  }\n});\n\n/* File details use their own request generation so closed dialogs stay empty. */\nconst fileDialog = $('#file-dialog');\nconst fileDetail = $('#file-detail');\nconst fileDownload = $('#file-download');\nlet fileRequest = 0;\nlet activePreview = null;\nlet activeFileDetail = null;\nlet shareEditBusy = false;\nfunction resetShareEditor() {\n  $('#file-editor').hidden = true;\n  $('#file-editor').replaceChildren();\n  fileDetail.hidden = false;\n  fileDialog.querySelector('.source-footer').hidden = false;\n  $('#file-title').textContent = t('ad.fileDetails');\n}\nfunction fileField(label, value, secondary) {\n  return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),\n    el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);\n}\n\nasync function openFileDetails(code) {\n  if (shareEditBusy) return;\n  activeFileDetail = null;\n  resetShareEditor();\n  $('#file-edit').hidden = true;\n  activePreview?.dispose(); activePreview = null;\n  const request = ++fileRequest;\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  $('#file-context').textContent = `${t('ad.th.code')} ${code}`;\n  fileDetail.textContent = t('ad.loading');\n  fileDialog.showModal();\n  try {\n    const detail = await api(`/api/admin/shares/${code}`);\n    if (request !== fileRequest || !fileDialog.open) return;\n    activeFileDetail = detail;\n    const state = detail.storage?.state || 'unknown';\n    const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };\n    const source = detail.source;\n    const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',\n      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }, code); },\n    }, sourceLabel(source)) : t('ad.sourceUnrecorded');\n    if (source) sourceButton.dataset.visitor = source.visitorId;\n    fileDetail.replaceChildren(\n      el('div', { class: 'file-identity file-wide' },\n        el('strong', {}, detail.filename || t('ad.unnamed')),\n        el('div', { class: 'file-summary' },\n          el('span', { title: t('ad.exactBytes', detail.size.toLocaleString()) }, fmtBytes(detail.size)),\n          el('span', { class: `badge ${detail.status}`, title: t('ad.shareState') }, t(STATUS_KEY[detail.status])),\n          state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),\n      ...(detail.description ? [el('div', { class: 'file-description file-wide' },\n        el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),\n      ...(state === 'available' ? [(activePreview = createFilePreview(code, detail.filename || '')).element] : []),\n      fileField(t('ad.source'), sourceButton),\n      fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '\u221E'}`),\n      fileField(t('ad.th.created'), fmtDate(detail.createdAt)),\n      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)),\n\n    );\n    fileDownload.href = `/api/admin/shares/${code}/download`;\n    fileDownload.download = detail.filename || 'file';\n    fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');\n    fileDownload.hidden = state === 'missing';\n    $('#file-edit').hidden = state !== 'available';\n    $('#file-edit').disabled = detail.cleanupStatus === 'pending';\n    $('#file-edit').title = detail.cleanupStatus === 'pending' ? t('ad.editCleanupPending') : '';\n  } catch (error) {\n    if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');\n  }\n}\nfunction closeFileDetails() {\n  if (shareEditBusy) return;\n  activeFileDetail = null;\n  resetShareEditor();\n  $('#file-edit').hidden = true;\n  activePreview?.dispose(); activePreview = null;\n  fileRequest++;\n  fileDetail.replaceChildren();\n  $('#file-context').textContent = '';\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  fileDialog.close();\n}\n$('#file-close').addEventListener('click', closeFileDetails);\n$('#file-edit').addEventListener('click', () => {\n  if (!activeFileDetail || shareEditBusy) return;\n  const detail = activeFileDetail;\n  const editor = createShareEditor(detail, {\n    onBusy(value) { shareEditBusy = value; $('#lang-btn').disabled = value; },\n    onCancel() { openFileDetails(detail.code); },\n    onSaved() {\n      toast(t('ad.editSaved'));\n      openFileDetails(detail.code);\n      loadList(); loadStats();\n    },\n  });\n  fileDetail.hidden = true;\n  fileDialog.querySelector('.source-footer').hidden = true;\n  $('#file-title').textContent = t('ad.editShare');\n  $('#file-editor').replaceChildren(editor.element);\n  $('#file-editor').hidden = false;\n  editor.enhance();\n});\nfileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });\n\n/* Keep unsaved input local; only a validated save changes retention. */\nconst retentionInput = $('#retention-days');\nconst retentionSave = $('#retention-save');\nconst retentionError = $('#retention-error');\nasync function loadSettings() {\n  $('#retention-status').hidden = true;\n  retentionInput.disabled = true;\n  retentionSave.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-retry').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings');\n    if (!Number.isInteger(settings.expiredRetentionDays) || settings.expiredRetentionDays < 0 || settings.expiredRetentionDays > 3650) throw new Error(t('ad.loadFail'));\n    retentionInput.value = settings.expiredRetentionDays;\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n    $('#retention-retry').hidden = false;\n  }\n}\n$('#retention-retry').addEventListener('click', loadSettings);\nretentionInput.addEventListener('input', () => { $('#retention-status').hidden = true; });\n$('#retention-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (retentionSave.disabled || !retentionInput.reportValidity()) return;\n  retentionSave.disabled = true;\n  retentionInput.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-status').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });\n    retentionInput.value = settings.expiredRetentionDays;\n    $('#retention-status').textContent = t('ad.settingsSaved');\n    $('#retention-status').hidden = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n  } finally {\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  }\n});\n\nconst guestWeekly = $('#guest-weekly');\nconst guestSave = $('#guest-save');\nconst guestError = $('#guest-error');\nfunction guestBusy(busy) {\n  for (const control of [guestWeekly, guestSave]) control.disabled = busy;\n}\nasync function loadGuestPolicy() {\n  $('#guest-status').hidden = true;\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-retry').hidden = true;\n  try {\n    const policy = await api('/api/admin/upload-policy');\n    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000) throw new Error(t('ad.loadFail'));\n    guestWeekly.value = policy.weeklyFileLimit;\n    guestBusy(false);\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n    $('#guest-retry').hidden = false;\n  }\n}\n$('#guest-retry').addEventListener('click', loadGuestPolicy);\nguestWeekly.addEventListener('input', () => { $('#guest-status').hidden = true; });\n$('#guest-policy-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (guestSave.disabled || !e.target.reportValidity()) return;\n  const body = { weeklyFileLimit: Number(guestWeekly.value) };\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-status').hidden = true;\n  try {\n    await api('/api/admin/upload-policy', { method: 'PUT', body });\n    $('#guest-status').textContent = t('ad.guestSaved');\n    $('#guest-status').hidden = false;\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n  } finally { guestBusy(false); }\n});\n\nlet guardRequest = 0;\nasync function loadLoginProtection() {\n  const request = ++guardRequest;\n  const refresh = $('#login-guard-refresh');\n  const error = $('#login-guard-error');\n  refresh.disabled = true;\n  error.hidden = true;\n  $('#login-guard-bans').replaceChildren();\n  $('#login-guard-status').textContent = '';\n  try {\n    const data = await api('/api/admin/login-protection');\n    if (request !== guardRequest) return;\n    if (typeof data.enabled !== 'boolean' || !Array.isArray(data.bans) ||\n        ![data.maxFailures, data.windowSeconds, data.banSeconds].every(n => Number.isInteger(n) && n > 0)) throw new Error(t('ad.loadFail'));\n    $('#login-guard-status').textContent = data.enabled\n      ? t('ad.guardRule', data.windowSeconds / 60, data.maxFailures, data.banSeconds / 60) : t('ad.guardDisabled');\n    if (!data.enabled) return;\n    if (!data.bans.length) $('#login-guard-bans').append(el('small', { class: 'muted' }, t('ad.guardEmpty')));\n    for (const ban of data.bans) {\n      const button = el('button', { class: 'btn small ghost', type: 'button' }, t('ad.guardUnblock'));\n      button.addEventListener('click', async () => {\n        button.disabled = true;\n        error.hidden = true;\n        try {\n          await api('/api/admin/login-protection/unblock', { method: 'POST', body: { ip: ban.ip } });\n          toast(t('ad.guardUnblocked'), 'ok');\n          await loadLoginProtection();\n        } catch (e) {\n          error.textContent = e.message || t('ad.loadFail');\n          error.hidden = false;\n          button.disabled = false;\n        }\n      });\n      $('#login-guard-bans').append(el('div', { class: 'login-guard-row' },\n        el('div', { class: 'login-guard-info' },\n          el('b', {}, ban.ip === 'unknown' ? t('ad.guardUnknown') : ban.ip),\n          el('small', { class: 'muted' }, t('ad.guardFailures', ban.failures) + ' \xB7 ' + t('ad.guardUntil', fmtDate(ban.bannedUntil))),\n          el('small', { class: 'muted' }, t('ad.guardLast', fmtDate(ban.lastFailedAt)))), button));\n    }\n  } catch (e) {\n    if (request !== guardRequest) return;\n    error.textContent = e.message || t('ad.loadFail');\n    error.hidden = false;\n  } finally { if (request === guardRequest) refresh.disabled = false; }\n}\n$('#login-guard-refresh').addEventListener('click', loadLoginProtection);\n\ninitUi();\ninitClassifications();\ninitAuditLayout();\ninitSecurity();\ninitCombinedAdmin();\nfunction applyFileFilters() {\n  fileFilters.q = $('#files-q').value.trim();\n  fileFilters.kind = $('#files-kind').value;\n  offset = 0;\n  loadList();\n}\n$('#files-filter').addEventListener('submit', event => { event.preventDefault(); applyFileFilters(); });\n$('#files-kind').addEventListener('change', applyFileFilters);\nfor (const button of document.querySelectorAll('#files-status-tabs button')) button.addEventListener('click', () => {\n  fileFilters.status = button.dataset.status;\n  for (const node of document.querySelectorAll('#files-status-tabs button')) node.setAttribute('aria-pressed', String(node === button));\n  applyFileFilters();\n});\n", "js/common.js": "import { t } from './i18n.js?v=4fceee008cffd8b6';\n\nexport const $ = (sel, el = document) => el.querySelector(sel);\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\n\n/** Keep Tab within modal content, including the wrap past the final button. */\nexport function initDialogs() {\n  for (const dialog of $$('dialog')) {\n    dialog.addEventListener('keydown', event => {\n      if (event.key !== 'Tab') return;\n      const controls = $$('button, a[href], input, select, textarea, summary, [tabindex]', dialog)\n        .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);\n      const first = controls[0];\n      const last = controls.at(-1);\n      if (!first) { event.preventDefault(); return; }\n      if (!controls.includes(document.activeElement) || (event.shiftKey && document.activeElement === first)) {\n        event.preventDefault(); (event.shiftKey ? last : first).focus();\n      } else if (!event.shiftKey && document.activeElement === last) {\n        event.preventDefault(); first.focus();\n      }\n    });\n  }\n}\n\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\nexport async function api(path, opts = {}) {\n  const res = await fetch(path, {\n    method: opts.method || 'GET',\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\n  });\n  if (res.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n  let data = null;\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\n  if (!res.ok) {\n    throw responseError(data, res.status);\n  }\n  return data;\n}\n\n/** Shared by fetch and XHR so security errors survive multipart/direct uploads. */\nexport function responseError(data, status) {\n  const error = new Error(data?.message || t('req.fail', status));\n  return Object.assign(error, { code: data?.error || 'unknown', status,\n    remainingBytes: data?.remainingBytes, retryAt: data?.retryAt,\n    serverTime: data?.serverTime, reason: data?.reason, requestId: data?.requestId });\n}\n\nexport function fmtBytes(n) {\n  if (!Number.isFinite(n) || n < 0) return '-';\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\n  let i = 0;\n  while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 100) / 100;\n  return `${v} ${units[i]}`;\n}\n\n/** \u6C38\u4E45\u5206\u4EAB\u8FD4\u56DE null,\u7531\u8C03\u7528\u65B9\u6309\u8BED\u8A00\u6E32\u67D3\u300C\u6C38\u4E45 / Forever\u300D */\nexport function fmtDate(ms) {\n  if (ms === null || ms === undefined) return null;\n  const d = new Date(ms);\n  const p = (x) => String(x).padStart(2, '0');\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\n}\n\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6,\u5355\u4F4D\u8BCD\u968F\u8BED\u8A00 */\nexport function fmtDuration(sec) {\n  if (!Number.isFinite(sec) || sec < 0) return '-';\n  if (sec < 1) return t('dur.ms');\n  if (sec < 60) return t('dur.s', Math.round(sec));\n  if (sec < 3600) {\n    const m = Math.floor(sec / 60);\n    const s = Math.round(sec % 60);\n    return s ? t('dur.hm', m, s) : t('dur.h', m);\n  }\n  if (sec < 86400) {\n    const h = Math.floor(sec / 3600);\n    const m = Math.round((sec % 3600) / 60);\n    return m ? t('dur.hH', h, m) : t('dur.hH2', h);\n  }\n  return t('dur.d', Math.round(sec / 86400));\n}\n\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\nexport function iconFor(name = '', mime = '') {\n  const ext = (name.split('.').pop() || '').toLowerCase();\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\n  return '\u{1F4E6}';\n}\n\nexport async function copyText(text) {\n  try {\n    await navigator.clipboard.writeText(text);\n    return true;\n  } catch { /* \u8D70\u964D\u7EA7 */ }\n  try {\n    const ta = document.createElement('textarea');\n    ta.value = text;\n    ta.style.cssText = 'position:fixed;opacity:0';\n    document.body.appendChild(ta);\n    ta.select();\n    const ok = document.execCommand('copy');\n    ta.remove();\n    return ok;\n  } catch {\n    return false;\n  }\n}\n\nexport function toast(msg, type = 'info') {\n  let host = $('#toast-host');\n  if (!host) {\n    host = document.createElement('div');\n    host.id = 'toast-host';\n    document.body.appendChild(host);\n  }\n  const t = document.createElement('div');\n  t.className = `toast ${type}`;\n  t.textContent = msg;\n  host.appendChild(t);\n  requestAnimationFrame(() => t.classList.add('show'));\n  setTimeout(() => {\n    t.classList.remove('show');\n    setTimeout(() => t.remove(), 300);\n  }, 2400);\n}\n\nexport function initTheme() {\n  const btn = $('#theme-btn');\n  const meta = $('meta[name=\"theme-color\"]');\n  const sync = () => {\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\n  };\n  window.addEventListener('storage', event => {\n    if(event.key === 'theme' && ['dark','light'].includes(event.newValue)){document.documentElement.dataset.theme=event.newValue;sync();}\n  });\n  sync();\n  btn?.addEventListener('click', () => {\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\n    localStorage.setItem('theme', next);\n    document.documentElement.dataset.theme = next;\n    sync();\n  });\n}\n\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\nexport function el(tag, attrs = {}, ...children) {\n  const n = document.createElement(tag);\n  for (const [k, v] of Object.entries(attrs)) {\n    if (k === 'class') n.className = v;\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\n    else n[k] = v;\n  }\n  for (const c of children.flat(Infinity)) {\n    if (c == null || c === false) continue;\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\n  }\n  return n;\n}\n", "js/i18n.js": `/**
+`, "js/admin-preferences.js": "import { $ } from './common.js?v=9b8843adbff8575d';\nimport { t } from './i18n.js?v=9b8843adbff8575d';\n\nconst options = { files: [10, 20, 40], audit: [20, 50, 100] };\nconst values = { files: 20, audit: 20 };\nfor (const name of Object.keys(values)) {\n  try {\n    const saved = Number(localStorage.getItem(`admin-page-size-${name}`));\n    if (options[name].includes(saved)) values[name] = saved;\n  } catch { /* Browser preferences are optional when persistent storage is blocked. */ }\n}\nexport function pageSize(name) { return values[name]; }\n\nexport function scrollToList(selector) {\n  const list = $(selector);\n  const top = list.querySelector('.table-wrap').getBoundingClientRect().top + window.scrollY\n    - list.querySelector('.list-toolbar').getBoundingClientRect().height - 20;\n  window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });\n}\n\nexport function initAdminPreferences() {\n  const dialog = $('#settings-dialog');\n  $('#admin-settings-btn').addEventListener('click', () => dialog.showModal());\n  $('#settings-close').addEventListener('click', () => dialog.close());\n  for (const name of Object.keys(values)) {\n    const select = $(`#${name}-page-size`);\n    select.value = String(values[name]);\n    select.addEventListener('change', () => {\n      const value = Number(select.value);\n      if (!options[name].includes(value)) return;\n      values[name] = value;\n      $('#preferences-error').hidden = true;\n      try { localStorage.setItem(`admin-page-size-${name}`, String(value)); }\n      catch {\n        $('#preferences-error').textContent = t('ad.preferenceNotSaved');\n        $('#preferences-error').hidden = false;\n      }\n      window.dispatchEvent(new CustomEvent('admin-page-size', { detail: { name, value } }));\n    });\n  }\n  window.addEventListener('audit-write-failed', () => { $('#settings-audit-warning').hidden = false; });\n}\n", "js/admin-preview.js": "import { el } from './common.js?v=9b8843adbff8575d';\nimport { t } from './i18n.js?v=9b8843adbff8575d';\n\n/** CSV excerpt, preserving quoted commas/newlines and omitting an incomplete last record. */\nexport function csvExcerpt(text, truncated) {\n  const rows = []; let row = [], cell = '', quoted = false, afterQuote = false, clipped = truncated;\n  const pushCell = () => { row.push(cell); cell = ''; afterQuote = false; };\n  const pushRow = () => { pushCell(); rows.push(row.slice(0, 20)); if (row.length > 20) clipped = true; row = []; };\n  for (let i = 0; i < text.length; i++) {\n    const c = text[i];\n    if (quoted) {\n      if (c === '\"') { if (text[i + 1] === '\"') { cell += '\"'; i++; } else { quoted = false; afterQuote = true; } }\n      else cell += c;\n    } else if (c === ',' || c === '\\n' || c === '\\r') {\n      if (c === ',') pushCell();\n      else { if (c === '\\r' && text[i + 1] === '\\n') i++; pushRow(); }\n    } else if (c === '\"' && !cell && !afterQuote) quoted = true;\n    else { if (afterQuote || c === '\"') return null; cell += c; }\n    if (rows.length >= 50) { clipped ||= i < text.length - 1; return { rows, clipped }; }\n  }\n  if (!truncated) {\n    if (quoted) return null;\n    if (cell || row.length || afterQuote) pushRow();\n  }\n  return { rows, clipped };\n}\n\nexport function createFilePreview(code, filename) {\n  const scope = el('small', { class: 'muted' });\n  const body = el('div', { class: 'file-preview-body' });\n  const element = el('section', { class: 'file-preview file-wide', 'aria-label': t('preview.title') },\n    el('div', { class: 'file-preview-heading' }, el('b', {}, t('preview.title')), scope), body);\n  let controller, objectUrl, closed = false;\n  function release() { if (objectUrl) URL.revokeObjectURL(objectUrl); objectUrl = null; }\n  async function load() {\n    controller?.abort(); release();\n    const current = new AbortController(); controller = current;\n    const timeout = setTimeout(() => current.abort(), 15000);\n    body.textContent = t('ad.loading'); scope.textContent = '';\n    try {\n      const response = await fetch(`/api/admin/shares/${code}/preview`, { signal: current.signal });\n      if (response.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n      if (!response.ok) throw new Error(t(response.status === 410 || response.status === 404 ? 'ad.fileState.missing' : 'ad.loadFail'));\n      if (response.headers.get('Content-Type')?.startsWith('image/')) {\n        const blob = await response.blob();\n        if (closed || controller !== current) return;\n        if (blob.size > 2 * 1024 * 1024) throw new Error(t('preview.size'));\n        objectUrl = URL.createObjectURL(blob);\n        const img = el('img', { src: objectUrl, alt: filename, class: 'file-preview-image' });\n        img.addEventListener('error', () => { if (!closed && controller === current) { release(); body.textContent = t('preview.image'); } });\n        body.replaceChildren(img);\n        scope.textContent = `${response.headers.get('X-Preview-Width')} \xD7 ${response.headers.get('X-Preview-Height')}`;\n      } else {\n        const data = await response.json();\n        if (closed || controller !== current) return;\n        if (data.kind === 'unsupported') {\n          body.textContent = t(['type', 'size', 'encoding', 'image'].includes(data.reason) ? `preview.${data.reason}` : 'preview.type');\n        } else {\n          if (!['text', 'csv'].includes(data.kind) || typeof data.text !== 'string' || data.text.length > 65536) throw new Error(t('ad.loadFail'));\n          const csv = data.kind === 'csv' ? csvExcerpt(data.text, data.truncated) : null;\n          scope.textContent = t(data.truncated || csv?.clipped ? 'preview.partial' : 'preview.complete');\n          if (csv?.rows.length) {\n            const table = el('table', { class: 'file-preview-table', 'aria-label': t('preview.title') });\n            table.append(el('tbody', {}, ...csv.rows.map(row => el('tr', {}, ...row.map(cell => el('td', {}, cell))))));\n            body.replaceChildren(table);\n          } else body.replaceChildren(el('pre', {}, data.text || t('preview.empty')));\n        }\n      }\n    } catch (error) {\n      if (!closed && controller === current) body.replaceChildren(\n        el('span', { role: 'alert' }, current.signal.aborted ? t('preview.timeout') : error.message || t('ad.loadFail')),\n        el('button', { type: 'button', class: 'btn small ghost', onclick: load }, t('ad.retry')));\n    } finally { clearTimeout(timeout); }\n  }\n  load();\n  return { element, dispose() { closed = true; controller?.abort(); release(); body.replaceChildren(); } };\n}\n", "js/admin-security.js": "import { api } from './common.js?v=9b8843adbff8575d';\nexport function initSecurity() {\n    /* Security workspace backed by authenticated, persistent server actions. */\n    (() => {\n        if (!document.querySelector('#admin-panel'))\n            return;\n        const $ = s => document.querySelector(s), nav = $('#admin-navigation');\n        const t = (zh, en) => document.documentElement.lang === 'en' ? en : zh;\n        const el = (tag, attrs = {}, ...children) => { const n = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) {\n            if (k === 'class')\n                n.className = v;\n            else if (k === 'click')\n                n.addEventListener('click', v);\n            else\n                n.setAttribute(k, v);\n        } for (const c of children.flat())\n            if (c != null)\n                n.append(c instanceof Node ? c : document.createTextNode(String(c))); return n; };\n        let pendingAction = false;\n        const btn = (zh, en, fn, cls = 'btn small ghost') => el('button', { type: 'button', class: cls, click: async (event) => {\n                const button = event.currentTarget;\n                if (button.disabled)\n                    return;\n                let controls = [];\n                try {\n                    const result = fn();\n                    if (result && typeof result.then === 'function') {\n                        controls = [...dialog.querySelectorAll('button,input,select')].map(n => [n, n.disabled]);\n                        for (const [n] of controls)\n                            n.disabled = true;\n                        button.disabled = true;\n                        pendingAction = true;\n                        await result;\n                    }\n                }\n                catch (error) {\n                    if (dialog.open)\n                        fail($('#sec-form-error'), error.message);\n                    else {\n                        toast(error.message);\n                        feedback.classList.add('sec-feedback-error');\n                    }\n                }\n                finally {\n                    pendingAction = false;\n                    if (button.isConnected)\n                        button.disabled = false;\n                    for (const [n, disabled] of controls)\n                        if (n.isConnected)\n                            n.disabled = disabled;\n                }\n            } }, t(zh, en));\n        const input = (id, value = '', attrs = {}) => el('input', { id, value, ...attrs });\n        const field = (zh, en, node) => el('label', { class: 'sec-field', for: node.id }, el('span', {}, t(zh, en)), node.type === 'number' ? numberControl(node, t(zh, en)) : node);\n        const numberControl = (node, label) => window.numberControl(node, label);\n        const date = n => new Intl.DateTimeFormat(document.documentElement.lang === 'en' ? 'en-GB' : 'zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).format(n);\n        const liveBans = () => store.bans.filter(b => b.until === null || b.until > Date.now());\n        const scopes = [['login', '\u540E\u53F0\u767B\u5F55', 'Admin login'], ['upload', '\u4E0A\u4F20', 'Upload'], ['pickup', '\u53D6\u4EF6', 'Pickup']];\n        const scopeName = key => { const s = scopes.find(s => s[0] === key); return t(s[1], s[2]); };\n        const scopeText = list => list.map(scopeName).join(' / ');\n        const scopeBadges = (list, sup = false) => el(sup ? 'sup' : 'div', { class: 'sec-scope-badges' + (sup ? ' sec-scope-sup' : '') }, ...list.map(s => el('span', { 'data-tone': { login: 'blue', upload: 'orange', pickup: 'teal' }[s] }, scopeName(s))));\n        const ipLine = row => el('div', { class: 'sec-ip-line' }, el('b', { class: 'mono' }, row.ip), scopeBadges(row.scopes, true));\n        function scopePicker(values = ['login'], prefix = 'sec-scope', disabled = []) {\n            const checks = scopes.map(([key, zh, en]) => { const n = input(prefix + '-' + key, '', { type: 'checkbox' }); n.disabled = disabled.includes(key); n.checked = !n.disabled && values.includes(key); return { key, n, label: el('label', { class: 'sec-check' }, n, t(zh, en)) }; });\n            return { node: el('fieldset', { class: 'sec-scope-picker' }, el('legend', {}, t('\u4FDD\u62A4\u8303\u56F4', 'Protected actions')), ...checks.map(c => c.label)), values: () => checks.filter(c => c.n.checked && !c.n.disabled && !disabled.includes(c.key)).map(c => c.key) };\n        }\n        const geography = { CN: { label: ['\u4E2D\u56FD', 'China'], regions: { ZJ: ['\u6D59\u6C5F', 'Zhejiang'], GX: ['\u5E7F\u897F', 'Guangxi'], GD: ['\u5E7F\u4E1C', 'Guangdong'], SH: ['\u4E0A\u6D77', 'Shanghai'], BJ: ['\u5317\u4EAC', 'Beijing'] } }, US: { label: ['\u7F8E\u56FD', 'United States'], regions: { CA: ['\u52A0\u5229\u798F\u5C3C\u4E9A', 'California'], NY: ['\u7EBD\u7EA6\u5DDE', 'New York'] } }, SG: { label: ['\u65B0\u52A0\u5761', 'Singapore'], regions: {} }, JP: { label: ['\u65E5\u672C', 'Japan'], regions: { '13': ['\u4E1C\u4EAC\u90FD', 'Tokyo'] } }, DE: { label: ['\u5FB7\u56FD', 'Germany'], regions: {} } };\n        const regionName = r => [geography[r.country] ? t(...geography[r.country].label) : r.country, r.region ? (geography[r.country]?.regions[r.region] ? t(...geography[r.country].regions[r.region]) : r.region) : t('\u5168\u90E8\u5730\u533A', 'All regions')].join(' \xB7 ');\n        const activeRegions = () => store.regions.filter(r => r.enabled && (r.until === null || r.until > Date.now()));\n        const overlaps = (a, b) => a.some(s => b.includes(s));\n        function geoPicker(country = 'CN', region = '', unknown = false) {\n            const countryInput = input('sec-country', country, { list: 'sec-country-options', maxlength: 2, placeholder: unknown ? t('\u7559\u7A7A\u8868\u793A\u672A\u77E5', 'Blank for unknown') : 'CN', autocomplete: 'off' });\n            const countries = el('datalist', { id: 'sec-country-options' }, ...Object.entries(geography).map(([key, g]) => el('option', { value: key }, t(...g.label))));\n            const regionInput = input('sec-region', region, { list: 'sec-region-options', maxlength: 10, placeholder: t('\u5168\u90E8\u7701\u5DDE\uFF08\u53EF\u586B\u4EE3\u7801\uFF09', 'All subdivisions (or enter code)'), autocomplete: 'off' }), regions = el('datalist', { id: 'sec-region-options' });\n            const update = () => { countryInput.value = countryInput.value.toUpperCase(); regions.replaceChildren(...Object.entries(geography[countryInput.value]?.regions || {}).map(([key, label]) => el('option', { value: key }, t(...label)))); };\n            countryInput.addEventListener('input', () => { regionInput.value = ''; update(); });\n            regionInput.addEventListener('input', () => { regionInput.value = regionInput.value.toUpperCase(); });\n            update();\n            const node = el('div', { class: 'sec-form-grid' }, field('\u56FD\u5BB6 / \u5730\u533A\u4EE3\u7801', 'Country code', countryInput), field('\u7701 / \u5DDE\u4EE3\u7801', 'Subdivision code', regionInput), countries, regions);\n            window.attachHelp(node.querySelector('label > span'), el('span', {}, t('\u4F7F\u7528 Cloudflare \u7684\u56FD\u5BB6\u4E0E\u7701\u5DDE\u4EE3\u7801\uFF0C\u5982 CN / ZJ\u3001US / TX\u3002\u7701\u5DDE\u7559\u7A7A\u8868\u793A\u6574\u4E2A\u56FD\u5BB6\uFF1B\u53EF\u9009\u62E9\u5E38\u7528\u4EE3\u7801\u6216\u81EA\u884C\u8F93\u5165\u3002', 'Use Cloudflare country/subdivision codes, e.g. CN / ZJ or US / TX. A blank subdivision covers the country. Select a suggestion or enter a code.')));\n            return { country: countryInput, region: regionInput, node };\n        }\n        /** Four intent-based choices; existing region rules may retain their expiry. */\n        function durationPicker(id, initial = '60', keep = false) {\n            const presets = [['60', '1 \u5C0F\u65F6', '1 hour'], ['1440', '1 \u5929', '1 day'],\n                ['10080', '7 \u5929', '7 days'], ['0', '\u6C38\u4E45', 'Permanent']];\n            const select = el('select', { id }, ...(keep ? [el('option', { value: 'keep' }, t('\u4FDD\u6301\u539F\u5230\u671F\u65F6\u95F4', 'Keep current expiry'))] : []),\n                ...presets.map(([value, zh, en]) => el('option', { value }, t(zh, en))));\n            select.value = initial;\n            return { node: field('\u5C01\u7981\u65F6\u957F', 'Ban duration', select),\n                minutes: () => select.value === 'keep' ? 'keep' : Number(select.value) };\n        }\n        let store = { enabled: false, configRevision: '', rules: { login: { enabled: true, limit: 5, window: 10, duration: 30 }, upload: { enabled: true, limit: 20, window: 10, duration: 30 }, pickup: { enabled: true, limit: 10, window: 10, duration: 30 } }, bans: [], allow: [], regions: [] };\n        const selected = new Set();\n        let tab = 'bans', query = '', kind = 'all', scopeFilter = 'all', page = 1, open = false, failed = false, empty = false, lastFocus = null, loaded = false, loading = false;\n        function validateState(data) {\n            if (!data || typeof data.enabled !== 'boolean' || typeof data.configRevision !== 'string' || !scopes.every(([k]) => data.rules?.[k] && typeof data.rules[k].enabled === 'boolean' && ['limit', 'window', 'duration'].every(n => Number.isInteger(data.rules[k][n]) && data.rules[k][n] > 0)) || !['bans', 'allow', 'regions'].every(k => Array.isArray(data[k]) && data[k].every(r => r && Array.isArray(r.scopes) && r.scopes.every(v => scopes.some(([s]) => s === v)))))\n                throw new Error(t('\u9632\u62A4\u72B6\u6001\u683C\u5F0F\u65E0\u6548', 'Invalid protection response'));\n            return data;\n        }\n        async function refresh() { if (loading)\n            return; loading = true; render(); try {\n            store = validateState(await api('/api/admin/security'));\n            loaded = true;\n            failed = false;\n        }\n        catch (error) {\n            failed = true;\n            throw error;\n        }\n        finally {\n            loading = false;\n            render();\n        } }\n        async function mutate(action, data = {}) { await api('/api/admin/security', { method: 'POST', body: { action, configRevision: store.configRevision, ...data } }); try {\n            store = validateState(await api('/api/admin/security'));\n            failed = false;\n        }\n        catch {\n            failed = true;\n            throw new Error(t('\u64CD\u4F5C\u5DF2\u4FDD\u5B58\uFF0C\u4F46\u72B6\u6001\u5237\u65B0\u5931\u8D25\u3002\u8BF7\u5173\u95ED\u5F39\u7A97\u5E76\u5237\u65B0\uFF0C\u52FF\u91CD\u590D\u63D0\u4EA4\u3002', 'Saved, but refresh failed. Close and refresh without submitting again.'));\n        } }\n        const view = el('section', { id: 'security-view', hidden: '', 'aria-labelledby': 'security-title' });\n        $('#admin-panel').insertBefore(view, $('.admin-footer'));\n        const navButton = btn('\u5B89\u5168\u9632\u62A4', 'Security', () => show(), 'admin-nav-link');\n        navButton.id = 'admin-security-tab';\n        navButton.setAttribute('aria-controls', 'security-view');\n        navButton.setAttribute('aria-pressed', 'false');\n        nav.append(navButton);\n        const dialog = el('dialog', { id: 'security-dialog', class: 'source-dialog sec-dialog', 'aria-labelledby': 'security-dialog-title' });\n        document.body.append(dialog);\n        const old = $('#login-protection');\n        old.hidden = true;\n        const shortcut = el('section', { class: 'settings-section sec-setting-entry' }, el('h4', {}, t('\u5B89\u5168\u9632\u62A4', 'Security')), btn('\u7BA1\u7406\u8BBF\u95EE\u89C4\u5219\u4E0E\u5C01\u7981 \u2192', 'Manage access rules and bans \u2192', () => { $('#settings-dialog').close(); show(); }));\n        old.before(shortcut);\n        const auditEntry = $('.ui-guard-entry');\n        if (auditEntry) {\n            auditEntry.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            auditEntry.onclick = () => show();\n        }\n        function show() { open = true; $('#admin-files-view').hidden = true; $('#admin-audit-view').hidden = true; view.hidden = false; for (const n of nav.querySelectorAll('button'))\n            n.setAttribute('aria-pressed', String(n === navButton)); render(); if (!loaded && !loading)\n            refresh().catch(error => toast(error.message)); }\n        for (const id of ['#admin-files-tab', '#admin-audit-tab'])\n            $(id).addEventListener('click', () => { open = false; view.hidden = true; navButton.setAttribute('aria-pressed', 'false'); });\n        const feedback = el('div', { id: 'sec-feedback', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });\n        document.body.append(feedback);\n        let feedbackTimer;\n        function clearFeedback() { clearTimeout(feedbackTimer); feedback.textContent = ''; feedback.classList.remove('sec-feedback-error'); }\n        function toast(msg) { clearFeedback(); feedback.textContent = msg; feedbackTimer = setTimeout(clearFeedback, 4000); }\n        for (const id of ['#admin-files-tab', '#admin-audit-tab'])\n            $(id).addEventListener('click', clearFeedback);\n        dialog.addEventListener('close', () => { if (!open)\n            clearFeedback(); });\n        const auditLabels = { manualBan: ['\u624B\u52A8\u5C01\u7981 IP', 'Manually ban IP'], allowIP: ['\u6DFB\u52A0\u5141\u8BB8 IP', 'Allow IP'], removeAllow: ['\u79FB\u9664\u5141\u8BB8 IP', 'Remove allowed IP'], securityRules: ['\u4FEE\u6539\u9632\u62A4\u89C4\u5219', 'Change protection rules'], regionAdd: ['\u6DFB\u52A0\u5730\u533A\u5C01\u7981', 'Add region ban'], regionEdit: ['\u4FEE\u6539\u5730\u533A\u5C01\u7981', 'Edit region ban'], regionToggle: ['\u5207\u6362\u5730\u533A\u89C4\u5219\u72B6\u6001', 'Toggle region rule'], regionRemove: ['\u79FB\u9664\u5730\u533A\u5C01\u7981', 'Remove region ban'] };\n        function translateAudit() { for (const host of [$('#audit-body'), $('#audit-detail')]) {\n            const walker = document.createTreeWalker(host, NodeFilter.SHOW_TEXT);\n            let n;\n            while (n = walker.nextNode()) {\n                const label = auditLabels[n.textContent.replace('audit.action.', '')];\n                if (label && n.textContent.startsWith('audit.action.'))\n                    n.textContent = t(...label);\n            }\n        } }\n        for (const host of [$('#audit-body'), $('#audit-detail')])\n            new MutationObserver(translateAudit).observe(host, { childList: true, subtree: true });\n        function close() { dialog.close(); if (lastFocus?.isConnected)\n            lastFocus.focus(); }\n        dialog.addEventListener('cancel', e => { e.preventDefault(); if (!pendingAction)\n            close(); });\n        dialog.addEventListener('keydown', e => { if (e.key !== 'Tab')\n            return; const a = [...dialog.querySelectorAll('button,input,select,textarea')].filter(n => !n.disabled && n.getClientRects().length); if (!a.length)\n            return; const first = a[0], last = a.at(-1); if (e.shiftKey && document.activeElement === first) {\n            e.preventDefault();\n            last.focus();\n        }\n        else if (!e.shiftKey && document.activeElement === last) {\n            e.preventDefault();\n            first.focus();\n        } });\n        function modal(zh, en) { clearFeedback(); lastFocus = document.activeElement; dialog.classList.remove('sec-rules-dialog'); dialog.replaceChildren(); const head = el('div', { class: 'source-heading' }, el('h3', { id: 'security-dialog-title' }, t(zh, en)), btn('\u5173\u95ED', 'Close', close)); const body = el('div', { class: 'source-body sec-dialog-body' }), error = el('p', { id: 'sec-form-error', class: 'error-box', hidden: '', role: 'alert' }), foot = el('div', { class: 'source-footer' }); body.append(error); dialog.append(head, body, foot); dialog.showModal(); return { body, foot, error }; }\n        function fail(node, msg) { node.textContent = msg; node.hidden = false; }\n        function canonical(value) { const s = value.trim(); if (/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(s) && s.split('.').every(x => Number(x) <= 255 && !/^0\\d/.test(x)))\n            return s; if (s.includes(':') && !/[\\s/%\\[\\]]/.test(s)) {\n            try {\n                return new URL('http://[' + s + ']/').hostname.slice(1, -1).toLowerCase();\n            }\n            catch { }\n        } return null; }\n        function logLink(ip) { $('#admin-audit-tab').click(); $('#audit-reset').click(); $('#audit-q').value = ip; $('#audit-filter').requestSubmit(); }\n        function confirmUnban(ips) { const current = liveBans().filter(b => ips.includes(b.ip)); if (!current.length)\n            return; const m = modal('\u89E3\u9664 IP \u5C01\u7981', 'Unban IPs'); m.body.prepend(el('p', {}, t(`\u89E3\u9664 ${current.length} \u4E2A IP \u7684\u5C01\u7981\uFF1F`, `Remove bans for ${current.length} IP addresses?`)), ...current.map(b => el('div', {}, el('b', { class: 'mono' }, b.ip), scopeBadges(b.scopes))), el('small', { class: 'muted' }, t('\u5730\u533A\u5C01\u7981\u53CA\u5176\u4ED6\u8BBF\u95EE\u9650\u5236\u4ECD\u7136\u751F\u6548\u3002', 'Region bans and other access restrictions still apply.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u786E\u8BA4\u89E3\u5C01', 'Unban', async () => { await mutate('unban', { ips }); selected.clear(); close(); render(); toast(t('\u5DF2\u89E3\u9664\u5C01\u7981', 'Bans removed')); }, 'btn primary')); }\n        function openAdd(allow = false) {\n            const m = modal(allow ? '\u6DFB\u52A0\u5141\u8BB8 IP' : '\u624B\u52A8\u5C01\u7981 IP', allow ? 'Allow IP' : 'Ban IP');\n            const ip = input('sec-ip', '', { placeholder: '203.0.113.20 / 2001:db8::1', autocomplete: 'off' }), note = input('sec-note', '', { maxlength: 120, placeholder: t('\u7528\u9014\u6216\u539F\u56E0', 'Purpose or reason') });\n            const duration = allow ? null : durationPicker('sec-duration'), scope = scopePicker(allow ? ['login'] : ['login', 'upload', 'pickup']);\n            m.body.prepend(field('IP \u5730\u5740', 'IP address', ip), scope.node, ...(allow ? [] : [duration.node]), field(allow ? '\u5907\u6CE8' : '\u5C01\u7981\u539F\u56E0', allow ? 'Note' : 'Ban reason', note), el('small', { class: 'muted' }, t(allow ? '\u4EC5\u8C41\u514D\u6240\u9009\u8303\u56F4\u7684\u81EA\u52A8\u5C01\u7981\uFF0C\u4E0D\u7ED5\u8FC7\u624B\u52A8\u5C01\u7981\u3001\u5730\u533A\u89C4\u5219\u6216\u8EAB\u4EFD\u6821\u9A8C\u3002' : '\u5728\u6240\u9009\u8303\u56F4\u62E6\u622A\u540E\u7EED\u8BF7\u6C42\uFF1B\u540E\u53F0\u767B\u5F55\u8303\u56F4\u4E0D\u64A4\u9500\u5DF2\u767B\u5F55\u4F1A\u8BDD\u3002', allow ? 'Exempts automatic bans in selected scopes, never manual bans, region rules or authentication.' : 'Blocks subsequent requests in selected scopes; login bans do not revoke existing sessions.')));\n            window.attachHelp($('#security-dialog-title'), m.body.querySelector(':scope > small'));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn(allow ? '\u6DFB\u52A0\u5141\u8BB8 IP' : '\u786E\u8BA4\u5C01\u7981', allow ? 'Allow IP' : 'Ban IP', async () => {\n                const value = canonical(ip.value), chosen = scope.values();\n                if (!value)\n                    return fail(m.error, t('\u8BF7\u8F93\u5165\u5355\u4E2A\u6709\u6548 IPv4 \u6216 IPv6 \u5730\u5740\u3002', 'Enter one valid IPv4 or IPv6 address.'));\n                if (!chosen.length)\n                    return fail(m.error, t('\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u4FDD\u62A4\u8303\u56F4\u3002', 'Select at least one protected action.'));\n                if ((allow ? store.allow : liveBans()).some(b => b.ip === value))\n                    return fail(m.error, t('\u8BE5\u540D\u5355\u5DF2\u6709\u6B64 IP\uFF0C\u8BF7\u5148\u79FB\u9664\u539F\u8BB0\u5F55\u518D\u8C03\u6574\u8303\u56F4\u3002', 'This list already contains the IP. Remove the existing entry to change its scope.'));\n                if (!note.value.trim())\n                    return fail(m.error, t('\u8BF7\u586B\u5199\u5907\u6CE8\u6216\u539F\u56E0\uFF0C\u4FBF\u4E8E\u540E\u7EED\u5BA1\u8BA1\u3002', 'Enter a note or reason for the audit trail.'));\n                const minutes = allow ? 0 : duration.minutes();\n                await mutate(allow ? 'allow' : 'ban', { ip: value, scopes: chosen, note: note.value.trim(), minutes });\n                tab = allow ? 'allow' : 'bans';\n                query = '';\n                kind = 'all';\n                scopeFilter = 'all';\n                page = 1;\n                empty = false;\n                close();\n                render();\n                toast(t('\u8BB0\u5F55\u5DF2\u6DFB\u52A0', 'Entry added'));\n            }, 'btn primary'));\n            ip.focus();\n        }\n        function removeAllow(row) { const m = modal('\u79FB\u9664\u5141\u8BB8 IP', 'Remove allowed IP'); m.body.prepend(el('p', { class: 'mono' }, row.ip), scopeBadges(row.scopes), el('p', {}, t('\u79FB\u9664\u540E\uFF0C\u8BE5 IP \u5C06\u91CD\u65B0\u9002\u7528\u6240\u9009\u8303\u56F4\u7684\u81EA\u52A8\u5C01\u7981\u89C4\u5219\u3002', 'Automatic ban rules will apply again in these scopes.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u79FB\u9664', 'Remove', async () => { await mutate('removeAllow', { ip: row.ip }); close(); render(); toast(t('\u5DF2\u79FB\u9664\u5141\u8BB8 IP', 'Allow entry removed')); }, 'btn primary')); }\n        function editRules() {\n            const m = modal('\u81EA\u52A8\u9632\u62A4\u89C4\u5219', 'Automatic protection rules'), controls = [];\n            dialog.classList.add('sec-rules-dialog');\n            m.body.prepend(el('div', { class: 'sec-rules-columns', 'aria-hidden': 'true' },\n                el('span', {}, t('\u4FDD\u62A4\u8303\u56F4', 'Protection')),\n                el('span', {}, t('\u7EDF\u8BA1\u7A97\u53E3 / \u5206\u949F', 'Window / min')),\n                el('span', {}, t('\u89E6\u53D1\u6B21\u6570', 'Threshold')),\n                el('span', {}, t('\u5C01\u7981\u65F6\u957F / \u5206\u949F', 'Ban / min'))));\n            for (const [key, zh, en] of scopes) {\n                const rule = store.rules[key], suffix = key === 'login' ? '' : '-' + key;\n                const enabled = input('sec-enabled' + suffix, '', { type: 'checkbox' });\n                enabled.checked = rule.enabled;\n                const limit = input('sec-threshold' + suffix, rule.limit, { type: 'number', min: 1, max: 10000, step: 1 }), minutes = input('sec-window' + suffix, rule.window, { type: 'number', min: 1, max: 1440, step: 1 }), duration = input('sec-ban-minutes' + suffix, rule.duration, { type: 'number', min: 1, max: 10080, step: 1 });\n                const toggle = () => { for (const n of [limit, minutes, duration])\n                    n.disabled = !enabled.checked; };\n                enabled.onchange = toggle;\n                toggle();\n                const descriptions = { login: ['\u7BA1\u7406\u4EE4\u724C\u6821\u9A8C\u5931\u8D25\u6B21\u6570', 'Failed admin-token checks'], upload: ['\u53D1\u8D77\u5206\u4EAB\u6B21\u6570\uFF1B\u6587\u4EF6\u548C\u6587\u672C\u5747\u8BA1\u5165\uFF0C\u5206\u7247\u4E0D\u91CD\u590D\u8BA1\u6570', 'Share creation attempts; files and text count, chunks do not'], pickup: ['\u65E0\u6548\u53D6\u4EF6\u53E3\u4EE4\u6B21\u6570\uFF1B\u6210\u529F\u53D6\u4EF6\u4E0D\u8BA1\u5165', 'Invalid pickup-code attempts; successful pickups do not count'] };\n                m.body.append(el('section', { class: 'sec-rule-section', 'aria-labelledby': 'sec-rule-label-' + key }, el('label', { class: 'sec-check', id: 'sec-rule-label-' + key }, enabled, el('b', {}, t(zh, en))), el('small', { class: 'muted' }, t(...descriptions[key])), el('div', { class: 'sec-rule-fields' }, field('\u7A97\u53E3\uFF08\u5206\u949F\uFF09', 'Window (min)', minutes), field('\u89E6\u53D1\u6B21\u6570', 'Threshold', limit), field('\u5C01\u7981\uFF08\u5206\u949F\uFF09', 'Ban (min)', duration))));\n                controls.push({ key, enabled, limit, minutes, duration });\n                const section = m.body.lastElementChild;\n                window.attachHelp(section.querySelector('.sec-check'), section.querySelector(':scope > small'));\n            }\n            m.body.append(el('small', { class: 'muted' }, t('\u6309 IP \u72EC\u7ACB\u8BA1\u6570\uFF0C\u4EC5\u5C01\u7981\u89E6\u53D1\u7684\u8303\u56F4\u3002\u505C\u7528\u89C4\u5219\u4E0D\u4F1A\u89E3\u9664\u5DF2\u6709\u5C01\u7981\u3002', 'Counters are per IP and scope. Pausing a rule does not remove existing bans.')));\n            window.attachHelp($('#security-dialog-title'), m.body.lastElementChild);\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u4FDD\u5B58\u89C4\u5219', 'Save rules', async () => { if (controls.some(c => c.enabled.checked && [c.limit, c.minutes, c.duration].some(n => !n.value || !n.reportValidity())))\n                return; const rules = structuredClone(store.rules); for (const c of controls)\n                rules[c.key] = { ...rules[c.key], enabled: c.enabled.checked, ...(c.enabled.checked ? { limit: Number(c.limit.value), window: Number(c.minutes.value), duration: Number(c.duration.value) } : {}) }; await mutate('rules', { rules }); close(); render(); toast(t('\u89C4\u5219\u5DF2\u4FDD\u5B58', 'Rules saved')); }, 'btn primary'));\n        }\n        function editRegion(row = null) {\n            const m = modal(row ? '\u7F16\u8F91\u5730\u533A\u5C01\u7981' : '\u6DFB\u52A0\u5730\u533A\u5C01\u7981', row ? 'Edit region ban' : 'Add region ban');\n            const geo = geoPicker(row?.country || 'CN', row?.region || ''), scope = scopePicker(row?.scopes || ['upload', 'pickup'], 'sec-scope', ['login']), reason = input('sec-region-reason', row?.reason || '', { maxlength: 120, placeholder: t('\u586B\u5199\u5C01\u7981\u539F\u56E0', 'Reason for blocking') });\n            const duration = durationPicker('sec-region-duration', row ? 'keep' : '0', !!row);\n            const enabled = input('sec-region-enabled', '', { type: 'checkbox' });\n            enabled.checked = row?.enabled ?? true;\n            m.body.prepend(geo.node, scope.node, el('div', { class: 'sec-form-grid' }, duration.node, el('label', { class: 'sec-check' }, enabled, t('\u542F\u7528\u89C4\u5219', 'Enable rule'))), field('\u539F\u56E0', 'Reason', reason));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u4FDD\u5B58\u89C4\u5219', 'Save rule', async () => {\n                const chosen = scope.values();\n                if (!chosen.length)\n                    return fail(m.error, t('\u81F3\u5C11\u9009\u62E9\u4E00\u4E2A\u4FDD\u62A4\u8303\u56F4\u3002', 'Select at least one protected action.'));\n                if (!reason.value.trim())\n                    return fail(m.error, t('\u8BF7\u586B\u5199\u5C01\u7981\u539F\u56E0\u3002', 'Enter a reason.'));\n                const minutes = duration.minutes();\n                const until = minutes === 'keep' ? row.until : minutes ? Date.now() + minutes * 60000 : null;\n                if (enabled.checked && until !== null && until <= Date.now())\n                    return fail(m.error, t('\u539F\u89C4\u5219\u5DF2\u8FC7\u671F\uFF0C\u8BF7\u91CD\u65B0\u9009\u62E9\u5C01\u7981\u65F6\u957F\u3002', 'This rule expired; choose a new duration.'));\n                const candidate = { country: geo.country.value, region: geo.region.value, scopes: chosen, enabled: enabled.checked, reason: reason.value.trim(), until };\n                if (store.regions.some(r => r !== row && r.country === candidate.country && r.region === candidate.region && overlaps(r.scopes, chosen)))\n                    return fail(m.error, t('\u8BE5\u5730\u533A\u5DF2\u6709\u91CD\u53E0\u8303\u56F4\u7684\u89C4\u5219\uFF0C\u8BF7\u7F16\u8F91\u73B0\u6709\u89C4\u5219\u3002', 'This region has an overlapping rule. Edit that rule instead.'));\n                await mutate('region', { id: row?.id, rule: candidate });\n                tab = 'regions';\n                query = '';\n                scopeFilter = 'all';\n                page = 1;\n                empty = false;\n                close();\n                render();\n                toast(t('\u5730\u533A\u89C4\u5219\u5DF2\u4FDD\u5B58', 'Region rule saved'));\n            }, 'btn primary'));\n        }\n        function toggleRegion(row) {\n            if (row.until !== null && row.until <= Date.now()) {\n                editRegion(row);\n                $('#sec-region-enabled').checked = true;\n                return;\n            }\n            const m = modal(row.enabled ? '\u505C\u7528\u5730\u533A\u89C4\u5219' : '\u542F\u7528\u5730\u533A\u89C4\u5219', row.enabled ? 'Pause region rule' : 'Enable region rule');\n            m.body.prepend(el('b', {}, regionName(row)), scopeBadges(row.scopes), el('p', {}, t(row.enabled ? '\u505C\u7528\u540E\uFF0C\u8BE5\u5730\u533A\u4E0D\u518D\u53D7\u6B64\u89C4\u5219\u9650\u5236\u3002' : '\u542F\u7528\u540E\uFF0C\u5C06\u62E6\u622A\u6B64\u5730\u533A\u5728\u6240\u9009\u8303\u56F4\u7684\u8BF7\u6C42\u3002', row.enabled ? 'This rule will stop blocking the region.' : 'Requests from this region will be blocked in selected scopes.')));\n            m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u786E\u8BA4', 'Confirm', async () => { await mutate('region', { id: row.id, rule: { ...row, enabled: !row.enabled } }); close(); render(); toast(t('\u89C4\u5219\u72B6\u6001\u5DF2\u66F4\u65B0', 'Rule status updated')); }, 'btn primary'));\n        }\n        function removeRegion(row) { const m = modal('\u79FB\u9664\u5730\u533A\u89C4\u5219', 'Remove region rule'); m.body.prepend(el('b', {}, regionName(row)), scopeBadges(row.scopes), el('p', {}, t('\u79FB\u9664\u540E\u4E0D\u518D\u6309\u6B64\u89C4\u5219\u62E6\u622A\uFF1B\u5176\u4ED6\u89C4\u5219\u4ECD\u751F\u6548\u3002', 'This rule will be removed; other rules remain active.'))); m.foot.append(btn('\u53D6\u6D88', 'Cancel', close), btn('\u79FB\u9664', 'Remove', async () => { await mutate('removeRegion', { id: row.id }); close(); render(); toast(t('\u5730\u533A\u89C4\u5219\u5DF2\u79FB\u9664', 'Region rule removed')); }, 'btn primary')); }\n        function testRules() {\n            const m = modal('\u89C4\u5219\u6D4B\u8BD5', 'Test rules'), ip = input('sec-test-ip', '203.0.113.20', { autocomplete: 'off' }), geo = geoPicker('US', '', true), scope = el('select', { id: 'sec-test-scope' }, ...scopes.map(([key, zh, en]) => el('option', { value: key }, t(zh, en))));\n            const count = input('sec-test-count', '0', { type: 'number', min: 0, max: 100000, step: 1 }), hint = el('small', { class: 'muted' }), result = el('div', { id: 'sec-test-result', role: 'status', 'aria-live': 'polite', hidden: '' });\n            const update = () => { const key = scope.value, r = store.rules[key]; hint.textContent = t(`\u586B\u5165\u8BE5 IP \u6700\u8FD1 ${r.window} \u5206\u949F\u7684${key === 'upload' ? '\u53D1\u8D77\u5206\u4EAB' : '\u6821\u9A8C\u5931\u8D25'}\u603B\u6B21\u6570\uFF08\u542B\u672C\u6B21\uFF09\uFF1B\u6D4B\u8BD5\u4E0D\u4F1A\u5199\u5165\u5C01\u7981\u3002`, `Enter ${key === 'upload' ? 'share attempts' : 'failed checks'} in the last ${r.window} min, including this request. Testing does not create a ban.`); result.hidden = true; };\n            scope.onchange = update;\n            update();\n            m.body.prepend(el('div', { class: 'sec-form-grid' }, field('\u6A21\u62DF\u8BF7\u6C42 IP', 'Simulated request IP', ip), field('\u8BF7\u6C42\u8303\u56F4', 'Request scope', scope)), geo.node, field('\u7A97\u53E3\u5185\u6B21\u6570\uFF08\u542B\u672C\u6B21\uFF09', 'Count in window (including this request)', count), hint, el('small', { class: 'muted' }, t('\u5C5E\u5730\u7531\u4F60\u624B\u52A8\u6307\u5B9A\uFF0C\u4E0D\u67E5\u8BE2\u6B64 IP \u7684\u5B9E\u9645\u4F4D\u7F6E\u3002\u653E\u884C\u4EC5\u4EE3\u8868\u901A\u8FC7\u9632\u62A4\uFF0C\u4ECD\u9700\u6EE1\u8DB3\u767B\u5F55\u3001\u5206\u4EAB\u53CA\u53D6\u4EF6\u6821\u9A8C\u3002', 'Location is entered manually, not looked up. Passing protection does not bypass authentication or share permissions.')), result);\n            window.attachHelp(m.body.querySelector('label[for=\"sec-test-count\"] > span'), hint);\n            window.attachHelp($('#security-dialog-title'), m.body.querySelector(':scope > small'));\n            for (const n of [ip, geo.country, geo.region, count])\n                n.addEventListener('input', () => { result.hidden = true; });\n            m.foot.append(btn('\u5173\u95ED', 'Close', close), btn('\u6D4B\u8BD5\u89C4\u5219', 'Test rules', async () => {\n                result.hidden = true;\n                const address = canonical(ip.value);\n                if (!address)\n                    return fail(m.error, t('\u8BF7\u8F93\u5165\u6709\u6548 IP \u5730\u5740\u3002', 'Enter a valid IP address.'));\n                if (!count.value || !count.reportValidity())\n                    return;\n                m.error.hidden = true;\n                const key = scope.value;\n                const { blocked, reason } = await api('/api/admin/security/test', { method: 'POST', body: { ip: address, scope: key, country: geo.country.value, region: geo.region.value, count: Number(count.value) } });\n                result.className = 'sec-test-result ' + (blocked ? 'sec-test-blocked' : 'sec-test-pass');\n                result.replaceChildren(el('b', {}, t(blocked ? '\u62E6\u622A' : '\u9632\u62A4\u653E\u884C', blocked ? 'Blocked' : 'Passes protection') + ' \xB7 ' + scopeName(key)), el('p', {}, reason), ...(!geo.country.value ? [el('small', { class: 'muted' }, t('\u5C5E\u5730\u672A\u77E5\uFF0C\u672A\u5339\u914D\u5730\u533A\u89C4\u5219\uFF1BIP \u4E0E\u81EA\u52A8\u9632\u62A4\u4ECD\u53C2\u4E0E\u5224\u65AD\u3002', 'Unknown location: region rules skipped; IP and automatic rules still apply.'))] : []));\n                result.hidden = false;\n            }, 'btn primary'));\n        }\n        function details(row) { const m = modal('\u5C01\u7981\u8BE6\u60C5', 'Ban details'); const pairs = [[t('IP \u5730\u5740', 'IP address'), row.ip], [t('\u4FDD\u62A4\u8303\u56F4', 'Scope'), scopeText(row.scopes)], [t('\u65B9\u5F0F', 'Type'), row.kind === 'auto' ? t('\u81EA\u52A8\u5C01\u7981', 'Automatic') : t('\u624B\u52A8\u5C01\u7981', 'Manual')], [t('\u539F\u56E0', 'Reason'), row.reason], [t('\u89E6\u53D1\u6B21\u6570', 'Trigger count'), row.kind === 'auto' ? row.failures : '\u2014'], [t('\u5C01\u7981\u65F6\u95F4', 'Banned at'), date(row.at)], [t('\u89E3\u5C01\u65F6\u95F4', 'Expires'), row.until === null ? t('\u6C38\u4E45', 'Never') : date(row.until)]]; m.body.prepend(el('dl', { class: 'sec-details' }, ...pairs.map(([k, v]) => el('div', {}, el('dt', { class: 'muted' }, k), el('dd', {}, v))))); m.foot.append(btn('\u67E5\u770B\u65E5\u5FD7', 'View logs', () => { close(); logLink(row.ip); }), btn('\u5173\u95ED', 'Close', close), btn('\u89E3\u5C01', 'Unban', () => { close(); confirmUnban([row.ip]); }, 'btn primary')); }\n        function rows() { if (empty)\n            return []; return (tab === 'bans' ? liveBans() : tab === 'regions' ? store.regions : store.allow).filter(b => (tab !== 'bans' || kind === 'all' || b.kind === kind) && (scopeFilter === 'all' || b.scopes.includes(scopeFilter)) && (!query || [b.ip, b.note || b.reason, b.country ? regionName(b) : '', scopeText(b.scopes)].join(' ').toLowerCase().includes(query.toLowerCase()))); }\n        function exportRows() { if (failed || loading || !store.enabled || filtersDirty())\n            return; const items = rows(), data = tab === 'regions' ? [['Country', 'Subdivision', 'Scope', 'Enabled', 'Reason', 'Expires'], ...items.map(r => [r.country, r.region, r.scopes.join('|'), r.enabled, r.reason, r.until === null ? 'Never' : new Date(r.until).toISOString()])] : [['IP', 'Scope', tab === 'bans' ? 'Type' : 'Note', tab === 'bans' ? 'Reason' : 'Created', ...(tab === 'bans' ? ['Expires'] : [])], ...items.map(b => tab === 'bans' ? [b.ip, b.scopes.join('|'), b.kind, b.reason, b.until === null ? 'Never' : new Date(b.until).toISOString()] : [b.ip, b.scopes.join('|'), b.note, new Date(b.created).toISOString()])]; const csv = '\\uFEFF' + data.map(r => r.map(v => '\"' + String(v).replace(/^[=+\\-@]/, \"'$&\").replaceAll('\"', '\"\"') + '\"').join(',')).join('\\r\\n'); const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); const a = el('a', { href: url, download: 'security-' + tab + '.csv' }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); toast(t('\u5DF2\u5BFC\u51FA\u5168\u90E8\u5339\u914D\u8BB0\u5F55', 'All matching records exported')); }\n        function filtersDirty() { return $('#sec-search') && ($('#sec-search').value.trim() !== query || ($('#sec-kind')?.value || 'all') !== kind || $('#sec-scope-filter').value !== scopeFilter); }\n        function syncExport() {\n            const dirty = filtersDirty(), exportButton = $('#sec-export'), pending = $('#sec-filter-pending');\n            if (exportButton)\n                exportButton.disabled = failed || loading || !store.enabled || dirty || !rows().length;\n            if (pending)\n                pending.hidden = !dirty;\n        }\n        function render() {\n            const focusId = view.contains(document.activeElement) ? document.activeElement.id : null;\n            clearFeedback();\n            const active = liveBans();\n            for (const ip of selected)\n                if (!active.some(b => b.ip === ip))\n                    selected.delete(ip);\n            navButton.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            view.replaceChildren();\n            const actions = el('div', { class: 'sec-actions' }, btn('\u9632\u62A4\u89C4\u5219', 'Rules', editRules), btn('\u89C4\u5219\u6D4B\u8BD5', 'Test rules', testRules));\n            actions.children[0].id = 'sec-rules';\n            actions.children[1].id = 'sec-test';\n            if (failed || loading || !store.enabled)\n                for (const n of actions.children)\n                    n.disabled = true;\n            const title = el('h2', { id: 'security-title' }, t('\u5B89\u5168\u9632\u62A4', 'Security'));\n            view.append(el('div', { class: 'sec-heading' }, title, actions));\n            window.attachHelp(title, el('span', {}, t('\u4FDD\u62A4\u540E\u53F0\u767B\u5F55\u3001\u4E0A\u4F20\u548C\u53D6\u4EF6\u3002\u5730\u533A\u5C01\u7981\u4EC5\u4F5C\u7528\u4E8E\u4E0A\u4F20\u548C\u53D6\u4EF6\uFF1B\u5141\u8BB8\u540D\u5355\u53EA\u8C41\u514D\u81EA\u52A8\u5C01\u7981\u3002', 'Protects admin login, uploads and pickups. Region bans apply only to uploads and pickups; allowed IPs bypass automatic bans only.')));\n            const enabled = (!failed && !loading && store.enabled) ? Object.values(store.rules).filter(r => r.enabled).length : 0;\n            const summary = el('div', { class: 'sec-summary' }, el('div', { class: 'sec-auto-summary' }, el('b', { class: failed ? 'sec-warning' : enabled ? 'sec-enabled' : 'muted' }, failed || loading || !store.enabled ? t(loading ? '\u6B63\u5728\u8BFB\u53D6' : failed ? '\u72B6\u6001\u672A\u77E5' : '\u672A\u542F\u7528', loading ? 'Loading' : failed ? 'Status unknown' : 'Unavailable') : enabled ? t(`\u81EA\u52A8\u9632\u62A4 ${enabled} / 3 \u5DF2\u542F\u7528`, `${enabled} / 3 automatic rules enabled`) : t('\u81EA\u52A8\u9632\u62A4\u5DF2\u6682\u505C', 'Automatic protection paused'))), el('div', { class: 'sec-metric' }, el('b', { id: 'sec-ip-total' }, failed || loading || !store.enabled ? '\u2014' : empty ? 0 : active.length), el('small', { class: 'muted' }, t('\u5F53\u524D\u5C01\u7981 IP', 'Active IP bans'))), el('div', { class: 'sec-metric' }, el('b', { id: 'sec-region-total' }, failed || loading || !store.enabled ? '\u2014' : empty ? 0 : activeRegions().length), el('small', { class: 'muted' }, t('\u751F\u6548\u5730\u533A\u89C4\u5219', 'Active region rules'))));\n            const ruleGrid = el('div', { class: 'sec-rule-grid' }), triggers = { login: ['\u4EE4\u724C\u6821\u9A8C\u5931\u8D25', 'Failed token checks'], upload: ['\u53D1\u8D77\u6587\u4EF6\u6216\u6587\u672C\u5206\u4EAB\uFF0C\u5206\u7247\u4E0D\u91CD\u590D\u8BA1\u6570', 'File or text share attempts; chunks do not count'], pickup: ['\u65E0\u6548\u53E3\u4EE4\uFF0C\u6210\u529F\u53D6\u4EF6\u4E0D\u8BA1\u5165', 'Invalid codes; successful pickups do not count'] };\n            if (failed || loading || !store.enabled)\n                summary.firstChild.append(el('small', { class: 'muted' }, t('\u65E0\u6CD5\u8BFB\u53D6\u9632\u62A4\u72B6\u6001\uFF0C\u8BF7\u5237\u65B0\u91CD\u8BD5', 'Unable to read protection status; refresh to retry')));\n            else {\n                for (const [key] of scopes) {\n                    const r = store.rules[key], name = el('b', {}, scopeName(key));\n                    const rule = el('div', { class: 'sec-rule-summary' }, name, el('small', { class: 'muted' }, r.enabled ? t(`${r.window} \u5206\u949F ${r.limit} \u6B21`, `${r.limit} in ${r.window} min`) : t('\u5DF2\u6682\u505C', 'Paused')), el('small', { class: r.enabled ? 'muted' : 'sec-rule-inactive' }, r.enabled ? t(`\u5C01\u7981 ${r.duration} \u5206\u949F`, `${r.duration} min ban`) : t('\u4E0D\u89E6\u53D1\u81EA\u52A8\u5C01\u7981', 'No automatic ban')));\n                    ruleGrid.append(rule);\n                    window.attachHelp(name, el('span', {}, t(...triggers[key])));\n                }\n                summary.firstChild.append(ruleGrid);\n            }\n            view.append(summary);\n            const tabs = el('div', { class: 'sec-tabs', role: 'group', 'aria-label': t('\u9632\u62A4\u540D\u5355', 'Protection lists') });\n            for (const [key, zh, en] of [['bans', '\u5C01\u7981 IP', 'Banned IPs'], ['regions', '\u5730\u533A\u5C01\u7981', 'Region bans'], ['allow', '\u5141\u8BB8\u540D\u5355', 'Allowed IPs']]) {\n                const b = btn(zh, en, () => { tab = key; page = 1; query = ''; kind = 'all'; scopeFilter = 'all'; selected.clear(); render(); });\n                b.setAttribute('aria-pressed', String(tab === key));\n                b.dataset.secTab = key;\n                tabs.append(b);\n            }\n            const add = tab === 'bans' ? btn('\u624B\u52A8\u5C01\u7981', 'Ban IP', () => openAdd(false), 'btn small primary') : tab === 'regions' ? btn('\u6DFB\u52A0\u5730\u533A', 'Add region', () => editRegion(), 'btn small primary') : btn('\u6DFB\u52A0\u5141\u8BB8 IP', 'Allow IP', () => openAdd(true), 'btn small primary');\n            add.id = 'sec-add';\n            add.disabled = failed || loading || !store.enabled;\n            view.append(el('div', { class: 'sec-list-heading' }, tabs, add));\n            const search = input('sec-search', query, { type: 'search', placeholder: t(tab === 'regions' ? '\u641C\u7D22\u5730\u533A / \u539F\u56E0' : tab === 'allow' ? '\u641C\u7D22 IP / \u5907\u6CE8' : '\u641C\u7D22 IP / \u539F\u56E0', tab === 'regions' ? 'Search region / reason' : tab === 'allow' ? 'Search IP / note' : 'Search IP / reason'), 'aria-label': t('\u641C\u7D22\u540D\u5355', 'Search list') });\n            const filter = el('select', { id: 'sec-kind', 'aria-label': t('\u5C01\u7981\u65B9\u5F0F', 'Ban type') }, el('option', { value: 'all' }, t('\u5168\u90E8\u65B9\u5F0F', 'All types')), el('option', { value: 'auto' }, t('\u81EA\u52A8\u5C01\u7981', 'Automatic')), el('option', { value: 'manual' }, t('\u624B\u52A8\u5C01\u7981', 'Manual')));\n            filter.value = kind;\n            const scope = el('select', { id: 'sec-scope-filter', 'aria-label': t('\u4FDD\u62A4\u8303\u56F4', 'Protected action') }, el('option', { value: 'all' }, t('\u5168\u90E8\u8303\u56F4', 'All scopes')), ...scopes.filter(([key]) => tab !== 'regions' || key !== 'login').map(([key, zh, en]) => el('option', { value: key }, t(zh, en))));\n            scope.value = scopeFilter;\n            const apply = () => { query = search.value.trim(); kind = filter.value; scopeFilter = scope.value; page = 1; selected.clear(); draw(); };\n            search.addEventListener('input', syncExport);\n            filter.onchange = syncExport;\n            scope.onchange = syncExport;\n            const exportButton = btn('\u5BFC\u51FA\u7B5B\u9009\u7ED3\u679C', 'Export results', exportRows);\n            exportButton.id = 'sec-export';\n            exportButton.title = t('\u5BFC\u51FA\u5F53\u524D\u7C7B\u522B\u548C\u7B5B\u9009\u6761\u4EF6\u4E0B\u7684\u5168\u90E8\u8BB0\u5F55\uFF0C\u5305\u542B\u6240\u6709\u5206\u9875\u3002', 'Export all matching records in this category across pages.');\n            const submit = btn('\u7B5B\u9009', 'Filter', () => { });\n            submit.type = 'submit';\n            const form = el('form', { class: 'sec-toolbar', id: 'sec-filter' }, el('div', { class: 'sec-actions sec-filters' }, search, scope, ...(tab === 'bans' ? [filter] : [])), el('div', { class: 'sec-actions sec-filter-actions' }, submit, btn('\u91CD\u7F6E', 'Reset', () => { query = ''; kind = 'all'; scopeFilter = 'all'; page = 1; selected.clear(); render(); }), exportButton));\n            form.onsubmit = e => { e.preventDefault(); apply(); };\n            view.append(form, el('small', { id: 'sec-filter-pending', class: 'sec-filter-pending', role: 'status', hidden: '' }, t('\u7B5B\u9009\u6761\u4EF6\u5DF2\u66F4\u6539\uFF0C\u8BF7\u5148\u70B9\u51FB\u201C\u7B5B\u9009\u201D\u3002', 'Filters changed. Apply them before exporting.')), el('div', { id: 'sec-list' }));\n            draw();\n            if (focusId)\n                document.getElementById(focusId)?.focus();\n        }\n        function draw() {\n            const host = $('#sec-list');\n            if (!host)\n                return;\n            if (loading || (!store.enabled && !failed)) {\n                host.replaceChildren(el('div', { class: 'sec-empty', role: 'status' }, loading ? t('\u6B63\u5728\u8BFB\u53D6\u9632\u62A4\u72B6\u6001\u2026', 'Loading protection\u2026') : t('\u5B89\u5168\u9632\u62A4\u672A\u542F\u7528\uFF0C\u9700\u8981\u7ED1\u5B9A R2 \u6216 D1\u3002', 'Protection unavailable. Bind R2 or D1.')));\n                syncExport();\n                return;\n            }\n            const focusId = document.activeElement?.id;\n            host.replaceChildren();\n            if (failed) {\n                syncExport();\n                host.append(el('div', { class: 'sec-empty', role: 'alert' }, t('\u9632\u62A4\u6570\u636E\u52A0\u8F7D\u5931\u8D25', 'Failed to load protection data'), btn('\u91CD\u8BD5', 'Retry', () => refresh())));\n                return;\n            }\n            $('#sec-ip-total').textContent = empty ? 0 : liveBans().length;\n            $('#sec-region-total').textContent = empty ? 0 : activeRegions().length;\n            for (const ip of selected)\n                if (!liveBans().some(b => b.ip === ip))\n                    selected.delete(ip);\n            const items = rows(), max = Math.max(1, Math.ceil(items.length / 5));\n            page = Math.min(page, max);\n            const visible = items.slice((page - 1) * 5, page * 5);\n            const prev = btn('\u4E0A\u4E00\u9875', 'Previous', () => { page--; draw(); }), next = btn('\u4E0B\u4E00\u9875', 'Next', () => { page++; draw(); });\n            prev.disabled = page <= 1;\n            next.disabled = page >= max;\n            const bulk = btn(t(`\u89E3\u5C01\u6240\u9009\uFF08${selected.size}\uFF09`, `Unban selected (${selected.size})`), `Unban selected (${selected.size})`, () => confirmUnban([...selected]));\n            bulk.id = 'sec-bulk';\n            bulk.disabled = !selected.size;\n            host.append(el('div', { class: 'sec-pagination' }, el('div', { class: 'sec-actions' }, el('small', { class: 'muted' }, t(`\u5171 ${items.length} \u6761 \xB7 \u7B2C ${page} / ${max} \u9875`, `${items.length} entries \xB7 Page ${page} / ${max}`)), ...(tab === 'bans' && selected.size ? [el('span', { class: 'sec-selection-count' }, t(`\u5DF2\u9009 ${selected.size} \u9879`, `Selected ${selected.size}`)), bulk, btn('\u53D6\u6D88\u9009\u62E9', 'Clear selection', () => { selected.clear(); draw(); })] : [])), el('div', { class: 'sec-actions' }, prev, next, btn('\u5237\u65B0', 'Refresh', async () => { await refresh(); toast(t('\u5DF2\u5237\u65B0', 'Refreshed')); }))));\n            syncExport();\n            if (!items.length) {\n                host.append(el('div', { class: 'sec-empty' }, query ? t('\u6CA1\u6709\u5339\u914D\u7684\u8BB0\u5F55', 'No matching records') : tab === 'bans' ? t('\u5F53\u524D\u6CA1\u6709\u5C01\u7981 IP', 'No active bans') : tab === 'regions' ? t('\u5C1A\u672A\u6DFB\u52A0\u5730\u533A\u89C4\u5219', 'No region rules') : t('\u5C1A\u672A\u6DFB\u52A0\u5141\u8BB8 IP', 'No allowed IPs')));\n                return;\n            }\n            if (tab === 'regions') {\n                drawRegions(host, visible);\n                return;\n            }\n            const table = el('table', { class: 'sec-table', 'aria-label': t(tab === 'bans' ? '\u5C01\u7981\u5217\u8868' : '\u5141\u8BB8\u540D\u5355', tab === 'bans' ? 'Banned IPs' : 'Allowed IPs') });\n            const header = el('tr');\n            if (tab === 'bans') {\n                const all = input('sec-select-page', '', { type: 'checkbox', 'aria-label': t('\u9009\u62E9\u672C\u9875', 'Select this page') });\n                all.checked = visible.every(r => selected.has(r.ip));\n                all.indeterminate = !all.checked && visible.some(r => selected.has(r.ip));\n                all.onchange = () => { for (const r of visible)\n                    all.checked ? selected.add(r.ip) : selected.delete(r.ip); draw(); };\n                header.append(el('th', {}, all));\n            }\n            const cols = tab === 'bans' ? [[\"IP / \u4FDD\u62A4\u8303\u56F4\", \"IP / scope\"], [\"\u539F\u56E0\", \"Reason\"], [\"\u89E6\u53D1\u6B21\u6570\", \"Count\"], [\"\u5C01\u7981\u65F6\u95F4\", \"Banned at\"], [\"\u81EA\u52A8\u89E3\u5C01\", \"Expires\"], [\"\u64CD\u4F5C\", \"Actions\"]] : [[\"IP / \u8C41\u514D\u8303\u56F4\", \"IP / exempt scope\"], [\"\u5907\u6CE8\", \"Note\"], [\"\u6DFB\u52A0\u65F6\u95F4\", \"Added\"], [\"\u64CD\u4F5C\", \"Actions\"]];\n            for (const [zh, en] of cols)\n                header.append(el('th', {}, t(zh, en)));\n            table.append(el('thead', {}, header));\n            const body = el('tbody');\n            for (const r of visible) {\n                const row = el('tr');\n                if (tab === 'bans') {\n                    const check = input('sec-select-' + r.ip, '', { type: 'checkbox', 'aria-label': t('\u9009\u62E9 ' + r.ip, 'Select ' + r.ip) });\n                    check.checked = selected.has(r.ip);\n                    check.onchange = () => { check.checked ? selected.add(r.ip) : selected.delete(r.ip); draw(); };\n                    row.append(el('td', { class: 'sec-select' }, check));\n                    const remaining = r.until === null ? t('\u6C38\u4E45', 'Permanent') : t(`\u5269\u4F59 ${Math.max(1, Math.ceil((r.until - Date.now()) / 60000))} \u5206\u949F`, `${Math.max(1, Math.ceil((r.until - Date.now()) / 60000))} min left`);\n                    row.append(el('td', { 'data-label': 'IP', class: 'sec-address' }, ipLine(r)), el('td', { 'data-label': t('\u539F\u56E0', 'Reason') }, el('div', { class: 'ui-record-line' }, el('span', {}, r.reason), el('sup', { class: 'ui-record-sup', 'data-tone': r.kind === 'auto' ? 'violet' : 'slate' }, r.kind === 'auto' ? t('\u81EA\u52A8\u5C01\u7981', 'Automatic') : t('\u624B\u52A8\u5C01\u7981', 'Manual')))), el('td', { 'data-label': t('\u89E6\u53D1\u6B21\u6570', 'Count') }, r.kind === 'auto' ? r.failures : '\u2014'), el('td', { 'data-label': t('\u5C01\u7981\u65F6\u95F4', 'Banned at') }, date(r.at)), el('td', { 'data-label': t('\u81EA\u52A8\u89E3\u5C01', 'Expires') }, remaining, ...(r.until === null ? [] : [el('small', { class: 'muted' }, date(r.until))])), el('td', { class: 'sec-row-actions' }, btn('\u8BE6\u60C5', 'Details', () => details(r)), btn('\u65E5\u5FD7', 'Logs', () => logLink(r.ip)), btn('\u89E3\u5C01', 'Unban', () => confirmUnban([r.ip]))));\n                }\n                else\n                    row.append(el('td', { 'data-label': 'IP', class: 'sec-address' }, ipLine(r)), el('td', { 'data-label': t('\u5907\u6CE8', 'Note') }, r.note), el('td', { 'data-label': t('\u6DFB\u52A0\u65F6\u95F4', 'Added') }, date(r.created)), el('td', { class: 'sec-row-actions' }, btn('\u65E5\u5FD7', 'Logs', () => logLink(r.ip)), btn('\u79FB\u9664', 'Remove', () => removeAllow(r))));\n                body.append(row);\n            }\n            table.append(body);\n            host.append(el('div', { class: 'sec-table-wrap' }, table));\n            if (focusId?.startsWith('sec-select'))\n                document.getElementById(focusId)?.focus();\n        }\n        function drawRegions(host, items) {\n            const table = el('table', { class: 'sec-table sec-region-table', 'aria-label': t('\u5730\u533A\u5C01\u7981\u89C4\u5219', 'Region ban rules') }), head = el('tr');\n            for (const [zh, en] of [['\u5730\u533A / \u8303\u56F4', 'Region / scope'], ['\u539F\u56E0', 'Reason'], ['\u72B6\u6001', 'Status'], ['\u5230\u671F\u65F6\u95F4', 'Expires'], ['\u64CD\u4F5C', 'Actions']])\n                head.append(el('th', {}, t(zh, en)));\n            table.append(el('thead', {}, head));\n            const body = el('tbody');\n            for (const r of items) {\n                const expired = r.until !== null && r.until <= Date.now(), active = r.enabled && !expired;\n                body.append(el('tr', {}, el('td', { class: 'sec-address' }, el('div', { class: 'sec-ip-line' }, el('b', {}, regionName(r)), scopeBadges(r.scopes, true))), el('td', { 'data-label': t('\u539F\u56E0', 'Reason') }, r.reason), el('td', { 'data-label': t('\u72B6\u6001', 'Status') }, el('span', { class: active ? 'sec-enabled' : 'muted' }, expired ? t('\u5DF2\u8FC7\u671F', 'Expired') : r.enabled ? t('\u751F\u6548\u4E2D', 'Active') : t('\u5DF2\u505C\u7528', 'Paused'))), el('td', { 'data-label': t('\u5230\u671F\u65F6\u95F4', 'Expires') }, r.until === null ? t('\u6C38\u4E45', 'Never') : date(r.until)), el('td', { class: 'sec-row-actions' }, btn('\u7F16\u8F91', 'Edit', () => editRegion(r)), btn(r.enabled && !expired ? '\u505C\u7528' : '\u542F\u7528', r.enabled && !expired ? 'Pause' : 'Enable', () => toggleRegion(r)), btn('\u65E5\u5FD7', 'Logs', () => logLink(r.id)), btn('\u79FB\u9664', 'Remove', () => removeRegion(r)))));\n            }\n            table.append(body);\n            host.append(el('div', { class: 'sec-table-wrap' }, table));\n        }\n        $('#lang-btn').addEventListener('click', () => { navButton.textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            shortcut.querySelector('h4').textContent = t('\u5B89\u5168\u9632\u62A4', 'Security');\n            shortcut.querySelector('button').textContent = t('\u7BA1\u7406\u8BBF\u95EE\u89C4\u5219\u4E0E\u5C01\u7981 \u2192', 'Manage access rules and bans \u2192'); if (open)\n            render(); });\n        setInterval(() => { if (open && !document.hidden && !dialog.open && !loading && $('#sec-list') && !filtersDirty())\n            refresh().catch(error => toast(error.message)); }, 60000);\n    })();\n}\n", "js/admin-share-editor.js": "import { api, el, fmtDate } from './common.js?v=9b8843adbff8575d';\nimport { t } from './i18n.js?v=9b8843adbff8575d';\n\nconst MAX_COUNT = 2147483647;\nconst WEEK = 7 * 86400000;\nexport function ruleStatus(rules, now = Date.now()) {\n  if (rules.expireAt !== null && rules.expireAt <= now) return 'expired';\n  if (rules.maxPickups !== null && rules.pickupCount >= rules.maxPickups) return 'exhausted';\n  return 'active';\n}\n/** Selecting a status changes visible values; the server still derives the saved status. */\nexport function linkStatus(rules, status, now = Date.now()) {\n  const next = { ...rules };\n  if (status === 'expired') next.expireAt = now;\n  else {\n    if (next.expireAt !== null && next.expireAt <= now) next.expireAt = now + WEEK;\n    if (status === 'active' && next.maxPickups !== null && next.pickupCount >= next.maxPickups)\n      next.maxPickups = next.pickupCount < MAX_COUNT ? next.pickupCount + 1 : null;\n    if (status === 'exhausted') {\n      next.maxPickups ??= Math.max(1, next.pickupCount);\n      next.pickupCount = Math.max(next.pickupCount, next.maxPickups);\n    }\n  }\n  return next;\n}\nfunction localDateTime(value) {\n  const date = new Date(value);\n  const pad = n => String(n).padStart(2, '0');\n  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;\n}\n\nexport function createShareEditor(detail, { onSaved, onCancel, onBusy }) {\n  const form = el('form', { id: 'share-edit-form', class: 'share-edit-form' });\n  const number = (id, value, min) => el('input', { id, type: 'number', value, min, max: MAX_COUNT, step: 1, required: true });\n  const count = number('share-edit-count', detail.pickupCount, 0);\n  const limit = number('share-edit-limit', detail.maxPickups ?? Math.max(1, detail.pickupCount+1), 1);\n  const unlimited = el('input', { id: 'share-edit-unlimited', type: 'checkbox' });\n  unlimited.checked = detail.maxPickups === null;\n  const permanent = el('input', { id: 'share-edit-permanent', type: 'checkbox' });\n  permanent.checked = detail.expireAt === null;\n  const expiry = el('input', { id: 'share-edit-expiry', type: 'datetime-local', step: 60, min: '1970-01-01T00:00', max: '9999-12-31T23:59', required: true });\n  let exactExpiry = detail.expireAt;\n  let displayedExpiry = localDateTime(exactExpiry ?? Date.now()+WEEK);\n  expiry.value = displayedExpiry;\n  const status = el('select', { id: 'share-edit-status' }, ...['active','expired','exhausted'].map(value => el('option', { value }, t('ad.st.'+value))));\n  status.value = detail.status;\n  const field = (label, control) => el('div', { class: 'share-edit-field' }, el('label', { htmlFor: control.id }, label), control);\n  const check = (label, control) => el('label', { class: 'share-edit-check' }, control, label);\n  const limitField = field(t('ad.editLimit'), limit);\n  limitField.append(check(t('ad.editUnlimited'), unlimited));\n  const expiryField = field(t('ad.th.expire'), expiry);\n  expiryField.classList.add('share-edit-expiry');\n  expiryField.append(check(t('ad.forever'), permanent));\n  const linked = el('p', { class: 'share-edit-linked muted', role: 'status', hidden: true });\n  const error = el('p', { id: 'share-edit-error', class: 'error-box', role: 'alert', hidden: true });\n  const reload = el('button', { type: 'button', class: 'btn small ghost', hidden: true, onclick: onCancel }, t('ad.editReload'));\n  const save = el('button', { type: 'submit', class: 'btn primary' }, t('ad.editSave'));\n  const cancel = el('button', { type: 'button', class: 'btn ghost', onclick: onCancel }, t('ad.editCancel'));\n  form.append(el('strong', { class: 'share-edit-filename', title: detail.filename || '' }, detail.filename || t('ad.unnamed')),\n    el('div', { class: 'share-edit-grid' }, field(t('ad.editCount'), count), limitField, field(t('ad.th.status'), status), expiryField),\n    linked, error, reload, el('div', { class: 'share-edit-actions' }, cancel, save));\n  function values() {\n    return { pickupCount: count.valueAsNumber, maxPickups: unlimited.checked ? null : limit.valueAsNumber,\n      expireAt: permanent.checked ? null : expiry.value === displayedExpiry && exactExpiry !== null ? exactExpiry : new Date(expiry.value).getTime() };\n  }\n  function sync() { limit.disabled = unlimited.checked; expiry.disabled = permanent.checked; }\n  const valid = rules => Number.isSafeInteger(rules.pickupCount) && rules.pickupCount >= 0 && rules.pickupCount <= MAX_COUNT &&\n    (rules.maxPickups === null || (Number.isSafeInteger(rules.maxPickups) && rules.maxPickups >= 1 && rules.maxPickups <= MAX_COUNT)) &&\n    (rules.expireAt === null || Number.isFinite(rules.expireAt));\n  for (const control of [count, limit, unlimited, expiry, permanent]) {\n    control.addEventListener('input', () => { sync(); linked.hidden = true; const rules = values(); if (valid(rules)) status.value = ruleStatus(rules); });\n  }\n  status.addEventListener('change', () => {\n    const before = values();\n    if (!valid(before)) { error.textContent = t('ad.editInvalid'); error.hidden = false; return; }\n    const next = linkStatus(before, status.value), changes = [];\n    if (before.pickupCount !== next.pickupCount) changes.push(`${t('ad.editCount')} \u2192 ${next.pickupCount}`);\n    if (before.maxPickups !== next.maxPickups) changes.push(`${t('ad.editLimit')} \u2192 ${next.maxPickups ?? '\u221E'}`);\n    if (before.expireAt !== next.expireAt) changes.push(`${t('ad.th.expire')} \u2192 ${fmtDate(next.expireAt)}`);\n    count.value = next.pickupCount; unlimited.checked = next.maxPickups === null;\n    if (next.maxPickups !== null) limit.value = next.maxPickups;\n    permanent.checked = next.expireAt === null;\n    exactExpiry = next.expireAt;\n    displayedExpiry = localDateTime(next.expireAt ?? Date.now()+WEEK); expiry.value = displayedExpiry;\n    sync(); linked.textContent = changes.join('\uFF1B'); linked.hidden = !changes.length;\n  });\n  let busy = false;\n  form.addEventListener('submit', async event => {\n    event.preventDefault();\n    if (busy || !form.reportValidity()) return;\n    const rules = values();\n    if (!valid(rules)) { error.textContent = t('ad.editInvalid'); error.hidden = false; return; }\n    if (status.value !== ruleStatus(rules)) { status.value = ruleStatus(rules); error.textContent = t('ad.editTimeChanged'); error.hidden = false; return; }\n    busy = true; onBusy(true); error.hidden = reload.hidden = true;\n    const controls = [...form.querySelectorAll('input,button,select')].map(node => [node,node.disabled]);\n    for (const [node] of controls) node.disabled = true;\n    let saved = false;\n    try {\n      await api(`/api/admin/shares/${detail.code}`, { method: 'PUT', body: { expected: {\n        id: detail.id, pickupCount: detail.pickupCount, maxPickups: detail.maxPickups, expireAt: detail.expireAt,\n      }, rules: { ...rules, status: status.value } } });\n      saved = true;\n    } catch (e) {\n      error.textContent = e.message; error.hidden = false; reload.hidden = e.code !== 'share_conflict';\n    } finally {\n      busy = false; onBusy(false);\n      for (const [node,disabled] of controls) node.disabled = disabled;\n    }\n    if (saved) onSaved();\n  });\n  sync();\n  return { element: form, enhance() {\n    const help = el('span', {}, t('ad.editHint', Intl.DateTimeFormat().resolvedOptions().timeZone));\n    window.attachHelp(expiryField.querySelector('label'), help);\n    window.attachHelp(form.querySelector('label[for=\"share-edit-status\"]'), el('span', {}, t('ad.editStatusHint')));\n    count.focus();\n  } };\n}\n", "js/admin.js": "import { initClassifications } from './ui-classifications.js?v=9b8843adbff8575d';\nimport { initAuditLayout } from './ui-audit-layout.js?v=9b8843adbff8575d';\nimport { initSecurity } from './admin-security.js?v=9b8843adbff8575d';\nimport { initCombinedAdmin } from './admin-layout.js?v=9b8843adbff8575d';\nimport { kvUsageCard, storageHelp } from './storage-overview.js?v=9b8843adbff8575d';\nimport { initUi } from './ui.js?v=9b8843adbff8575d';\nimport { $, api, fmtBytes, fmtDate, toast, copyText, initTheme, initDialogs, el } from './common.js?v=9b8843adbff8575d';\nimport { LANG, t, onLangChange, initI18n } from './i18n.js?v=9b8843adbff8575d';\nimport { initAudit } from './admin-audit.js?v=9b8843adbff8575d';\nimport { createFilePreview } from './admin-preview.js?v=9b8843adbff8575d';\nimport { createShareEditor } from './admin-share-editor.js?v=9b8843adbff8575d';\nimport { pageSize, scrollToList, initAdminPreferences } from './admin-preferences.js?v=9b8843adbff8575d';\n\ninitTheme();\ninitI18n();\ninitDialogs();\ninitAdminPreferences();\ninitAudit();\n\nconst loginCard = $('#admin-login');\nconst panel = $('#admin-panel');\nconst loginError = $('#login-error');\nconst tokenInput = $('#admin-token');\nconst statsRow = $('#stats-row');\nconst tbody = $('#shares-body');\nconst btnPrev = $('#btn-prev');\nconst btnNext = $('#btn-next');\nconst btnRefresh = $('#btn-refresh');\nconst pageInfo = $('#page-info');\n\nlet limit = pageSize('files'); // Bounded to 40 to leave room for KV reads on the free plan.\nlet offset = 0;\nlet total = 0;\nlet listRequest = 0;\nlet listBusy = false;\nlet fileFilters = { status: 'all', kind: 'all', q: '' };\n\n/* \u8BED\u8A00\u5207\u6362:\u9762\u677F\u53EF\u89C1\u65F6\u6309\u65B0\u8BED\u8A00\u91CD\u62C9\u6587\u6848 */\nonLangChange(() => {\n  if ($('#source-dialog').open) closeSource();\n  if ($('#file-dialog').open) closeFileDetails();\n  if (!panel.hidden) {\n    loadStats();\n    loadList();\n    loadLoginProtection();\n  }\n});\n\n/* ---------- \u767B\u5F55\u6001\u63A2\u6D4B:stats \u901A\u5219\u89C6\u4E3A\u5DF2\u767B\u5F55 ---------- */\n(async () => {\n  try {\n    await api('/api/admin/stats');\n    showPanel();\n  } catch {\n    loginCard.hidden = false;\n    tokenInput.focus();\n  }\n})();\n\nasync function login() {\n  const token = tokenInput.value.trim();\n  if (!token || $('#btn-login').disabled) return;\n  $('#btn-login').disabled = true;\n  loginError.hidden = true;\n  try {\n    await api('/api/admin/login', { method: 'POST', body: { token } });\n    showPanel();\n  } catch (e) {\n    loginError.textContent = e.code === 'login_blocked' ? t('ad.loginBlocked')\n      : e.code === 'login_protection_unavailable' ? t('ad.guardUnavailable') : e.message || t('ad.badToken');\n    loginError.hidden = false;\n  } finally { $('#btn-login').disabled = false; }\n}\n$('#btn-login').addEventListener('click', login);\ntokenInput.addEventListener('keydown', (e) => e.key === 'Enter' && login());\n\nfunction showPanel() {\n  loginCard.hidden = true;\n  panel.hidden = false;\n  $('#admin-navigation').hidden = false;\n  $('#admin-settings-btn').hidden = false;\n  loadStats();\n  loadList();\n  loadSettings();\n  loadGuestPolicy();\n  loadLoginProtection();\n}\n\n$('#btn-logout').addEventListener('click', async () => {\n  try { await api('/api/admin/logout', { method: 'POST', body: {} }); } catch { /* ignore */ }\n  location.reload();\n});\n\n/* ---------- \u7EDF\u8BA1 ---------- */\nlet lastStats = null; // \u5220\u9664\u540E\u672C\u5730\u9012\u51CF\u7528,\u907F\u514D\u7ACB\u5373\u91CD\u62C9\u649E\u4E0A KV \u6700\u7EC8\u4E00\u81F4\u7A97\u53E3\n\nfunction renderStats(s) {\n  const counts = [\n    [s.total, 'ad.total'], [s.active, 'ad.active'], [s.files, 'ad.files'],\n    [s.texts, 'ad.texts'], [s.todayCreated, 'ad.today'],\n  ];\n  const capacity = s.fileBackend === 'r2' ? s.storage : null;\n  const storageCard = el('div', { class: 'stat-card storage-card' },\n    el('div', { class: 'storage-heading' }, el('small', {}, s.fileBackend === 'r2' ? 'R2' : t('ad.shareBytes')), s.fileBackend === 'r2' ? storageHelp('R2', t('ad.storageReserved')) : null),\n    capacity\n      ? el('div', { class: 'storage-value' },\n          el('b', {}, fmtBytes(capacity.usedBytes)),\n          el('span', { class: 'storage-total' }, ` / ${fmtBytes(capacity.capacityBytes)}`))\n      : el('div', { class: 'storage-value' }, el('b', {}, s.fileBackend === 'r2'\n          ? t('ad.storageUnavailable') : fmtBytes(s.totalBytes))),\n  );\n  if (capacity) {\n    storageCard.append(\n      el('meter', { class: 'storage-meter', min: 0, max: capacity.capacityBytes,\n        value: capacity.usedBytes, ariaLabel: t('ad.storage') }),\n    );\n  }\n  statsRow.replaceChildren(\n    el('div', { class: 'stats-counts' }, ...counts.map(([value, label]) =>\n      el('div', { class: 'stat-card' }, el('b', {}, String(value)), el('small', {}, t(label))))),\n    el('div', { class: 'storage-overview' }, storageCard, kvUsageCard(s.kv)),\n  );\n}\n\nasync function loadStats() {\n  try {\n    lastStats = await api('/api/admin/stats');\n    renderStats(lastStats);\n  } catch { /* \u5FFD\u7565,\u5217\u8868\u52A0\u8F7D\u4F1A\u518D\u62A5 */ }\n}\n\n/** \u5220\u9664\u6210\u529F\u540E\u672C\u5730\u540C\u6B65\u7EDF\u8BA1(\u670D\u52A1\u7AEF KV \u7D22\u5F15\u6700\u957F 60s \u624D\u53CD\u6620\u5220\u9664,\u91CD\u62C9\u4F1A\u770B\u5230\u65E7\u6570) */\nasync function statsAfterDelete(r) {\n  if (!lastStats) return;\n  const s = { ...lastStats };\n  s.total = Math.max(0, s.total - 1);\n  if (r.kind === 'file') s.files = Math.max(0, s.files - 1);\n  else s.texts = Math.max(0, s.texts - 1);\n  s.totalBytes = Math.max(0, s.totalBytes - r.size);\n  if (r.status === 'active') s.active = Math.max(0, s.active - 1);\n  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);\n  if (r.created_at >= todayStart.getTime()) s.todayCreated = Math.max(0, s.todayCreated - 1);\n  lastStats = s;\n  renderStats(s);\n  if (s.fileBackend === 'r2') {\n    try { s.storage = (await api('/api/admin/stats')).storage; }\n    catch { s.storage = null; } // Do not present stale capacity as current after deletion.\n    if (lastStats === s) renderStats(s);\n  }\n}\n\n/* ---------- \u5217\u8868 ---------- */\nconst STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };\nconst KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };\n\nasync function loadList() {\n  const request = ++listRequest;\n  listBusy = true;\n  btnPrev.disabled = btnNext.disabled = btnRefresh.disabled = true;\n  pageInfo.textContent = t('ad.loading');\n  tbody.setAttribute('aria-busy', 'true');\n  tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.loading'))));\n  try {\n    const params = new URLSearchParams({ ...fileFilters, limit, offset });\n    const data = await api(`/api/admin/shares?${params}`);\n    if (request !== listRequest) return;\n    if (!Number.isSafeInteger(data.total) || data.total < 0 || !Array.isArray(data.rows)) throw new Error(t('ad.loadFail'));\n    total = data.total;\n    if (offset > 0 && offset >= total) { offset = Math.max(0, Math.ceil(total / limit) - 1) * limit; return loadList(); }\n    const rows = data.rows ?? [];\n    tbody.replaceChildren();\n    for (const r of rows) {\n      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n      tbody.append(\n        el('tr', {},\n          el('td', { class: 'mono' }, r.code),\n          el('td', { class: 'share-content-cell' },\n            el('div', { class: 'share-filename-line' },\n              r.kind === 'file'\n                ? el('button', { class: 'share-filename file-detail-link', type: 'button', title: content, onclick: () => openFileDetails(r.code) }, content)\n                : el('span', { class: 'share-filename', title: content }, content),\n              el('sup', { class: `badge share-kind kind-${r.kind}` }, t(KIND_KEY[r.kind] || r.kind)))),\n          sourceCell(r),\n          el('td', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size)),\n          el('td', {}, `${r.pickup_count} / ${r.max_pickups ?? '\u221E'}`),\n          el('td', {}, r.expire_at ? fmtDate(r.expire_at) : t('ad.forever')),\n          el('td', {}, el('span', { class: `badge ${r.status}` }, STATUS_KEY[r.status] ? t(STATUS_KEY[r.status]) : r.status)),\n          el('td', {}, fmtDate(r.created_at)),\n          el('td', {}, el('button', { class: 'btn danger small', onclick: (e) => remove(r, e.target.closest('tr')) }, t('ad.delete'))),\n        ),\n      );\n    }\n    if (rows.length === 0) {\n      tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, t('ad.empty'))));\n    }\n    listBusy = false;\n    updatePager();\n  } catch (e) {\n    if (request !== listRequest) return;\n    pageInfo.textContent = t('ad.loadFail');\n    tbody.replaceChildren(el('tr', {}, el('td', { class: 'muted', colspan: 9 }, e.message || t('ad.loadFail'))));\n  } finally {\n    if (request === listRequest) {\n      listBusy = false;\n      btnRefresh.disabled = false;\n      tbody.setAttribute('aria-busy', 'false');\n    }\n  }\n}\n\nfunction updatePager() {\n  const page = Math.floor(offset / limit) + 1;\n  const pages = Math.max(1, Math.ceil(total / limit));\n  pageInfo.textContent = t('ad.page', page, pages, total);\n  btnPrev.disabled = listBusy || offset <= 0;\n  btnNext.disabled = listBusy || offset + limit >= total;\n}\nbtnPrev.addEventListener('click', async () => { offset = Math.max(0, offset - limit); await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\nbtnNext.addEventListener('click', async () => { offset += limit; await loadList(); if (!$('#admin-files-view').hidden) scrollToList('.admin-list-card'); });\nbtnRefresh.addEventListener('click', () => { noteOverrides.clear(); loadStats(); loadList(); });\nwindow.addEventListener('admin-page-size', event => {\n  if (event.detail.name !== 'files') return;\n  limit = event.detail.value; offset = 0;\n  if (!panel.hidden) loadList();\n});\n\n/* ---------- \u5220\u9664:\u7968\u636E\u98CE\u786E\u8BA4\u5F39\u7A97 + \u672C\u5730\u540C\u6B65(KV \u6700\u7EC8\u4E00\u81F4,\u5220\u9664\u540E\u7ACB\u5373\u91CD\u62C9\u4F1A\u770B\u5230\u6B8B\u7559\u7D22\u5F15) ---------- */\nconst delMask = $('#del-mask');\nconst delTarget = $('#del-target');\nlet delResolve = null;\n\nfunction confirmDelete(r) {\n  const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));\n  delTarget.replaceChildren(\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.code')), el('b', { class: 'mono' }, r.code)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.content')), el('span', {}, content)),\n    el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),\n      el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),\n  );\n  delMask.showModal();\n  $('#del-cancel').focus();\n  return new Promise((resolve) => { delResolve = resolve; });\n}\n\nfunction closeDelModal(v) {\n  if (!delResolve) return;\n  delMask.close();\n  const resolve = delResolve;\n  delResolve = null;\n  resolve(v);\n}\n$('#del-cancel').addEventListener('click', () => closeDelModal(false));\n$('#del-ok').addEventListener('click', () => closeDelModal(true));\ndelMask.addEventListener('click', (e) => e.target === delMask && closeDelModal(false));\ndelMask.addEventListener('cancel', e => { e.preventDefault(); closeDelModal(false); });\n\nasync function remove(r, tr) {\n  if (!(await confirmDelete(r))) return;\n  try {\n    await api(`/api/admin/shares/${r.code}`, { method: 'DELETE' });\n    toast(t('ad.deleted'), 'ok');\n    statsAfterDelete(r);\n    total = Math.max(0, total - 1);\n    tr?.remove();\n    // \u5F53\u524D\u9875\u5220\u7A7A\u4E14\u4E0D\u5728\u7B2C\u4E00\u9875:\u9000\u56DE\u4E0A\u4E00\u9875\u91CD\u62C9,\u907F\u514D\u505C\u5728\u7A7A\u9875\n    if (tbody.rows.length === 0 && offset > 0) {\n      offset = Math.max(0, offset - limit);\n      loadList();\n    } else {\n      updatePager();\n    }\n  } catch (e) {\n    toast(e.message || t('ad.deleteFail'), 'error');\n  }\n}\n\n/* Upload source details: source labels are text nodes, never interpolated HTML. */\nconst sourceDialog = $('#source-dialog');\nconst sourceForm = $('#source-form');\nconst sourceNote = $('#source-note');\nconst sourceSave = $('#source-save');\nconst sourceError = $('#source-error');\nconst noteOverrides = new Map(); // Read-your-write while KV propagation completes.\nlet sourceRequest = 0;\nlet activeSource = null;\nlet sourceReturnCode = null;\nlet sourceHistoryLoaded = false;\n\nfunction sourceField(label, value, className = '', hint = '') {\n  return el('div', { class: `source-field ${className}` },\n    el('small', { class: 'muted', ...(hint ? { title: hint } : {}) }, label), el('span', {}, value));\n}\nfunction browserLabel(ua) {\n  if (!ua) return t('ad.sourceUnrecorded');\n  const browser = /Edg\\//.test(ua) ? 'Edge' : /Firefox\\//.test(ua) ? 'Firefox'\n    : /Chrome\\//.test(ua) ? 'Chrome' : /Safari\\//.test(ua) ? 'Safari' : t('ad.sourceUnknown');\n  const os = /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS'\n    : /Windows/.test(ua) ? 'Windows' : /Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';\n  return [browser, os].filter(Boolean).join(' \xB7 ');\n}\n\nfunction visitorLabel(id) { return t('ad.visitor', id.slice(0, 8).toUpperCase()); }\nfunction sourceLabel(source) {\n  const override = noteOverrides.get(source.visitorId);\n  return (override !== undefined ? override : source.note) || visitorLabel(source.visitorId);\n}\nfunction locationLabel(source) {\n  let country = source.country;\n  if (country && /^[A-Z]{2}$/.test(country)) {\n    country = new Intl.DisplayNames([LANG === 'zh' ? 'zh-CN' : 'en'], { type: 'region' }).of(country);\n  }\n  return [...new Set([country, source.region, source.city].filter(Boolean))].join(' \xB7 ') || t('ad.sourceUnknown');\n}\nfunction sourceCell(row) {\n  if (!row.source) return el('td', { class: 'source-cell muted' }, t('ad.sourceUnrecorded'));\n  const button = el('button', { class: 'source-link', type: 'button', onclick: () => openSource(row) }, sourceLabel(row.source));\n  button.dataset.visitor = row.source.visitorId;\n  button.title = t('ad.source');\n  return el('td', { class: 'source-cell' }, button, el('small', { class: 'muted' }, locationLabel(row.source)));\n}\nasync function openSource(row, returnCode = null) {\n  const request = ++sourceRequest;\n  activeSource = null;\n  sourceReturnCode = returnCode;\n  $('#source-back').hidden = !returnCode;\n  $('#source-history').hidden = true;\n  $('#source-history-list').replaceChildren();\n  sourceHistoryLoaded = false;\n  sourceForm.hidden = true;\n  $('#source-identity').hidden = true;\n  $('#source-visitor-id').textContent = '';\n  sourceError.hidden = true;\n  sourceSave.disabled = false;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = `${t('ad.th.code')} ${row.code}`;\n  $('#source-detail').textContent = t('ad.loading');\n  sourceDialog.showModal();\n  try {\n    const { source } = await api(`/api/admin/shares/${row.code}/source`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    if (!source) { $('#source-detail').textContent = t('ad.sourceUnrecorded'); return; }\n    activeSource = { code: row.code, visitorId: source.visitorId };\n    $('#source-visitor-id').textContent = source.visitorId;\n    const ip = el('span', { class: 'source-ip' }, source.ip || t('ad.sourceUnknown'));\n    if (source.ip) ip.append(el('button', { class: 'btn small ghost', type: 'button',\n      onclick: async () => toast(t(await copyText(source.ip) ? 'ad.ipCopied' : 'ad.copyFailed')) }, t('ad.copyIP')));\n    $('#source-detail').replaceChildren(\n      ...(source.displayName ? [sourceField(t('ad.submittedName'), source.displayName)] : []),\n      sourceField(t('ad.requestIP'), ip),\n      sourceField(t('ad.sourceLocation'), locationLabel(source)),\n      ...(source.asn || source.organization ? [sourceField(t('ad.network'),\n        [source.organization, source.asn ? `AS${source.asn}` : null].filter(Boolean).join(' \xB7 '))] : []),\n      sourceField(t('ad.browserReported'), browserLabel(source.userAgent), '', t('ad.browserHint')),\n      sourceField(t('ad.sourceTime'), fmtDate(source.capturedAt)),\n      ...(source.userAgent ? [el('div', { class: 'source-agent source-field-wide' }, el('small', { class: 'muted' }, 'User-Agent'),\n        el('p', { class: 'mono', title: source.userAgent, tabIndex: 0 }, source.userAgent))] : []),\n    );\n    $('#source-history').hidden = false;\n    sourceNote.value = noteOverrides.get(source.visitorId) ?? source.note ?? '';\n    sourceForm.hidden = false;\n    $('#source-identity').hidden = false;\n    sourceSave.hidden = false;\n    loadSourceHistory();\n  } catch (e) {\n    if (request === sourceRequest) $('#source-detail').textContent = e.message || t('ad.loadFail');\n  }\n}\nfunction closeSource() {\n  sourceRequest++;\n  activeSource = null;\n  sourceReturnCode = null;\n  $('#source-history').hidden = true;\n  $('#source-history-list').replaceChildren();\n  $('#source-back').hidden = true;\n  sourceNote.value = '';\n  $('#source-identity').hidden = true;\n  $('#source-visitor-id').textContent = '';\n  sourceForm.hidden = true;\n  sourceSave.hidden = true;\n  $('#source-context').textContent = '';\n  $('#source-detail').replaceChildren();\n  sourceDialog.close();\n}\nsourceDialog.addEventListener('cancel', (e) => { e.preventDefault(); closeSource(); });\n$('#source-close').addEventListener('click', closeSource);\n$('#source-back').addEventListener('click', () => {\n  const code = sourceReturnCode;\n  closeSource();\n  if (code) openFileDetails(code);\n});\nasync function loadSourceHistory() {\n  if (!activeSource || sourceHistoryLoaded) return;\n  sourceHistoryLoaded = true;\n  const request = sourceRequest;\n  const list = $('#source-history-list');\n  list.textContent = t('ad.loading');\n  try {\n    const { rows } = await api(`/api/admin/shares/${activeSource.code}/source/activity`);\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },\n      el('div', { class: 'activity-head' }, row.kind === 'file'\n        ? el('button', { type: 'button', class: 'source-link', title: row.filename || t('ad.unnamed'),\n          onclick: () => { closeSource(); openFileDetails(row.code); } }, row.filename || t('ad.unnamed'))\n        : el('span', {}, t('ad.textFallback')),\n        el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),\n      el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} \xB7 ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} \xB7 ${row.code}`),\n      row.ip || row.country || row.region || row.city\n        ? el('small', { class: 'muted' }, [row.ip, row.country || row.region || row.city ? locationLabel(row) : null].filter(Boolean).join(' \xB7 ')) : null,\n    )));\n    if (!rows.length) list.textContent = t('ad.empty');\n  } catch (error) {\n    if (request !== sourceRequest || !sourceDialog.open) return;\n    sourceHistoryLoaded = false;\n    list.replaceChildren(el('p', { class: 'error-box', role: 'alert' }, error.message || t('ad.loadFail')),\n      el('button', { type: 'button', class: 'btn small ghost', onclick: loadSourceHistory }, t('ad.retry')));\n  }\n}\nsourceForm.addEventListener('submit', async (e) => {\n  e.preventDefault();\n  if (!activeSource || sourceSave.disabled) return;\n  const { code } = activeSource;\n  const request = sourceRequest;\n  sourceSave.disabled = true;\n  sourceError.hidden = true;\n  try {\n    const result = await api(`/api/admin/shares/${code}/source`, { method: 'PUT', body: { note: sourceNote.value } });\n    noteOverrides.set(result.visitorId, result.note);\n    document.querySelectorAll('[data-visitor]').forEach((button) => {\n      if (button.dataset.visitor === result.visitorId) button.textContent = result.note || visitorLabel(result.visitorId);\n    });\n    if (request === sourceRequest) closeSource();\n    toast(t('ad.sourceSaved'));\n  } catch (error) {\n    if (request === sourceRequest) {\n      sourceError.textContent = error.message || t('ad.loadFail');\n      sourceError.hidden = false;\n    }\n  } finally {\n    if (request === sourceRequest) sourceSave.disabled = false;\n  }\n});\n\n/* File details use their own request generation so closed dialogs stay empty. */\nconst fileDialog = $('#file-dialog');\nconst fileDetail = $('#file-detail');\nconst fileDownload = $('#file-download');\nlet fileRequest = 0;\nlet activePreview = null;\nlet activeFileDetail = null;\nlet shareEditBusy = false;\nfunction resetShareEditor() {\n  $('#file-editor').hidden = true;\n  $('#file-editor').replaceChildren();\n  fileDetail.hidden = false;\n  fileDialog.querySelector('.source-footer').hidden = false;\n  $('#file-title').textContent = t('ad.fileDetails');\n}\nfunction fileField(label, value, secondary) {\n  return el('div', { class: 'file-field' }, el('small', { class: 'muted' }, label),\n    el('div', { class: 'file-field-value' }, value), secondary ? el('small', { class: 'muted' }, secondary) : null);\n}\n\nasync function openFileDetails(code) {\n  if (shareEditBusy) return;\n  activeFileDetail = null;\n  resetShareEditor();\n  $('#file-edit').hidden = true;\n  activePreview?.dispose(); activePreview = null;\n  const request = ++fileRequest;\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  $('#file-context').textContent = `${t('ad.th.code')} ${code}`;\n  fileDetail.textContent = t('ad.loading');\n  fileDialog.showModal();\n  try {\n    const detail = await api(`/api/admin/shares/${code}`);\n    if (request !== fileRequest || !fileDialog.open) return;\n    activeFileDetail = detail;\n    const state = detail.storage?.state || 'unknown';\n    const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };\n    const source = detail.source;\n    const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',\n      title: t('ad.source'), onclick: () => { closeFileDetails(); openSource({ code }, code); },\n    }, sourceLabel(source)) : t('ad.sourceUnrecorded');\n    if (source) sourceButton.dataset.visitor = source.visitorId;\n    fileDetail.replaceChildren(\n      el('div', { class: 'file-identity file-wide' },\n        el('strong', {}, detail.filename || t('ad.unnamed')),\n        el('div', { class: 'file-summary' },\n          el('span', { title: t('ad.exactBytes', detail.size.toLocaleString()) }, fmtBytes(detail.size)),\n          el('span', { class: `badge ${detail.status}`, title: t('ad.shareState') }, t(STATUS_KEY[detail.status])),\n          state !== 'available' ? el('span', { class: `badge ${state === 'missing' ? 'expired' : ''}` }, t(storageLabels[state])) : null)),\n      ...(detail.description ? [el('div', { class: 'file-description file-wide' },\n        el('small', { class: 'muted' }, t('ad.fileDescription')), el('p', {}, detail.description))] : []),\n      ...(state === 'available' ? [(activePreview = createFilePreview(code, detail.filename || '')).element] : []),\n      fileField(t('ad.source'), sourceButton),\n      fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '\u221E'}`),\n      fileField(t('ad.th.created'), fmtDate(detail.createdAt)),\n      fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)),\n\n    );\n    fileDownload.href = `/api/admin/shares/${code}/download`;\n    fileDownload.download = detail.filename || 'file';\n    fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');\n    fileDownload.hidden = state === 'missing';\n    $('#file-edit').hidden = state !== 'available';\n    $('#file-edit').disabled = detail.cleanupStatus === 'pending';\n    $('#file-edit').title = detail.cleanupStatus === 'pending' ? t('ad.editCleanupPending') : '';\n  } catch (error) {\n    if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');\n  }\n}\nfunction closeFileDetails() {\n  if (shareEditBusy) return;\n  activeFileDetail = null;\n  resetShareEditor();\n  $('#file-edit').hidden = true;\n  activePreview?.dispose(); activePreview = null;\n  fileRequest++;\n  fileDetail.replaceChildren();\n  $('#file-context').textContent = '';\n  fileDownload.hidden = true;\n  fileDownload.removeAttribute('href');\n  fileDownload.removeAttribute('download');\n  fileDialog.close();\n}\n$('#file-close').addEventListener('click', closeFileDetails);\n$('#file-edit').addEventListener('click', () => {\n  if (!activeFileDetail || shareEditBusy) return;\n  const detail = activeFileDetail;\n  const editor = createShareEditor(detail, {\n    onBusy(value) { shareEditBusy = value; $('#lang-btn').disabled = value; },\n    onCancel() { openFileDetails(detail.code); },\n    onSaved() {\n      toast(t('ad.editSaved'));\n      openFileDetails(detail.code);\n      loadList(); loadStats();\n    },\n  });\n  fileDetail.hidden = true;\n  fileDialog.querySelector('.source-footer').hidden = true;\n  $('#file-title').textContent = t('ad.editShare');\n  $('#file-editor').replaceChildren(editor.element);\n  $('#file-editor').hidden = false;\n  editor.enhance();\n});\nfileDialog.addEventListener('cancel', e => { e.preventDefault(); closeFileDetails(); });\n\n/* Keep unsaved input local; only a validated save changes retention. */\nconst retentionInput = $('#retention-days');\nconst retentionSave = $('#retention-save');\nconst retentionError = $('#retention-error');\nasync function loadSettings() {\n  $('#retention-status').hidden = true;\n  retentionInput.disabled = true;\n  retentionSave.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-retry').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings');\n    if (!Number.isInteger(settings.expiredRetentionDays) || settings.expiredRetentionDays < 0 || settings.expiredRetentionDays > 3650) throw new Error(t('ad.loadFail'));\n    retentionInput.value = settings.expiredRetentionDays;\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n    $('#retention-retry').hidden = false;\n  }\n}\n$('#retention-retry').addEventListener('click', loadSettings);\nretentionInput.addEventListener('input', () => { $('#retention-status').hidden = true; });\n$('#retention-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (retentionSave.disabled || !retentionInput.reportValidity()) return;\n  retentionSave.disabled = true;\n  retentionInput.disabled = true;\n  retentionError.hidden = true;\n  $('#retention-status').hidden = true;\n  try {\n    const settings = await api('/api/admin/settings', { method: 'PUT', body: { expiredRetentionDays: Number(retentionInput.value) } });\n    retentionInput.value = settings.expiredRetentionDays;\n    $('#retention-status').textContent = t('ad.settingsSaved');\n    $('#retention-status').hidden = false;\n  } catch (error) {\n    retentionError.textContent = error.message || t('ad.loadFail');\n    retentionError.hidden = false;\n  } finally {\n    retentionInput.disabled = false;\n    retentionSave.disabled = false;\n  }\n});\n\nconst guestWeekly = $('#guest-weekly');\nconst guestSave = $('#guest-save');\nconst guestError = $('#guest-error');\nfunction guestBusy(busy) {\n  for (const control of [guestWeekly, guestSave]) control.disabled = busy;\n}\nasync function loadGuestPolicy() {\n  $('#guest-status').hidden = true;\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-retry').hidden = true;\n  try {\n    const policy = await api('/api/admin/upload-policy');\n    if (!Number.isInteger(policy.weeklyFileLimit) || policy.weeklyFileLimit < 0 || policy.weeklyFileLimit > 1000) throw new Error(t('ad.loadFail'));\n    guestWeekly.value = policy.weeklyFileLimit;\n    guestBusy(false);\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n    $('#guest-retry').hidden = false;\n  }\n}\n$('#guest-retry').addEventListener('click', loadGuestPolicy);\nguestWeekly.addEventListener('input', () => { $('#guest-status').hidden = true; });\n$('#guest-policy-form').addEventListener('submit', async e => {\n  e.preventDefault();\n  if (guestSave.disabled || !e.target.reportValidity()) return;\n  const body = { weeklyFileLimit: Number(guestWeekly.value) };\n  guestBusy(true);\n  guestError.hidden = true;\n  $('#guest-status').hidden = true;\n  try {\n    await api('/api/admin/upload-policy', { method: 'PUT', body });\n    $('#guest-status').textContent = t('ad.guestSaved');\n    $('#guest-status').hidden = false;\n  } catch (error) {\n    guestError.textContent = error.message || t('ad.loadFail');\n    guestError.hidden = false;\n  } finally { guestBusy(false); }\n});\n\nlet guardRequest = 0;\nasync function loadLoginProtection() {\n  const request = ++guardRequest;\n  const refresh = $('#login-guard-refresh');\n  const error = $('#login-guard-error');\n  refresh.disabled = true;\n  error.hidden = true;\n  $('#login-guard-bans').replaceChildren();\n  $('#login-guard-status').textContent = '';\n  try {\n    const data = await api('/api/admin/login-protection');\n    if (request !== guardRequest) return;\n    if (typeof data.enabled !== 'boolean' || !Array.isArray(data.bans) ||\n        ![data.maxFailures, data.windowSeconds, data.banSeconds].every(n => Number.isInteger(n) && n > 0)) throw new Error(t('ad.loadFail'));\n    $('#login-guard-status').textContent = data.enabled\n      ? t('ad.guardRule', data.windowSeconds / 60, data.maxFailures, data.banSeconds / 60) : t('ad.guardDisabled');\n    if (!data.enabled) return;\n    if (!data.bans.length) $('#login-guard-bans').append(el('small', { class: 'muted' }, t('ad.guardEmpty')));\n    for (const ban of data.bans) {\n      const button = el('button', { class: 'btn small ghost', type: 'button' }, t('ad.guardUnblock'));\n      button.addEventListener('click', async () => {\n        button.disabled = true;\n        error.hidden = true;\n        try {\n          await api('/api/admin/login-protection/unblock', { method: 'POST', body: { ip: ban.ip } });\n          toast(t('ad.guardUnblocked'), 'ok');\n          await loadLoginProtection();\n        } catch (e) {\n          error.textContent = e.message || t('ad.loadFail');\n          error.hidden = false;\n          button.disabled = false;\n        }\n      });\n      $('#login-guard-bans').append(el('div', { class: 'login-guard-row' },\n        el('div', { class: 'login-guard-info' },\n          el('b', {}, ban.ip === 'unknown' ? t('ad.guardUnknown') : ban.ip),\n          el('small', { class: 'muted' }, t('ad.guardFailures', ban.failures) + ' \xB7 ' + t('ad.guardUntil', fmtDate(ban.bannedUntil))),\n          el('small', { class: 'muted' }, t('ad.guardLast', fmtDate(ban.lastFailedAt)))), button));\n    }\n  } catch (e) {\n    if (request !== guardRequest) return;\n    error.textContent = e.message || t('ad.loadFail');\n    error.hidden = false;\n  } finally { if (request === guardRequest) refresh.disabled = false; }\n}\n$('#login-guard-refresh').addEventListener('click', loadLoginProtection);\n\ninitUi();\ninitClassifications();\ninitAuditLayout();\ninitSecurity();\ninitCombinedAdmin();\nfunction applyFileFilters() {\n  fileFilters.q = $('#files-q').value.trim();\n  fileFilters.kind = $('#files-kind').value;\n  offset = 0;\n  loadList();\n}\n$('#files-filter').addEventListener('submit', event => { event.preventDefault(); applyFileFilters(); });\n$('#files-kind').addEventListener('change', applyFileFilters);\nfor (const button of document.querySelectorAll('#files-status-tabs button')) button.addEventListener('click', () => {\n  fileFilters.status = button.dataset.status;\n  for (const node of document.querySelectorAll('#files-status-tabs button')) node.setAttribute('aria-pressed', String(node === button));\n  applyFileFilters();\n});\n", "js/common.js": "import { t } from './i18n.js?v=9b8843adbff8575d';\n\nexport const $ = (sel, el = document) => el.querySelector(sel);\nexport const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];\n\n/** Keep Tab within modal content, including the wrap past the final button. */\nexport function initDialogs() {\n  for (const dialog of $$('dialog')) {\n    dialog.addEventListener('keydown', event => {\n      if (event.key !== 'Tab') return;\n      const controls = $$('button, a[href], input, select, textarea, summary, [tabindex]', dialog)\n        .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);\n      const first = controls[0];\n      const last = controls.at(-1);\n      if (!first) { event.preventDefault(); return; }\n      if (!controls.includes(document.activeElement) || (event.shiftKey && document.activeElement === first)) {\n        event.preventDefault(); (event.shiftKey ? last : first).focus();\n      } else if (!event.shiftKey && document.activeElement === last) {\n        event.preventDefault(); first.focus();\n      }\n    });\n  }\n}\n\n/** fetch JSON \u5C01\u88C5:\u975E 2xx \u629B\u9519(\u5E26\u670D\u52A1\u7AEF\u7684\u4E2D\u6587 message \u4E0E\u673A\u5668\u7801) */\nexport async function api(path, opts = {}) {\n  const res = await fetch(path, {\n    method: opts.method || 'GET',\n    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},\n    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,\n  });\n  if (res.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));\n  let data = null;\n  try { data = await res.json(); } catch { /* \u975E JSON \u54CD\u5E94 */ }\n  if (!res.ok) {\n    throw responseError(data, res.status);\n  }\n  return data;\n}\n\n/** Shared by fetch and XHR so security errors survive multipart/direct uploads. */\nexport function responseError(data, status) {\n  const error = new Error(data?.message || t('req.fail', status));\n  return Object.assign(error, { code: data?.error || 'unknown', status,\n    remainingBytes: data?.remainingBytes, retryAt: data?.retryAt,\n    serverTime: data?.serverTime, reason: data?.reason, requestId: data?.requestId });\n}\n\nexport function fmtBytes(n) {\n  if (!Number.isFinite(n) || n < 0) return '-';\n  const units = ['B', 'KB', 'MB', 'GB', 'TB'];\n  let i = 0;\n  while (n >= 1000 && i < units.length - 1) { n /= 1000; i++; }\n  const v = i === 0 ? Math.round(n) : n >= 100 ? Math.round(n) : Math.round(n * 100) / 100;\n  return `${v} ${units[i]}`;\n}\n\n/** \u6C38\u4E45\u5206\u4EAB\u8FD4\u56DE null,\u7531\u8C03\u7528\u65B9\u6309\u8BED\u8A00\u6E32\u67D3\u300C\u6C38\u4E45 / Forever\u300D */\nexport function fmtDate(ms) {\n  if (ms === null || ms === undefined) return null;\n  const d = new Date(ms);\n  const p = (x) => String(x).padStart(2, '0');\n  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;\n}\n\n/** \u79D2\u6570\u4EBA\u6027\u5316:\u7528\u4E8E\u4E0A\u4F20\u5269\u4F59\u65F6\u95F4 / \u8FC7\u671F\u5012\u8BA1\u65F6,\u5355\u4F4D\u8BCD\u968F\u8BED\u8A00 */\nexport function fmtDuration(sec) {\n  if (!Number.isFinite(sec) || sec < 0) return '-';\n  if (sec < 1) return t('dur.ms');\n  if (sec < 60) return t('dur.s', Math.round(sec));\n  if (sec < 3600) {\n    const m = Math.floor(sec / 60);\n    const s = Math.round(sec % 60);\n    return s ? t('dur.hm', m, s) : t('dur.h', m);\n  }\n  if (sec < 86400) {\n    const h = Math.floor(sec / 3600);\n    const m = Math.round((sec % 3600) / 60);\n    return m ? t('dur.hH', h, m) : t('dur.hH2', h);\n  }\n  return t('dur.d', Math.round(sec / 86400));\n}\n\n/** \u6309\u6587\u4EF6\u540D/ MIME \u6311\u4E00\u4E2A\u76F4\u89C2\u56FE\u6807(\u7EAF\u5C55\u793A\u7528) */\nexport function iconFor(name = '', mime = '') {\n  const ext = (name.split('.').pop() || '').toLowerCase();\n  if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'avif'].includes(ext)) return '\u{1F5BC}\uFE0F';\n  if (mime.startsWith('video/') || ['mp4', 'mkv', 'mov', 'avi', 'webm', 'flv'].includes(ext)) return '\u{1F3AC}';\n  if (mime.startsWith('audio/') || ['mp3', 'flac', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return '\u{1F3B5}';\n  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) return '\u{1F5DC}\uFE0F';\n  if (mime === 'application/pdf' || ext === 'pdf') return '\u{1F4D5}';\n  if (['doc', 'docx', 'txt', 'md', 'ppt', 'pptx', 'xls', 'xlsx', 'csv'].includes(ext)) return '\u{1F4C4}';\n  if (['js', 'ts', 'py', 'json', 'html', 'css', 'java', 'go', 'rs', 'c', 'cpp', 'sh', 'yml', 'yaml', 'xml'].includes(ext)) return '\u{1F9E9}';\n  return '\u{1F4E6}';\n}\n\nexport async function copyText(text) {\n  try {\n    await navigator.clipboard.writeText(text);\n    return true;\n  } catch { /* \u8D70\u964D\u7EA7 */ }\n  try {\n    const ta = document.createElement('textarea');\n    ta.value = text;\n    ta.style.cssText = 'position:fixed;opacity:0';\n    document.body.appendChild(ta);\n    ta.select();\n    const ok = document.execCommand('copy');\n    ta.remove();\n    return ok;\n  } catch {\n    return false;\n  }\n}\n\nexport function toast(msg, type = 'info') {\n  let host = $('#toast-host');\n  if (!host) {\n    host = document.createElement('div');\n    host.id = 'toast-host';\n    document.body.appendChild(host);\n  }\n  const t = document.createElement('div');\n  t.className = `toast ${type}`;\n  t.textContent = msg;\n  host.appendChild(t);\n  requestAnimationFrame(() => t.classList.add('show'));\n  setTimeout(() => {\n    t.classList.remove('show');\n    setTimeout(() => t.remove(), 300);\n  }, 2400);\n}\n\nexport function initTheme() {\n  const btn = $('#theme-btn');\n  const meta = $('meta[name=\"theme-color\"]');\n  const sync = () => {\n    if (meta) meta.content = document.documentElement.dataset.theme === 'dark' ? '#0f1117' : '#f6f7fb';\n  };\n  window.addEventListener('storage', event => {\n    if(event.key === 'theme' && ['dark','light'].includes(event.newValue)){document.documentElement.dataset.theme=event.newValue;sync();}\n  });\n  sync();\n  btn?.addEventListener('click', () => {\n    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';\n    localStorage.setItem('theme', next);\n    document.documentElement.dataset.theme = next;\n    sync();\n  });\n}\n\n/** \u5B89\u5168 DOM \u6784\u5EFA:\u5168\u90E8 textContent,\u9632 XSS */\nexport function el(tag, attrs = {}, ...children) {\n  const n = document.createElement(tag);\n  for (const [k, v] of Object.entries(attrs)) {\n    if (k === 'class') n.className = v;\n    else if (k === 'href' || k === 'download' || k === 'type' || k === 'inputmode' || k === 'colspan') n.setAttribute(k, v);\n    else if (k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);\n    else n[k] = v;\n  }\n  for (const c of children.flat(Infinity)) {\n    if (c == null || c === false) continue;\n    n.append(c instanceof Node ? c : document.createTextNode(String(c)));\n  }\n  return n;\n}\n", "js/i18n.js": `/**
  * \u8F7B\u91CF i18n:HTML \u9759\u6001\u6587\u6848\u7528 data-i18n / data-i18n-ph / data-i18n-title \u6807\u8BB0,
  * JS \u52A8\u6001\u5B57\u7B26\u4E32\u7528 t('key', \u2026args);{n} \u5360\u4F4D\u3002
  * \u8BED\u8A00\u4F18\u5148\u7EA7:localStorage('lang') > \u6D4F\u89C8\u5668\u8BED\u8A00(en \u5F00\u5934\u2192\u82F1\u6587)> \u4E2D\u6587\u3002
@@ -583,6 +583,16 @@ export function initCombinedAdmin() {
 
 const DICT = {
   zh: {
+    "audit.action.apiAuth": "API \u9274\u6743",
+    "audit.action.apiList": "API \u67E5\u8BE2\u5217\u8868",
+    "audit.action.apiRead": "API \u67E5\u8BE2\u8BE6\u60C5",
+    "audit.action.apiEdit": "API \u4FEE\u6539\u5206\u4EAB",
+    "audit.action.apiDelete": "API \u5220\u9664\u5206\u4EAB",
+    "audit.action.apiDownload": "API \u4E0B\u8F7D\u6587\u4EF6",
+    "audit.detail.changedFields": "\u4FEE\u6539\u5B57\u6BB5",
+    "audit.value.api_disabled": "\u811A\u672C\u63A5\u53E3\u672A\u914D\u7F6E",
+    "audit.value.unauthorized": "API Token \u65E0\u6548\u6216\u7F3A\u5931",
+
     "audit.upload": "\u4E0A\u4F20\u65E5\u5FD7",
     "audit.actor.visitor": "\u8BBF\u5BA2",
     "audit.pickup": "\u53D6\u4EF6\u65E5\u5FD7",
@@ -1033,6 +1043,16 @@ const DICT = {
   },
 
   en: {
+    "audit.action.apiAuth": "API authentication",
+    "audit.action.apiList": "API list shares",
+    "audit.action.apiRead": "API read share",
+    "audit.action.apiEdit": "API edit share",
+    "audit.action.apiDelete": "API delete share",
+    "audit.action.apiDownload": "API download",
+    "audit.detail.changedFields": "Changed fields",
+    "audit.value.api_disabled": "Script API not configured",
+    "audit.value.unauthorized": "Missing or invalid API Token",
+
     "audit.upload": "Uploads",
     "audit.actor.visitor": "Visitor",
     "audit.pickup": "Pickups",
@@ -1518,7 +1538,7 @@ export function initI18n() {
     rerenders.forEach((fn) => fn());
   });
 }
-`, "js/index.js": "import qrcode from './vendor/qrcode.js?v=4fceee008cffd8b6';\nimport { initUi } from './ui.js?v=4fceee008cffd8b6';\nimport { $, $$, api, responseError, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme, el } from './common.js?v=4fceee008cffd8b6';\nimport { createSecurityFeedback, isSecurityError } from './security-feedback.js?v=4fceee008cffd8b6';\nimport { t, onLangChange, initI18n } from './i18n.js?v=4fceee008cffd8b6';\n\ninitTheme();\ninitI18n();\n\nconst els = {\n  dropzone: $('#dropzone'),\n  dzHint: $('#dz-hint'),\n  fileInput: $('#file-input'),\n  fileList: $('#file-list'),\n  textInput: $('#text-input'),\n  textCounter: $('#text-counter'),\n  btnUpload: $('#btn-upload'),\n  btnText: $('#btn-text'),\n  progress: $('#progress'),\n  progressFill: $('#progress-fill'),\n  progressText: $('#progress-text'),\n  btnCancel: $('#btn-cancel'),\n  results: $('#results'),\n  placeholder: $('#result-placeholder'),\n  capDate: $('#cap-date'),\n};\n\nconst MAX_SIZE_FALLBACK = 25 * 1024 * 1024;\nconst MAX_BATCH = 10;\nlet cfg = { fileBackend: 'kv', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config \u52A0\u8F7D\u540E\u8986\u76D6\nlet MAX_SIZE = MAX_SIZE_FALLBACK;\nlet policyReady = false;\n\nlet files = []; // \u5F85\u4E0A\u4F20\u961F\u5217(File[])\nlet queueUI = new Map(); // File \u2192 { row, bar, status }\nlet queueState = new Map(); // File \u2192 'idle' | { done: code } | 'fail'(\u8BED\u8A00\u5207\u6362\u540E\u91CD\u6E32\u67D3\u7528)\nlet session = null; // \u8FDB\u884C\u4E2D\u7684 R2 \u5206\u7247\u4F1A\u8BDD { uploadId, partSize, parts }\nlet currentXhr = null;\nlet cancelled = false;\nlet uploading = false;\nlet lastResults = [];\nconst securityFeedback = createSecurityFeedback($('.form-card'), 'upload', () =>\n  $('#panel-text').hidden ? startUpload() : submitText());\n\n/* \u670D\u52A1\u7AEF\u914D\u7F6E:\u51B3\u5B9A\u8D70\u5206\u7247\u4E0A\u4F20(R2 \u5927\u5B58\u50A8)\u8FD8\u662F\u5355\u8BF7\u6C42\u76F4\u4F20(KV \u5C0F\u5B58\u50A8) */\nfunction canUploadFiles() {\n  return policyReady && cfg.fileBackend !== 'none' && cfg.fileUploadAvailable !== false && cfg.uploadsRemaining !== 0;\n}\nfunction updateHint() {\n  els.dzHint.textContent = t('dz.hintMax', fmtBytes(MAX_SIZE));\n  for (const [id, value, allowed, fallback] of [\n    ['seg-expiry', 'forever', cfg.allowPermanent === true, '7d'],\n    ['seg-pickups', 'null', cfg.allowUnlimited === true, '5'],\n  ]) {\n    const button = $(`#${id} [data-v=\"${value}\"]`);\n    button.disabled = !allowed;\n    if (!allowed && button.classList.contains('active')) {\n      button.classList.remove('active');\n      $(`#${id} [data-v=\"${fallback}\"]`).classList.add('active');\n    }\n  }\n  $('#upload-policy-hint').textContent = !policyReady ? t('policy.unavailable')\n    : cfg.fileUploadAvailable === false ? t('policy.contact')\n    : cfg.weeklyFileLimit !== null && cfg.weeklyFileLimit !== undefined\n      ? t('policy.remaining', cfg.uploadsRemaining, cfg.weeklyFileLimit, fmtDate(cfg.uploadsResetAt)) : '';\n  $$('.seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n}\nasync function refreshPolicy() {\n  try {\n    cfg = await api('/api/config');\n    if (!Number.isSafeInteger(cfg.maxFileSize) || (cfg.maxFileSize < 0 || (cfg.maxFileSize === 0 && cfg.fileBackend !== 'none'))) throw new Error('Invalid upload policy');\n    MAX_SIZE = cfg.maxFileSize;\n    policyReady = true;\n  } catch { policyReady = false; }\n  updateHint();\n  setBusy(uploading);\n}\nupdateHint();\nrefreshPolicy();\n\n/* \u5BC4\u4EF6\u5355\u62AC\u5934\u65E5\u671F(\u88C5\u9970) */\nif (els.capDate) els.capDate.textContent = fmtDate(Date.now()).split(' ')[0];\n\n/* \u8BED\u8A00\u5207\u6362:\u91CD\u7B97\u52A8\u6001\u6587\u6848\u4E0E\u7ED3\u679C\u5361\u7247 */\nonLangChange(() => {\n  if (cfg.maxFileSize) updateHint();\n  renderQueue();\n  if (lastResults.length) showResults(lastResults);\n});\n\n/* ---------- tabs ---------- */\n$$('.tab').forEach((tb) =>\n  tb.addEventListener('click', () => {\n    if (uploading) return; // \u4E0A\u4F20\u4E2D\u7981\u6B62\u5207\u6362\n    $$('.tab').forEach((x) => x.classList.toggle('active', x === tb));\n    const tab = tb.dataset.tab;\n    $('#panel-file').hidden = tab !== 'file';\n    $('#panel-text').hidden = tab !== 'text';\n    $('#upload-description-field').hidden = tab !== 'file';\n    $$('.tab').forEach(x => x.setAttribute('aria-pressed', String(x === tb)));\n    els.btnUpload.hidden = tab !== 'file';\n    els.btnText.hidden = tab !== 'text';\n    hideResult();\n  }),\n);\n\n/* ---------- segmented \u9009\u9879 ---------- */\nfor (const id of ['seg-expiry', 'seg-pickups']) {\n  $(`#${id}`).addEventListener('click', (e) => {\n    const b = e.target.closest('button');\n    if (!b || b.disabled) return;\n    $$('button', $(`#${id}`)).forEach((x) => {\n      x.classList.toggle('active', x === b);\n      x.setAttribute('aria-pressed', String(x === b));\n    });\n  });\n}\nfunction readOptions() {\n  const exp = $('#seg-expiry .active').dataset.v;\n  const pk = $('#seg-pickups .active').dataset.v;\n  return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk),\n    displayName: $('#upload-name').value.trim(),\n    description: $('#panel-file').hidden ? '' : $('#upload-description').value.trim() };\n}\n$$('.tab, .seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n$('#upload-description').addEventListener('input', e => {\n  $('#description-count').textContent = `${e.target.value.length} / 300`;\n});\n\n/* ---------- \u6587\u4EF6\u961F\u5217:\u70B9\u51FB / \u5168\u7A97\u53E3\u62D6\u62FD / \u667A\u80FD\u7C98\u8D34,\u518D\u9009\u5373\u6574\u4F53\u66FF\u6362 ---------- */\nels.dropzone.addEventListener('click', () => els.fileInput.click());\nels.dropzone.addEventListener('keydown', (e) => {\n  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); els.fileInput.click(); }\n});\nels.fileInput.addEventListener('change', () => {\n  setFiles([...els.fileInput.files]);\n  els.fileInput.value = '';\n});\n\nfunction showTab(name) {\n  const tb = $(`.tab[data-tab=\"${name}\"]`);\n  if (tb && !tb.classList.contains('active')) tb.click(); // \u4E0A\u4F20\u4E2D\u65F6 tab \u5904\u7406\u5668\u81EA\u5DF1\u4F1A\u62D2\u7EDD\n}\n\n/* \u62D6\u5230\u9875\u9762\u4EFB\u610F\u4F4D\u7F6E\u90FD\u9AD8\u4EAE\u5E76\u53EF\u653E\u4E0B(\u4E0D\u518D\u8981\u6C42\u7CBE\u786E\u547D\u4E2D\u62D6\u62FD\u533A) */\nlet dragDepth = 0;\nwindow.addEventListener('dragenter', (e) => {\n  if (![...(e.dataTransfer?.types || [])].includes('Files')) return;\n  dragDepth++;\n  if (!uploading) els.dropzone.classList.add('dragover');\n});\nwindow.addEventListener('dragleave', () => {\n  if (--dragDepth <= 0) { dragDepth = 0; els.dropzone.classList.remove('dragover'); }\n});\nwindow.addEventListener('dragover', (e) => e.preventDefault());\nwindow.addEventListener('drop', (e) => {\n  e.preventDefault();\n  dragDepth = 0;\n  els.dropzone.classList.remove('dragover');\n  if (e.dataTransfer?.files?.length) setFiles([...e.dataTransfer.files]);\n});\n\n/* \u7C98\u8D34\u667A\u80FD\u8DEF\u7531:\u7C98\u8D34\u6587\u4EF6\u2192\u6587\u4EF6\u9875;\u6587\u4EF6\u9875\u7C98\u8D34\u7EAF\u6587\u672C\u2192\u81EA\u52A8\u5207\u5230\u6587\u672C\u9875 */\ndocument.addEventListener('paste', (e) => {\n  if (e.target?.closest?.('textarea, input')) return; // \u8F93\u5165\u6846\u5185\u7C98\u8D34\u8D70\u9ED8\u8BA4\u884C\u4E3A\n  if (e.clipboardData?.files?.length) {\n    setFiles([...e.clipboardData.files]);\n    return;\n  }\n  const text = e.clipboardData?.getData('text/plain');\n  if (text && $('#panel-text').hidden) {\n    showTab('text');\n    els.textInput.value = text;\n    els.textInput.dispatchEvent(new Event('input'));\n  }\n});\n\nfunction setFiles(list) {\n  if (uploading) return;\n  const ok = [];\n  for (const f of list) {\n    if (f.size > MAX_SIZE) { toast(t('err.oversize', fmtBytes(MAX_SIZE), fmtBytes(f.size)), 'error'); continue; }\n    if (f.size < 1) { toast(t('err.empty'), 'error'); continue; }\n    ok.push(f);\n  }\n  if (ok.length > MAX_BATCH) {\n    toast(t('err.tooMany', MAX_BATCH), 'error');\n    ok.length = MAX_BATCH;\n  }\n  files = ok; // \u66FF\u6362\u8BED\u4E49:\u518D\u6B21\u9009\u62E9\u5373\u91CD\u7F6E\u961F\u5217\n  queueState = new Map(files.map((f) => [f, 'idle']));\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n  hideResult();\n}\n\nfunction statusText(f, st) {\n  if (st === 'fail') return '\u2717';\n  if (st && st.done) return `\u2713 ${st.done}`;\n  return fmtBytes(f.size);\n}\n\nfunction renderQueue() {\n  els.fileList.replaceChildren();\n  queueUI = new Map();\n  files.forEach((f) => {\n    const st = queueState.get(f) || 'idle';\n    const bar = el('div', { class: 'fr-bar' });\n    const status = el('small', { class: 'fr-status' }, statusText(f, st));\n    const row = el('div', {\n      class: `file-row${st === 'fail' ? ' fail' : ''}${st && st.done ? ' done' : ''}`,\n    });\n    row.replaceChildren(\n      el('span', { class: 'fr-icon' }, iconFor(f.name, f.type)),\n      el('div', { class: 'fr-meta' },\n        el('b', { title: f.name }, f.name),\n        el('small', {}, `${fmtBytes(f.size)} \xB7 ${f.type || t('unknown.type')}`),\n      ),\n      status,\n      el('button', { class: 'icon-btn fr-remove', title: t('remove'), type: 'button', onclick: () => removeFile(f) }, '\u2715'),\n      bar,\n    );\n    if (st && st.done) bar.style.width = '100%';\n    queueUI.set(f, { row, bar, status });\n    els.fileList.append(row);\n  });\n  els.fileList.hidden = files.length === 0;\n  els.dropzone.hidden = files.length > 0;\n}\n\nfunction removeFile(f) {\n  if (uploading) return;\n  files = files.filter((x) => x !== f);\n  queueState.delete(f);\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n}\n\n/* ---------- \u6587\u672C\u8F93\u5165 ---------- */\nels.textInput.addEventListener('input', () => {\n  els.textCounter.textContent = t('text.counter', els.textInput.value.length, 65536);\n  els.btnText.disabled = !policyReady || !els.textInput.value.trim();\n});\n\n/* ---------- \u4E0A\u4F20:\u961F\u5217\u987A\u5E8F\u9010\u4E2A,\u805A\u5408\u8FDB\u5EA6 + \u6BCF\u884C\u8FF7\u4F60\u8FDB\u5EA6 ---------- */\nels.btnUpload.addEventListener('click', startUpload);\nels.btnCancel.addEventListener('click', cancelUpload);\nels.btnText.addEventListener('click', submitText);\n\nfunction sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }\n\nfunction xhrPut(url, blob, onProgress) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open('PUT', url);\n    xhr.onload = () => {\n      let etag = null;\n      try {\n        const result = JSON.parse(xhr.responseText);\n        if (result.error === 'capacity_exceeded' || (xhr.status >= 400 && xhr.status < 500) || result.error?.startsWith('upload_policy') || isSecurityError({ code: result.error })) {\n          const error = responseError(result, xhr.status);\n          reject(error);\n          return;\n        }\n        etag = result.etag;\n      } catch { /* ignore */ }\n      resolve(xhr.status >= 200 && xhr.status < 300 && etag ? etag : null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\n/** \u5355\u7247\u6700\u591A\u91CD\u8BD5 3 \u6B21,\u9000\u907F 1s/2s/4s */\nasync function putPartWithRetry(uploadId, n, blob, onProgress) {\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) return null;\n    const etag = await xhrPut(`/api/uploads/${uploadId}/parts/${n}`, blob, onProgress);\n    if (etag) return etag;\n    await sleep([1000, 2000, 4000][attempt] || 4000);\n  }\n  return null;\n}\n\nfunction xhrJson(method, url, blob, onProgress, context) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open(method, url);\n    if (context) xhr.setRequestHeader('X-Upload-Context', encodeURIComponent(JSON.stringify(context)));\n    xhr.onload = () => {\n      if (xhr.status >= 200 && xhr.status < 300) {\n        try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }\n      }\n      let data;\n      try { data = JSON.parse(xhr.responseText); } catch { /* Use status below. */ }\n      if ((xhr.status >= 400 && xhr.status < 500) || isSecurityError({ code: data?.error })) {\n        reject(responseError(data, xhr.status));\n        return;\n      }\n      resolve(null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\nlet speedState = { t: 0, loaded: 0, speed: 0 };\nlet curFileIdx = 0;\nlet curFileTotal = 1;\nfunction updateAggregate(loaded, total) {\n  const pct = Math.min(100, Math.floor((loaded / total) * 100));\n  els.progressFill.style.width = pct + '%';\n  const now = performance.now();\n  if (speedState.t && loaded > speedState.loaded) {\n    const inst = (loaded - speedState.loaded) / ((now - speedState.t) / 1000);\n    speedState.speed = speedState.speed ? speedState.speed * 0.7 + inst * 0.3 : inst;\n  }\n  speedState.t = now;\n  speedState.loaded = loaded;\n  let text = `${pct}% \xB7 ${fmtBytes(loaded)} / ${fmtBytes(total)} \xB7 ${fmtBytes(speedState.speed)}/s`;\n  if (speedState.speed > 1024 && loaded > 0 && loaded < total) {\n    text += ` \xB7 ${t('prog.eta', fmtDuration((total - loaded) / speedState.speed))}`;\n  }\n  if (curFileTotal > 1) text += ` \xB7 ${t('prog.file', curFileIdx, curFileTotal)}`;\n  els.progressText.textContent = text;\n}\n\n/** \u7B49\u5F85\u6001(\u521D\u59CB\u5316/\u91CD\u8BD5\u95F4\u9694/\u5408\u5E76\u5206\u7247):\u8FDB\u5EA6\u6761\u53E0\u52A0\u6D41\u5149\u52A8\u753B */\nfunction setPending(on) {\n  els.progressFill.classList.toggle('pending', on);\n}\n\nasync function startUpload() {\n  if (!files.length || uploading || !canUploadFiles() || !securityFeedback.canRetry()) return;\n  // A retry must not re-upload files already accepted earlier in the batch.\n  const pendingFiles = files.filter(file => !queueState.get(file)?.done);\n  if (!pendingFiles.length) return;\n  securityFeedback.clear();\n  uploading = true;\n  cancelled = false;\n  speedState = { t: 0, loaded: 0, speed: 0 };\n  curFileIdx = 0;\n  curFileTotal = pendingFiles.length;\n  const opts = readOptions();\n  const responses = [];\n  const totalBytes = pendingFiles.reduce((s, f) => s + f.size, 0);\n  let baseBytes = 0;\n  setBusy(true);\n  els.progress.hidden = false;\n  els.progressFill.style.width = '0%';\n  setPending(false);\n  els.progressText.textContent = t('prog.preparing');\n\n  for (let i = 0; i < pendingFiles.length; i++) {\n    if (cancelled) break;\n    const f = pendingFiles[i];\n    const ui = queueUI.get(f);\n    ui.row.classList.remove('fail');\n    curFileIdx = i + 1;\n    ui.row.classList.add('uploading');\n    els.progressText.textContent = t('prog.uploading');\n    const onProgress = (loaded) => {\n      ui.bar.style.width = Math.min(100, (loaded / f.size) * 100) + '%';\n      updateAggregate(baseBytes + loaded, totalBytes);\n    };\n    try {\n      const res = cfg.fileBackend === 'kv'\n        ? await directUpload(f, opts, onProgress)\n        : await multipartUpload(f, opts, onProgress);\n      responses.push(res);\n      baseBytes += f.size;\n      queueState.set(f, { done: res.code });\n      ui.bar.style.width = '100%';\n      ui.row.classList.add('done');\n      ui.status.textContent = `\u2713 ${res.code}`;\n    } catch (e) {\n      await abortUpload();\n      queueState.set(f, 'fail');\n      ui.row.classList.add('fail');\n      ui.status.textContent = '\u2717';\n      if (e.code === 'capacity_exceeded') {\n        window.alert(Number.isSafeInteger(e.remainingBytes) && e.remainingBytes >= 0\n          ? t('err.capacityRemaining', (e.remainingBytes / 1e9).toFixed(3), e.remainingBytes.toLocaleString())\n          : t('err.capacity'));\n      } else if (!cancelled && !securityFeedback.show(e)) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');\n      break; // \u4E00\u4E2A\u5931\u8D25\u5373\u505C,\u4FDD\u7559\u961F\u5217\u4FBF\u4E8E\u5904\u7406\n    }\n  }\n\n  uploading = false;\n  els.progress.hidden = true;\n  setPending(false);\n  setBusy(false);\n  if (cancelled) toast(t('toast.cancelled'));\n  if (responses.length) showResults([...lastResults, ...responses]);\n  await refreshPolicy();\n}\n\n/* ---------- \u5C0F\u5B58\u50A8\u6A21\u5F0F(KV):\u5355\u8BF7\u6C42\u76F4\u4F20,\u5931\u8D25\u6574\u6587\u4EF6\u91CD\u53D1 ---------- */\nasync function directUpload(f, opts, onProgress) {\n  const qs = new URLSearchParams({\n    filename: f.name,\n    mime: f.type || 'application/octet-stream',\n    expiry: opts.expiry,\n  });\n  if (opts.maxPickups !== null) qs.set('maxPickups', String(opts.maxPickups));\n\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) throw new Error('cancelled');\n    setPending(false);\n    const res = await xhrJson('POST', `/api/shares/file?${qs}`, f, onProgress,\n      { displayName: opts.displayName, description: opts.description });\n    if (res) return res;\n    if (cancelled) throw new Error('cancelled');\n    setPending(true);\n    els.progressText.textContent = t('prog.retry', attempt + 1);\n    await sleep([1000, 2000][attempt] || 4000);\n  }\n  throw new Error(t('err.upload'));\n}\n\n/* ---------- \u5927\u5B58\u50A8\u6A21\u5F0F(R2):\u5206\u7247\u4E0A\u4F20 ---------- */\nasync function multipartUpload(f, opts, onProgress) {\n  setPending(true);\n  els.progressText.textContent = t('prog.init');\n  const init = await api('/api/uploads/init', {\n    method: 'POST',\n    body: { filename: f.name, size: f.size, mime: f.type || 'application/octet-stream', ...opts },\n  });\n  session = init;\n  setPending(false);\n\n  const etags = [];\n  let doneBytes = 0;\n  for (let i = 1; i <= init.parts; i++) {\n    const blob = f.slice((i - 1) * init.partSize, Math.min(i * init.partSize, f.size));\n    const etag = await putPartWithRetry(init.uploadId, i, blob, (loaded) =>\n      onProgress(doneBytes + loaded),\n    );\n    if (!etag) {\n      const wasCancelled = cancelled;\n      await abortUpload();\n      throw new Error(wasCancelled ? 'cancelled' : t('err.upload'));\n    }\n    etags.push({ partNumber: i, etag });\n    doneBytes += blob.size;\n  }\n  if (cancelled) throw new Error('cancelled');\n\n  els.progressFill.style.width = '100%';\n  setPending(true);\n  els.progressText.textContent = t('prog.merging');\n  try {\n    const res = await api(`/api/uploads/${init.uploadId}/complete`, {\n      method: 'POST',\n      body: { parts: etags },\n    });\n    session = null;\n    return res;\n  } catch (e) {\n    await abortUpload();\n    throw e;\n  }\n}\n\nasync function cancelUpload() {\n  cancelled = true;\n  currentXhr?.abort();\n  await abortUpload();\n}\n\nasync function abortUpload() {\n  if (!session) return;\n  const id = session.uploadId;\n  session = null;\n  try { await api(`/api/uploads/${id}/abort`, { method: 'POST', body: {} }); } catch { /* ignore */ }\n}\n\nfunction setBusy(busy) {\n  for (const field of [$('#upload-name'), $('#upload-description')]) field.disabled = busy;\n  els.btnUpload.disabled = busy || files.length === 0 || !canUploadFiles();\n  els.btnText.disabled = busy || !policyReady || !els.textInput.value.trim();\n}\n\n/* \u5237\u65B0/\u5173\u9875\u65F6\u5C3D\u529B\u901A\u77E5\u670D\u52A1\u7AEF\u653E\u5F03(\u4E0D\u662F\u65AD\u70B9\u7EED\u4F20) */\nwindow.addEventListener('pagehide', () => {\n  if (session) navigator.sendBeacon(`/api/uploads/${session.uploadId}/abort`);\n});\n\n/* ---------- \u6587\u672C\u5206\u4EAB ---------- */\nasync function submitText() {\n  const text = els.textInput.value;\n  if (!text.trim() || !policyReady || !securityFeedback.canRetry()) return;\n  securityFeedback.clear();\n  setBusy(true);\n  try {\n    const res = await api('/api/shares/text', { method: 'POST', body: { text, ...readOptions() } });\n    showResults([res]);\n  } catch (e) {\n    if (!securityFeedback.show(e)) toast(e.message || t('err.submit'), 'error');\n  } finally {\n    setBusy(false);\n  }\n}\n\n/* ---------- \u7ED3\u679C\u5361\u7247(\u591A\u6587\u4EF6\u65F6\u9010\u5F20\u5806\u53E0 + \u6279\u91CF\u5934\u90E8) ---------- */\nfunction qrSvgFor(url) {\n  /* Vendored ES module; no parser-blocking classic script or global dependency. */\n  try {\n    const qr = qrcode(0, 'M');\n    qr.addData(url);\n    qr.make();\n    const holder = document.createElement('div');\n    holder.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true, alt: t('qr.hint') });\n    return holder.firstElementChild;\n  } catch { return null; }\n}\n\nfunction metaText(r) {\n  const parts = [];\n  parts.push(r.expireAt\n    ? t('meta.after', fmtDuration((r.expireAt - Date.now()) / 1000), fmtDate(r.expireAt))\n    : t('meta.forever'));\n  parts.push(r.maxPickups === null || r.maxPickups === undefined ? t('meta.unlimited') : t('meta.pickups', r.maxPickups));\n  if (r.kind === 'file' && r.size) parts.push(fmtBytes(r.size));\n  return parts.join(' \xB7 ');\n}\n\n/* \u7ED3\u679C\u5361\u7247 = \u53D6\u4EF6\u51ED\u8BC1\u7968\u636E:\u7968\u5934(\u6807\u9898+\u2116) \u2192 \u7968\u8EAB(\u53E3\u4EE4+\u4E8C\u7EF4\u7801) \u2192 \u6495\u7968\u7EBF \u2192 \u7968\u811A(\u64CD\u4F5C) */\nfunction buildResultCard(r, compact) {\n  const link = `${location.origin}/pickup?code=${r.code}`;\n  const qr = qrSvgFor(link);\n  const col = el('div', { class: 'result-col' },\n    compact && r.kind === 'file' && r.filename ? el('div', { class: 'result-file-name' }, r.filename) : null,\n    el('div', { class: 'code' }, ...r.code.split('').map((d) => el('span', {}, d))),\n    el('div', { class: 'result-link' }, link),\n    el('div', { class: 'result-meta' }, metaText(r)),\n  );\n  const main = el('div', { class: 'result-main' },\n    qr ? el('div', { class: 'qr-wrap', title: t('qr.hint') }, qr, el('div', { class: 'qr-hint' }, t('qr.hint'))) : null,\n    col,\n  );\n  return el('div', { class: 'result' },\n    el('div', { class: 'tk-head' },\n      el('span', {}, t('ticket.title')),\n      el('span', { class: 'tk-no' }, t('ticket.no', r.code)),\n    ),\n    el('div', { class: 'tk-body' },\n      compact ? null : el('p', { class: 'result-title' }, t('result.ok')),\n      main,\n    ),\n    el('div', { class: 'tk-tear' }),\n    el('div', { class: 'tk-foot' },\n      el('button', { class: 'btn primary', type: 'button', onclick: (e) => copyBtn(e.currentTarget, r.code, t('label.code')) }, t('btn.copyCode')),\n      el('button', { class: 'btn', type: 'button', onclick: (e) => copyBtn(e.currentTarget, link, t('label.link')) }, t('btn.copyLink')),\n      compact ? null : el('button', { class: 'btn ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n    ),\n  );\n}\n\nfunction showResults(list) {\n  lastResults = list;\n  if (els.placeholder) els.placeholder.hidden = true;\n  els.results.replaceChildren();\n  if (list.length > 1) {\n    els.results.append(\n      el('div', { class: 'result-batch-head' },\n        el('p', { class: 'result-title batch' }, t('result.okBatch', list.length)),\n        el('div', { class: 'btn-row' },\n          el('button', {\n            class: 'btn small', type: 'button',\n            onclick: async (e) => {\n              const ok = await copyText(list.map((r) => r.code).join('\\n'));\n              toast(ok ? t('copied', t('label.code')) : t('copy.fail'), ok ? 'ok' : 'error');\n            },\n          }, t('btn.copyAll')),\n          el('button', { class: 'btn small ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n        ),\n      ),\n    );\n  }\n  for (const r of list) els.results.append(buildResultCard(r, list.length > 1));\n  els.results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });\n}\n\nfunction resetAll() {\n  files = [];\n  queueState = new Map();\n  renderQueue();\n  els.btnUpload.disabled = true;\n  els.textInput.value = '';\n  els.textCounter.textContent = t('text.counter', 0, 65536);\n  els.btnText.disabled = true;\n  hideResult();\n}\n\n/** \u590D\u5236\u6210\u529F\u540E\u6309\u94AE\u77ED\u6682\u53D8\u6210\"\u2713 \u5DF2\u590D\u5236\" */\nasync function copyBtn(btn, text, label) {\n  const ok = await copyText(text);\n  toast(ok ? t('copied', label) : t('copy.fail'), ok ? 'ok' : 'error');\n  if (!ok) return;\n  btn.textContent = t('copied.btn');\n  btn.disabled = true;\n  setTimeout(() => { btn.textContent = label === t('label.code') ? t('btn.copyCode') : t('btn.copyLink'); btn.disabled = false; }, 1500);\n}\n\nfunction hideResult() {\n  lastResults = [];\n  if (els.placeholder) els.placeholder.hidden = false;\n  els.results.replaceChildren();\n}\n\ninitUi();\n", "js/pickup.js": "import { initUi } from './ui.js?v=4fceee008cffd8b6';\nimport { createSecurityFeedback } from './security-feedback.js?v=4fceee008cffd8b6';\nimport { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js?v=4fceee008cffd8b6';\nimport { t, onLangChange, initI18n } from './i18n.js?v=4fceee008cffd8b6';\n\ninitTheme();\ninitI18n();\n\nconst boxes = $$('.otp-box');\nconst row = $('#otp-row');\nconst errorBox = $('#pickup-error');\nconst resultCard = $('#pickup-result');\nlet querying = false;\nlet last = null; // { res, code } \u8BED\u8A00\u5207\u6362\u65F6\u91CD\u6E32\u67D3\nconst securityFeedback = createSecurityFeedback($('#pickup-input-card'), 'pickup', submit);\n\nonLangChange(() => {\n  if (last && !resultCard.hidden) render(last.res, last.code);\n});\n\nfunction value() {\n  return boxes.map((b) => b.value).join('');\n}\n\n/* \u586B\u5165 1-6 \u4F4D\u6570\u5B57:\u591F 6 \u4F4D\u81EA\u52A8\u63D0\u4EA4,\u5426\u5219\u805A\u7126\u5230\u4E0B\u4E00\u4E2A\u7A7A\u683C */\nfunction fill(digits) {\n  boxes.forEach((b, i) => { b.value = digits[i] || ''; });\n  hideError();\n  if (digits.length === 6) {\n    boxes[5].focus();\n    if (!querying) submit();\n  } else {\n    boxes[Math.min(digits.length, 5)].focus();\n  }\n}\n\nboxes.forEach((box, i) => {\n  box.addEventListener('input', () => {\n    box.value = box.value.replace(/\\D/g, '').slice(0, 1);\n    hideError();\n    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();\n    if (value().length === 6 && !querying) submit();\n  });\n  box.addEventListener('keydown', (e) => {\n    if (e.key === 'Backspace' && !box.value && i > 0) {\n      e.preventDefault();\n      boxes[i - 1].value = '';\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowLeft' && i > 0) {\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {\n      boxes[i + 1].focus();\n    } else if (e.key === 'Enter' && value().length === 6 && !querying) {\n      submit();\n    }\n  });\n  box.addEventListener('paste', (e) => {\n    e.preventDefault();\n    const digits = (e.clipboardData.getData('text') || '').replace(/\\D/g, '').slice(0, 6);\n    if (digits) fill(digits);\n  });\n  box.addEventListener('focus', () => box.select());\n});\n\nfunction showError(msg) {\n  errorBox.textContent = msg;\n  errorBox.hidden = false;\n  row.classList.remove('shake');\n  void row.offsetWidth; /* \u5F3A\u5236 reflow,\u91CD\u542F\u52A8\u753B */\n  row.classList.add('shake');\n}\nfunction hideError() {\n  errorBox.hidden = true;\n}\n\nasync function submit() {\n  const code = value();\n  if (querying || !/^\\d{6}$/.test(code) || !securityFeedback.canRetry()) return;\n  securityFeedback.clear();\n  querying = true;\n  hideError();\n  resultCard.hidden = true;\n  try {\n    const res = await api('/api/pickup', { method: 'POST', body: { code } });\n    render(res, code);\n  } catch (e) {\n    if (!securityFeedback.show(e)) showError(e.message || t('pk.fail'));\n  } finally {\n    querying = false;\n  }\n}\n\nfunction metaLine(res) {\n  const parts = [];\n  parts.push(res.expireAt ? t('pk.expireAt', fmtDate(res.expireAt)) : t('meta.forever'));\n  parts.push(res.pickupsLeft === null || res.pickupsLeft === undefined ? t('meta.unlimited') : t('pk.left', res.pickupsLeft));\n  return parts.join(' \xB7 ');\n}\n\nfunction render(res, code) {\n  last = { res, code };\n  resultCard.replaceChildren();\n\n  if (res.kind === 'text') {\n    const pre = el('pre', { class: 'text-body' });\n    pre.textContent = res.text ?? '';\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, '\u{1F4DD}'),\n        el('div', { class: 'sc-meta' }, el('b', {}, t('pk.textChars', res.size))),\n      ),\n      pre,\n      el('div', { class: 'btn-row' },\n        el('button', { class: 'btn primary', onclick: async () => {\n          (await copyText(res.text)) ? toast(t('copied.text'), 'ok') : toast(t('copy.fail'), 'error');\n        } }, t('pk.copyAllText')),\n      ),\n    );\n  } else {\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, iconFor(res.filename, res.mime)),\n        el('div', { class: 'sc-meta' },\n          el('b', {}, res.filename || t('pk.unnamed')),\n          el('small', {}, `${fmtBytes(res.size)} \xB7 ${res.mime || t('unknown.type')}`),\n        ),\n      ),\n      el('a', {\n        class: 'btn primary block',\n        href: `/api/pickup/${code}/download`,\n      }, t('pk.download')),\n    );\n  }\n\n  resultCard.append(\n    el('div', { class: 'meta-line' }, metaLine(res)),\n    el('div', { class: 'btn-row' },\n      el('button', { class: 'btn ghost', onclick: reset }, t('pk.again')),\n    ),\n  );\n  resultCard.hidden = false;\n}\n\nfunction reset() {\n  last = null;\n  resultCard.hidden = true;\n  boxes.forEach((b) => { b.value = ''; });\n  hideError();\n  boxes[0].focus();\n}\n\n/* \u652F\u6301 /pickup?code=xxxxxx \u5E26\u53C2\u8FDB\u5165 */\nconst fromUrl = new URLSearchParams(location.search).get('code');\nif (fromUrl && /^\\d{1,6}$/.test(fromUrl)) {\n  fill(fromUrl.slice(0, 6));\n} else {\n  boxes[0].focus();\n}\n\ninitUi();\n", "js/security-download.js": "import { initTheme, responseError } from './common.js?v=4fceee008cffd8b6';\nimport { initI18n, onLangChange } from './i18n.js?v=4fceee008cffd8b6';\nimport { createSecurityFeedback } from './security-feedback.js?v=4fceee008cffd8b6';\n\ninitTheme(); initI18n();\ndocument.documentElement.classList.add('ui-enhanced', 'ui-soft');\nconst data = JSON.parse(document.querySelector('#security-data').textContent);\nconst feedback = createSecurityFeedback(document.querySelector('#download-feedback'), 'download', () => location.reload());\nfeedback.show(responseError(data, 403));\nconst translate = () => {\n  const en = document.documentElement.lang === 'en';\n  document.title = en ? 'File download \xB7 File relay' : '\u6587\u4EF6\u4E0B\u8F7D \xB7 \u6587\u4EF6\u4E2D\u8F6C\u7AD9';\n  document.querySelector('#back-pickup').textContent = en ? 'Back to pickup' : '\u8FD4\u56DE\u53D6\u4EF6\u9875';\n};\nonLangChange(translate); translate();\n", "js/security-feedback.js": "import { el, copyText } from './common.js?v=4fceee008cffd8b6';\nimport { onLangChange } from './i18n.js?v=4fceee008cffd8b6';\n\nconst EMAIL = 'iblykk@gmail.com';\nexport const isSecurityError = error => ['security_blocked', 'security_unavailable'].includes(error?.code);\n\n/** One persistent notice per surface. No requests run on countdown expiry. */\nexport function createSecurityFeedback(host, operation, retry) {\n  let current = null, timer = null, deadline = 0, pending = false;\n  const card = el('section', { class: 'security-feedback', hidden: true, tabIndex: -1, ariaLabel: '\u8BBF\u95EE\u63D0\u793A' });\n  host.append(card);\n  const text = (zh, en) => document.documentElement.lang === 'en' ? en : zh;\n  const action = () => ({ upload: text('\u4E0A\u4F20', 'upload'), pickup: text('\u53D6\u4EF6', 'pick up'), download: text('\u4E0B\u8F7D', 'download') })[operation];\n  function clear() {\n    current = null;\n    clearInterval(timer);\n    timer = null;\n    card.hidden = true;\n    card.replaceChildren();\n  }\n  function ready() { return !pending && (!current || performance.now() >= deadline); }\n  function draw() {\n    if (!current) return;\n    const error = current;\n    const unavailable = error.code === 'security_unavailable';\n    const reason = unavailable ? 'service_unavailable' : error.reason;\n    const title = unavailable ? text('\u670D\u52A1\u6682\u65F6\u4E0D\u53EF\u7528', 'Service temporarily unavailable') : text('\u6682\u65F6\u65E0\u6CD5' + action(), 'Unable to ' + action());\n    const descriptions = {\n      rate_limit: text('\u64CD\u4F5C\u8F83\u9891\u7E41\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002\u5982\u6709\u7591\u95EE\uFF0C\u53EF\u8054\u7CFB\u7AD9\u957F\u3002', 'Too many attempts. Please try again later or contact the site owner.'),\n      region: text('\u5F53\u524D\u8BBF\u95EE\u5730\u533A\u4E0D\u5728\u672C\u7AD9\u5F00\u653E\u8303\u56F4\u5185\u3002\u5982\u6709\u7591\u95EE\uFF0C\u53EF\u8054\u7CFB\u7AD9\u957F\u3002', 'Access is unavailable from your current region. Contact the site owner for help.'),\n      service_unavailable: text('\u6682\u65F6\u65E0\u6CD5\u5904\u7406\u8BF7\u6C42\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002', 'Your request cannot be processed right now. Please try again later.'),\n    };\n    const description = descriptions[reason] || text('\u5F53\u524D\u7F51\u7EDC\u7684\u8BF7\u6C42\u53D7\u5230\u9650\u5236\u3002\u5982\u9700\u534F\u52A9\uFF0C\u8BF7\u8054\u7CFB\u7AD9\u957F\u3002', 'Requests from your current network are restricted. Contact the site owner for help.');\n    const heading = el('h3', {}, title);\n    const content = el('div', {}, heading, el('p', {}, description));\n    const head = el('div', { class: 'security-feedback-head' }, el('span', { class: 'security-feedback-icon', 'aria-hidden': 'true' }, '!'), content);\n    const status = el('p', { class: 'security-feedback-status', role: 'status' });\n    const copy = async value => {\n      if (await copyText(value)) { status.textContent = text('\u5DF2\u590D\u5236', 'Copied'); return; }\n      const dialog = el('dialog', { class: 'security-copy-dialog', 'aria-label': text('\u624B\u52A8\u590D\u5236', 'Copy manually') });\n      const field = el('textarea', { readonly: '', 'aria-label': text('\u5F85\u590D\u5236\u5185\u5BB9', 'Text to copy') });\n      field.value = value;\n      const close = el('button', { type: 'button', class: 'btn ghost', onclick: () => dialog.close() }, text('\u5173\u95ED', 'Close'));\n      dialog.append(field, close); document.body.append(dialog);\n      dialog.addEventListener('close', () => dialog.remove(), { once: true });\n      dialog.showModal(); field.focus(); field.select();\n    };\n    const id = typeof error.requestId === 'string' && /^[a-zA-Z0-9-]{1,80}$/.test(error.requestId) ? error.requestId : '';\n    const feedback = [text('\u6587\u4EF6\u4E2D\u8F6C\u7AD9\u8BBF\u95EE\u53CD\u9988', 'File relay access feedback'),\n      text('\u64CD\u4F5C\uFF1A', 'Action: ') + action(), text('\u63D0\u793A\uFF1A', 'Notice: ') + description,\n      text('\u53D1\u751F\u65F6\u95F4\uFF1A', 'Time: ') + new Date(error.serverTime || error.receivedAt).toISOString(),\n      ...(id ? [text('\u8BF7\u6C42\u7F16\u53F7\uFF1A', 'Request ID: ') + id] : []), '', text('\u8865\u5145\u8BF4\u660E\uFF1A', 'Additional details: ')].join('\\n');\n    const contact = el('a', { class: 'btn ghost', href: `mailto:${EMAIL}?subject=${encodeURIComponent(text('\u6587\u4EF6\u4E2D\u8F6C\u7AD9 \xB7 \u8BBF\u95EE\u53CD\u9988', 'File relay \xB7 Access feedback'))}&body=${encodeURIComponent(feedback)}` }, text('\u8054\u7CFB\u7AD9\u957F', 'Contact site owner'));\n    const retryButton = el('button', { type: 'button', class: 'btn primary', onclick: async () => {\n      if (!ready()) return;\n      pending = true; tick();\n      try { await retry(); }\n      finally { pending = false; if (current) draw(); }\n    } }, text('\u91CD\u65B0\u5C1D\u8BD5', 'Try again'));\n    const contactFirst = !unavailable && reason !== 'rate_limit';\n    if (contactFirst) { contact.className = 'btn primary'; retryButton.className = 'btn ghost'; }\n    const actions = el('div', { class: 'security-feedback-actions' }, ...(contactFirst ? [contact, retryButton] : [retryButton, contact]));\n    const time = el('div', { class: 'security-feedback-time' });\n    const remaining = el('span', {});\n    const hasExpiry = Number.isFinite(error.retryAt) && error.retryAt > 0;\n    time.hidden = !hasExpiry;\n    if (hasExpiry) time.append(el('span', {}, text('\u9884\u8BA1\u53EF\u91CD\u8BD5\uFF1A', 'Try after: ') + new Date(error.retryAt).toLocaleString(document.documentElement.lang, { hour12: false })), remaining);\n    const tip = text('\u8C03\u7528\u90AE\u4EF6\u5E94\u7528\u5E76\u9884\u586B\u53CD\u9988\u4FE1\u606F\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u53D1\u9001\u3002\u672A\u914D\u7F6E\u90AE\u4EF6\u5E94\u7528\u65F6\uFF0C\u53EF\u590D\u5236\u90AE\u7BB1\u540E\u81EA\u884C\u5199\u4FE1\u3002', 'Opens your mail app with a draft; nothing is sent automatically. You can also copy the email address.');\n    const help = el('button', { type: 'button', class: 'security-help', 'aria-label': tip, title: tip, 'aria-expanded': 'false' }, '?');\n    const helpText = el('span', { class: 'security-help-text', role: 'tooltip' }, tip);\n    help.onclick = () => help.setAttribute('aria-expanded', String(help.getAttribute('aria-expanded') !== 'true'));\n    help.onkeydown = event => { if (event.key === 'Escape') help.setAttribute('aria-expanded', 'false'); };\n    const fallback = el('div', { class: 'security-feedback-fallback' },\n      el('button', { type: 'button', class: 'security-text-button', onclick: () => copy(EMAIL) }, text('\u590D\u5236\u90AE\u7BB1', 'Copy email')),\n      el('span', { class: 'security-help-wrap' }, help, helpText));\n    const reference = el('div', { class: 'security-feedback-reference' },\n      el('span', {}, id ? text('\u8BF7\u6C42\u7F16\u53F7 ', 'Request ID ') + id : ''),\n      el('button', { type: 'button', class: 'security-text-button', onclick: () => copy(feedback) }, text('\u590D\u5236\u53CD\u9988\u4FE1\u606F', 'Copy feedback')));\n    card.replaceChildren(head, time, actions, fallback, reference, status);\n    function tick() {\n      const seconds = Math.max(0, Math.ceil((deadline - performance.now()) / 1000));\n      retryButton.disabled = pending || seconds > 0;\n      remaining.textContent = seconds ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` : text('\u53EF\u91CD\u65B0\u68C0\u67E5', 'Ready to retry');\n    }\n    clearInterval(timer); tick(); timer = setInterval(tick, 1000);\n  }\n  onLangChange(draw);\n  window.addEventListener('pagehide', () => clearInterval(timer));\n  window.addEventListener('pageshow', () => { if (current) draw(); });\n  return {\n    clear,\n    canRetry: () => !current || performance.now() >= deadline,\n    show(error) {\n      if (!isSecurityError(error)) return false;\n      const receivedAt = Date.now();\n      current = { ...error, receivedAt };\n      const serverTime = Number.isFinite(error.serverTime) ? error.serverTime : receivedAt;\n      deadline = performance.now() + (Number.isFinite(error.retryAt) ? Math.max(0, error.retryAt - serverTime) : 0);\n      draw(); card.hidden = false; card.focus({ preventScroll: true });\n      card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });\n      return true;\n    },\n  };\n}\n", "js/storage-overview.js": "import { el, fmtBytes } from './common.js?v=4fceee008cffd8b6';\nimport { t } from './i18n.js?v=4fceee008cffd8b6';\n\n/** Compact help shared by both storage headings; works with pointer, keyboard and touch. */\nexport function storageHelp(label, text) {\n  const anchor = el('span', { class: 'storage-help-anchor' }, label);\n  const content = el('span', {}, text);\n  // Reuse the shared help controller for focus, Escape and lifecycle cleanup.\n  queueMicrotask(() => { if (anchor.isConnected) window.attachHelp(anchor, content); });\n  return anchor;\n}\nexport function kvUsageCard(kv) {\n  if (!kv?.bound) return null;\n  const ready = kv.state === 'available' && Number.isSafeInteger(kv.usedBytes) && kv.usedBytes >= 0;\n  const quota = Number.isSafeInteger(kv.freeQuotaBytes) && kv.freeQuotaBytes > 0 ? kv.freeQuotaBytes : 1_000_000_000;\n  const info = [t('storage.sharedQuota'), t('storage.dailyPeak'), ready ? t('storage.keys', kv.keyCount) + ' \xB7 ' + t('storage.sample', kv.sampleDate) : t('storage.analyticsRequired')].join('\u3002');\n  return el('div', { class: 'stat-card storage-card kv-storage-card' },\n    el('div', { class: 'storage-heading' }, el('small', {}, 'KV'), storageHelp('KV', info)),\n    el('div', { class: 'storage-value' }, el('b', {}, ready ? fmtBytes(kv.usedBytes) : '\u2014'), el('span', { class: 'storage-total' }, ' / ' + fmtBytes(quota))),\n    ready ? el('meter', { class: 'storage-meter', min: 0, max: quota, value: Math.min(kv.usedBytes, quota), ariaLabel: t('storage.quotaReference') }) : el('small', { class: 'storage-state' }, t(kv.state === 'unconfigured' ? 'storage.notConfigured' : 'ad.storageUnavailable')));\n}\n", "js/ui-audit-layout.js": "export function initAuditLayout() {\n    /* Keep category selection, applied filters and export in the same workspace. */\n    (() => {\n        const form = document.querySelector('#audit-filter'), exportButton = document.querySelector('#audit-export');\n        if (!form || !exportButton)\n            return;\n        const oldActions = exportButton.parentElement;\n        form.querySelector('.audit-actions').append(exportButton);\n        oldActions.remove();\n        const notice = document.createElement('small');\n        notice.id = 'ui-audit-pending';\n        notice.className = 'ui-audit-pending';\n        notice.setAttribute('role', 'status');\n        notice.hidden = true;\n        form.append(notice);\n        const fields = ['audit-result', 'audit-from', 'audit-to', 'audit-q'].map(id => document.getElementById(id));\n        const snapshot = () => JSON.stringify(fields.map(n => n.value.trim()));\n        let applied = snapshot();\n        function sync() {\n            const dirty = snapshot() !== applied, en = document.documentElement.lang === 'en';\n            notice.hidden = !dirty;\n            notice.textContent = en ? 'Filters changed. Apply them before exporting.' : '\u7B5B\u9009\u6761\u4EF6\u5DF2\u66F4\u6539\uFF0C\u8BF7\u5148\u70B9\u51FB\u201C\u7B5B\u9009\u201D\u3002';\n            exportButton.setAttribute('aria-disabled', String(dirty));\n            exportButton.title = en ? 'Export all matching records across pages' : '\u5BFC\u51FA\u5F53\u524D\u7C7B\u522B\u53CA\u7B5B\u9009\u6761\u4EF6\u4E0B\u7684\u5168\u90E8\u5339\u914D\u8BB0\u5F55\uFF0C\u5305\u542B\u6240\u6709\u5206\u9875';\n            if (dirty)\n                exportButton.setAttribute('aria-describedby', notice.id);\n            else\n                exportButton.removeAttribute('aria-describedby');\n        }\n        for (const n of fields) {\n            n.addEventListener('input', sync);\n            n.addEventListener('change', sync);\n        }\n        form.addEventListener('submit', () => { const from = fields[1].value, to = fields[2].value; if (from && to && from > to) {\n            sync();\n            return;\n        } applied = snapshot(); sync(); });\n        document.querySelector('#audit-reset').addEventListener('click', () => { applied = snapshot(); sync(); });\n        exportButton.addEventListener('click', e => { if (snapshot() !== applied) {\n            e.preventDefault();\n            e.stopImmediatePropagation();\n            sync();\n        } }, true);\n        document.querySelector('#lang-btn').addEventListener('click', sync);\n        sync();\n    })();\n}\n", "js/ui-classifications.js": "export function initClassifications() {\n    /* Attach record categories to their subject; navigation and outcome badges stay intact. */\n    (() => {\n        const body = document.querySelector('#audit-body');\n        if (!body)\n            return;\n        function enhance() {\n            for (const cell of body.querySelectorAll('tr>td:nth-child(2)')) {\n                const category = cell.querySelector(':scope > small'), action = cell.querySelector(':scope > span');\n                if (!category || !action)\n                    continue;\n                const line = document.createElement('div');\n                line.className = 'ui-record-line';\n                const tag = document.createElement('sup');\n                tag.className = 'ui-record-sup';\n                tag.textContent = category.textContent;\n                const key = [...document.querySelectorAll('.audit-categories button[data-category]')].find(button => button.textContent.trim() === category.textContent.trim())?.dataset.category;\n                tag.dataset.tone = { login: 'blue', operation: 'teal', security: 'amber' }[key] || 'slate';\n                line.append(action, tag);\n                cell.replaceChildren(line);\n            }\n        }\n        enhance();\n        new MutationObserver(enhance).observe(body, { childList: true, subtree: true });\n    })();\n}\n", "js/ui-controls.js": `export function initControls() {
+`, "js/index.js": "import qrcode from './vendor/qrcode.js?v=9b8843adbff8575d';\nimport { initUi } from './ui.js?v=9b8843adbff8575d';\nimport { $, $$, api, responseError, fmtBytes, fmtDate, fmtDuration, iconFor, copyText, toast, initTheme, el } from './common.js?v=9b8843adbff8575d';\nimport { createSecurityFeedback, isSecurityError } from './security-feedback.js?v=9b8843adbff8575d';\nimport { t, onLangChange, initI18n } from './i18n.js?v=9b8843adbff8575d';\n\ninitTheme();\ninitI18n();\n\nconst els = {\n  dropzone: $('#dropzone'),\n  dzHint: $('#dz-hint'),\n  fileInput: $('#file-input'),\n  fileList: $('#file-list'),\n  textInput: $('#text-input'),\n  textCounter: $('#text-counter'),\n  btnUpload: $('#btn-upload'),\n  btnText: $('#btn-text'),\n  progress: $('#progress'),\n  progressFill: $('#progress-fill'),\n  progressText: $('#progress-text'),\n  btnCancel: $('#btn-cancel'),\n  results: $('#results'),\n  placeholder: $('#result-placeholder'),\n  capDate: $('#cap-date'),\n};\n\nconst MAX_SIZE_FALLBACK = 25 * 1024 * 1024;\nconst MAX_BATCH = 10;\nlet cfg = { fileBackend: 'kv', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config \u52A0\u8F7D\u540E\u8986\u76D6\nlet MAX_SIZE = MAX_SIZE_FALLBACK;\nlet policyReady = false;\n\nlet files = []; // \u5F85\u4E0A\u4F20\u961F\u5217(File[])\nlet queueUI = new Map(); // File \u2192 { row, bar, status }\nlet queueState = new Map(); // File \u2192 'idle' | { done: code } | 'fail'(\u8BED\u8A00\u5207\u6362\u540E\u91CD\u6E32\u67D3\u7528)\nlet session = null; // \u8FDB\u884C\u4E2D\u7684 R2 \u5206\u7247\u4F1A\u8BDD { uploadId, partSize, parts }\nlet currentXhr = null;\nlet cancelled = false;\nlet uploading = false;\nlet lastResults = [];\nconst securityFeedback = createSecurityFeedback($('.form-card'), 'upload', () =>\n  $('#panel-text').hidden ? startUpload() : submitText());\n\n/* \u670D\u52A1\u7AEF\u914D\u7F6E:\u51B3\u5B9A\u8D70\u5206\u7247\u4E0A\u4F20(R2 \u5927\u5B58\u50A8)\u8FD8\u662F\u5355\u8BF7\u6C42\u76F4\u4F20(KV \u5C0F\u5B58\u50A8) */\nfunction canUploadFiles() {\n  return policyReady && cfg.fileBackend !== 'none' && cfg.fileUploadAvailable !== false && cfg.uploadsRemaining !== 0;\n}\nfunction updateHint() {\n  els.dzHint.textContent = t('dz.hintMax', fmtBytes(MAX_SIZE));\n  for (const [id, value, allowed, fallback] of [\n    ['seg-expiry', 'forever', cfg.allowPermanent === true, '7d'],\n    ['seg-pickups', 'null', cfg.allowUnlimited === true, '5'],\n  ]) {\n    const button = $(`#${id} [data-v=\"${value}\"]`);\n    button.disabled = !allowed;\n    if (!allowed && button.classList.contains('active')) {\n      button.classList.remove('active');\n      $(`#${id} [data-v=\"${fallback}\"]`).classList.add('active');\n    }\n  }\n  $('#upload-policy-hint').textContent = !policyReady ? t('policy.unavailable')\n    : cfg.fileUploadAvailable === false ? t('policy.contact')\n    : cfg.weeklyFileLimit !== null && cfg.weeklyFileLimit !== undefined\n      ? t('policy.remaining', cfg.uploadsRemaining, cfg.weeklyFileLimit, fmtDate(cfg.uploadsResetAt)) : '';\n  $$('.seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n}\nasync function refreshPolicy() {\n  try {\n    cfg = await api('/api/config');\n    if (!Number.isSafeInteger(cfg.maxFileSize) || (cfg.maxFileSize < 0 || (cfg.maxFileSize === 0 && cfg.fileBackend !== 'none'))) throw new Error('Invalid upload policy');\n    MAX_SIZE = cfg.maxFileSize;\n    policyReady = true;\n  } catch { policyReady = false; }\n  updateHint();\n  setBusy(uploading);\n}\nupdateHint();\nrefreshPolicy();\n\n/* \u5BC4\u4EF6\u5355\u62AC\u5934\u65E5\u671F(\u88C5\u9970) */\nif (els.capDate) els.capDate.textContent = fmtDate(Date.now()).split(' ')[0];\n\n/* \u8BED\u8A00\u5207\u6362:\u91CD\u7B97\u52A8\u6001\u6587\u6848\u4E0E\u7ED3\u679C\u5361\u7247 */\nonLangChange(() => {\n  if (cfg.maxFileSize) updateHint();\n  renderQueue();\n  if (lastResults.length) showResults(lastResults);\n});\n\n/* ---------- tabs ---------- */\n$$('.tab').forEach((tb) =>\n  tb.addEventListener('click', () => {\n    if (uploading) return; // \u4E0A\u4F20\u4E2D\u7981\u6B62\u5207\u6362\n    $$('.tab').forEach((x) => x.classList.toggle('active', x === tb));\n    const tab = tb.dataset.tab;\n    $('#panel-file').hidden = tab !== 'file';\n    $('#panel-text').hidden = tab !== 'text';\n    $('#upload-description-field').hidden = tab !== 'file';\n    $$('.tab').forEach(x => x.setAttribute('aria-pressed', String(x === tb)));\n    els.btnUpload.hidden = tab !== 'file';\n    els.btnText.hidden = tab !== 'text';\n    hideResult();\n  }),\n);\n\n/* ---------- segmented \u9009\u9879 ---------- */\nfor (const id of ['seg-expiry', 'seg-pickups']) {\n  $(`#${id}`).addEventListener('click', (e) => {\n    const b = e.target.closest('button');\n    if (!b || b.disabled) return;\n    $$('button', $(`#${id}`)).forEach((x) => {\n      x.classList.toggle('active', x === b);\n      x.setAttribute('aria-pressed', String(x === b));\n    });\n  });\n}\nfunction readOptions() {\n  const exp = $('#seg-expiry .active').dataset.v;\n  const pk = $('#seg-pickups .active').dataset.v;\n  return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk),\n    displayName: $('#upload-name').value.trim(),\n    description: $('#panel-file').hidden ? '' : $('#upload-description').value.trim() };\n}\n$$('.tab, .seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));\n$('#upload-description').addEventListener('input', e => {\n  $('#description-count').textContent = `${e.target.value.length} / 300`;\n});\n\n/* ---------- \u6587\u4EF6\u961F\u5217:\u70B9\u51FB / \u5168\u7A97\u53E3\u62D6\u62FD / \u667A\u80FD\u7C98\u8D34,\u518D\u9009\u5373\u6574\u4F53\u66FF\u6362 ---------- */\nels.dropzone.addEventListener('click', () => els.fileInput.click());\nels.dropzone.addEventListener('keydown', (e) => {\n  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); els.fileInput.click(); }\n});\nels.fileInput.addEventListener('change', () => {\n  setFiles([...els.fileInput.files]);\n  els.fileInput.value = '';\n});\n\nfunction showTab(name) {\n  const tb = $(`.tab[data-tab=\"${name}\"]`);\n  if (tb && !tb.classList.contains('active')) tb.click(); // \u4E0A\u4F20\u4E2D\u65F6 tab \u5904\u7406\u5668\u81EA\u5DF1\u4F1A\u62D2\u7EDD\n}\n\n/* \u62D6\u5230\u9875\u9762\u4EFB\u610F\u4F4D\u7F6E\u90FD\u9AD8\u4EAE\u5E76\u53EF\u653E\u4E0B(\u4E0D\u518D\u8981\u6C42\u7CBE\u786E\u547D\u4E2D\u62D6\u62FD\u533A) */\nlet dragDepth = 0;\nwindow.addEventListener('dragenter', (e) => {\n  if (![...(e.dataTransfer?.types || [])].includes('Files')) return;\n  dragDepth++;\n  if (!uploading) els.dropzone.classList.add('dragover');\n});\nwindow.addEventListener('dragleave', () => {\n  if (--dragDepth <= 0) { dragDepth = 0; els.dropzone.classList.remove('dragover'); }\n});\nwindow.addEventListener('dragover', (e) => e.preventDefault());\nwindow.addEventListener('drop', (e) => {\n  e.preventDefault();\n  dragDepth = 0;\n  els.dropzone.classList.remove('dragover');\n  if (e.dataTransfer?.files?.length) setFiles([...e.dataTransfer.files]);\n});\n\n/* \u7C98\u8D34\u667A\u80FD\u8DEF\u7531:\u7C98\u8D34\u6587\u4EF6\u2192\u6587\u4EF6\u9875;\u6587\u4EF6\u9875\u7C98\u8D34\u7EAF\u6587\u672C\u2192\u81EA\u52A8\u5207\u5230\u6587\u672C\u9875 */\ndocument.addEventListener('paste', (e) => {\n  if (e.target?.closest?.('textarea, input')) return; // \u8F93\u5165\u6846\u5185\u7C98\u8D34\u8D70\u9ED8\u8BA4\u884C\u4E3A\n  if (e.clipboardData?.files?.length) {\n    setFiles([...e.clipboardData.files]);\n    return;\n  }\n  const text = e.clipboardData?.getData('text/plain');\n  if (text && $('#panel-text').hidden) {\n    showTab('text');\n    els.textInput.value = text;\n    els.textInput.dispatchEvent(new Event('input'));\n  }\n});\n\nfunction setFiles(list) {\n  if (uploading) return;\n  const ok = [];\n  for (const f of list) {\n    if (f.size > MAX_SIZE) { toast(t('err.oversize', fmtBytes(MAX_SIZE), fmtBytes(f.size)), 'error'); continue; }\n    if (f.size < 1) { toast(t('err.empty'), 'error'); continue; }\n    ok.push(f);\n  }\n  if (ok.length > MAX_BATCH) {\n    toast(t('err.tooMany', MAX_BATCH), 'error');\n    ok.length = MAX_BATCH;\n  }\n  files = ok; // \u66FF\u6362\u8BED\u4E49:\u518D\u6B21\u9009\u62E9\u5373\u91CD\u7F6E\u961F\u5217\n  queueState = new Map(files.map((f) => [f, 'idle']));\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n  hideResult();\n}\n\nfunction statusText(f, st) {\n  if (st === 'fail') return '\u2717';\n  if (st && st.done) return `\u2713 ${st.done}`;\n  return fmtBytes(f.size);\n}\n\nfunction renderQueue() {\n  els.fileList.replaceChildren();\n  queueUI = new Map();\n  files.forEach((f) => {\n    const st = queueState.get(f) || 'idle';\n    const bar = el('div', { class: 'fr-bar' });\n    const status = el('small', { class: 'fr-status' }, statusText(f, st));\n    const row = el('div', {\n      class: `file-row${st === 'fail' ? ' fail' : ''}${st && st.done ? ' done' : ''}`,\n    });\n    row.replaceChildren(\n      el('span', { class: 'fr-icon' }, iconFor(f.name, f.type)),\n      el('div', { class: 'fr-meta' },\n        el('b', { title: f.name }, f.name),\n        el('small', {}, `${fmtBytes(f.size)} \xB7 ${f.type || t('unknown.type')}`),\n      ),\n      status,\n      el('button', { class: 'icon-btn fr-remove', title: t('remove'), type: 'button', onclick: () => removeFile(f) }, '\u2715'),\n      bar,\n    );\n    if (st && st.done) bar.style.width = '100%';\n    queueUI.set(f, { row, bar, status });\n    els.fileList.append(row);\n  });\n  els.fileList.hidden = files.length === 0;\n  els.dropzone.hidden = files.length > 0;\n}\n\nfunction removeFile(f) {\n  if (uploading) return;\n  files = files.filter((x) => x !== f);\n  queueState.delete(f);\n  renderQueue();\n  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();\n}\n\n/* ---------- \u6587\u672C\u8F93\u5165 ---------- */\nels.textInput.addEventListener('input', () => {\n  els.textCounter.textContent = t('text.counter', els.textInput.value.length, 65536);\n  els.btnText.disabled = !policyReady || !els.textInput.value.trim();\n});\n\n/* ---------- \u4E0A\u4F20:\u961F\u5217\u987A\u5E8F\u9010\u4E2A,\u805A\u5408\u8FDB\u5EA6 + \u6BCF\u884C\u8FF7\u4F60\u8FDB\u5EA6 ---------- */\nels.btnUpload.addEventListener('click', startUpload);\nels.btnCancel.addEventListener('click', cancelUpload);\nels.btnText.addEventListener('click', submitText);\n\nfunction sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }\n\nfunction xhrPut(url, blob, onProgress) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open('PUT', url);\n    xhr.onload = () => {\n      let etag = null;\n      try {\n        const result = JSON.parse(xhr.responseText);\n        if (result.error === 'capacity_exceeded' || (xhr.status >= 400 && xhr.status < 500) || result.error?.startsWith('upload_policy') || isSecurityError({ code: result.error })) {\n          const error = responseError(result, xhr.status);\n          reject(error);\n          return;\n        }\n        etag = result.etag;\n      } catch { /* ignore */ }\n      resolve(xhr.status >= 200 && xhr.status < 300 && etag ? etag : null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\n/** \u5355\u7247\u6700\u591A\u91CD\u8BD5 3 \u6B21,\u9000\u907F 1s/2s/4s */\nasync function putPartWithRetry(uploadId, n, blob, onProgress) {\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) return null;\n    const etag = await xhrPut(`/api/uploads/${uploadId}/parts/${n}`, blob, onProgress);\n    if (etag) return etag;\n    await sleep([1000, 2000, 4000][attempt] || 4000);\n  }\n  return null;\n}\n\nfunction xhrJson(method, url, blob, onProgress, context) {\n  return new Promise((resolve, reject) => {\n    const xhr = new XMLHttpRequest();\n    currentXhr = xhr;\n    xhr.open(method, url);\n    if (context) xhr.setRequestHeader('X-Upload-Context', encodeURIComponent(JSON.stringify(context)));\n    xhr.onload = () => {\n      if (xhr.status >= 200 && xhr.status < 300) {\n        try { resolve(JSON.parse(xhr.responseText)); return; } catch { /* fallthrough */ }\n      }\n      let data;\n      try { data = JSON.parse(xhr.responseText); } catch { /* Use status below. */ }\n      if ((xhr.status >= 400 && xhr.status < 500) || isSecurityError({ code: data?.error })) {\n        reject(responseError(data, xhr.status));\n        return;\n      }\n      resolve(null);\n    };\n    xhr.onerror = () => resolve(null);\n    xhr.onabort = () => resolve(null);\n    xhr.upload.onprogress = (e) => onProgress && e.lengthComputable && onProgress(e.loaded);\n    xhr.send(blob);\n  });\n}\n\nlet speedState = { t: 0, loaded: 0, speed: 0 };\nlet curFileIdx = 0;\nlet curFileTotal = 1;\nfunction updateAggregate(loaded, total) {\n  const pct = Math.min(100, Math.floor((loaded / total) * 100));\n  els.progressFill.style.width = pct + '%';\n  const now = performance.now();\n  if (speedState.t && loaded > speedState.loaded) {\n    const inst = (loaded - speedState.loaded) / ((now - speedState.t) / 1000);\n    speedState.speed = speedState.speed ? speedState.speed * 0.7 + inst * 0.3 : inst;\n  }\n  speedState.t = now;\n  speedState.loaded = loaded;\n  let text = `${pct}% \xB7 ${fmtBytes(loaded)} / ${fmtBytes(total)} \xB7 ${fmtBytes(speedState.speed)}/s`;\n  if (speedState.speed > 1024 && loaded > 0 && loaded < total) {\n    text += ` \xB7 ${t('prog.eta', fmtDuration((total - loaded) / speedState.speed))}`;\n  }\n  if (curFileTotal > 1) text += ` \xB7 ${t('prog.file', curFileIdx, curFileTotal)}`;\n  els.progressText.textContent = text;\n}\n\n/** \u7B49\u5F85\u6001(\u521D\u59CB\u5316/\u91CD\u8BD5\u95F4\u9694/\u5408\u5E76\u5206\u7247):\u8FDB\u5EA6\u6761\u53E0\u52A0\u6D41\u5149\u52A8\u753B */\nfunction setPending(on) {\n  els.progressFill.classList.toggle('pending', on);\n}\n\nasync function startUpload() {\n  if (!files.length || uploading || !canUploadFiles() || !securityFeedback.canRetry()) return;\n  // A retry must not re-upload files already accepted earlier in the batch.\n  const pendingFiles = files.filter(file => !queueState.get(file)?.done);\n  if (!pendingFiles.length) return;\n  securityFeedback.clear();\n  uploading = true;\n  cancelled = false;\n  speedState = { t: 0, loaded: 0, speed: 0 };\n  curFileIdx = 0;\n  curFileTotal = pendingFiles.length;\n  const opts = readOptions();\n  const responses = [];\n  const totalBytes = pendingFiles.reduce((s, f) => s + f.size, 0);\n  let baseBytes = 0;\n  setBusy(true);\n  els.progress.hidden = false;\n  els.progressFill.style.width = '0%';\n  setPending(false);\n  els.progressText.textContent = t('prog.preparing');\n\n  for (let i = 0; i < pendingFiles.length; i++) {\n    if (cancelled) break;\n    const f = pendingFiles[i];\n    const ui = queueUI.get(f);\n    ui.row.classList.remove('fail');\n    curFileIdx = i + 1;\n    ui.row.classList.add('uploading');\n    els.progressText.textContent = t('prog.uploading');\n    const onProgress = (loaded) => {\n      ui.bar.style.width = Math.min(100, (loaded / f.size) * 100) + '%';\n      updateAggregate(baseBytes + loaded, totalBytes);\n    };\n    try {\n      const res = cfg.fileBackend === 'kv'\n        ? await directUpload(f, opts, onProgress)\n        : await multipartUpload(f, opts, onProgress);\n      responses.push(res);\n      baseBytes += f.size;\n      queueState.set(f, { done: res.code });\n      ui.bar.style.width = '100%';\n      ui.row.classList.add('done');\n      ui.status.textContent = `\u2713 ${res.code}`;\n    } catch (e) {\n      await abortUpload();\n      queueState.set(f, 'fail');\n      ui.row.classList.add('fail');\n      ui.status.textContent = '\u2717';\n      if (e.code === 'capacity_exceeded') {\n        window.alert(Number.isSafeInteger(e.remainingBytes) && e.remainingBytes >= 0\n          ? t('err.capacityRemaining', (e.remainingBytes / 1e9).toFixed(3), e.remainingBytes.toLocaleString())\n          : t('err.capacity'));\n      } else if (!cancelled && !securityFeedback.show(e)) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');\n      break; // \u4E00\u4E2A\u5931\u8D25\u5373\u505C,\u4FDD\u7559\u961F\u5217\u4FBF\u4E8E\u5904\u7406\n    }\n  }\n\n  uploading = false;\n  els.progress.hidden = true;\n  setPending(false);\n  setBusy(false);\n  if (cancelled) toast(t('toast.cancelled'));\n  if (responses.length) showResults([...lastResults, ...responses]);\n  await refreshPolicy();\n}\n\n/* ---------- \u5C0F\u5B58\u50A8\u6A21\u5F0F(KV):\u5355\u8BF7\u6C42\u76F4\u4F20,\u5931\u8D25\u6574\u6587\u4EF6\u91CD\u53D1 ---------- */\nasync function directUpload(f, opts, onProgress) {\n  const qs = new URLSearchParams({\n    filename: f.name,\n    mime: f.type || 'application/octet-stream',\n    expiry: opts.expiry,\n  });\n  if (opts.maxPickups !== null) qs.set('maxPickups', String(opts.maxPickups));\n\n  for (let attempt = 0; attempt < 3; attempt++) {\n    if (cancelled) throw new Error('cancelled');\n    setPending(false);\n    const res = await xhrJson('POST', `/api/shares/file?${qs}`, f, onProgress,\n      { displayName: opts.displayName, description: opts.description });\n    if (res) return res;\n    if (cancelled) throw new Error('cancelled');\n    setPending(true);\n    els.progressText.textContent = t('prog.retry', attempt + 1);\n    await sleep([1000, 2000][attempt] || 4000);\n  }\n  throw new Error(t('err.upload'));\n}\n\n/* ---------- \u5927\u5B58\u50A8\u6A21\u5F0F(R2):\u5206\u7247\u4E0A\u4F20 ---------- */\nasync function multipartUpload(f, opts, onProgress) {\n  setPending(true);\n  els.progressText.textContent = t('prog.init');\n  const init = await api('/api/uploads/init', {\n    method: 'POST',\n    body: { filename: f.name, size: f.size, mime: f.type || 'application/octet-stream', ...opts },\n  });\n  session = init;\n  setPending(false);\n\n  const etags = [];\n  let doneBytes = 0;\n  for (let i = 1; i <= init.parts; i++) {\n    const blob = f.slice((i - 1) * init.partSize, Math.min(i * init.partSize, f.size));\n    const etag = await putPartWithRetry(init.uploadId, i, blob, (loaded) =>\n      onProgress(doneBytes + loaded),\n    );\n    if (!etag) {\n      const wasCancelled = cancelled;\n      await abortUpload();\n      throw new Error(wasCancelled ? 'cancelled' : t('err.upload'));\n    }\n    etags.push({ partNumber: i, etag });\n    doneBytes += blob.size;\n  }\n  if (cancelled) throw new Error('cancelled');\n\n  els.progressFill.style.width = '100%';\n  setPending(true);\n  els.progressText.textContent = t('prog.merging');\n  try {\n    const res = await api(`/api/uploads/${init.uploadId}/complete`, {\n      method: 'POST',\n      body: { parts: etags },\n    });\n    session = null;\n    return res;\n  } catch (e) {\n    await abortUpload();\n    throw e;\n  }\n}\n\nasync function cancelUpload() {\n  cancelled = true;\n  currentXhr?.abort();\n  await abortUpload();\n}\n\nasync function abortUpload() {\n  if (!session) return;\n  const id = session.uploadId;\n  session = null;\n  try { await api(`/api/uploads/${id}/abort`, { method: 'POST', body: {} }); } catch { /* ignore */ }\n}\n\nfunction setBusy(busy) {\n  for (const field of [$('#upload-name'), $('#upload-description')]) field.disabled = busy;\n  els.btnUpload.disabled = busy || files.length === 0 || !canUploadFiles();\n  els.btnText.disabled = busy || !policyReady || !els.textInput.value.trim();\n}\n\n/* \u5237\u65B0/\u5173\u9875\u65F6\u5C3D\u529B\u901A\u77E5\u670D\u52A1\u7AEF\u653E\u5F03(\u4E0D\u662F\u65AD\u70B9\u7EED\u4F20) */\nwindow.addEventListener('pagehide', () => {\n  if (session) navigator.sendBeacon(`/api/uploads/${session.uploadId}/abort`);\n});\n\n/* ---------- \u6587\u672C\u5206\u4EAB ---------- */\nasync function submitText() {\n  const text = els.textInput.value;\n  if (!text.trim() || !policyReady || !securityFeedback.canRetry()) return;\n  securityFeedback.clear();\n  setBusy(true);\n  try {\n    const res = await api('/api/shares/text', { method: 'POST', body: { text, ...readOptions() } });\n    showResults([res]);\n  } catch (e) {\n    if (!securityFeedback.show(e)) toast(e.message || t('err.submit'), 'error');\n  } finally {\n    setBusy(false);\n  }\n}\n\n/* ---------- \u7ED3\u679C\u5361\u7247(\u591A\u6587\u4EF6\u65F6\u9010\u5F20\u5806\u53E0 + \u6279\u91CF\u5934\u90E8) ---------- */\nfunction qrSvgFor(url) {\n  /* Vendored ES module; no parser-blocking classic script or global dependency. */\n  try {\n    const qr = qrcode(0, 'M');\n    qr.addData(url);\n    qr.make();\n    const holder = document.createElement('div');\n    holder.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true, alt: t('qr.hint') });\n    return holder.firstElementChild;\n  } catch { return null; }\n}\n\nfunction metaText(r) {\n  const parts = [];\n  parts.push(r.expireAt\n    ? t('meta.after', fmtDuration((r.expireAt - Date.now()) / 1000), fmtDate(r.expireAt))\n    : t('meta.forever'));\n  parts.push(r.maxPickups === null || r.maxPickups === undefined ? t('meta.unlimited') : t('meta.pickups', r.maxPickups));\n  if (r.kind === 'file' && r.size) parts.push(fmtBytes(r.size));\n  return parts.join(' \xB7 ');\n}\n\n/* \u7ED3\u679C\u5361\u7247 = \u53D6\u4EF6\u51ED\u8BC1\u7968\u636E:\u7968\u5934(\u6807\u9898+\u2116) \u2192 \u7968\u8EAB(\u53E3\u4EE4+\u4E8C\u7EF4\u7801) \u2192 \u6495\u7968\u7EBF \u2192 \u7968\u811A(\u64CD\u4F5C) */\nfunction buildResultCard(r, compact) {\n  const link = `${location.origin}/pickup?code=${r.code}`;\n  const qr = qrSvgFor(link);\n  const col = el('div', { class: 'result-col' },\n    compact && r.kind === 'file' && r.filename ? el('div', { class: 'result-file-name' }, r.filename) : null,\n    el('div', { class: 'code' }, ...r.code.split('').map((d) => el('span', {}, d))),\n    el('div', { class: 'result-link' }, link),\n    el('div', { class: 'result-meta' }, metaText(r)),\n  );\n  const main = el('div', { class: 'result-main' },\n    qr ? el('div', { class: 'qr-wrap', title: t('qr.hint') }, qr, el('div', { class: 'qr-hint' }, t('qr.hint'))) : null,\n    col,\n  );\n  return el('div', { class: 'result' },\n    el('div', { class: 'tk-head' },\n      el('span', {}, t('ticket.title')),\n      el('span', { class: 'tk-no' }, t('ticket.no', r.code)),\n    ),\n    el('div', { class: 'tk-body' },\n      compact ? null : el('p', { class: 'result-title' }, t('result.ok')),\n      main,\n    ),\n    el('div', { class: 'tk-tear' }),\n    el('div', { class: 'tk-foot' },\n      el('button', { class: 'btn primary', type: 'button', onclick: (e) => copyBtn(e.currentTarget, r.code, t('label.code')) }, t('btn.copyCode')),\n      el('button', { class: 'btn', type: 'button', onclick: (e) => copyBtn(e.currentTarget, link, t('label.link')) }, t('btn.copyLink')),\n      compact ? null : el('button', { class: 'btn ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n    ),\n  );\n}\n\nfunction showResults(list) {\n  lastResults = list;\n  if (els.placeholder) els.placeholder.hidden = true;\n  els.results.replaceChildren();\n  if (list.length > 1) {\n    els.results.append(\n      el('div', { class: 'result-batch-head' },\n        el('p', { class: 'result-title batch' }, t('result.okBatch', list.length)),\n        el('div', { class: 'btn-row' },\n          el('button', {\n            class: 'btn small', type: 'button',\n            onclick: async (e) => {\n              const ok = await copyText(list.map((r) => r.code).join('\\n'));\n              toast(ok ? t('copied', t('label.code')) : t('copy.fail'), ok ? 'ok' : 'error');\n            },\n          }, t('btn.copyAll')),\n          el('button', { class: 'btn small ghost', type: 'button', onclick: resetAll }, t('btn.again')),\n        ),\n      ),\n    );\n  }\n  for (const r of list) els.results.append(buildResultCard(r, list.length > 1));\n  els.results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });\n}\n\nfunction resetAll() {\n  files = [];\n  queueState = new Map();\n  renderQueue();\n  els.btnUpload.disabled = true;\n  els.textInput.value = '';\n  els.textCounter.textContent = t('text.counter', 0, 65536);\n  els.btnText.disabled = true;\n  hideResult();\n}\n\n/** \u590D\u5236\u6210\u529F\u540E\u6309\u94AE\u77ED\u6682\u53D8\u6210\"\u2713 \u5DF2\u590D\u5236\" */\nasync function copyBtn(btn, text, label) {\n  const ok = await copyText(text);\n  toast(ok ? t('copied', label) : t('copy.fail'), ok ? 'ok' : 'error');\n  if (!ok) return;\n  btn.textContent = t('copied.btn');\n  btn.disabled = true;\n  setTimeout(() => { btn.textContent = label === t('label.code') ? t('btn.copyCode') : t('btn.copyLink'); btn.disabled = false; }, 1500);\n}\n\nfunction hideResult() {\n  lastResults = [];\n  if (els.placeholder) els.placeholder.hidden = false;\n  els.results.replaceChildren();\n}\n\ninitUi();\n", "js/pickup.js": "import { initUi } from './ui.js?v=9b8843adbff8575d';\nimport { createSecurityFeedback } from './security-feedback.js?v=9b8843adbff8575d';\nimport { $, $$, api, fmtBytes, fmtDate, copyText, toast, initTheme, el, iconFor } from './common.js?v=9b8843adbff8575d';\nimport { t, onLangChange, initI18n } from './i18n.js?v=9b8843adbff8575d';\n\ninitTheme();\ninitI18n();\n\nconst boxes = $$('.otp-box');\nconst row = $('#otp-row');\nconst errorBox = $('#pickup-error');\nconst resultCard = $('#pickup-result');\nlet querying = false;\nlet last = null; // { res, code } \u8BED\u8A00\u5207\u6362\u65F6\u91CD\u6E32\u67D3\nconst securityFeedback = createSecurityFeedback($('#pickup-input-card'), 'pickup', submit);\n\nonLangChange(() => {\n  if (last && !resultCard.hidden) render(last.res, last.code);\n});\n\nfunction value() {\n  return boxes.map((b) => b.value).join('');\n}\n\n/* \u586B\u5165 1-6 \u4F4D\u6570\u5B57:\u591F 6 \u4F4D\u81EA\u52A8\u63D0\u4EA4,\u5426\u5219\u805A\u7126\u5230\u4E0B\u4E00\u4E2A\u7A7A\u683C */\nfunction fill(digits) {\n  boxes.forEach((b, i) => { b.value = digits[i] || ''; });\n  hideError();\n  if (digits.length === 6) {\n    boxes[5].focus();\n    if (!querying) submit();\n  } else {\n    boxes[Math.min(digits.length, 5)].focus();\n  }\n}\n\nboxes.forEach((box, i) => {\n  box.addEventListener('input', () => {\n    box.value = box.value.replace(/\\D/g, '').slice(0, 1);\n    hideError();\n    if (box.value && i < boxes.length - 1) boxes[i + 1].focus();\n    if (value().length === 6 && !querying) submit();\n  });\n  box.addEventListener('keydown', (e) => {\n    if (e.key === 'Backspace' && !box.value && i > 0) {\n      e.preventDefault();\n      boxes[i - 1].value = '';\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowLeft' && i > 0) {\n      boxes[i - 1].focus();\n    } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {\n      boxes[i + 1].focus();\n    } else if (e.key === 'Enter' && value().length === 6 && !querying) {\n      submit();\n    }\n  });\n  box.addEventListener('paste', (e) => {\n    e.preventDefault();\n    const digits = (e.clipboardData.getData('text') || '').replace(/\\D/g, '').slice(0, 6);\n    if (digits) fill(digits);\n  });\n  box.addEventListener('focus', () => box.select());\n});\n\nfunction showError(msg) {\n  errorBox.textContent = msg;\n  errorBox.hidden = false;\n  row.classList.remove('shake');\n  void row.offsetWidth; /* \u5F3A\u5236 reflow,\u91CD\u542F\u52A8\u753B */\n  row.classList.add('shake');\n}\nfunction hideError() {\n  errorBox.hidden = true;\n}\n\nasync function submit() {\n  const code = value();\n  if (querying || !/^\\d{6}$/.test(code) || !securityFeedback.canRetry()) return;\n  securityFeedback.clear();\n  querying = true;\n  hideError();\n  resultCard.hidden = true;\n  try {\n    const res = await api('/api/pickup', { method: 'POST', body: { code } });\n    render(res, code);\n  } catch (e) {\n    if (!securityFeedback.show(e)) showError(e.message || t('pk.fail'));\n  } finally {\n    querying = false;\n  }\n}\n\nfunction metaLine(res) {\n  const parts = [];\n  parts.push(res.expireAt ? t('pk.expireAt', fmtDate(res.expireAt)) : t('meta.forever'));\n  parts.push(res.pickupsLeft === null || res.pickupsLeft === undefined ? t('meta.unlimited') : t('pk.left', res.pickupsLeft));\n  return parts.join(' \xB7 ');\n}\n\nfunction render(res, code) {\n  last = { res, code };\n  resultCard.replaceChildren();\n\n  if (res.kind === 'text') {\n    const pre = el('pre', { class: 'text-body' });\n    pre.textContent = res.text ?? '';\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, '\u{1F4DD}'),\n        el('div', { class: 'sc-meta' }, el('b', {}, t('pk.textChars', res.size))),\n      ),\n      pre,\n      el('div', { class: 'btn-row' },\n        el('button', { class: 'btn primary', onclick: async () => {\n          (await copyText(res.text)) ? toast(t('copied.text'), 'ok') : toast(t('copy.fail'), 'error');\n        } }, t('pk.copyAllText')),\n      ),\n    );\n  } else {\n    resultCard.append(\n      el('div', { class: 'share-card' },\n        el('span', { class: 'sc-icon' }, iconFor(res.filename, res.mime)),\n        el('div', { class: 'sc-meta' },\n          el('b', {}, res.filename || t('pk.unnamed')),\n          el('small', {}, `${fmtBytes(res.size)} \xB7 ${res.mime || t('unknown.type')}`),\n        ),\n      ),\n      el('a', {\n        class: 'btn primary block',\n        href: `/api/pickup/${code}/download`,\n      }, t('pk.download')),\n    );\n  }\n\n  resultCard.append(\n    el('div', { class: 'meta-line' }, metaLine(res)),\n    el('div', { class: 'btn-row' },\n      el('button', { class: 'btn ghost', onclick: reset }, t('pk.again')),\n    ),\n  );\n  resultCard.hidden = false;\n}\n\nfunction reset() {\n  last = null;\n  resultCard.hidden = true;\n  boxes.forEach((b) => { b.value = ''; });\n  hideError();\n  boxes[0].focus();\n}\n\n/* \u652F\u6301 /pickup?code=xxxxxx \u5E26\u53C2\u8FDB\u5165 */\nconst fromUrl = new URLSearchParams(location.search).get('code');\nif (fromUrl && /^\\d{1,6}$/.test(fromUrl)) {\n  fill(fromUrl.slice(0, 6));\n} else {\n  boxes[0].focus();\n}\n\ninitUi();\n", "js/security-download.js": "import { initTheme, responseError } from './common.js?v=9b8843adbff8575d';\nimport { initI18n, onLangChange } from './i18n.js?v=9b8843adbff8575d';\nimport { createSecurityFeedback } from './security-feedback.js?v=9b8843adbff8575d';\n\ninitTheme(); initI18n();\ndocument.documentElement.classList.add('ui-enhanced', 'ui-soft');\nconst data = JSON.parse(document.querySelector('#security-data').textContent);\nconst feedback = createSecurityFeedback(document.querySelector('#download-feedback'), 'download', () => location.reload());\nfeedback.show(responseError(data, 403));\nconst translate = () => {\n  const en = document.documentElement.lang === 'en';\n  document.title = en ? 'File download \xB7 File relay' : '\u6587\u4EF6\u4E0B\u8F7D \xB7 \u6587\u4EF6\u4E2D\u8F6C\u7AD9';\n  document.querySelector('#back-pickup').textContent = en ? 'Back to pickup' : '\u8FD4\u56DE\u53D6\u4EF6\u9875';\n};\nonLangChange(translate); translate();\n", "js/security-feedback.js": "import { el, copyText } from './common.js?v=9b8843adbff8575d';\nimport { onLangChange } from './i18n.js?v=9b8843adbff8575d';\n\nconst EMAIL = 'iblykk@gmail.com';\nexport const isSecurityError = error => ['security_blocked', 'security_unavailable'].includes(error?.code);\n\n/** One persistent notice per surface. No requests run on countdown expiry. */\nexport function createSecurityFeedback(host, operation, retry) {\n  let current = null, timer = null, deadline = 0, pending = false;\n  const card = el('section', { class: 'security-feedback', hidden: true, tabIndex: -1, ariaLabel: '\u8BBF\u95EE\u63D0\u793A' });\n  host.append(card);\n  const text = (zh, en) => document.documentElement.lang === 'en' ? en : zh;\n  const action = () => ({ upload: text('\u4E0A\u4F20', 'upload'), pickup: text('\u53D6\u4EF6', 'pick up'), download: text('\u4E0B\u8F7D', 'download') })[operation];\n  function clear() {\n    current = null;\n    clearInterval(timer);\n    timer = null;\n    card.hidden = true;\n    card.replaceChildren();\n  }\n  function ready() { return !pending && (!current || performance.now() >= deadline); }\n  function draw() {\n    if (!current) return;\n    const error = current;\n    const unavailable = error.code === 'security_unavailable';\n    const reason = unavailable ? 'service_unavailable' : error.reason;\n    const title = unavailable ? text('\u670D\u52A1\u6682\u65F6\u4E0D\u53EF\u7528', 'Service temporarily unavailable') : text('\u6682\u65F6\u65E0\u6CD5' + action(), 'Unable to ' + action());\n    const descriptions = {\n      rate_limit: text('\u64CD\u4F5C\u8F83\u9891\u7E41\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5\u3002\u5982\u6709\u7591\u95EE\uFF0C\u53EF\u8054\u7CFB\u7AD9\u957F\u3002', 'Too many attempts. Please try again later or contact the site owner.'),\n      region: text('\u5F53\u524D\u8BBF\u95EE\u5730\u533A\u4E0D\u5728\u672C\u7AD9\u5F00\u653E\u8303\u56F4\u5185\u3002\u5982\u6709\u7591\u95EE\uFF0C\u53EF\u8054\u7CFB\u7AD9\u957F\u3002', 'Access is unavailable from your current region. Contact the site owner for help.'),\n      service_unavailable: text('\u6682\u65F6\u65E0\u6CD5\u5904\u7406\u8BF7\u6C42\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u3002', 'Your request cannot be processed right now. Please try again later.'),\n    };\n    const description = descriptions[reason] || text('\u5F53\u524D\u7F51\u7EDC\u7684\u8BF7\u6C42\u53D7\u5230\u9650\u5236\u3002\u5982\u9700\u534F\u52A9\uFF0C\u8BF7\u8054\u7CFB\u7AD9\u957F\u3002', 'Requests from your current network are restricted. Contact the site owner for help.');\n    const heading = el('h3', {}, title);\n    const content = el('div', {}, heading, el('p', {}, description));\n    const head = el('div', { class: 'security-feedback-head' }, el('span', { class: 'security-feedback-icon', 'aria-hidden': 'true' }, '!'), content);\n    const status = el('p', { class: 'security-feedback-status', role: 'status' });\n    const copy = async value => {\n      if (await copyText(value)) { status.textContent = text('\u5DF2\u590D\u5236', 'Copied'); return; }\n      const dialog = el('dialog', { class: 'security-copy-dialog', 'aria-label': text('\u624B\u52A8\u590D\u5236', 'Copy manually') });\n      const field = el('textarea', { readonly: '', 'aria-label': text('\u5F85\u590D\u5236\u5185\u5BB9', 'Text to copy') });\n      field.value = value;\n      const close = el('button', { type: 'button', class: 'btn ghost', onclick: () => dialog.close() }, text('\u5173\u95ED', 'Close'));\n      dialog.append(field, close); document.body.append(dialog);\n      dialog.addEventListener('close', () => dialog.remove(), { once: true });\n      dialog.showModal(); field.focus(); field.select();\n    };\n    const id = typeof error.requestId === 'string' && /^[a-zA-Z0-9-]{1,80}$/.test(error.requestId) ? error.requestId : '';\n    const feedback = [text('\u6587\u4EF6\u4E2D\u8F6C\u7AD9\u8BBF\u95EE\u53CD\u9988', 'File relay access feedback'),\n      text('\u64CD\u4F5C\uFF1A', 'Action: ') + action(), text('\u63D0\u793A\uFF1A', 'Notice: ') + description,\n      text('\u53D1\u751F\u65F6\u95F4\uFF1A', 'Time: ') + new Date(error.serverTime || error.receivedAt).toISOString(),\n      ...(id ? [text('\u8BF7\u6C42\u7F16\u53F7\uFF1A', 'Request ID: ') + id] : []), '', text('\u8865\u5145\u8BF4\u660E\uFF1A', 'Additional details: ')].join('\\n');\n    const contact = el('a', { class: 'btn ghost', href: `mailto:${EMAIL}?subject=${encodeURIComponent(text('\u6587\u4EF6\u4E2D\u8F6C\u7AD9 \xB7 \u8BBF\u95EE\u53CD\u9988', 'File relay \xB7 Access feedback'))}&body=${encodeURIComponent(feedback)}` }, text('\u8054\u7CFB\u7AD9\u957F', 'Contact site owner'));\n    const retryButton = el('button', { type: 'button', class: 'btn primary', onclick: async () => {\n      if (!ready()) return;\n      pending = true; tick();\n      try { await retry(); }\n      finally { pending = false; if (current) draw(); }\n    } }, text('\u91CD\u65B0\u5C1D\u8BD5', 'Try again'));\n    const contactFirst = !unavailable && reason !== 'rate_limit';\n    if (contactFirst) { contact.className = 'btn primary'; retryButton.className = 'btn ghost'; }\n    const actions = el('div', { class: 'security-feedback-actions' }, ...(contactFirst ? [contact, retryButton] : [retryButton, contact]));\n    const time = el('div', { class: 'security-feedback-time' });\n    const remaining = el('span', {});\n    const hasExpiry = Number.isFinite(error.retryAt) && error.retryAt > 0;\n    time.hidden = !hasExpiry;\n    if (hasExpiry) time.append(el('span', {}, text('\u9884\u8BA1\u53EF\u91CD\u8BD5\uFF1A', 'Try after: ') + new Date(error.retryAt).toLocaleString(document.documentElement.lang, { hour12: false })), remaining);\n    const tip = text('\u8C03\u7528\u90AE\u4EF6\u5E94\u7528\u5E76\u9884\u586B\u53CD\u9988\u4FE1\u606F\uFF0C\u4E0D\u4F1A\u81EA\u52A8\u53D1\u9001\u3002\u672A\u914D\u7F6E\u90AE\u4EF6\u5E94\u7528\u65F6\uFF0C\u53EF\u590D\u5236\u90AE\u7BB1\u540E\u81EA\u884C\u5199\u4FE1\u3002', 'Opens your mail app with a draft; nothing is sent automatically. You can also copy the email address.');\n    const help = el('button', { type: 'button', class: 'security-help', 'aria-label': tip, title: tip, 'aria-expanded': 'false' }, '?');\n    const helpText = el('span', { class: 'security-help-text', role: 'tooltip' }, tip);\n    help.onclick = () => help.setAttribute('aria-expanded', String(help.getAttribute('aria-expanded') !== 'true'));\n    help.onkeydown = event => { if (event.key === 'Escape') help.setAttribute('aria-expanded', 'false'); };\n    const fallback = el('div', { class: 'security-feedback-fallback' },\n      el('button', { type: 'button', class: 'security-text-button', onclick: () => copy(EMAIL) }, text('\u590D\u5236\u90AE\u7BB1', 'Copy email')),\n      el('span', { class: 'security-help-wrap' }, help, helpText));\n    const reference = el('div', { class: 'security-feedback-reference' },\n      el('span', {}, id ? text('\u8BF7\u6C42\u7F16\u53F7 ', 'Request ID ') + id : ''),\n      el('button', { type: 'button', class: 'security-text-button', onclick: () => copy(feedback) }, text('\u590D\u5236\u53CD\u9988\u4FE1\u606F', 'Copy feedback')));\n    card.replaceChildren(head, time, actions, fallback, reference, status);\n    function tick() {\n      const seconds = Math.max(0, Math.ceil((deadline - performance.now()) / 1000));\n      retryButton.disabled = pending || seconds > 0;\n      remaining.textContent = seconds ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` : text('\u53EF\u91CD\u65B0\u68C0\u67E5', 'Ready to retry');\n    }\n    clearInterval(timer); tick(); timer = setInterval(tick, 1000);\n  }\n  onLangChange(draw);\n  window.addEventListener('pagehide', () => clearInterval(timer));\n  window.addEventListener('pageshow', () => { if (current) draw(); });\n  return {\n    clear,\n    canRetry: () => !current || performance.now() >= deadline,\n    show(error) {\n      if (!isSecurityError(error)) return false;\n      const receivedAt = Date.now();\n      current = { ...error, receivedAt };\n      const serverTime = Number.isFinite(error.serverTime) ? error.serverTime : receivedAt;\n      deadline = performance.now() + (Number.isFinite(error.retryAt) ? Math.max(0, error.retryAt - serverTime) : 0);\n      draw(); card.hidden = false; card.focus({ preventScroll: true });\n      card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });\n      return true;\n    },\n  };\n}\n", "js/storage-overview.js": "import { el, fmtBytes } from './common.js?v=9b8843adbff8575d';\nimport { t } from './i18n.js?v=9b8843adbff8575d';\n\n/** Compact help shared by both storage headings; works with pointer, keyboard and touch. */\nexport function storageHelp(label, text) {\n  const anchor = el('span', { class: 'storage-help-anchor' }, label);\n  const content = el('span', {}, text);\n  // Reuse the shared help controller for focus, Escape and lifecycle cleanup.\n  queueMicrotask(() => { if (anchor.isConnected) window.attachHelp(anchor, content); });\n  return anchor;\n}\nexport function kvUsageCard(kv) {\n  if (!kv?.bound) return null;\n  const ready = kv.state === 'available' && Number.isSafeInteger(kv.usedBytes) && kv.usedBytes >= 0;\n  const quota = Number.isSafeInteger(kv.freeQuotaBytes) && kv.freeQuotaBytes > 0 ? kv.freeQuotaBytes : 1_000_000_000;\n  const info = [t('storage.sharedQuota'), t('storage.dailyPeak'), ready ? t('storage.keys', kv.keyCount) + ' \xB7 ' + t('storage.sample', kv.sampleDate) : t('storage.analyticsRequired')].join('\u3002');\n  return el('div', { class: 'stat-card storage-card kv-storage-card' },\n    el('div', { class: 'storage-heading' }, el('small', {}, 'KV'), storageHelp('KV', info)),\n    el('div', { class: 'storage-value' }, el('b', {}, ready ? fmtBytes(kv.usedBytes) : '\u2014'), el('span', { class: 'storage-total' }, ' / ' + fmtBytes(quota))),\n    ready ? el('meter', { class: 'storage-meter', min: 0, max: quota, value: Math.min(kv.usedBytes, quota), ariaLabel: t('storage.quotaReference') }) : el('small', { class: 'storage-state' }, t(kv.state === 'unconfigured' ? 'storage.notConfigured' : 'ad.storageUnavailable')));\n}\n", "js/ui-audit-layout.js": "export function initAuditLayout() {\n    /* Keep category selection, applied filters and export in the same workspace. */\n    (() => {\n        const form = document.querySelector('#audit-filter'), exportButton = document.querySelector('#audit-export');\n        if (!form || !exportButton)\n            return;\n        const oldActions = exportButton.parentElement;\n        form.querySelector('.audit-actions').append(exportButton);\n        oldActions.remove();\n        const notice = document.createElement('small');\n        notice.id = 'ui-audit-pending';\n        notice.className = 'ui-audit-pending';\n        notice.setAttribute('role', 'status');\n        notice.hidden = true;\n        form.append(notice);\n        const fields = ['audit-result', 'audit-from', 'audit-to', 'audit-q'].map(id => document.getElementById(id));\n        const snapshot = () => JSON.stringify(fields.map(n => n.value.trim()));\n        let applied = snapshot();\n        function sync() {\n            const dirty = snapshot() !== applied, en = document.documentElement.lang === 'en';\n            notice.hidden = !dirty;\n            notice.textContent = en ? 'Filters changed. Apply them before exporting.' : '\u7B5B\u9009\u6761\u4EF6\u5DF2\u66F4\u6539\uFF0C\u8BF7\u5148\u70B9\u51FB\u201C\u7B5B\u9009\u201D\u3002';\n            exportButton.setAttribute('aria-disabled', String(dirty));\n            exportButton.title = en ? 'Export all matching records across pages' : '\u5BFC\u51FA\u5F53\u524D\u7C7B\u522B\u53CA\u7B5B\u9009\u6761\u4EF6\u4E0B\u7684\u5168\u90E8\u5339\u914D\u8BB0\u5F55\uFF0C\u5305\u542B\u6240\u6709\u5206\u9875';\n            if (dirty)\n                exportButton.setAttribute('aria-describedby', notice.id);\n            else\n                exportButton.removeAttribute('aria-describedby');\n        }\n        for (const n of fields) {\n            n.addEventListener('input', sync);\n            n.addEventListener('change', sync);\n        }\n        form.addEventListener('submit', () => { const from = fields[1].value, to = fields[2].value; if (from && to && from > to) {\n            sync();\n            return;\n        } applied = snapshot(); sync(); });\n        document.querySelector('#audit-reset').addEventListener('click', () => { applied = snapshot(); sync(); });\n        exportButton.addEventListener('click', e => { if (snapshot() !== applied) {\n            e.preventDefault();\n            e.stopImmediatePropagation();\n            sync();\n        } }, true);\n        document.querySelector('#lang-btn').addEventListener('click', sync);\n        sync();\n    })();\n}\n", "js/ui-classifications.js": "export function initClassifications() {\n    /* Attach record categories to their subject; navigation and outcome badges stay intact. */\n    (() => {\n        const body = document.querySelector('#audit-body');\n        if (!body)\n            return;\n        function enhance() {\n            for (const cell of body.querySelectorAll('tr>td:nth-child(2)')) {\n                const category = cell.querySelector(':scope > small'), action = cell.querySelector(':scope > span');\n                if (!category || !action)\n                    continue;\n                const line = document.createElement('div');\n                line.className = 'ui-record-line';\n                const tag = document.createElement('sup');\n                tag.className = 'ui-record-sup';\n                tag.textContent = category.textContent;\n                const key = [...document.querySelectorAll('.audit-categories button[data-category]')].find(button => button.textContent.trim() === category.textContent.trim())?.dataset.category;\n                tag.dataset.tone = { login: 'blue', operation: 'teal', security: 'amber' }[key] || 'slate';\n                line.append(action, tag);\n                cell.replaceChildren(line);\n            }\n        }\n        enhance();\n        new MutationObserver(enhance).observe(body, { childList: true, subtree: true });\n    })();\n}\n", "js/ui-controls.js": `export function initControls() {
     /* Shared accessible controls. Native inputs and their original events are retained. */
     (() => {
         const en = () => document.documentElement.lang === 'en';
@@ -1661,8 +1681,8 @@ export function initI18n() {
         new MutationObserver(upgrade).observe(document.body, { childList: true, subtree: true });
     })();
 }
-`, "js/ui-entry.js": "export function initEntry() {\n    /* Shared send, pickup and login interactions; templates own the initial layout. */\n    const root = document.documentElement, q = s => document.querySelector(s);\n    const en = () => document.documentElement.lang === 'en';\n    const words = [];\n    const label = (node, zh, english) => { words.push([node, zh, english]); node.textContent = en() ? english : zh; return node; };\n    const button = (id, zh, english, cls = 'btn ghost') => { const n = document.createElement('button'); n.type = 'button'; n.id = id; n.className = cls; return label(n, zh, english); };\n    // Stable layout lives in HTML. This module only attaches interactions.\n    if (q('#dropzone') || q('#otp-row')) {\n        const help = q('#ui-send-help');\n        const helpDialog = document.createElement('dialog');\n        helpDialog.id = 'ui-send-help-dialog';\n        helpDialog.className = 'source-dialog ui-send-help-dialog';\n        helpDialog.setAttribute('aria-labelledby', 'ui-send-help-title');\n        const helpHead = document.createElement('div');\n        helpHead.className = 'source-heading';\n        const helpTitle = document.createElement('h3');\n        helpTitle.id = 'ui-send-help-title';\n        label(helpTitle, '\u4F7F\u7528\u5E2E\u52A9', 'Sharing help');\n        helpHead.append(helpTitle);\n        const helpBody = document.createElement('div');\n        helpBody.className = 'source-body ui-send-help-body';\n        for (const [zhTitle, enTitle, zhText, enText] of [\n            ['\u5982\u4F55\u53D1\u9001\uFF1F', 'How do I send?', '\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u4E0E\u53EF\u53D6\u6B21\u6570\uFF0C\u63D0\u4EA4\u540E\u5C06\u751F\u6210\u7684\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9\u3002', 'Choose files or enter text, set expiry and pickup limits, then send the generated code or link to your recipient.'],\n            ['\u5BF9\u65B9\u5982\u4F55\u53D6\u4EF6\uFF1F', 'How does the recipient collect it?', '\u5728\u53D6\u4EF6\u9875\u8F93\u5165 6 \u4F4D\u53E3\u4EE4\uFF0C\u4E5F\u53EF\u4EE5\u76F4\u63A5\u6253\u5F00\u5206\u4EAB\u94FE\u63A5\u6216\u626B\u63CF\u4E8C\u7EF4\u7801\u3002', 'Enter the six-digit code on the pickup page, open the share link, or scan its QR code.'],\n            ['\u53E3\u4EE4\u65E0\u6CD5\u4F7F\u7528\u600E\u4E48\u529E\uFF1F', 'Why is a code unavailable?', '\u5148\u68C0\u67E5\u53E3\u4EE4\u662F\u5426\u6B63\u786E\uFF1B\u5206\u4EAB\u8FC7\u671F\u3001\u8FBE\u5230\u53D6\u4EF6\u6B21\u6570\u4E0A\u9650\u6216\u88AB\u5220\u9664\u540E\uFF0C\u5C06\u65E0\u6CD5\u7EE7\u7EED\u53D6\u4EF6\u3002\u53EF\u8054\u7CFB\u53D1\u9001\u8005\u91CD\u65B0\u5206\u4EAB\u3002', 'Check the code first. Expired, deleted or fully collected shares are unavailable. Ask the sender to share again.']\n        ]) {\n            const section = document.createElement('section'), heading = document.createElement('h4'), text = document.createElement('p');\n            label(heading, zhTitle, enTitle);\n            label(text, zhText, enText);\n            section.append(heading, text);\n            helpBody.append(section);\n        }\n        const helpFoot = document.createElement('div');\n        helpFoot.className = 'source-footer';\n        const closeHelp = button('ui-send-help-close', '\u77E5\u9053\u4E86', 'Got it', 'btn primary');\n        helpFoot.append(closeHelp);\n        helpDialog.append(helpHead, helpBody, helpFoot);\n        document.body.append(helpDialog);\n        help.onclick = () => helpDialog.showModal();\n        closeHelp.onclick = () => helpDialog.close();\n        helpDialog.addEventListener('close', () => help.focus());\n    }\n    if (q('#otp-row')) {\n        const card = q('#pickup-input-card'), result = q('#pickup-result'), boxes = [...document.querySelectorAll('.otp-box')], error = q('#pickup-error');\n        const submit = q('#ui-query'), clear = q('#ui-clear');\n        boxes.forEach((box, i) => box.setAttribute('aria-label', en() ? `Digit ${i + 1}` : `\u7B2C ${i + 1} \u4F4D\u53E3\u4EE4`));\n        submit.onclick = () => {\n            const value = boxes.map(n => n.value).join('');\n            if (!/^\\d{6}$/.test(value)) {\n                error.textContent = en() ? 'Enter all 6 digits.' : '\u8BF7\u8F93\u5165\u5B8C\u6574\u7684 6 \u4F4D\u6570\u5B57\u53E3\u4EE4\u3002';\n                error.hidden = false;\n                boxes.find(n => !n.value)?.focus();\n                return;\n            }\n            boxes[5].dispatchEvent(new Event('input', { bubbles: true }));\n        };\n        clear.onclick = () => { boxes.forEach(n => n.value = ''); error.hidden = true; result.hidden = true; boxes[0].focus(); };\n        const sync = () => { card.hidden = !result.hidden; root.classList.toggle('ui-pickup-found', !result.hidden); };\n        new MutationObserver(sync).observe(result, { attributes: true, attributeFilter: ['hidden'] });\n        sync();\n    }\n    const login = q('#admin-login');\n    if (login) {\n        const sync = () => root.classList.toggle('ui-login', !login.hidden);\n        new MutationObserver(sync).observe(login, { attributes: true, attributeFilter: ['hidden'] });\n        sync();\n        const token = q('#admin-token'), toggle = q('#ui-token-toggle');\n        function toggleLabel() {\n            const shown = token.type === 'text';\n            toggle.textContent = en() ? (shown ? 'Hide' : 'Show') : (shown ? '\u9690\u85CF' : '\u663E\u793A');\n            toggle.setAttribute('aria-label', en() ? (shown ? 'Hide admin token' : 'Show admin token') : (shown ? '\u9690\u85CF\u7BA1\u7406\u4EE4\u724C' : '\u663E\u793A\u7BA1\u7406\u4EE4\u724C'));\n        }\n        q('#lang-btn')?.addEventListener('click', toggleLabel);\n        toggle.onclick = () => { const show = token.type === 'password'; token.type = show ? 'text' : 'password'; toggle.setAttribute('aria-pressed', String(show)); toggleLabel(); };\n        token.required = true;\n        q('#btn-login').addEventListener('click', e => { if (!token.reportValidity()) {\n            e.preventDefault();\n            e.stopImmediatePropagation();\n        } }, true);\n    }\n    q('#lang-btn')?.addEventListener('click', () => { for (const [node, zh, english] of words)\n        node.textContent = en() ? english : zh; });\n}\n", "js/ui.js": `import { initEntry } from './ui-entry.js?v=4fceee008cffd8b6';
-import { initControls } from './ui-controls.js?v=4fceee008cffd8b6';
+`, "js/ui-entry.js": "export function initEntry() {\n    /* Shared send, pickup and login interactions; templates own the initial layout. */\n    const root = document.documentElement, q = s => document.querySelector(s);\n    const en = () => document.documentElement.lang === 'en';\n    const words = [];\n    const label = (node, zh, english) => { words.push([node, zh, english]); node.textContent = en() ? english : zh; return node; };\n    const button = (id, zh, english, cls = 'btn ghost') => { const n = document.createElement('button'); n.type = 'button'; n.id = id; n.className = cls; return label(n, zh, english); };\n    // Stable layout lives in HTML. This module only attaches interactions.\n    if (q('#dropzone') || q('#otp-row')) {\n        const help = q('#ui-send-help');\n        const helpDialog = document.createElement('dialog');\n        helpDialog.id = 'ui-send-help-dialog';\n        helpDialog.className = 'source-dialog ui-send-help-dialog';\n        helpDialog.setAttribute('aria-labelledby', 'ui-send-help-title');\n        const helpHead = document.createElement('div');\n        helpHead.className = 'source-heading';\n        const helpTitle = document.createElement('h3');\n        helpTitle.id = 'ui-send-help-title';\n        label(helpTitle, '\u4F7F\u7528\u5E2E\u52A9', 'Sharing help');\n        helpHead.append(helpTitle);\n        const helpBody = document.createElement('div');\n        helpBody.className = 'source-body ui-send-help-body';\n        for (const [zhTitle, enTitle, zhText, enText] of [\n            ['\u5982\u4F55\u53D1\u9001\uFF1F', 'How do I send?', '\u9009\u62E9\u6587\u4EF6\u6216\u8F93\u5165\u6587\u672C\uFF0C\u8BBE\u7F6E\u6709\u6548\u671F\u4E0E\u53EF\u53D6\u6B21\u6570\uFF0C\u63D0\u4EA4\u540E\u5C06\u751F\u6210\u7684\u53E3\u4EE4\u6216\u94FE\u63A5\u53D1\u7ED9\u5BF9\u65B9\u3002', 'Choose files or enter text, set expiry and pickup limits, then send the generated code or link to your recipient.'],\n            ['\u5BF9\u65B9\u5982\u4F55\u53D6\u4EF6\uFF1F', 'How does the recipient collect it?', '\u5728\u53D6\u4EF6\u9875\u8F93\u5165 6 \u4F4D\u53E3\u4EE4\uFF0C\u4E5F\u53EF\u4EE5\u76F4\u63A5\u6253\u5F00\u5206\u4EAB\u94FE\u63A5\u6216\u626B\u63CF\u4E8C\u7EF4\u7801\u3002', 'Enter the six-digit code on the pickup page, open the share link, or scan its QR code.'],\n            ['\u53E3\u4EE4\u65E0\u6CD5\u4F7F\u7528\u600E\u4E48\u529E\uFF1F', 'Why is a code unavailable?', '\u5148\u68C0\u67E5\u53E3\u4EE4\u662F\u5426\u6B63\u786E\uFF1B\u5206\u4EAB\u8FC7\u671F\u3001\u8FBE\u5230\u53D6\u4EF6\u6B21\u6570\u4E0A\u9650\u6216\u88AB\u5220\u9664\u540E\uFF0C\u5C06\u65E0\u6CD5\u7EE7\u7EED\u53D6\u4EF6\u3002\u53EF\u8054\u7CFB\u53D1\u9001\u8005\u91CD\u65B0\u5206\u4EAB\u3002', 'Check the code first. Expired, deleted or fully collected shares are unavailable. Ask the sender to share again.']\n        ]) {\n            const section = document.createElement('section'), heading = document.createElement('h4'), text = document.createElement('p');\n            label(heading, zhTitle, enTitle);\n            label(text, zhText, enText);\n            section.append(heading, text);\n            helpBody.append(section);\n        }\n        const helpFoot = document.createElement('div');\n        helpFoot.className = 'source-footer';\n        const closeHelp = button('ui-send-help-close', '\u77E5\u9053\u4E86', 'Got it', 'btn primary');\n        helpFoot.append(closeHelp);\n        helpDialog.append(helpHead, helpBody, helpFoot);\n        document.body.append(helpDialog);\n        help.onclick = () => helpDialog.showModal();\n        closeHelp.onclick = () => helpDialog.close();\n        helpDialog.addEventListener('close', () => help.focus());\n    }\n    if (q('#otp-row')) {\n        const card = q('#pickup-input-card'), result = q('#pickup-result'), boxes = [...document.querySelectorAll('.otp-box')], error = q('#pickup-error');\n        const submit = q('#ui-query'), clear = q('#ui-clear');\n        boxes.forEach((box, i) => box.setAttribute('aria-label', en() ? `Digit ${i + 1}` : `\u7B2C ${i + 1} \u4F4D\u53E3\u4EE4`));\n        submit.onclick = () => {\n            const value = boxes.map(n => n.value).join('');\n            if (!/^\\d{6}$/.test(value)) {\n                error.textContent = en() ? 'Enter all 6 digits.' : '\u8BF7\u8F93\u5165\u5B8C\u6574\u7684 6 \u4F4D\u6570\u5B57\u53E3\u4EE4\u3002';\n                error.hidden = false;\n                boxes.find(n => !n.value)?.focus();\n                return;\n            }\n            boxes[5].dispatchEvent(new Event('input', { bubbles: true }));\n        };\n        clear.onclick = () => { boxes.forEach(n => n.value = ''); error.hidden = true; result.hidden = true; boxes[0].focus(); };\n        const sync = () => { card.hidden = !result.hidden; root.classList.toggle('ui-pickup-found', !result.hidden); };\n        new MutationObserver(sync).observe(result, { attributes: true, attributeFilter: ['hidden'] });\n        sync();\n    }\n    const login = q('#admin-login');\n    if (login) {\n        const sync = () => root.classList.toggle('ui-login', !login.hidden);\n        new MutationObserver(sync).observe(login, { attributes: true, attributeFilter: ['hidden'] });\n        sync();\n        const token = q('#admin-token'), toggle = q('#ui-token-toggle');\n        function toggleLabel() {\n            const shown = token.type === 'text';\n            toggle.textContent = en() ? (shown ? 'Hide' : 'Show') : (shown ? '\u9690\u85CF' : '\u663E\u793A');\n            toggle.setAttribute('aria-label', en() ? (shown ? 'Hide admin token' : 'Show admin token') : (shown ? '\u9690\u85CF\u7BA1\u7406\u4EE4\u724C' : '\u663E\u793A\u7BA1\u7406\u4EE4\u724C'));\n        }\n        q('#lang-btn')?.addEventListener('click', toggleLabel);\n        toggle.onclick = () => { const show = token.type === 'password'; token.type = show ? 'text' : 'password'; toggle.setAttribute('aria-pressed', String(show)); toggleLabel(); };\n        token.required = true;\n        q('#btn-login').addEventListener('click', e => { if (!token.reportValidity()) {\n            e.preventDefault();\n            e.stopImmediatePropagation();\n        } }, true);\n    }\n    q('#lang-btn')?.addEventListener('click', () => { for (const [node, zh, english] of words)\n        node.textContent = en() ? english : zh; });\n}\n", "js/ui.js": `import { initEntry } from './ui-entry.js?v=9b8843adbff8575d';
+import { initControls } from './ui-controls.js?v=9b8843adbff8575d';
 export function initUi() {
     initEntry();
     initControls();
@@ -3986,8 +4006,8 @@ export default qrcode;
 <meta name="theme-color" content="#efe8d8">
 <title data-i18n="doc.pickup">\u6587\u4EF6\u4E2D\u8F6C\u7AD9 - \u53D6\u4EF6</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\u{1F4E6}</text></svg>">
-<link rel="stylesheet" href="/style.css?v=4fceee008cffd8b6">
-<link rel="stylesheet" href="/ui.css?v=4fceee008cffd8b6">
+<link rel="stylesheet" href="/style.css?v=9b8843adbff8575d">
+<link rel="stylesheet" href="/ui.css?v=9b8843adbff8575d">
 <script>
   document.documentElement.dataset.theme =
     localStorage.getItem('theme') ||
@@ -4043,7 +4063,7 @@ export default qrcode;
   </div>
 </footer>
 
-<script type="module" src="/js/pickup.js?v=4fceee008cffd8b6"><\/script>
+<script type="module" src="/js/pickup.js?v=9b8843adbff8575d"><\/script>
 </body>
 </html>
 `, "style.css": `/* ============================================================
@@ -5834,669 +5854,202 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
 @media(max-width:600px){.ui-enhanced.ui-send .upload-context>summary{min-height:44px}}
 /* Reserve the date's line box before its client-local value is filled in. */
 .ui-send .cap-date:empty::before{content:'\\00a0'}
-` }, "4fceee008cffd8b6");
+` }, "9b8843adbff8575d");
 
-// src/settings.ts
-var DEFAULT_RETENTION_DAYS = 30;
-var MAX_RETENTION_DAYS = 3650;
-var RETENTION_DAY_MS = 864e5;
-var KEY = "sys:expired-retention-days";
-var CREATE_SETTINGS = "CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)";
-function validRetentionDays(value) {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= MAX_RETENTION_DAYS;
-}
-__name(validRetentionDays, "validRetentionDays");
-async function readSetting(env, key) {
-  let raw2;
-  if (env.fileKV) raw2 = await env.fileKV.get(key);
-  else if (env.DB) {
-    try {
-      const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key = ?").bind(key).first();
-      raw2 = row?.value ?? null;
-    } catch (error) {
-      const message = error instanceof Error ? `${error.message} ${String(error.cause ?? "")}` : String(error);
-      if (/no such table: app_settings/i.test(message)) return null;
-      throw error;
-    }
-  } else throw new Error("No metadata store configured");
-  return raw2;
-}
-__name(readSetting, "readSetting");
-async function getRetentionDays(env) {
-  const raw2 = await readSetting(env, KEY);
-  if (raw2 === null) return DEFAULT_RETENTION_DAYS;
-  const days = /^\d+$/.test(raw2) ? Number(raw2) : NaN;
-  if (!validRetentionDays(days)) throw new Error("Invalid stored retention setting; cleanup stopped");
-  return days;
-}
-__name(getRetentionDays, "getRetentionDays");
-async function setRetentionDays(env, days) {
-  if (!validRetentionDays(days)) throw new Error("Invalid retention days");
-  await writeSetting(env, KEY, String(days));
-}
-__name(setRetentionDays, "setRetentionDays");
-async function writeSetting(env, key, value) {
-  if (env.fileKV) await env.fileKV.put(key, value);
-  else if (env.DB) {
-    await env.DB.prepare(CREATE_SETTINGS).run();
-    await env.DB.prepare("INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(key, value).run();
-  } else throw new Error("No metadata store configured");
-}
-__name(writeSetting, "writeSetting");
-
-// src/security-feedback.ts
-function securityDownloadPage(data) {
-  const payload = JSON.stringify(data).replace(/</g, "\\u003c");
-  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
-<title>\u6587\u4EF6\u4E0B\u8F7D \xB7 \u6587\u4EF6\u4E2D\u8F6C\u7AD9</title><link rel="stylesheet" href="${assetUrl("/style.css")}"><link rel="stylesheet" href="${assetUrl("/ui.css")}">
-<script type="module" src="${assetUrl("/js/security-download.js")}"><\/script></head><body>
-<header class="topbar"><div class="brand"><span class="logo">\u{1F4E6}</span><b>\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b></div>
-<div class="actions"><button id="lang-btn" class="icon-btn">EN</button><button id="theme-btn" class="icon-btn" aria-label="\u5207\u6362\u4E3B\u9898">\u{1F317}</button></div></header>
-<main class="container narrow"><section id="download-feedback"></section>
-<noscript><p>\u5F53\u524D\u65E0\u6CD5\u4E0B\u8F7D\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u6216\u8054\u7CFB\u7AD9\u957F\u3002</p><a href="mailto:iblykk@gmail.com">\u8054\u7CFB\u7AD9\u957F</a></noscript>
-<p><a id="back-pickup" href="/pickup">\u8FD4\u56DE\u53D6\u4EF6\u9875</a></p></main>
-<script type="application/json" id="security-data">${payload}<\/script></body></html>`;
-}
-__name(securityDownloadPage, "securityDownloadPage");
-
-// src/security.ts
-var SECURITY_KEY = "__file-relay/security-v1.json";
-var SCOPES = ["login", "upload", "pickup"];
-var SecurityError = class extends Error {
-  constructor(status, message, retryAt, newBan = false, reason = status === 503 ? "service_unavailable" : status === 429 ? "rate_limit" : "access_rule") {
-    super(message);
-    this.status = status;
-    this.retryAt = retryAt;
-    this.newBan = newBan;
-    this.reason = reason;
-  }
-  status;
-  retryAt;
-  newBan;
-  reason;
-  static {
-    __name(this, "SecurityError");
-  }
-};
-function securityResponse(c, e) {
-  if (!(e instanceof SecurityError))
-    return;
-  c.header("Cache-Control", "no-store");
-  if (e.retryAt)
-    c.header("Retry-After", String(Math.max(1, Math.ceil((e.retryAt - Date.now()) / 1e3))));
-  const data = { error: e.status === 503 ? "security_unavailable" : e.status === 409 ? "security_conflict" : e.status === 400 ? "bad_request" : "security_blocked", message: e.message, retryAt: e.retryAt, reason: e.reason, serverTime: Date.now(), requestId: crypto.randomUUID() };
-  c.header("X-Request-ID", data.requestId);
-  console.warn("security_rejection", { requestId: data.requestId, reason: data.reason, status: e.status });
-  if (["GET", "HEAD"].includes(c.req.method) && /^\/api\/pickup\/[^/]+\/download$/.test(c.req.path) && (c.req.header("Accept") || "").includes("text/html")) {
-    c.header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
-    c.header("Referrer-Policy", "no-referrer");
-    return c.html(securityDownloadPage(data), e.status);
-  }
-  return c.json(data, e.status);
-}
-__name(securityResponse, "securityResponse");
-var securityEnabled = /* @__PURE__ */ __name((env) => !!(env.BUCKET || env.DB), "securityEnabled");
-function canonicalIP(value) {
-  if (typeof value !== "string" || value.length > 45)
-    return null;
-  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(value) && value.split(".").every((x) => Number(x) <= 255 && !/^0\d/.test(x)))
-    return value;
-  if (!value.includes(":") || !/^[a-fA-F0-9:.]+$/.test(value))
-    return null;
-  try {
-    return new URL(`http://[${value}]/`).hostname.slice(1, -1).toLowerCase();
-  } catch {
-    return null;
-  }
-}
-__name(canonicalIP, "canonicalIP");
-var MAX_MANUAL_BAN_MINUTES = 30 * 24 * 60;
-var defaults = /* @__PURE__ */ __name(() => ({ version: 1, revision: "", configRevision: "", rules: {
-  login: { enabled: true, limit: 5, window: 10, duration: 30 },
-  upload: { enabled: true, limit: 20, window: 10, duration: 30 },
-  pickup: { enabled: true, limit: 10, window: 10, duration: 30 }
-}, bans: [], allow: [], regions: [], counters: [] }), "defaults");
-var integer = /* @__PURE__ */ __name((v, min, max) => Number.isSafeInteger(v) && v >= min && v <= max, "integer");
-var validScopes = /* @__PURE__ */ __name((v, region = false) => Array.isArray(v) && v.length > 0 && v.length <= 3 && new Set(v).size === v.length && v.every((s) => SCOPES.includes(s) && (!region || s !== "login")), "validScopes");
-var note = /* @__PURE__ */ __name((v) => typeof v === "string" && v.trim().length > 0 && v.length <= 120 && !/[\u0000-\u001f\u007f]/.test(v), "note");
-var timestamp = /* @__PURE__ */ __name((v) => integer(v, 0, Number.MAX_SAFE_INTEGER), "timestamp");
-var untilValid = /* @__PURE__ */ __name((v) => v === null || timestamp(v), "untilValid");
-var rulesValid = /* @__PURE__ */ __name((v) => v && Object.keys(v).length === 3 && SCOPES.every((k) => v[k] && typeof v[k].enabled === "boolean" && integer(v[k].limit, 1, 1e4) && integer(v[k].window, 1, 1440) && integer(v[k].duration, 1, 10080)), "rulesValid");
-function parse(raw2) {
-  if (raw2 === null)
-    return defaults();
-  const d = JSON.parse(raw2);
-  if (d?.version !== 1 || typeof d.revision !== "string" || typeof d.configRevision !== "string" || !rulesValid(d.rules) || !Array.isArray(d.bans) || d.bans.length > 1e3 || d.bans.some((b) => !b || !(!!canonicalIP(b.ip) && canonicalIP(b.ip) === b.ip || b.ip === "unknown") || !validScopes(b.scopes) || !["auto", "manual"].includes(b.kind) || !note(b.reason) || !integer(b.failures, 0, 1e4) || !timestamp(b.at) || !untilValid(b.until)) || !Array.isArray(d.allow) || d.allow.length > 200 || d.allow.some((a) => !a || !canonicalIP(a.ip) || canonicalIP(a.ip) !== a.ip || !validScopes(a.scopes) || !note(a.note) || !timestamp(a.created)) || !Array.isArray(d.regions) || d.regions.length > 200 || d.regions.some((r) => !r || typeof r.id !== "string" || !/^[A-Z]{2}$/.test(r.country) || !/^[A-Z0-9-]{0,10}$/.test(r.region) || !validScopes(r.scopes, true) || typeof r.enabled !== "boolean" || !note(r.reason) || !timestamp(r.at) || !untilValid(r.until)) || !Array.isArray(d.counters) || d.counters.length > 1e3 || d.counters.some((c) => !c || !(!!canonicalIP(c.ip) && canonicalIP(c.ip) === c.ip || c.ip === "unknown") || !SCOPES.includes(c.scope) || !Array.isArray(c.times) || c.times.length > 1e4 || c.times.some((n) => !timestamp(n))) || d.counters.reduce((n, c) => n + c.times.length, 0) > 2e4)
-    throw new Error("Invalid security state");
-  return d;
-}
-__name(parse, "parse");
-function prune(d, now) {
-  d.bans = d.bans.filter((b) => b.until === null || b.until > now);
-  d.counters = d.counters.filter((c) => {
-    c.times = c.times.filter((n) => n + d.rules[c.scope].window * 6e4 > now);
-    return c.times.length;
-  });
-}
-__name(prune, "prune");
-async function read(env) {
-  if (env.BUCKET) {
-    const obj = await env.BUCKET.get(SECURITY_KEY);
-    return { data: parse(obj ? await obj.text() : null), previous: obj?.etag ?? null };
-  }
-  await env.DB.prepare(CREATE_SETTINGS).run();
-  const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key=?").bind(SECURITY_KEY).first();
-  return { data: parse(row?.value ?? null), previous: row?.value ?? null };
-}
-__name(read, "read");
-async function write(env, d, previous) {
-  d.revision = crypto.randomUUID();
-  const value = JSON.stringify(d);
-  if (env.BUCKET)
-    return !!await env.BUCKET.put(SECURITY_KEY, value, { onlyIf: previous === null ? { etagDoesNotMatch: "*" } : { etagMatches: previous }, httpMetadata: { contentType: "application/json" }, storageClass: "Standard" });
-  const result = previous === null ? await env.DB.prepare("INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO NOTHING").bind(SECURITY_KEY, value).run() : await env.DB.prepare("UPDATE app_settings SET value=? WHERE key=? AND value=?").bind(value, SECURITY_KEY, previous).run();
-  return result.meta.changes === 1;
-}
-__name(write, "write");
-async function securityState(env) {
-  if (!securityEnabled(env))
-    return defaults();
-  try {
-    const { data } = await read(env);
-    prune(data, Date.now());
-    return data;
-  } catch {
-    throw new SecurityError(503, "\u5B89\u5168\u9632\u62A4\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
-  }
-}
-__name(securityState, "securityState");
-async function change(env, edit) {
-  if (!securityEnabled(env))
-    throw new SecurityError(503, "\u5B89\u5168\u9632\u62A4\u9700\u8981\u7ED1\u5B9A R2 \u6216 D1");
-  try {
-    for (let attempt = 0; attempt < 5; attempt++) {
-      if (attempt)
-        await new Promise((r) => setTimeout(r, 1100 + Math.random() * 200));
-      const { data, previous } = await read(env);
-      prune(data, Date.now());
-      if (edit(data, Date.now()) === false)
-        return data;
-      try {
-        if (await write(env, data, previous))
-          return data;
-      } catch (e) {
-        if (!/429|rate|too many/i.test(String(e)))
-          throw e;
+// ../../node_modules/hono/dist/compose.js
+var compose = /* @__PURE__ */ __name((middleware, onError, onNotFound) => {
+  return (context, next) => {
+    let index = -1;
+    return dispatch(0);
+    async function dispatch(i) {
+      if (i <= index) {
+        throw new Error("next() called multiple times");
       }
-    }
-  } catch (e) {
-    if (e instanceof SecurityError)
-      throw e;
-  }
-  throw new SecurityError(503, "\u5B89\u5168\u9632\u62A4\u5B58\u50A8\u7E41\u5FD9\u6216\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
-}
-__name(change, "change");
-function exempt(d, ip, scope) {
-  return d.allow.some((a) => a.ip === ip && a.scopes.includes(scope));
-}
-__name(exempt, "exempt");
-function evaluate(d, ip, scope, country = "", region = "", now = Date.now()) {
-  const ban = d.bans.find((b) => b.ip === ip && b.scopes.includes(scope) && (b.until === null || b.until > now) && (b.kind === "manual" || !exempt(d, ip, scope)));
-  if (ban)
-    return { blocked: true, reason: ban.reason, publicReason: ban.kind === "auto" ? "rate_limit" : "access_rule", retryAt: ban.until ?? void 0, status: ban.kind === "auto" ? 429 : 403 };
-  const geo = scope === "login" ? void 0 : d.regions.find((r) => r.enabled && r.scopes.includes(scope) && (r.until === null || r.until > now) && country !== "" && r.country === country && (!r.region || r.region === region));
-  if (geo)
-    return { blocked: true, reason: "\u547D\u4E2D\u5730\u533A\u5C01\u7981\u89C4\u5219", publicReason: "region", retryAt: geo.until ?? void 0, status: 403 };
-  return { blocked: false, reason: exempt(d, ip, scope) ? "\u547D\u4E2D\u5141\u8BB8\u540D\u5355" : "\u9632\u62A4\u653E\u884C", retryAt: void 0 };
-}
-__name(evaluate, "evaluate");
-async function enforceSecurity(env, ip, scope, country = "", region = "", count = false) {
-  if (!securityEnabled(env))
-    return;
-  const check = /* @__PURE__ */ __name((d) => {
-    const result = evaluate(d, ip, scope, country, region);
-    if (result.blocked)
-      throw new SecurityError(result.status || 403, "\u5F53\u524D\u8BF7\u6C42\u53D7\u8BBF\u95EE\u89C4\u5219\u9650\u5236", result.retryAt, false, result.publicReason);
-  }, "check");
-  if (!count) {
-    check(await securityState(env));
-    return;
-  }
-  let retryAt;
-  await change(env, (d, now) => {
-    retryAt = void 0;
-    check(d);
-    const rule = d.rules[scope];
-    if (!rule.enabled || exempt(d, ip, scope))
-      return false;
-    let counter = d.counters.find((c) => c.ip === ip && c.scope === scope);
-    if (!counter) {
-      if (d.counters.length >= 1e3)
-        throw new SecurityError(503, "\u9632\u62A4\u8BA1\u6570\u5BB9\u91CF\u5DF2\u6EE1\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
-      counter = { ip, scope, times: [] };
-      d.counters.push(counter);
-    }
-    if (d.counters.reduce((n, c) => n + c.times.length, 0) >= 2e4)
-      throw new SecurityError(503, "\u9632\u62A4\u8BA1\u6570\u5BB9\u91CF\u5DF2\u6EE1\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
-    counter.times.push(now);
-    if (counter.times.length >= rule.limit) {
-      if (d.bans.length >= 1e3)
-        throw new SecurityError(503, "\u9632\u62A4\u8BB0\u5F55\u5BB9\u91CF\u5DF2\u6EE1\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
-      retryAt = now + rule.duration * 6e4;
-      d.bans.push({ ip, scopes: [scope], kind: "auto", reason: scope === "upload" ? "\u4E0A\u4F20\u8BF7\u6C42\u8D85\u8FC7\u9891\u7387\u9650\u5236" : "\u65E0\u6548\u53D6\u4EF6\u53E3\u4EE4\u8D85\u8FC7\u9891\u7387\u9650\u5236", failures: counter.times.length, at: now, until: retryAt });
-      d.counters = d.counters.filter((c) => c !== counter);
-    }
-  });
-  if (retryAt)
-    throw new SecurityError(429, "\u8BF7\u6C42\u8FC7\u4E8E\u9891\u7E41\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5", retryAt, true);
-}
-__name(enforceSecurity, "enforceSecurity");
-async function editSecurity(env, body) {
-  if (!body || typeof body !== "object" || typeof body.action !== "string")
-    throw new SecurityError(400, "\u64CD\u4F5C\u53C2\u6570\u65E0\u6548");
-  return change(env, (d, now) => {
-    if (body.configRevision !== d.configRevision)
-      throw new SecurityError(409, "\u914D\u7F6E\u5DF2\u88AB\u5176\u4ED6\u64CD\u4F5C\u66F4\u65B0\uFF0C\u8BF7\u5237\u65B0\u540E\u91CD\u8BD5");
-    const bad = /* @__PURE__ */ __name(() => {
-      throw new SecurityError(400, "\u89C4\u5219\u53C2\u6570\u65E0\u6548\u6216\u8BB0\u5F55\u5DF2\u5B58\u5728");
-    }, "bad");
-    const ip = canonicalIP(body.ip);
-    switch (body.action) {
-      case "rules":
-        if (!rulesValid(body.rules))
-          bad();
-        d.rules = structuredClone(body.rules);
-        d.counters = [];
-        break;
-      case "ban":
-      case "allow": {
-        if (!ip || !validScopes(body.scopes) || !note(body.note))
-          bad();
-        if (body.action === "allow") {
-          if (d.allow.length >= 200 || d.allow.some((a) => a.ip === ip))
-            bad();
-          d.allow.push({ ip, scopes: body.scopes, note: body.note, created: now });
-        } else {
-          if (d.bans.length >= 1e3 || !integer(body.minutes, 0, MAX_MANUAL_BAN_MINUTES) || d.bans.some((b) => b.ip === ip))
-            bad();
-          d.bans.push({ ip, scopes: body.scopes, kind: "manual", reason: body.note, failures: 0, at: now, until: body.minutes ? now + body.minutes * 6e4 : null });
+      index = i;
+      let res;
+      let isError = false;
+      let handler;
+      if (middleware[i]) {
+        handler = middleware[i][0][0];
+        context.req.routeIndex = i;
+      } else {
+        handler = i === middleware.length && next || void 0;
+      }
+      if (handler) {
+        try {
+          res = await handler(context, () => dispatch(i + 1));
+        } catch (err2) {
+          if (err2 instanceof Error && onError) {
+            context.error = err2;
+            res = await onError(err2, context);
+            isError = true;
+          } else {
+            throw err2;
+          }
         }
-        break;
+      } else {
+        if (context.finalized === false && onNotFound) {
+          res = await onNotFound(context);
+        }
       }
-      case "unban":
-        if (!Array.isArray(body.ips) || !body.ips.length || body.ips.length > 1e3 || body.ips.some((v) => !canonicalIP(v) && v !== "unknown"))
-          bad();
-        const ips = body.ips.map((ip2) => canonicalIP(ip2) || "unknown");
-        d.bans = d.bans.filter((b) => !ips.includes(b.ip));
-        d.counters = d.counters.filter((c) => !ips.includes(c.ip));
-        break;
-      case "removeAllow":
-        if (!ip)
-          bad();
-        d.allow = d.allow.filter((a) => a.ip !== ip);
-        break;
-      case "region": {
-        const r = body.rule;
-        if (!r || typeof r.country !== "string" || !/^[A-Z]{2}$/.test(r.country) || typeof r.region !== "string" || !/^[A-Z0-9-]{0,10}$/.test(r.region) || !validScopes(r.scopes, true) || !note(r.reason) || typeof r.enabled !== "boolean" || !untilValid(r.until) || r.enabled && r.until !== null && r.until <= now)
-          bad();
-        const old = body.id ? d.regions.find((r2) => r2.id === body.id) : void 0;
-        if (body.id && !old || !old && d.regions.length >= 200 || d.regions.some((v) => v !== old && v.country === r.country && v.region === r.region && v.scopes.some((s) => r.scopes.includes(s))))
-          bad();
-        const next = { id: old?.id || crypto.randomUUID(), at: old?.at || now, country: r.country, region: r.region, scopes: r.scopes, reason: r.reason, enabled: r.enabled, until: r.until };
-        if (old)
-          d.regions[d.regions.indexOf(old)] = next;
-        else
-          d.regions.push(next);
-        break;
+      if (res && (context.finalized === false || isError)) {
+        context.res = res;
       }
-      case "removeRegion":
-        if (typeof body.id !== "string")
-          bad();
-        d.regions = d.regions.filter((r) => r.id !== body.id);
-        break;
-      default:
-        bad();
+      return context;
     }
-    d.configRevision = crypto.randomUUID();
-  });
-}
-__name(editSecurity, "editSecurity");
-
-// src/login-protection.ts
-var LOGIN_GUARD_KEY = "__file-relay/login-guard-v1.json";
-var LOGIN_RULES = { maxFailures: 5, windowSeconds: 600, banSeconds: 1800 };
-var MAX_RECORDS = 1e3;
-var LoginProtectionError = class extends Error {
-  constructor(retryAt, newBan = false) {
-    super("Login protection unavailable");
-    this.retryAt = retryAt;
-    this.newBan = newBan;
-  }
-  retryAt;
-  newBan;
-  static {
-    __name(this, "LoginProtectionError");
-  }
-};
-function loginProtectionResponse(c, error) {
-  if (!(error instanceof LoginProtectionError)) return;
-  c.header("Cache-Control", "no-store");
-  if (error.retryAt) {
-    c.header("Retry-After", String(Math.max(1, Math.ceil((error.retryAt - Date.now()) / 1e3))));
-    return c.json({ error: "login_blocked", message: "\u767B\u5F55\u5931\u8D25\u6B21\u6570\u8FC7\u591A\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5", retryAt: error.retryAt }, 429);
-  }
-  return c.json({ error: "login_protection_unavailable", message: "\u767B\u5F55\u9632\u62A4\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5" }, 503);
-}
-__name(loginProtectionResponse, "loginProtectionResponse");
-function loginIP(c) {
-  const raw2 = c.req.raw.cf ? c.req.header("CF-Connecting-IP") : void 0;
-  if (!raw2 || !/^[0-9a-fA-F:.]{3,45}$/.test(raw2)) return "unknown";
-  try {
-    const host = new URL(raw2.includes(":") ? `http://[${raw2}]` : `http://${raw2}`).hostname;
-    return host.replace(/^\[|\]$/g, "").toLowerCase();
-  } catch {
-    return "unknown";
-  }
-}
-__name(loginIP, "loginIP");
-function loginProtectionEnabled(env) {
-  return !!(env.BUCKET || env.DB);
-}
-__name(loginProtectionEnabled, "loginProtectionEnabled");
-function parse2(raw2, now, windowSeconds = LOGIN_RULES.windowSeconds) {
-  if (raw2 === null) return { version: 1, revision: "", entries: [] };
-  const data = JSON.parse(raw2);
-  if (data?.version !== 1 || typeof data.revision !== "string" || !Array.isArray(data.entries) || data.entries.length > MAX_RECORDS || data.entries.some((e) => !e || typeof e.ip !== "string" || !/^(unknown|[0-9a-f:.]{3,45})$/.test(e.ip) || !Number.isInteger(e.failures) || e.failures < 1 || e.failures > 1e4 || !Array.isArray(e.failedAt) || e.failedAt.length !== e.failures || !e.failedAt.every((n, i) => Number.isSafeInteger(n) && n >= 0 && (i === 0 || n >= e.failedAt[i - 1])) || e.firstFailedAt !== e.failedAt[0] || e.lastFailedAt !== e.failedAt[e.failedAt.length - 1] || ![e.firstFailedAt, e.lastFailedAt, e.bannedUntil].every((n) => Number.isSafeInteger(n) && n >= 0)) || new Set(data.entries.map((e) => e.ip)).size !== data.entries.length) throw new Error("Invalid login protection state");
-  data.entries = data.entries.filter((e) => {
-    if (e.bannedUntil) return e.bannedUntil > now;
-    e.failedAt = e.failedAt.filter((at) => at + windowSeconds * 1e3 > now);
-    e.failures = e.failedAt.length;
-    e.firstFailedAt = e.failedAt[0];
-    return e.failures > 0;
-  });
-  return data;
-}
-__name(parse2, "parse");
-async function read2(env, now, windowSeconds = LOGIN_RULES.windowSeconds) {
-  if (env.BUCKET) {
-    const object = await env.BUCKET.get(LOGIN_GUARD_KEY);
-    return { data: parse2(object ? await object.text() : null, now, windowSeconds), previous: object?.etag ?? null };
-  }
-  await env.DB.prepare(CREATE_SETTINGS).run();
-  const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key=?").bind(LOGIN_GUARD_KEY).first();
-  return { data: parse2(row?.value ?? null, now, windowSeconds), previous: row?.value ?? null };
-}
-__name(read2, "read");
-async function write2(env, data, previous) {
-  data.revision = crypto.randomUUID();
-  const value = JSON.stringify(data);
-  if (env.BUCKET) return !!await env.BUCKET.put(LOGIN_GUARD_KEY, value, {
-    onlyIf: previous === null ? { etagDoesNotMatch: "*" } : { etagMatches: previous },
-    httpMetadata: { contentType: "application/json" },
-    storageClass: "Standard"
-  });
-  const result = previous === null ? await env.DB.prepare("INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO NOTHING").bind(LOGIN_GUARD_KEY, value).run() : await env.DB.prepare("UPDATE app_settings SET value=? WHERE key=? AND value=?").bind(value, LOGIN_GUARD_KEY, previous).run();
-  return result.meta.changes === 1;
-}
-__name(write2, "write");
-async function change2(env, edit, windowSeconds) {
-  try {
-    const window = windowSeconds ?? (await securityState(env)).rules.login.window * 60;
-    for (let attempt = 0; attempt < 5; attempt++) {
-      if (attempt) await new Promise((resolve) => setTimeout(resolve, 1100 + Math.random() * 200));
-      const now = Date.now();
-      const { data, previous } = await read2(env, now, window);
-      if (!edit(data, now)) return;
-      try {
-        if (await write2(env, data, previous)) return;
-      } catch (error) {
-        if (!/429|rate|too many/i.test(String(error))) throw error;
-      }
-    }
-  } catch (error) {
-    if (error instanceof LoginProtectionError) throw error;
-    console.warn("Login protection storage unavailable");
-  }
-  throw new LoginProtectionError();
-}
-__name(change2, "change");
-function rejectBanned(entry, now) {
-  if (entry && entry.bannedUntil > now) throw new LoginProtectionError(entry.bannedUntil);
-}
-__name(rejectBanned, "rejectBanned");
-async function checkLogin(env, ip) {
-  if (!loginProtectionEnabled(env)) return;
-  try {
-    const config = await securityState(env);
-    if (exempt(config, ip, "login")) return;
-    const now = Date.now();
-    rejectBanned((await read2(env, now, config.rules.login.window * 60)).data.entries.find((e) => e.ip === ip), now);
-  } catch (error) {
-    if (error instanceof LoginProtectionError) throw error;
-    throw new LoginProtectionError();
-  }
-}
-__name(checkLogin, "checkLogin");
-async function recordLogin(env, ip, success) {
-  if (!loginProtectionEnabled(env)) return;
-  const config = await securityState(env), rule = config.rules.login;
-  if (exempt(config, ip, "login") || !rule.enabled) return;
-  let bannedUntil = 0;
-  await change2(env, (data, now) => {
-    const entry = data.entries.find((e) => e.ip === ip);
-    rejectBanned(entry, now);
-    if (success) {
-      data.entries = data.entries.filter((e) => e.ip !== ip);
-      return !!entry;
-    }
-    if (!entry && data.entries.length >= MAX_RECORDS) throw new LoginProtectionError();
-    const next = entry ?? { ip, failures: 0, failedAt: [], firstFailedAt: now, lastFailedAt: now, bannedUntil: 0 };
-    next.failures++;
-    next.failedAt.push(now);
-    next.lastFailedAt = now;
-    if (next.failures >= rule.limit) next.bannedUntil = now + rule.duration * 6e4;
-    bannedUntil = next.bannedUntil;
-    if (!entry) data.entries.push(next);
-    return true;
-  }, rule.window * 60);
-  if (bannedUntil) throw new LoginProtectionError(bannedUntil, true);
-}
-__name(recordLogin, "recordLogin");
-async function loginProtectionStatus(env) {
-  const enabled = loginProtectionEnabled(env);
-  if (!enabled) return { enabled, ...LOGIN_RULES, bans: [] };
-  try {
-    const now = Date.now();
-    const rule = (await securityState(env)).rules.login;
-    const { data } = await read2(env, now, rule.window * 60);
-    return { enabled, automaticEnabled: rule.enabled, maxFailures: rule.limit, windowSeconds: rule.window * 60, banSeconds: rule.duration * 60, bans: data.entries.filter((e) => e.bannedUntil > now).sort((a, b) => b.lastFailedAt - a.lastFailedAt).map(({ failedAt: _times, ...entry }) => entry) };
-  } catch {
-    throw new LoginProtectionError();
-  }
-}
-__name(loginProtectionStatus, "loginProtectionStatus");
-async function unblockLogins(env, ips) {
-  if (!loginProtectionEnabled(env)) throw new LoginProtectionError();
-  const selected = new Set(ips);
-  await change2(env, (data) => {
-    const count = data.entries.length;
-    data.entries = data.entries.filter((e) => !selected.has(e.ip));
-    return data.entries.length !== count;
-  });
-}
-__name(unblockLogins, "unblockLogins");
-async function unblockLogin(env, ip) {
-  return unblockLogins(env, [ip]);
-}
-__name(unblockLogin, "unblockLogin");
-
-// src/audit.ts
-var AUDIT_KEY = "__file-relay/audit-v1.json";
-var AUDIT_DAYS = 30;
-var AUDIT_LIMIT = 1e3;
-var AUDIT_GROUP_MS = 5 * 6e4;
-var CATEGORIES = ["login", "operation", "security", "upload", "pickup"];
-var states = /* @__PURE__ */ new WeakMap();
-function auditState(c) {
-  let state = states.get(c);
-  if (!state) {
-    state = { authenticated: false, actor: "anonymous", detail: {} };
-    states.set(c, state);
-  }
-  return state;
-}
-__name(auditState, "auditState");
-function auditEnabled(env) {
-  return !!(env.BUCKET || env.DB);
-}
-__name(auditEnabled, "auditEnabled");
-var text = /* @__PURE__ */ __name((value, max = 80) => typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").slice(0, max) : "", "text");
-function parse3(raw2, now) {
-  if (raw2 === null) return { version: 1, revision: "", entries: [] };
-  const data = JSON.parse(raw2);
-  if (data?.version !== 1 || typeof data.revision !== "string" || !Array.isArray(data.entries) || data.entries.length > AUDIT_LIMIT || data.entries.some((e) => !e || typeof e.id !== "string" || !Number.isSafeInteger(e.at) || !CATEGORIES.includes(e.category) || !["success", "failed", "blocked"].includes(e.result) || !["admin", "token", "anonymous"].includes(e.actor) || !Number.isInteger(e.status) || !Number.isFinite(e.durationMs) || !["action", "ip", "country", "region", "city", "method", "target", "agent"].every((k) => typeof e[k] === "string") || !e.detail || typeof e.detail !== "object" || Array.isArray(e.detail))) throw new Error("Invalid audit state");
-  data.entries = data.entries.filter((e) => e.at >= now - AUDIT_DAYS * 864e5);
-  return data;
-}
-__name(parse3, "parse");
-async function read3(env) {
-  const now = Date.now();
-  if (env.BUCKET) {
-    const object = await env.BUCKET.get(AUDIT_KEY);
-    return { data: parse3(object ? await object.text() : null, now), previous: object?.etag ?? null };
-  }
-  await env.DB.prepare(CREATE_SETTINGS).run();
-  const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key=?").bind(AUDIT_KEY).first();
-  return { data: parse3(row?.value ?? null, now), previous: row?.value ?? null };
-}
-__name(read3, "read");
-async function write3(env, data, previous) {
-  data.revision = crypto.randomUUID();
-  const value = JSON.stringify(data);
-  if (env.BUCKET) return !!await env.BUCKET.put(AUDIT_KEY, value, {
-    onlyIf: previous === null ? { etagDoesNotMatch: "*" } : { etagMatches: previous },
-    httpMetadata: { contentType: "application/json" },
-    storageClass: "Standard"
-  });
-  const result = previous === null ? await env.DB.prepare("INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO NOTHING").bind(AUDIT_KEY, value).run() : await env.DB.prepare("UPDATE app_settings SET value=? WHERE key=? AND value=?").bind(value, AUDIT_KEY, previous).run();
-  return result.meta.changes === 1;
-}
-__name(write3, "write");
-async function appendAudit(env, event, aggregate = false) {
-  if (!auditEnabled(env)) return false;
-  try {
-    for (let attempt = 0; attempt < 5; attempt++) {
-      if (attempt) await new Promise((resolve) => setTimeout(resolve, 1100 + Math.random() * 200));
-      const { data, previous } = await read3(env);
-      if (data.entries.some((e) => e.id === event.id)) return true;
-      const grouped = aggregate && data.entries.find((e) => Math.floor(e.at / AUDIT_GROUP_MS) === Math.floor(event.at / AUDIT_GROUP_MS) && e.category === event.category && e.action === event.action && e.result === event.result && e.ip === event.ip && e.method === event.method && (e.target === event.target || event.category === "pickup" && ["bad_request", "not_found"].includes(String(event.detail.reason))) && e.detail.reason === event.detail.reason && e.detail.stage === event.detail.stage && (e.detail.uploadRef === event.detail.uploadRef || event.detail.reason === "not_found") && typeof e.detail.count === "number");
-      if (grouped) {
-        grouped.detail = {
-          ...grouped.detail,
-          ...event.detail,
-          count: Number(grouped.detail.count) + 1,
-          firstAt: Math.min(Number(grouped.detail.firstAt), event.at),
-          lastAt: Math.max(grouped.at, event.at)
-        };
-        grouped.at = Math.max(grouped.at, event.at);
-        grouped.status = event.status;
-        grouped.target = event.target;
-      } else data.entries.push(aggregate ? { ...event, detail: { ...event.detail, count: 1, firstAt: event.at, lastAt: event.at } } : event);
-      data.entries.sort((a, b) => b.at - a.at || b.id.localeCompare(a.id));
-      data.entries = data.entries.slice(0, AUDIT_LIMIT);
-      try {
-        if (await write3(env, data, previous)) return true;
-      } catch (error) {
-        if (!/429|rate|too many/i.test(String(error))) throw error;
-      }
-    }
-  } catch {
-  }
-  console.warn("Audit record could not be saved");
-  return false;
-}
-__name(appendAudit, "appendAudit");
-var routes = {
-  "POST /api/admin/login": ["login", "login"],
-  "POST /api/admin/security": ["security", "securityRules"],
-  "POST /api/admin/logout": ["login", "logout"],
-  "PUT /api/admin/settings": ["operation", "retention"],
-  "PUT /api/admin/upload-policy": ["operation", "uploadPolicy"],
-  "POST /api/admin/login-protection/unblock": ["security", "unblock"],
-  "POST /api/admin/cleanup": ["operation", "cleanup"],
-  "GET /api/admin/audit-logs/export": ["operation", "export"]
-};
-async function auditRequest(c, next) {
-  const start = Date.now();
-  await next();
-  if (!auditEnabled(c.env)) return;
-  const state = auditState(c);
-  const path = c.req.path;
-  let selected = routes[`${c.req.method} ${path}`];
-  let target = state.target ?? "";
-  const share = /^\/api\/admin\/shares\/(\d{6})(?:\/(source(?:\/activity)?|download|preview))?$/.exec(path);
-  if (share) {
-    target = share[1];
-    if (c.req.method === "DELETE" && !share[2]) selected = ["operation", "delete"];
-    if (c.req.method === "PUT" && !share[2]) selected = ["operation", "editShare"];
-    if (c.req.method === "PUT" && share[2] === "source") selected = ["operation", "note"];
-    if (c.req.method === "GET" && share[2]?.startsWith("source")) selected = ["operation", "viewSource"];
-    if (c.req.method === "GET" && share[2] === "preview") selected = ["operation", "preview"];
-    if (c.req.method === "GET" && share[2] === "download") selected = ["operation", "download"];
-  }
-  if (!selected) return;
-  const isLogin = path === "/api/admin/login";
-  const bearer = path === "/api/admin/cleanup" && c.req.header("Authorization")?.startsWith("Bearer ");
-  if (!state.authenticated && !isLogin && !bearer) return;
-  if (isLogin && c.res.status === 403) return;
-  if (c.error instanceof SecurityError && [403, 429].includes(c.error.status)) return;
-  const protectionError = c.error instanceof LoginProtectionError ? c.error : null;
-  if (protectionError?.retryAt && !protectionError.newBan) return;
-  let [category, action] = selected;
-  if (protectionError?.newBan) {
-    category = "security";
-    action = "ban";
-    state.detail.bannedUntil = protectionError.retryAt;
-  }
-  const cf = c.req.raw.cf;
-  const event = {
-    id: crypto.randomUUID(),
-    at: start,
-    category,
-    action,
-    result: c.res.status === 429 ? "blocked" : c.res.status < 400 ? "success" : "failed",
-    actor: state.actor,
-    ip: loginIP(c),
-    country: text(cf?.country, 2),
-    region: text(cf?.region),
-    city: text(cf?.city),
-    method: c.req.method,
-    status: c.res.status,
-    target: text(target),
-    agent: text(c.req.header("User-Agent"), 200),
-    durationMs: Math.max(0, Date.now() - start),
-    detail: state.detail
+    __name(dispatch, "dispatch");
   };
-  if (!await appendAudit(c.env, event)) c.header("X-Audit-Status", "unavailable");
+}, "compose");
+
+// ../../node_modules/hono/dist/http-exception.js
+var HTTPException = class extends Error {
+  static {
+    __name(this, "HTTPException");
+  }
+  res;
+  status;
+  /**
+   * Creates an instance of `HTTPException`.
+   * @param status - HTTP status code for the exception. Defaults to 500.
+   * @param options - Additional options for the exception.
+   */
+  constructor(status = 500, options) {
+    super(options?.message, { cause: options?.cause });
+    this.res = options?.res;
+    this.status = status;
+  }
+  /**
+   * Returns the response object associated with the exception.
+   * If a response object is not provided, a new response is created with the error message and status code.
+   * @returns The response object.
+   */
+  getResponse() {
+    if (this.res) {
+      const newResponse = new Response(this.res.body, {
+        status: this.status,
+        headers: this.res.headers
+      });
+      return newResponse;
+    }
+    return new Response(this.message, {
+      status: this.status
+    });
+  }
+};
+
+// ../../node_modules/hono/dist/request/constants.js
+var GET_MATCH_RESULT = /* @__PURE__ */ Symbol();
+
+// ../../node_modules/hono/dist/utils/buffer.js
+var bufferToFormData = /* @__PURE__ */ __name((arrayBuffer, contentType) => {
+  const response = new Response(arrayBuffer, {
+    headers: {
+      // Normalize the media type (case-insensitive) while keeping parameters like the boundary
+      "Content-Type": contentType.replace(/^[^;]+/, (mediaType) => mediaType.toLowerCase())
+    }
+  });
+  return response.formData();
+}, "bufferToFormData");
+
+// ../../node_modules/hono/dist/utils/body.js
+var MAX_NESTING_DEPTH = 32;
+var MAX_NESTED_OBJECTS = 1e4;
+var isRawRequest = /* @__PURE__ */ __name((request) => "headers" in request, "isRawRequest");
+var parseBody = /* @__PURE__ */ __name(async (request, options = /* @__PURE__ */ Object.create(null)) => {
+  const { all = false, dot = false } = options;
+  const headers = isRawRequest(request) ? request.headers : request.raw.headers;
+  const contentType = headers.get("Content-Type");
+  const mediaType = contentType?.split(";")[0].trim().toLowerCase();
+  if (mediaType === "multipart/form-data" || mediaType === "application/x-www-form-urlencoded") {
+    return parseFormData(request, { all, dot });
+  }
+  return {};
+}, "parseBody");
+async function parseFormData(request, options) {
+  if (!isRawRequest(request) && request.bodyCache.formData) {
+    return convertFormDataToBodyData(
+      await request.bodyCache.formData,
+      options
+    );
+  }
+  const headers = isRawRequest(request) ? request.headers : request.raw.headers;
+  const arrayBuffer = await request.arrayBuffer();
+  const formDataPromise = bufferToFormData(arrayBuffer, headers.get("Content-Type") || "");
+  if (!isRawRequest(request)) {
+    request.bodyCache.formData = formDataPromise;
+  }
+  const formData = await formDataPromise;
+  if (formData) {
+    return convertFormDataToBodyData(formData, options);
+  }
+  return {};
 }
-__name(auditRequest, "auditRequest");
-async function queryAudit(env, query) {
-  const category = query.category || "all";
-  const result = query.result || "all";
-  const from = query.from ? Number(query.from) : 0;
-  const to = query.to ? Number(query.to) : Date.now();
-  const offset = query.offset ? Number(query.offset) : 0;
-  const limit = query.limit ? Number(query.limit) : 20;
-  const q = (query.q || "").trim().toLowerCase();
-  if (!(category === "all" || CATEGORIES.includes(category)) || !["all", "success", "failed", "blocked"].includes(result) || ![from, to, offset, limit].every(Number.isSafeInteger) || from < 0 || to < from || offset < 0 || limit < 1 || limit > AUDIT_LIMIT || q.length > 80) throw new RangeError("Invalid audit filters");
-  const enabled = auditEnabled(env);
-  const entries = enabled ? (await read3(env)).data.entries : [];
-  entries.sort((a, b) => b.at - a.at || b.id.localeCompare(a.id));
-  const matched = entries.filter((e) => (category === "all" || e.category === category) && (result === "all" || e.result === result) && e.at >= from && e.at <= to && (!q || `${e.ip} ${e.target} ${e.action} ${e.detail.filename ?? ""} ${e.detail.visitorId ?? ""}`.toLowerCase().includes(q)));
-  return { enabled, retentionDays: AUDIT_DAYS, maxEntries: AUDIT_LIMIT, total: matched.length, offset, limit, rows: matched.slice(offset, offset + limit) };
+__name(parseFormData, "parseFormData");
+function convertFormDataToBodyData(formData, options) {
+  const form = /* @__PURE__ */ Object.create(null);
+  const nestingState = { count: 0 };
+  formData.forEach((value, key) => {
+    const shouldParseAllValues = options.all || key.endsWith("[]");
+    if (!shouldParseAllValues) {
+      form[key] = value;
+    } else {
+      handleParsingAllValues(form, key, value);
+    }
+  });
+  if (options.dot) {
+    Object.entries(form).forEach(([key, value]) => {
+      const shouldParseDotValues = key.includes(".");
+      if (shouldParseDotValues) {
+        handleParsingNestedValues(form, key, value, nestingState);
+        delete form[key];
+      }
+    });
+  }
+  return form;
 }
-__name(queryAudit, "queryAudit");
+__name(convertFormDataToBodyData, "convertFormDataToBodyData");
+var handleParsingAllValues = /* @__PURE__ */ __name((form, key, value) => {
+  if (form[key] !== void 0) {
+    if (Array.isArray(form[key])) {
+      ;
+      form[key].push(value);
+    } else {
+      form[key] = [form[key], value];
+    }
+  } else {
+    if (!key.endsWith("[]")) {
+      form[key] = value;
+    } else {
+      form[key] = [value];
+    }
+  }
+}, "handleParsingAllValues");
+var handleParsingNestedValues = /* @__PURE__ */ __name((form, key, value, state) => {
+  if (/(?:^|\.)__proto__\./.test(key)) {
+    return;
+  }
+  let nestedForm = form;
+  const keys = key.split(".", MAX_NESTING_DEPTH + 2);
+  if (keys.length > MAX_NESTING_DEPTH + 1) {
+    throwNestingLimitExceeded();
+  }
+  keys.forEach((key2, index) => {
+    if (index === keys.length - 1) {
+      nestedForm[key2] = value;
+    } else {
+      if (!nestedForm[key2] || typeof nestedForm[key2] !== "object" || Array.isArray(nestedForm[key2]) || nestedForm[key2] instanceof File) {
+        if (state.count++ >= MAX_NESTED_OBJECTS) {
+          throwNestingLimitExceeded();
+        }
+        nestedForm[key2] = /* @__PURE__ */ Object.create(null);
+      }
+      nestedForm = nestedForm[key2];
+    }
+  });
+}, "handleParsingNestedValues");
+var throwNestingLimitExceeded = /* @__PURE__ */ __name(() => {
+  throw new Error("Nesting limit exceeded");
+}, "throwNestingLimitExceeded");
 
 // ../../node_modules/hono/dist/utils/url.js
 var splitPath = /* @__PURE__ */ __name((path) => {
@@ -6703,649 +6256,6 @@ var getQueryParams = /* @__PURE__ */ __name((url, key) => {
   return _getQueryParam(url, key, true);
 }, "getQueryParams");
 var decodeURIComponent_ = decodeURIComponent;
-
-// ../../node_modules/hono/dist/utils/cookie.js
-var algorithm = { name: "HMAC", hash: "SHA-256" };
-var getCryptoKey = /* @__PURE__ */ __name(async (secret) => {
-  const secretBuf = typeof secret === "string" ? new TextEncoder().encode(secret) : secret;
-  return await crypto.subtle.importKey("raw", secretBuf, algorithm, false, ["sign", "verify"]);
-}, "getCryptoKey");
-var makeSignature = /* @__PURE__ */ __name(async (value, secret) => {
-  const key = await getCryptoKey(secret);
-  const signature = await crypto.subtle.sign(algorithm.name, key, new TextEncoder().encode(value));
-  return btoa(String.fromCharCode(...new Uint8Array(signature)));
-}, "makeSignature");
-var verifySignature = /* @__PURE__ */ __name(async (base64Signature, value, secret) => {
-  try {
-    const signatureBinStr = atob(base64Signature);
-    const signature = new Uint8Array(signatureBinStr.length);
-    for (let i = 0, len = signatureBinStr.length; i < len; i++) {
-      signature[i] = signatureBinStr.charCodeAt(i);
-    }
-    return await crypto.subtle.verify(algorithm, secret, signature, new TextEncoder().encode(value));
-  } catch {
-    return false;
-  }
-}, "verifySignature");
-var validCookieNameRegEx = /^[\w!#$%&'*.^`|~+-]+$/;
-var relaxedCookieNameRegEx = /^[!#-:<>-[\]-~]+$/;
-var validCookieValueRegEx = /^[ !#-:<-[\]-~]*$/;
-var trimCookieWhitespace = /* @__PURE__ */ __name((value) => {
-  let start = 0;
-  let end = value.length;
-  while (start < end) {
-    const charCode = value.charCodeAt(start);
-    if (charCode !== 32 && charCode !== 9) {
-      break;
-    }
-    start++;
-  }
-  while (end > start) {
-    const charCode = value.charCodeAt(end - 1);
-    if (charCode !== 32 && charCode !== 9) {
-      break;
-    }
-    end--;
-  }
-  return start === 0 && end === value.length ? value : value.slice(start, end);
-}, "trimCookieWhitespace");
-var parse4 = /* @__PURE__ */ __name((cookie, name) => {
-  if (name && cookie.indexOf(name) === -1) {
-    return {};
-  }
-  const pairs = cookie.split(";");
-  const parsedCookie = /* @__PURE__ */ Object.create(null);
-  for (const pairStr of pairs) {
-    const valueStartPos = pairStr.indexOf("=");
-    if (valueStartPos === -1) {
-      continue;
-    }
-    const cookieName = trimCookieWhitespace(pairStr.substring(0, valueStartPos));
-    if (name && name !== cookieName || !relaxedCookieNameRegEx.test(cookieName) || cookieName in parsedCookie) {
-      continue;
-    }
-    let cookieValue = trimCookieWhitespace(pairStr.substring(valueStartPos + 1));
-    if (cookieValue.startsWith('"') && cookieValue.endsWith('"')) {
-      cookieValue = cookieValue.slice(1, -1);
-    }
-    if (validCookieValueRegEx.test(cookieValue)) {
-      parsedCookie[cookieName] = tryDecodeURIComponent(cookieValue);
-      if (name) {
-        break;
-      }
-    }
-  }
-  return parsedCookie;
-}, "parse");
-var parseSigned = /* @__PURE__ */ __name(async (cookie, secret, name) => {
-  const parsedCookie = /* @__PURE__ */ Object.create(null);
-  const secretKey = await getCryptoKey(secret);
-  for (const [key, value] of Object.entries(parse4(cookie, name))) {
-    const signatureStartPos = value.lastIndexOf(".");
-    if (signatureStartPos < 0) {
-      continue;
-    }
-    const signedValue = value.substring(0, signatureStartPos);
-    const signature = value.substring(signatureStartPos + 1);
-    if (signature.length !== 44 || !signature.endsWith("=")) {
-      continue;
-    }
-    const isVerified = await verifySignature(signature, signedValue, secretKey);
-    parsedCookie[key] = isVerified ? signedValue : false;
-  }
-  return parsedCookie;
-}, "parseSigned");
-var _serialize = /* @__PURE__ */ __name((name, value, opt = {}) => {
-  if (!validCookieNameRegEx.test(name)) {
-    throw new Error("Invalid cookie name");
-  }
-  let cookie = `${name}=${value}`;
-  if (name.startsWith("__Secure-") && !opt.secure) {
-    throw new Error("__Secure- Cookie must have Secure attributes");
-  }
-  if (name.startsWith("__Host-")) {
-    if (!opt.secure) {
-      throw new Error("__Host- Cookie must have Secure attributes");
-    }
-    if (opt.path !== "/") {
-      throw new Error('__Host- Cookie must have Path attributes with "/"');
-    }
-    if (opt.domain) {
-      throw new Error("__Host- Cookie must not have Domain attributes");
-    }
-  }
-  for (const key of ["domain", "path", "sameSite", "priority"]) {
-    if (opt[key] && /[;\r\n]/.test(opt[key])) {
-      throw new Error(`${key} must not contain ";", "\\r", or "\\n"`);
-    }
-  }
-  if (opt && typeof opt.maxAge === "number" && opt.maxAge >= 0) {
-    if (opt.maxAge > 3456e4) {
-      throw new Error(
-        "Cookies Max-Age SHOULD NOT be greater than 400 days (34560000 seconds) in duration."
-      );
-    }
-    cookie += `; Max-Age=${opt.maxAge | 0}`;
-  }
-  if (opt.domain && opt.prefix !== "host") {
-    cookie += `; Domain=${opt.domain}`;
-  }
-  if (opt.path) {
-    cookie += `; Path=${opt.path}`;
-  }
-  if (opt.expires) {
-    if (opt.expires.getTime() - Date.now() > 3456e7) {
-      throw new Error(
-        "Cookies Expires SHOULD NOT be greater than 400 days (34560000 seconds) in the future."
-      );
-    }
-    cookie += `; Expires=${opt.expires.toUTCString()}`;
-  }
-  if (opt.httpOnly) {
-    cookie += "; HttpOnly";
-  }
-  if (opt.secure) {
-    cookie += "; Secure";
-  }
-  if (opt.sameSite) {
-    cookie += `; SameSite=${opt.sameSite.charAt(0).toUpperCase() + opt.sameSite.slice(1)}`;
-  }
-  if (opt.priority) {
-    cookie += `; Priority=${opt.priority.charAt(0).toUpperCase() + opt.priority.slice(1)}`;
-  }
-  if (opt.partitioned) {
-    if (!opt.secure) {
-      throw new Error("Partitioned Cookie must have Secure attributes");
-    }
-    cookie += "; Partitioned";
-  }
-  return cookie;
-}, "_serialize");
-var serialize = /* @__PURE__ */ __name((name, value, opt) => {
-  value = encodeURIComponent(value);
-  return _serialize(name, value, opt);
-}, "serialize");
-var serializeSigned = /* @__PURE__ */ __name(async (name, value, secret, opt = {}) => {
-  const signature = await makeSignature(value, secret);
-  value = `${value}.${signature}`;
-  value = encodeURIComponent(value);
-  return _serialize(name, value, opt);
-}, "serializeSigned");
-
-// ../../node_modules/hono/dist/helper/cookie/index.js
-var getCookie = /* @__PURE__ */ __name((c, key, prefix) => {
-  const cookie = c.req.raw.headers.get("Cookie");
-  if (typeof key === "string") {
-    if (!cookie) {
-      return void 0;
-    }
-    let finalKey = key;
-    if (prefix === "secure") {
-      finalKey = "__Secure-" + key;
-    } else if (prefix === "host") {
-      finalKey = "__Host-" + key;
-    }
-    const obj2 = parse4(cookie, finalKey);
-    return obj2[finalKey];
-  }
-  if (!cookie) {
-    return {};
-  }
-  const obj = parse4(cookie);
-  return obj;
-}, "getCookie");
-var getSignedCookie = /* @__PURE__ */ __name(async (c, secret, key, prefix) => {
-  const cookie = c.req.raw.headers.get("Cookie");
-  if (typeof key === "string") {
-    if (!cookie) {
-      return void 0;
-    }
-    let finalKey = key;
-    if (prefix === "secure") {
-      finalKey = "__Secure-" + key;
-    } else if (prefix === "host") {
-      finalKey = "__Host-" + key;
-    }
-    const obj2 = await parseSigned(cookie, secret, finalKey);
-    return obj2[finalKey];
-  }
-  if (!cookie) {
-    return {};
-  }
-  const obj = await parseSigned(cookie, secret);
-  return obj;
-}, "getSignedCookie");
-var generateCookie = /* @__PURE__ */ __name((name, value, opt) => {
-  let cookie;
-  if (opt?.prefix === "secure") {
-    cookie = serialize("__Secure-" + name, value, { path: "/", ...opt, secure: true });
-  } else if (opt?.prefix === "host") {
-    cookie = serialize("__Host-" + name, value, {
-      ...opt,
-      path: "/",
-      secure: true,
-      domain: void 0
-    });
-  } else {
-    cookie = serialize(name, value, { path: "/", ...opt });
-  }
-  return cookie;
-}, "generateCookie");
-var setCookie = /* @__PURE__ */ __name((c, name, value, opt) => {
-  const cookie = generateCookie(name, value, opt);
-  c.header("Set-Cookie", cookie, { append: true });
-}, "setCookie");
-var generateSignedCookie = /* @__PURE__ */ __name(async (name, value, secret, opt) => {
-  let cookie;
-  if (opt?.prefix === "secure") {
-    cookie = await serializeSigned("__Secure-" + name, value, secret, {
-      path: "/",
-      ...opt,
-      secure: true
-    });
-  } else if (opt?.prefix === "host") {
-    cookie = await serializeSigned("__Host-" + name, value, secret, {
-      ...opt,
-      path: "/",
-      secure: true,
-      domain: void 0
-    });
-  } else {
-    cookie = await serializeSigned(name, value, secret, { path: "/", ...opt });
-  }
-  return cookie;
-}, "generateSignedCookie");
-var setSignedCookie = /* @__PURE__ */ __name(async (c, name, value, secret, opt) => {
-  const cookie = await generateSignedCookie(name, value, secret, opt);
-  c.header("set-cookie", cookie, { append: true });
-}, "setSignedCookie");
-var deleteCookie = /* @__PURE__ */ __name((c, name, opt) => {
-  const deletedCookie = getCookie(c, name, opt?.prefix);
-  setCookie(c, name, "", { ...opt, maxAge: 0 });
-  return deletedCookie;
-}, "deleteCookie");
-
-// src/upload-source.ts
-var COOKIE = "relay_visitor";
-var MAX_AGE = 365 * 24 * 60 * 60;
-var ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-var visitors = /* @__PURE__ */ new WeakMap();
-async function ensureVisitor(c) {
-  const existing = visitors.get(c);
-  if (existing) return existing;
-  const id = await resolveVisitor(c);
-  visitors.set(c, id);
-  return id;
-}
-__name(ensureVisitor, "ensureVisitor");
-async function resolveVisitor(c) {
-  if (!c.env.ADMIN_TOKEN) return crypto.randomUUID();
-  const secret = `upload-source:${c.env.ADMIN_TOKEN}`;
-  const value = await getSignedCookie(c, secret, COOKIE);
-  if (value) {
-    const [id2, expires] = value.split(".");
-    if (ID.test(id2) && Number(expires) > Date.now() && Number(expires) <= Date.now() + MAX_AGE * 1e3) return id2;
-  }
-  const id = crypto.randomUUID();
-  await setSignedCookie(c, COOKIE, `${id}.${Date.now() + MAX_AGE * 1e3}`, secret, {
-    httpOnly: true,
-    secure: c.req.url.startsWith("https:"),
-    sameSite: "Lax",
-    path: "/",
-    maxAge: MAX_AGE
-  });
-  return id;
-}
-__name(resolveVisitor, "resolveVisitor");
-function location(value) {
-  if (typeof value !== "string") return null;
-  let result = "";
-  for (const char of value.trim().replace(/[\u0000-\u001f\u007f]/g, "")) {
-    if (new TextEncoder().encode(result + char).length > 48) break;
-    result += char;
-  }
-  return result || null;
-}
-__name(location, "location");
-async function captureSource(c) {
-  const cf = c.req.raw.cf;
-  const rawIP = cf ? c.req.header("CF-Connecting-IP") : void 0;
-  const ip = rawIP && /^[0-9a-fA-F:.]{3,45}$/.test(rawIP) ? rawIP : null;
-  return {
-    visitorId: await ensureVisitor(c),
-    ip,
-    asn: typeof cf?.asn === "number" && Number.isSafeInteger(cf.asn) && cf.asn > 0 ? cf.asn : null,
-    organization: boundedText(cf?.asOrganization, 120),
-    userAgent: boundedText(c.req.header("User-Agent"), 256),
-    country: typeof cf?.country === "string" && /^[A-Z]{2}$/.test(cf.country) ? cf.country : null,
-    region: location(cf?.region),
-    city: location(cf?.city),
-    capturedAt: Date.now()
-  };
-}
-__name(captureSource, "captureSource");
-function boundedText(value, max) {
-  return typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, max) || null : null;
-}
-__name(boundedText, "boundedText");
-function parseSubmission(body) {
-  const displayName = body.displayName ?? "";
-  const description = body.description ?? "";
-  if (typeof displayName !== "string" || displayName.length > 40 || /[\u0000-\u001f\u007f]/.test(displayName) || typeof description !== "string" || description.length > 300 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(description)) return null;
-  return { displayName: displayName.trim(), description: description.trim() };
-}
-__name(parseSubmission, "parseSubmission");
-function sourceSummary(source) {
-  if (!source) return null;
-  const { visitorId, country, region, city, capturedAt } = source;
-  return { visitorId, country, region, city, capturedAt };
-}
-__name(sourceSummary, "sourceSummary");
-
-// src/public-audit.ts
-var bounded = /* @__PURE__ */ __name((value, max = 80) => typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").slice(0, max) : "", "bounded");
-function transferAudit(c, record) {
-  const detail = auditState(c).detail;
-  if (record.filename) detail.filename = bounded(record.filename, 160);
-  detail[record.kind === "text" ? "textLength" : "sizeBytes"] = record.size;
-  if (record.kind) detail.kind = record.kind;
-  if (record.source) detail.visitorId = record.source.visitorId;
-}
-__name(transferAudit, "transferAudit");
-function uploadSessionAudit(c, session) {
-  transferAudit(c, { ...session, kind: "file" });
-}
-__name(uploadSessionAudit, "uploadSessionAudit");
-function publicRejection(c, error) {
-  const detail = auditState(c).detail;
-  detail.securityReason = error.reason;
-  detail.newBan = error.newBan;
-  if (error.retryAt) detail.bannedUntil = error.retryAt;
-}
-__name(publicRejection, "publicRejection");
-function select(path, method) {
-  if (method === "POST" && ["/api/shares/file", "/api/shares/text"].includes(path))
-    return { category: "upload", stage: path.endsWith("/text") ? "text" : "direct", action: "upload" };
-  if (method === "POST" && path === "/api/uploads/init")
-    return { category: "upload", stage: "init", action: "upload" };
-  const session = /^\/api\/uploads\/([^/]+)\/(complete|abort|parts\/[^/]+)$/.exec(path);
-  if (session && (method === "POST" && ["complete", "abort"].includes(session[2]) || method === "PUT" && session[2].startsWith("parts/")))
-    return {
-      category: "upload",
-      stage: session[2].startsWith("parts/") ? "part" : session[2],
-      action: session[2] === "abort" ? "uploadCancel" : "upload",
-      session: session[1]
-    };
-  if (method === "POST" && path === "/api/pickup")
-    return { category: "pickup", stage: "lookup", action: "pickup" };
-  if (["GET", "HEAD"].includes(method) && /^\/api\/pickup\/[^/]+\/download$/.test(path))
-    return { category: "pickup", stage: "download", action: method === "HEAD" ? "downloadProbe" : "publicDownload" };
-}
-__name(select, "select");
-async function publicAudit(c, next) {
-  const selected = select(c.req.path, c.req.method), start = Date.now();
-  await next();
-  if (!selected || !auditEnabled(c.env)) return;
-  try {
-    await recordPublicAudit(c, selected, start);
-  } catch {
-    console.warn("Public audit record could not be prepared");
-    c.header("X-Audit-Status", "unavailable");
-  }
-}
-__name(publicAudit, "publicAudit");
-async function recordPublicAudit(c, selected, start) {
-  const status = c.res.status;
-  const state = auditState(c);
-  if (status < 400 && (["init", "part"].includes(selected.stage) || selected.stage === "abort" && !state.detail.cancelled)) return;
-  if (c.error instanceof SecurityError) publicRejection(c, c.error);
-  const detail = { ...state.detail };
-  const securityReason = state.detail.securityReason;
-  const newBan = state.detail.newBan;
-  delete detail.securityReason;
-  delete detail.newBan;
-  delete detail.cancelled;
-  let reason = typeof detail.reason === "string" ? detail.reason : "";
-  if (status >= 400 && c.req.method !== "HEAD" && c.res.headers.get("Content-Type")?.includes("application/json")) {
-    const error = await c.res.clone().json();
-    reason ||= bounded(error.error, 64);
-  }
-  let category = selected.category, action = selected.action;
-  const blocked = status === 403 || status === 429;
-  let target = bounded(state.target);
-  if (typeof securityReason === "string") {
-    category = "security";
-    action = newBan ? "ban" : "accessBlocked";
-    target = selected.category;
-    for (const key of Object.keys(detail)) if (key !== "bannedUntil") delete detail[key];
-    detail.scope = selected.category;
-    reason = securityReason;
-    if (typeof state.detail.bannedUntil === "number") detail.bannedUntil = state.detail.bannedUntil;
-  } else {
-    detail.stage = selected.stage;
-    detail.visitorId = await ensureVisitor(c);
-    if ("session" in selected && selected.session) {
-      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(selected.session));
-      detail.uploadRef = Array.from(new Uint8Array(digest).slice(0, 8), (b) => b.toString(16).padStart(2, "0")).join("");
-    }
-  }
-  if (reason) detail.reason = reason;
-  const cf = c.req.raw.cf;
-  const event = {
-    id: crypto.randomUUID(),
-    at: start,
-    category,
-    action,
-    result: blocked ? "blocked" : status < 400 ? "success" : "failed",
-    actor: "anonymous",
-    ip: loginIP(c),
-    country: bounded(cf?.country, 2),
-    region: bounded(cf?.region),
-    city: bounded(cf?.city),
-    method: c.req.method,
-    status,
-    target,
-    agent: bounded(c.req.header("User-Agent"), 200),
-    durationMs: Math.max(0, Date.now() - start),
-    detail
-  };
-  if (!await appendAudit(c.env, event, status >= 400 && !newBan)) c.header("X-Audit-Status", "unavailable");
-}
-__name(recordPublicAudit, "recordPublicAudit");
-
-// src/security-middleware.ts
-async function publicSecurity(c, next) {
-  const path = c.req.path, method = c.req.method;
-  const upload = path.startsWith("/api/uploads/") || path === "/api/shares/file" || path === "/api/shares/text";
-  const pickup = path === "/api/pickup" || /^\/api\/pickup\/[^/]+\/download$/.test(path);
-  if (!upload && !pickup)
-    return next();
-  if (upload && path.endsWith("/abort"))
-    return next();
-  const scope = upload ? "upload" : "pickup", ip = loginIP(c);
-  const country = typeof c.req.raw.cf?.country === "string" ? c.req.raw.cf.country : "";
-  const region = typeof c.req.raw.cf?.regionCode === "string" ? c.req.raw.cf.regionCode : "";
-  const count = upload && method === "POST" && ["/api/uploads/init", "/api/shares/file", "/api/shares/text"].includes(path);
-  const reject = /* @__PURE__ */ __name(async (error) => {
-    if (!(error instanceof SecurityError))
-      throw error;
-    publicRejection(c, error);
-    return securityResponse(c, error);
-  }, "reject");
-  try {
-    await enforceSecurity(c.env, ip, scope, country, region, count);
-  } catch (error) {
-    return reject(error);
-  }
-  await next();
-  if (pickup && [400, 404].includes(c.res.status) && ["POST", "GET", "HEAD"].includes(method)) {
-    try {
-      await enforceSecurity(c.env, ip, scope, country, region, true);
-    } catch (error) {
-      c.res = await reject(error);
-    }
-  }
-}
-__name(publicSecurity, "publicSecurity");
-
-// ../../node_modules/hono/dist/compose.js
-var compose = /* @__PURE__ */ __name((middleware, onError, onNotFound) => {
-  return (context, next) => {
-    let index = -1;
-    return dispatch(0);
-    async function dispatch(i) {
-      if (i <= index) {
-        throw new Error("next() called multiple times");
-      }
-      index = i;
-      let res;
-      let isError = false;
-      let handler;
-      if (middleware[i]) {
-        handler = middleware[i][0][0];
-        context.req.routeIndex = i;
-      } else {
-        handler = i === middleware.length && next || void 0;
-      }
-      if (handler) {
-        try {
-          res = await handler(context, () => dispatch(i + 1));
-        } catch (err2) {
-          if (err2 instanceof Error && onError) {
-            context.error = err2;
-            res = await onError(err2, context);
-            isError = true;
-          } else {
-            throw err2;
-          }
-        }
-      } else {
-        if (context.finalized === false && onNotFound) {
-          res = await onNotFound(context);
-        }
-      }
-      if (res && (context.finalized === false || isError)) {
-        context.res = res;
-      }
-      return context;
-    }
-    __name(dispatch, "dispatch");
-  };
-}, "compose");
-
-// ../../node_modules/hono/dist/request/constants.js
-var GET_MATCH_RESULT = /* @__PURE__ */ Symbol();
-
-// ../../node_modules/hono/dist/utils/buffer.js
-var bufferToFormData = /* @__PURE__ */ __name((arrayBuffer, contentType) => {
-  const response = new Response(arrayBuffer, {
-    headers: {
-      // Normalize the media type (case-insensitive) while keeping parameters like the boundary
-      "Content-Type": contentType.replace(/^[^;]+/, (mediaType) => mediaType.toLowerCase())
-    }
-  });
-  return response.formData();
-}, "bufferToFormData");
-
-// ../../node_modules/hono/dist/utils/body.js
-var MAX_NESTING_DEPTH = 32;
-var MAX_NESTED_OBJECTS = 1e4;
-var isRawRequest = /* @__PURE__ */ __name((request) => "headers" in request, "isRawRequest");
-var parseBody = /* @__PURE__ */ __name(async (request, options = /* @__PURE__ */ Object.create(null)) => {
-  const { all = false, dot = false } = options;
-  const headers = isRawRequest(request) ? request.headers : request.raw.headers;
-  const contentType = headers.get("Content-Type");
-  const mediaType = contentType?.split(";")[0].trim().toLowerCase();
-  if (mediaType === "multipart/form-data" || mediaType === "application/x-www-form-urlencoded") {
-    return parseFormData(request, { all, dot });
-  }
-  return {};
-}, "parseBody");
-async function parseFormData(request, options) {
-  if (!isRawRequest(request) && request.bodyCache.formData) {
-    return convertFormDataToBodyData(
-      await request.bodyCache.formData,
-      options
-    );
-  }
-  const headers = isRawRequest(request) ? request.headers : request.raw.headers;
-  const arrayBuffer = await request.arrayBuffer();
-  const formDataPromise = bufferToFormData(arrayBuffer, headers.get("Content-Type") || "");
-  if (!isRawRequest(request)) {
-    request.bodyCache.formData = formDataPromise;
-  }
-  const formData = await formDataPromise;
-  if (formData) {
-    return convertFormDataToBodyData(formData, options);
-  }
-  return {};
-}
-__name(parseFormData, "parseFormData");
-function convertFormDataToBodyData(formData, options) {
-  const form = /* @__PURE__ */ Object.create(null);
-  const nestingState = { count: 0 };
-  formData.forEach((value, key) => {
-    const shouldParseAllValues = options.all || key.endsWith("[]");
-    if (!shouldParseAllValues) {
-      form[key] = value;
-    } else {
-      handleParsingAllValues(form, key, value);
-    }
-  });
-  if (options.dot) {
-    Object.entries(form).forEach(([key, value]) => {
-      const shouldParseDotValues = key.includes(".");
-      if (shouldParseDotValues) {
-        handleParsingNestedValues(form, key, value, nestingState);
-        delete form[key];
-      }
-    });
-  }
-  return form;
-}
-__name(convertFormDataToBodyData, "convertFormDataToBodyData");
-var handleParsingAllValues = /* @__PURE__ */ __name((form, key, value) => {
-  if (form[key] !== void 0) {
-    if (Array.isArray(form[key])) {
-      ;
-      form[key].push(value);
-    } else {
-      form[key] = [form[key], value];
-    }
-  } else {
-    if (!key.endsWith("[]")) {
-      form[key] = value;
-    } else {
-      form[key] = [value];
-    }
-  }
-}, "handleParsingAllValues");
-var handleParsingNestedValues = /* @__PURE__ */ __name((form, key, value, state) => {
-  if (/(?:^|\.)__proto__\./.test(key)) {
-    return;
-  }
-  let nestedForm = form;
-  const keys = key.split(".", MAX_NESTING_DEPTH + 2);
-  if (keys.length > MAX_NESTING_DEPTH + 1) {
-    throwNestingLimitExceeded();
-  }
-  keys.forEach((key2, index) => {
-    if (index === keys.length - 1) {
-      nestedForm[key2] = value;
-    } else {
-      if (!nestedForm[key2] || typeof nestedForm[key2] !== "object" || Array.isArray(nestedForm[key2]) || nestedForm[key2] instanceof File) {
-        if (state.count++ >= MAX_NESTED_OBJECTS) {
-          throwNestingLimitExceeded();
-        }
-        nestedForm[key2] = /* @__PURE__ */ Object.create(null);
-      }
-      nestedForm = nestedForm[key2];
-    }
-  });
-}, "handleParsingNestedValues");
-var throwNestingLimitExceeded = /* @__PURE__ */ __name(() => {
-  throw new Error("Nesting limit exceeded");
-}, "throwNestingLimitExceeded");
 
 // ../../node_modules/hono/dist/request.js
 var HonoRequest = class {
@@ -9082,6 +7992,56 @@ var Hono2 = class extends Hono {
   }
 };
 
+// ../../node_modules/hono/dist/middleware/body-limit/index.js
+var ERROR_MESSAGE = "Payload Too Large";
+var bodyLimit = /* @__PURE__ */ __name((options) => {
+  const onError = options.onError || (() => {
+    const res = new Response(ERROR_MESSAGE, {
+      status: 413
+    });
+    throw new HTTPException(413, { res });
+  });
+  const maxSize = options.maxSize;
+  return /* @__PURE__ */ __name(async function bodyLimit2(c, next) {
+    if (!c.req.raw.body) {
+      return next();
+    }
+    const hasTransferEncoding = c.req.raw.headers.has("transfer-encoding");
+    const hasContentLength = c.req.raw.headers.has("content-length");
+    if (hasContentLength && !hasTransferEncoding) {
+      const contentLength = parseInt(c.req.raw.headers.get("content-length") || "0", 10);
+      return contentLength > maxSize ? onError(c) : next();
+    }
+    let size = 0;
+    const chunks = [];
+    const rawReader = c.req.raw.body.getReader();
+    for (; ; ) {
+      const { done, value } = await rawReader.read();
+      if (done) {
+        break;
+      }
+      size += value.length;
+      if (size > maxSize) {
+        return onError(c);
+      }
+      chunks.push(value);
+    }
+    const requestInit = {
+      body: new ReadableStream({
+        start(controller) {
+          for (const chunk of chunks) {
+            controller.enqueue(chunk);
+          }
+          controller.close();
+        }
+      }),
+      duplex: "half"
+    };
+    c.req.raw = new Request(c.req.raw, requestInit);
+    return next();
+  }, "bodyLimit2");
+}, "bodyLimit");
+
 // src/types.ts
 function num(v, fallback) {
   const n = Number(v);
@@ -9089,33 +8049,1060 @@ function num(v, fallback) {
 }
 __name(num, "num");
 
-// src/util.ts
-var EXPIRY_MS = {
-  "1d": 864e5,
-  "7d": 7 * 864e5,
-  "30d": 30 * 864e5
+// src/auth.ts
+async function safeEqual(a, b) {
+  const encode = new TextEncoder();
+  const [da, db] = await Promise.all([a, b].map((value) => crypto.subtle.digest("SHA-256", encode.encode(value))));
+  const subtle = crypto.subtle;
+  if (subtle.timingSafeEqual) return subtle.timingSafeEqual(da, db);
+  const aa = new Uint8Array(da), bb = new Uint8Array(db);
+  let difference = 0;
+  for (let i = 0; i < aa.length; i++) difference |= aa[i] ^ bb[i];
+  return difference === 0;
+}
+__name(safeEqual, "safeEqual");
+
+// src/settings.ts
+var DEFAULT_RETENTION_DAYS = 30;
+var MAX_RETENTION_DAYS = 3650;
+var RETENTION_DAY_MS = 864e5;
+var KEY = "sys:expired-retention-days";
+var CREATE_SETTINGS = "CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)";
+function validRetentionDays(value) {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= MAX_RETENTION_DAYS;
+}
+__name(validRetentionDays, "validRetentionDays");
+async function readSetting(env, key) {
+  let raw2;
+  if (env.fileKV) raw2 = await env.fileKV.get(key);
+  else if (env.DB) {
+    try {
+      const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key = ?").bind(key).first();
+      raw2 = row?.value ?? null;
+    } catch (error) {
+      const message = error instanceof Error ? `${error.message} ${String(error.cause ?? "")}` : String(error);
+      if (/no such table: app_settings/i.test(message)) return null;
+      throw error;
+    }
+  } else throw new Error("No metadata store configured");
+  return raw2;
+}
+__name(readSetting, "readSetting");
+async function getRetentionDays(env) {
+  const raw2 = await readSetting(env, KEY);
+  if (raw2 === null) return DEFAULT_RETENTION_DAYS;
+  const days = /^\d+$/.test(raw2) ? Number(raw2) : NaN;
+  if (!validRetentionDays(days)) throw new Error("Invalid stored retention setting; cleanup stopped");
+  return days;
+}
+__name(getRetentionDays, "getRetentionDays");
+async function setRetentionDays(env, days) {
+  if (!validRetentionDays(days)) throw new Error("Invalid retention days");
+  await writeSetting(env, KEY, String(days));
+}
+__name(setRetentionDays, "setRetentionDays");
+async function writeSetting(env, key, value) {
+  if (env.fileKV) await env.fileKV.put(key, value);
+  else if (env.DB) {
+    await env.DB.prepare(CREATE_SETTINGS).run();
+    await env.DB.prepare("INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(key, value).run();
+  } else throw new Error("No metadata store configured");
+}
+__name(writeSetting, "writeSetting");
+
+// src/security-feedback.ts
+function securityDownloadPage(data) {
+  const payload = JSON.stringify(data).replace(/</g, "\\u003c");
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>\u6587\u4EF6\u4E0B\u8F7D \xB7 \u6587\u4EF6\u4E2D\u8F6C\u7AD9</title><link rel="stylesheet" href="${assetUrl("/style.css")}"><link rel="stylesheet" href="${assetUrl("/ui.css")}">
+<script type="module" src="${assetUrl("/js/security-download.js")}"><\/script></head><body>
+<header class="topbar"><div class="brand"><span class="logo">\u{1F4E6}</span><b>\u6587\u4EF6\u4E2D\u8F6C\u7AD9</b></div>
+<div class="actions"><button id="lang-btn" class="icon-btn">EN</button><button id="theme-btn" class="icon-btn" aria-label="\u5207\u6362\u4E3B\u9898">\u{1F317}</button></div></header>
+<main class="container narrow"><section id="download-feedback"></section>
+<noscript><p>\u5F53\u524D\u65E0\u6CD5\u4E0B\u8F7D\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5\u6216\u8054\u7CFB\u7AD9\u957F\u3002</p><a href="mailto:iblykk@gmail.com">\u8054\u7CFB\u7AD9\u957F</a></noscript>
+<p><a id="back-pickup" href="/pickup">\u8FD4\u56DE\u53D6\u4EF6\u9875</a></p></main>
+<script type="application/json" id="security-data">${payload}<\/script></body></html>`;
+}
+__name(securityDownloadPage, "securityDownloadPage");
+
+// src/security.ts
+var SECURITY_KEY = "__file-relay/security-v1.json";
+var SCOPES = ["login", "upload", "pickup"];
+var SecurityError = class extends Error {
+  constructor(status, message, retryAt, newBan = false, reason = status === 503 ? "service_unavailable" : status === 429 ? "rate_limit" : "access_rule") {
+    super(message);
+    this.status = status;
+    this.retryAt = retryAt;
+    this.newBan = newBan;
+    this.reason = reason;
+  }
+  status;
+  retryAt;
+  newBan;
+  reason;
+  static {
+    __name(this, "SecurityError");
+  }
 };
-function parseExpiry(v) {
-  if (v === "forever") return null;
-  if (typeof v === "string" && v in EXPIRY_MS) return EXPIRY_MS[v];
-  return void 0;
+function securityResponse(c, e) {
+  if (!(e instanceof SecurityError))
+    return;
+  c.header("Cache-Control", "no-store");
+  if (e.retryAt)
+    c.header("Retry-After", String(Math.max(1, Math.ceil((e.retryAt - Date.now()) / 1e3))));
+  const data = { error: e.status === 503 ? "security_unavailable" : e.status === 409 ? "security_conflict" : e.status === 400 ? "bad_request" : "security_blocked", message: e.message, retryAt: e.retryAt, reason: e.reason, serverTime: Date.now(), requestId: crypto.randomUUID() };
+  c.header("X-Request-ID", data.requestId);
+  console.warn("security_rejection", { requestId: data.requestId, reason: data.reason, status: e.status });
+  if (["GET", "HEAD"].includes(c.req.method) && /^\/api\/pickup\/[^/]+\/download$/.test(c.req.path) && (c.req.header("Accept") || "").includes("text/html")) {
+    c.header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    c.header("Referrer-Policy", "no-referrer");
+    return c.html(securityDownloadPage(data), e.status);
+  }
+  return c.json(data, e.status);
 }
-__name(parseExpiry, "parseExpiry");
-function parseMaxPickups(v) {
-  if (v === null || v === void 0) return null;
-  if (typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= 999) return v;
-  return void 0;
+__name(securityResponse, "securityResponse");
+var securityEnabled = /* @__PURE__ */ __name((env) => !!(env.BUCKET || env.DB), "securityEnabled");
+function canonicalIP(value) {
+  if (typeof value !== "string" || value.length > 45)
+    return null;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(value) && value.split(".").every((x) => Number(x) <= 255 && !/^0\d/.test(x)))
+    return value;
+  if (!value.includes(":") || !/^[a-fA-F0-9:.]+$/.test(value))
+    return null;
+  try {
+    return new URL(`http://[${value}]/`).hostname.slice(1, -1).toLowerCase();
+  } catch {
+    return null;
+  }
 }
-__name(parseMaxPickups, "parseMaxPickups");
-function err(c, status, code, message) {
-  return c.json({ error: code, message }, status);
+__name(canonicalIP, "canonicalIP");
+var MAX_MANUAL_BAN_MINUTES = 30 * 24 * 60;
+var defaults = /* @__PURE__ */ __name(() => ({ version: 1, revision: "", configRevision: "", rules: {
+  login: { enabled: true, limit: 5, window: 10, duration: 30 },
+  upload: { enabled: true, limit: 20, window: 10, duration: 30 },
+  pickup: { enabled: true, limit: 10, window: 10, duration: 30 }
+}, bans: [], allow: [], regions: [], counters: [] }), "defaults");
+var integer = /* @__PURE__ */ __name((v, min, max) => Number.isSafeInteger(v) && v >= min && v <= max, "integer");
+var validScopes = /* @__PURE__ */ __name((v, region = false) => Array.isArray(v) && v.length > 0 && v.length <= 3 && new Set(v).size === v.length && v.every((s) => SCOPES.includes(s) && (!region || s !== "login")), "validScopes");
+var note = /* @__PURE__ */ __name((v) => typeof v === "string" && v.trim().length > 0 && v.length <= 120 && !/[\u0000-\u001f\u007f]/.test(v), "note");
+var timestamp = /* @__PURE__ */ __name((v) => integer(v, 0, Number.MAX_SAFE_INTEGER), "timestamp");
+var untilValid = /* @__PURE__ */ __name((v) => v === null || timestamp(v), "untilValid");
+var rulesValid = /* @__PURE__ */ __name((v) => v && Object.keys(v).length === 3 && SCOPES.every((k) => v[k] && typeof v[k].enabled === "boolean" && integer(v[k].limit, 1, 1e4) && integer(v[k].window, 1, 1440) && integer(v[k].duration, 1, 10080)), "rulesValid");
+function parse(raw2) {
+  if (raw2 === null)
+    return defaults();
+  const d = JSON.parse(raw2);
+  if (d?.version !== 1 || typeof d.revision !== "string" || typeof d.configRevision !== "string" || !rulesValid(d.rules) || !Array.isArray(d.bans) || d.bans.length > 1e3 || d.bans.some((b) => !b || !(!!canonicalIP(b.ip) && canonicalIP(b.ip) === b.ip || b.ip === "unknown") || !validScopes(b.scopes) || !["auto", "manual"].includes(b.kind) || !note(b.reason) || !integer(b.failures, 0, 1e4) || !timestamp(b.at) || !untilValid(b.until)) || !Array.isArray(d.allow) || d.allow.length > 200 || d.allow.some((a) => !a || !canonicalIP(a.ip) || canonicalIP(a.ip) !== a.ip || !validScopes(a.scopes) || !note(a.note) || !timestamp(a.created)) || !Array.isArray(d.regions) || d.regions.length > 200 || d.regions.some((r) => !r || typeof r.id !== "string" || !/^[A-Z]{2}$/.test(r.country) || !/^[A-Z0-9-]{0,10}$/.test(r.region) || !validScopes(r.scopes, true) || typeof r.enabled !== "boolean" || !note(r.reason) || !timestamp(r.at) || !untilValid(r.until)) || !Array.isArray(d.counters) || d.counters.length > 1e3 || d.counters.some((c) => !c || !(!!canonicalIP(c.ip) && canonicalIP(c.ip) === c.ip || c.ip === "unknown") || !SCOPES.includes(c.scope) || !Array.isArray(c.times) || c.times.length > 1e4 || c.times.some((n) => !timestamp(n))) || d.counters.reduce((n, c) => n + c.times.length, 0) > 2e4)
+    throw new Error("Invalid security state");
+  return d;
 }
-__name(err, "err");
-function contentDisposition(name) {
-  const fallback = name.replace(/[^\x20-\x7e]/g, "").replace(/["\\]/g, "_").trim() || "file";
-  return `attachment; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(name)}`;
+__name(parse, "parse");
+function prune(d, now) {
+  d.bans = d.bans.filter((b) => b.until === null || b.until > now);
+  d.counters = d.counters.filter((c) => {
+    c.times = c.times.filter((n) => n + d.rules[c.scope].window * 6e4 > now);
+    return c.times.length;
+  });
 }
-__name(contentDisposition, "contentDisposition");
+__name(prune, "prune");
+async function read(env) {
+  if (env.BUCKET) {
+    const obj = await env.BUCKET.get(SECURITY_KEY);
+    return { data: parse(obj ? await obj.text() : null), previous: obj?.etag ?? null };
+  }
+  await env.DB.prepare(CREATE_SETTINGS).run();
+  const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key=?").bind(SECURITY_KEY).first();
+  return { data: parse(row?.value ?? null), previous: row?.value ?? null };
+}
+__name(read, "read");
+async function write(env, d, previous) {
+  d.revision = crypto.randomUUID();
+  const value = JSON.stringify(d);
+  if (env.BUCKET)
+    return !!await env.BUCKET.put(SECURITY_KEY, value, { onlyIf: previous === null ? { etagDoesNotMatch: "*" } : { etagMatches: previous }, httpMetadata: { contentType: "application/json" }, storageClass: "Standard" });
+  const result = previous === null ? await env.DB.prepare("INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO NOTHING").bind(SECURITY_KEY, value).run() : await env.DB.prepare("UPDATE app_settings SET value=? WHERE key=? AND value=?").bind(value, SECURITY_KEY, previous).run();
+  return result.meta.changes === 1;
+}
+__name(write, "write");
+async function securityState(env) {
+  if (!securityEnabled(env))
+    return defaults();
+  try {
+    const { data } = await read(env);
+    prune(data, Date.now());
+    return data;
+  } catch {
+    throw new SecurityError(503, "\u5B89\u5168\u9632\u62A4\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
+  }
+}
+__name(securityState, "securityState");
+async function change(env, edit) {
+  if (!securityEnabled(env))
+    throw new SecurityError(503, "\u5B89\u5168\u9632\u62A4\u9700\u8981\u7ED1\u5B9A R2 \u6216 D1");
+  try {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      if (attempt)
+        await new Promise((r) => setTimeout(r, 1100 + Math.random() * 200));
+      const { data, previous } = await read(env);
+      prune(data, Date.now());
+      if (edit(data, Date.now()) === false)
+        return data;
+      try {
+        if (await write(env, data, previous))
+          return data;
+      } catch (e) {
+        if (!/429|rate|too many/i.test(String(e)))
+          throw e;
+      }
+    }
+  } catch (e) {
+    if (e instanceof SecurityError)
+      throw e;
+  }
+  throw new SecurityError(503, "\u5B89\u5168\u9632\u62A4\u5B58\u50A8\u7E41\u5FD9\u6216\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
+}
+__name(change, "change");
+function exempt(d, ip, scope) {
+  return d.allow.some((a) => a.ip === ip && a.scopes.includes(scope));
+}
+__name(exempt, "exempt");
+function evaluate(d, ip, scope, country = "", region = "", now = Date.now()) {
+  const ban = d.bans.find((b) => b.ip === ip && b.scopes.includes(scope) && (b.until === null || b.until > now) && (b.kind === "manual" || !exempt(d, ip, scope)));
+  if (ban)
+    return { blocked: true, reason: ban.reason, publicReason: ban.kind === "auto" ? "rate_limit" : "access_rule", retryAt: ban.until ?? void 0, status: ban.kind === "auto" ? 429 : 403 };
+  const geo = scope === "login" ? void 0 : d.regions.find((r) => r.enabled && r.scopes.includes(scope) && (r.until === null || r.until > now) && country !== "" && r.country === country && (!r.region || r.region === region));
+  if (geo)
+    return { blocked: true, reason: "\u547D\u4E2D\u5730\u533A\u5C01\u7981\u89C4\u5219", publicReason: "region", retryAt: geo.until ?? void 0, status: 403 };
+  return { blocked: false, reason: exempt(d, ip, scope) ? "\u547D\u4E2D\u5141\u8BB8\u540D\u5355" : "\u9632\u62A4\u653E\u884C", retryAt: void 0 };
+}
+__name(evaluate, "evaluate");
+async function enforceSecurity(env, ip, scope, country = "", region = "", count = false) {
+  if (!securityEnabled(env))
+    return;
+  const check = /* @__PURE__ */ __name((d) => {
+    const result = evaluate(d, ip, scope, country, region);
+    if (result.blocked)
+      throw new SecurityError(result.status || 403, "\u5F53\u524D\u8BF7\u6C42\u53D7\u8BBF\u95EE\u89C4\u5219\u9650\u5236", result.retryAt, false, result.publicReason);
+  }, "check");
+  if (!count) {
+    check(await securityState(env));
+    return;
+  }
+  let retryAt;
+  await change(env, (d, now) => {
+    retryAt = void 0;
+    check(d);
+    const rule = d.rules[scope];
+    if (!rule.enabled || exempt(d, ip, scope))
+      return false;
+    let counter = d.counters.find((c) => c.ip === ip && c.scope === scope);
+    if (!counter) {
+      if (d.counters.length >= 1e3)
+        throw new SecurityError(503, "\u9632\u62A4\u8BA1\u6570\u5BB9\u91CF\u5DF2\u6EE1\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
+      counter = { ip, scope, times: [] };
+      d.counters.push(counter);
+    }
+    if (d.counters.reduce((n, c) => n + c.times.length, 0) >= 2e4)
+      throw new SecurityError(503, "\u9632\u62A4\u8BA1\u6570\u5BB9\u91CF\u5DF2\u6EE1\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
+    counter.times.push(now);
+    if (counter.times.length >= rule.limit) {
+      if (d.bans.length >= 1e3)
+        throw new SecurityError(503, "\u9632\u62A4\u8BB0\u5F55\u5BB9\u91CF\u5DF2\u6EE1\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5");
+      retryAt = now + rule.duration * 6e4;
+      d.bans.push({ ip, scopes: [scope], kind: "auto", reason: scope === "upload" ? "\u4E0A\u4F20\u8BF7\u6C42\u8D85\u8FC7\u9891\u7387\u9650\u5236" : "\u65E0\u6548\u53D6\u4EF6\u53E3\u4EE4\u8D85\u8FC7\u9891\u7387\u9650\u5236", failures: counter.times.length, at: now, until: retryAt });
+      d.counters = d.counters.filter((c) => c !== counter);
+    }
+  });
+  if (retryAt)
+    throw new SecurityError(429, "\u8BF7\u6C42\u8FC7\u4E8E\u9891\u7E41\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5", retryAt, true);
+}
+__name(enforceSecurity, "enforceSecurity");
+async function editSecurity(env, body) {
+  if (!body || typeof body !== "object" || typeof body.action !== "string")
+    throw new SecurityError(400, "\u64CD\u4F5C\u53C2\u6570\u65E0\u6548");
+  return change(env, (d, now) => {
+    if (body.configRevision !== d.configRevision)
+      throw new SecurityError(409, "\u914D\u7F6E\u5DF2\u88AB\u5176\u4ED6\u64CD\u4F5C\u66F4\u65B0\uFF0C\u8BF7\u5237\u65B0\u540E\u91CD\u8BD5");
+    const bad = /* @__PURE__ */ __name(() => {
+      throw new SecurityError(400, "\u89C4\u5219\u53C2\u6570\u65E0\u6548\u6216\u8BB0\u5F55\u5DF2\u5B58\u5728");
+    }, "bad");
+    const ip = canonicalIP(body.ip);
+    switch (body.action) {
+      case "rules":
+        if (!rulesValid(body.rules))
+          bad();
+        d.rules = structuredClone(body.rules);
+        d.counters = [];
+        break;
+      case "ban":
+      case "allow": {
+        if (!ip || !validScopes(body.scopes) || !note(body.note))
+          bad();
+        if (body.action === "allow") {
+          if (d.allow.length >= 200 || d.allow.some((a) => a.ip === ip))
+            bad();
+          d.allow.push({ ip, scopes: body.scopes, note: body.note, created: now });
+        } else {
+          if (d.bans.length >= 1e3 || !integer(body.minutes, 0, MAX_MANUAL_BAN_MINUTES) || d.bans.some((b) => b.ip === ip))
+            bad();
+          d.bans.push({ ip, scopes: body.scopes, kind: "manual", reason: body.note, failures: 0, at: now, until: body.minutes ? now + body.minutes * 6e4 : null });
+        }
+        break;
+      }
+      case "unban":
+        if (!Array.isArray(body.ips) || !body.ips.length || body.ips.length > 1e3 || body.ips.some((v) => !canonicalIP(v) && v !== "unknown"))
+          bad();
+        const ips = body.ips.map((ip2) => canonicalIP(ip2) || "unknown");
+        d.bans = d.bans.filter((b) => !ips.includes(b.ip));
+        d.counters = d.counters.filter((c) => !ips.includes(c.ip));
+        break;
+      case "removeAllow":
+        if (!ip)
+          bad();
+        d.allow = d.allow.filter((a) => a.ip !== ip);
+        break;
+      case "region": {
+        const r = body.rule;
+        if (!r || typeof r.country !== "string" || !/^[A-Z]{2}$/.test(r.country) || typeof r.region !== "string" || !/^[A-Z0-9-]{0,10}$/.test(r.region) || !validScopes(r.scopes, true) || !note(r.reason) || typeof r.enabled !== "boolean" || !untilValid(r.until) || r.enabled && r.until !== null && r.until <= now)
+          bad();
+        const old = body.id ? d.regions.find((r2) => r2.id === body.id) : void 0;
+        if (body.id && !old || !old && d.regions.length >= 200 || d.regions.some((v) => v !== old && v.country === r.country && v.region === r.region && v.scopes.some((s) => r.scopes.includes(s))))
+          bad();
+        const next = { id: old?.id || crypto.randomUUID(), at: old?.at || now, country: r.country, region: r.region, scopes: r.scopes, reason: r.reason, enabled: r.enabled, until: r.until };
+        if (old)
+          d.regions[d.regions.indexOf(old)] = next;
+        else
+          d.regions.push(next);
+        break;
+      }
+      case "removeRegion":
+        if (typeof body.id !== "string")
+          bad();
+        d.regions = d.regions.filter((r) => r.id !== body.id);
+        break;
+      default:
+        bad();
+    }
+    d.configRevision = crypto.randomUUID();
+  });
+}
+__name(editSecurity, "editSecurity");
+
+// src/login-protection.ts
+var LOGIN_GUARD_KEY = "__file-relay/login-guard-v1.json";
+var LOGIN_RULES = { maxFailures: 5, windowSeconds: 600, banSeconds: 1800 };
+var MAX_RECORDS = 1e3;
+var LoginProtectionError = class extends Error {
+  constructor(retryAt, newBan = false) {
+    super("Login protection unavailable");
+    this.retryAt = retryAt;
+    this.newBan = newBan;
+  }
+  retryAt;
+  newBan;
+  static {
+    __name(this, "LoginProtectionError");
+  }
+};
+function loginProtectionResponse(c, error) {
+  if (!(error instanceof LoginProtectionError)) return;
+  c.header("Cache-Control", "no-store");
+  if (error.retryAt) {
+    c.header("Retry-After", String(Math.max(1, Math.ceil((error.retryAt - Date.now()) / 1e3))));
+    return c.json({ error: "login_blocked", message: "\u767B\u5F55\u5931\u8D25\u6B21\u6570\u8FC7\u591A\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5", retryAt: error.retryAt }, 429);
+  }
+  return c.json({ error: "login_protection_unavailable", message: "\u767B\u5F55\u9632\u62A4\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5" }, 503);
+}
+__name(loginProtectionResponse, "loginProtectionResponse");
+function loginIP(c) {
+  const raw2 = c.req.raw.cf ? c.req.header("CF-Connecting-IP") : void 0;
+  if (!raw2 || !/^[0-9a-fA-F:.]{3,45}$/.test(raw2)) return "unknown";
+  try {
+    const host = new URL(raw2.includes(":") ? `http://[${raw2}]` : `http://${raw2}`).hostname;
+    return host.replace(/^\[|\]$/g, "").toLowerCase();
+  } catch {
+    return "unknown";
+  }
+}
+__name(loginIP, "loginIP");
+function loginProtectionEnabled(env) {
+  return !!(env.BUCKET || env.DB);
+}
+__name(loginProtectionEnabled, "loginProtectionEnabled");
+function parse2(raw2, now, windowSeconds = LOGIN_RULES.windowSeconds) {
+  if (raw2 === null) return { version: 1, revision: "", entries: [] };
+  const data = JSON.parse(raw2);
+  if (data?.version !== 1 || typeof data.revision !== "string" || !Array.isArray(data.entries) || data.entries.length > MAX_RECORDS || data.entries.some((e) => !e || typeof e.ip !== "string" || !/^(unknown|[0-9a-f:.]{3,45})$/.test(e.ip) || !Number.isInteger(e.failures) || e.failures < 1 || e.failures > 1e4 || !Array.isArray(e.failedAt) || e.failedAt.length !== e.failures || !e.failedAt.every((n, i) => Number.isSafeInteger(n) && n >= 0 && (i === 0 || n >= e.failedAt[i - 1])) || e.firstFailedAt !== e.failedAt[0] || e.lastFailedAt !== e.failedAt[e.failedAt.length - 1] || ![e.firstFailedAt, e.lastFailedAt, e.bannedUntil].every((n) => Number.isSafeInteger(n) && n >= 0)) || new Set(data.entries.map((e) => e.ip)).size !== data.entries.length) throw new Error("Invalid login protection state");
+  data.entries = data.entries.filter((e) => {
+    if (e.bannedUntil) return e.bannedUntil > now;
+    e.failedAt = e.failedAt.filter((at) => at + windowSeconds * 1e3 > now);
+    e.failures = e.failedAt.length;
+    e.firstFailedAt = e.failedAt[0];
+    return e.failures > 0;
+  });
+  return data;
+}
+__name(parse2, "parse");
+async function read2(env, now, windowSeconds = LOGIN_RULES.windowSeconds) {
+  if (env.BUCKET) {
+    const object = await env.BUCKET.get(LOGIN_GUARD_KEY);
+    return { data: parse2(object ? await object.text() : null, now, windowSeconds), previous: object?.etag ?? null };
+  }
+  await env.DB.prepare(CREATE_SETTINGS).run();
+  const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key=?").bind(LOGIN_GUARD_KEY).first();
+  return { data: parse2(row?.value ?? null, now, windowSeconds), previous: row?.value ?? null };
+}
+__name(read2, "read");
+async function write2(env, data, previous) {
+  data.revision = crypto.randomUUID();
+  const value = JSON.stringify(data);
+  if (env.BUCKET) return !!await env.BUCKET.put(LOGIN_GUARD_KEY, value, {
+    onlyIf: previous === null ? { etagDoesNotMatch: "*" } : { etagMatches: previous },
+    httpMetadata: { contentType: "application/json" },
+    storageClass: "Standard"
+  });
+  const result = previous === null ? await env.DB.prepare("INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO NOTHING").bind(LOGIN_GUARD_KEY, value).run() : await env.DB.prepare("UPDATE app_settings SET value=? WHERE key=? AND value=?").bind(value, LOGIN_GUARD_KEY, previous).run();
+  return result.meta.changes === 1;
+}
+__name(write2, "write");
+async function change2(env, edit, windowSeconds) {
+  try {
+    const window = windowSeconds ?? (await securityState(env)).rules.login.window * 60;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      if (attempt) await new Promise((resolve) => setTimeout(resolve, 1100 + Math.random() * 200));
+      const now = Date.now();
+      const { data, previous } = await read2(env, now, window);
+      if (!edit(data, now)) return;
+      try {
+        if (await write2(env, data, previous)) return;
+      } catch (error) {
+        if (!/429|rate|too many/i.test(String(error))) throw error;
+      }
+    }
+  } catch (error) {
+    if (error instanceof LoginProtectionError) throw error;
+    console.warn("Login protection storage unavailable");
+  }
+  throw new LoginProtectionError();
+}
+__name(change2, "change");
+function rejectBanned(entry, now) {
+  if (entry && entry.bannedUntil > now) throw new LoginProtectionError(entry.bannedUntil);
+}
+__name(rejectBanned, "rejectBanned");
+async function checkLogin(env, ip) {
+  if (!loginProtectionEnabled(env)) return;
+  try {
+    const config = await securityState(env);
+    if (exempt(config, ip, "login")) return;
+    const now = Date.now();
+    rejectBanned((await read2(env, now, config.rules.login.window * 60)).data.entries.find((e) => e.ip === ip), now);
+  } catch (error) {
+    if (error instanceof LoginProtectionError) throw error;
+    throw new LoginProtectionError();
+  }
+}
+__name(checkLogin, "checkLogin");
+async function recordLogin(env, ip, success) {
+  if (!loginProtectionEnabled(env)) return;
+  const config = await securityState(env), rule = config.rules.login;
+  if (exempt(config, ip, "login") || !rule.enabled) return;
+  let bannedUntil = 0;
+  await change2(env, (data, now) => {
+    const entry = data.entries.find((e) => e.ip === ip);
+    rejectBanned(entry, now);
+    if (success) {
+      data.entries = data.entries.filter((e) => e.ip !== ip);
+      return !!entry;
+    }
+    if (!entry && data.entries.length >= MAX_RECORDS) throw new LoginProtectionError();
+    const next = entry ?? { ip, failures: 0, failedAt: [], firstFailedAt: now, lastFailedAt: now, bannedUntil: 0 };
+    next.failures++;
+    next.failedAt.push(now);
+    next.lastFailedAt = now;
+    if (next.failures >= rule.limit) next.bannedUntil = now + rule.duration * 6e4;
+    bannedUntil = next.bannedUntil;
+    if (!entry) data.entries.push(next);
+    return true;
+  }, rule.window * 60);
+  if (bannedUntil) throw new LoginProtectionError(bannedUntil, true);
+}
+__name(recordLogin, "recordLogin");
+async function loginProtectionStatus(env) {
+  const enabled = loginProtectionEnabled(env);
+  if (!enabled) return { enabled, ...LOGIN_RULES, bans: [] };
+  try {
+    const now = Date.now();
+    const rule = (await securityState(env)).rules.login;
+    const { data } = await read2(env, now, rule.window * 60);
+    return { enabled, automaticEnabled: rule.enabled, maxFailures: rule.limit, windowSeconds: rule.window * 60, banSeconds: rule.duration * 60, bans: data.entries.filter((e) => e.bannedUntil > now).sort((a, b) => b.lastFailedAt - a.lastFailedAt).map(({ failedAt: _times, ...entry }) => entry) };
+  } catch {
+    throw new LoginProtectionError();
+  }
+}
+__name(loginProtectionStatus, "loginProtectionStatus");
+async function unblockLogins(env, ips) {
+  if (!loginProtectionEnabled(env)) throw new LoginProtectionError();
+  const selected = new Set(ips);
+  await change2(env, (data) => {
+    const count = data.entries.length;
+    data.entries = data.entries.filter((e) => !selected.has(e.ip));
+    return data.entries.length !== count;
+  });
+}
+__name(unblockLogins, "unblockLogins");
+async function unblockLogin(env, ip) {
+  return unblockLogins(env, [ip]);
+}
+__name(unblockLogin, "unblockLogin");
+
+// src/audit.ts
+var AUDIT_KEY = "__file-relay/audit-v1.json";
+var AUDIT_DAYS = 30;
+var AUDIT_LIMIT = 1e3;
+var AUDIT_GROUP_MS = 5 * 6e4;
+var CATEGORIES = ["login", "operation", "security", "upload", "pickup"];
+var states = /* @__PURE__ */ new WeakMap();
+function auditState(c) {
+  let state = states.get(c);
+  if (!state) {
+    state = { authenticated: false, actor: "anonymous", detail: {} };
+    states.set(c, state);
+  }
+  return state;
+}
+__name(auditState, "auditState");
+function auditEnabled(env) {
+  return !!(env.BUCKET || env.DB);
+}
+__name(auditEnabled, "auditEnabled");
+var text = /* @__PURE__ */ __name((value, max = 80) => typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").slice(0, max) : "", "text");
+function parse3(raw2, now) {
+  if (raw2 === null) return { version: 1, revision: "", entries: [] };
+  const data = JSON.parse(raw2);
+  if (data?.version !== 1 || typeof data.revision !== "string" || !Array.isArray(data.entries) || data.entries.length > AUDIT_LIMIT || data.entries.some((e) => !e || typeof e.id !== "string" || !Number.isSafeInteger(e.at) || !CATEGORIES.includes(e.category) || !["success", "failed", "blocked"].includes(e.result) || !["admin", "token", "anonymous"].includes(e.actor) || !Number.isInteger(e.status) || !Number.isFinite(e.durationMs) || !["action", "ip", "country", "region", "city", "method", "target", "agent"].every((k) => typeof e[k] === "string") || !e.detail || typeof e.detail !== "object" || Array.isArray(e.detail))) throw new Error("Invalid audit state");
+  data.entries = data.entries.filter((e) => e.at >= now - AUDIT_DAYS * 864e5);
+  return data;
+}
+__name(parse3, "parse");
+async function read3(env) {
+  const now = Date.now();
+  if (env.BUCKET) {
+    const object = await env.BUCKET.get(AUDIT_KEY);
+    return { data: parse3(object ? await object.text() : null, now), previous: object?.etag ?? null };
+  }
+  await env.DB.prepare(CREATE_SETTINGS).run();
+  const row = await env.DB.prepare("SELECT value FROM app_settings WHERE key=?").bind(AUDIT_KEY).first();
+  return { data: parse3(row?.value ?? null, now), previous: row?.value ?? null };
+}
+__name(read3, "read");
+async function write3(env, data, previous) {
+  data.revision = crypto.randomUUID();
+  const value = JSON.stringify(data);
+  if (env.BUCKET) return !!await env.BUCKET.put(AUDIT_KEY, value, {
+    onlyIf: previous === null ? { etagDoesNotMatch: "*" } : { etagMatches: previous },
+    httpMetadata: { contentType: "application/json" },
+    storageClass: "Standard"
+  });
+  const result = previous === null ? await env.DB.prepare("INSERT INTO app_settings (key,value) VALUES (?,?) ON CONFLICT(key) DO NOTHING").bind(AUDIT_KEY, value).run() : await env.DB.prepare("UPDATE app_settings SET value=? WHERE key=? AND value=?").bind(value, AUDIT_KEY, previous).run();
+  return result.meta.changes === 1;
+}
+__name(write3, "write");
+async function appendAudit(env, event, aggregate = false) {
+  if (!auditEnabled(env)) return false;
+  try {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      if (attempt) await new Promise((resolve) => setTimeout(resolve, 1100 + Math.random() * 200));
+      const { data, previous } = await read3(env);
+      if (data.entries.some((e) => e.id === event.id)) return true;
+      const grouped = aggregate && data.entries.find((e) => Math.floor(e.at / AUDIT_GROUP_MS) === Math.floor(event.at / AUDIT_GROUP_MS) && e.category === event.category && e.action === event.action && e.result === event.result && e.ip === event.ip && e.method === event.method && (e.target === event.target || event.category === "pickup" && ["bad_request", "not_found"].includes(String(event.detail.reason))) && e.detail.reason === event.detail.reason && e.detail.stage === event.detail.stage && (e.detail.uploadRef === event.detail.uploadRef || event.detail.reason === "not_found") && typeof e.detail.count === "number");
+      if (grouped) {
+        grouped.detail = {
+          ...grouped.detail,
+          ...event.detail,
+          count: Number(grouped.detail.count) + 1,
+          firstAt: Math.min(Number(grouped.detail.firstAt), event.at),
+          lastAt: Math.max(grouped.at, event.at)
+        };
+        grouped.at = Math.max(grouped.at, event.at);
+        grouped.status = event.status;
+        grouped.target = event.target;
+      } else data.entries.push(aggregate ? { ...event, detail: { ...event.detail, count: 1, firstAt: event.at, lastAt: event.at } } : event);
+      data.entries.sort((a, b) => b.at - a.at || b.id.localeCompare(a.id));
+      data.entries = data.entries.slice(0, AUDIT_LIMIT);
+      try {
+        if (await write3(env, data, previous)) return true;
+      } catch (error) {
+        if (!/429|rate|too many/i.test(String(error))) throw error;
+      }
+    }
+  } catch {
+  }
+  console.warn("Audit record could not be saved");
+  return false;
+}
+__name(appendAudit, "appendAudit");
+var routes = {
+  "POST /api/admin/login": ["login", "login"],
+  "POST /api/admin/security": ["security", "securityRules"],
+  "POST /api/admin/logout": ["login", "logout"],
+  "PUT /api/admin/settings": ["operation", "retention"],
+  "PUT /api/admin/upload-policy": ["operation", "uploadPolicy"],
+  "POST /api/admin/login-protection/unblock": ["security", "unblock"],
+  "POST /api/admin/cleanup": ["operation", "cleanup"],
+  "GET /api/admin/audit-logs/export": ["operation", "export"]
+};
+async function auditRequest(c, next) {
+  const start = Date.now();
+  await next();
+  if (!auditEnabled(c.env)) return;
+  const state = auditState(c);
+  const path = c.req.path;
+  let selected = routes[`${c.req.method} ${path}`];
+  let target = state.target ?? "";
+  const share = /^\/api\/admin\/shares\/(\d{6})(?:\/(source(?:\/activity)?|download|preview))?$/.exec(path);
+  if (share) {
+    target = share[1];
+    if (c.req.method === "DELETE" && !share[2]) selected = ["operation", "delete"];
+    if (c.req.method === "PUT" && !share[2]) selected = ["operation", "editShare"];
+    if (c.req.method === "PUT" && share[2] === "source") selected = ["operation", "note"];
+    if (c.req.method === "GET" && share[2]?.startsWith("source")) selected = ["operation", "viewSource"];
+    if (c.req.method === "GET" && share[2] === "preview") selected = ["operation", "preview"];
+    if (c.req.method === "GET" && share[2] === "download") selected = ["operation", "download"];
+  }
+  if (!selected) return;
+  const isLogin = path === "/api/admin/login";
+  const bearer = path === "/api/admin/cleanup" && c.req.header("Authorization")?.startsWith("Bearer ");
+  if (!state.authenticated && !isLogin && !bearer) return;
+  if (isLogin && c.res.status === 403) return;
+  if (c.error instanceof SecurityError && [403, 429].includes(c.error.status)) return;
+  const protectionError = c.error instanceof LoginProtectionError ? c.error : null;
+  if (protectionError?.retryAt && !protectionError.newBan) return;
+  let [category, action] = selected;
+  if (protectionError?.newBan) {
+    category = "security";
+    action = "ban";
+    state.detail.bannedUntil = protectionError.retryAt;
+  }
+  const cf = c.req.raw.cf;
+  const event = {
+    id: crypto.randomUUID(),
+    at: start,
+    category,
+    action,
+    result: c.res.status === 429 ? "blocked" : c.res.status < 400 ? "success" : "failed",
+    actor: state.actor,
+    ip: loginIP(c),
+    country: text(cf?.country, 2),
+    region: text(cf?.region),
+    city: text(cf?.city),
+    method: c.req.method,
+    status: c.res.status,
+    target: text(target),
+    agent: text(c.req.header("User-Agent"), 200),
+    durationMs: Math.max(0, Date.now() - start),
+    detail: state.detail
+  };
+  if (!await appendAudit(c.env, event)) c.header("X-Audit-Status", "unavailable");
+}
+__name(auditRequest, "auditRequest");
+async function queryAudit(env, query) {
+  const category = query.category || "all";
+  const result = query.result || "all";
+  const from = query.from ? Number(query.from) : 0;
+  const to = query.to ? Number(query.to) : Date.now();
+  const offset = query.offset ? Number(query.offset) : 0;
+  const limit = query.limit ? Number(query.limit) : 20;
+  const q = (query.q || "").trim().toLowerCase();
+  if (!(category === "all" || CATEGORIES.includes(category)) || !["all", "success", "failed", "blocked"].includes(result) || ![from, to, offset, limit].every(Number.isSafeInteger) || from < 0 || to < from || offset < 0 || limit < 1 || limit > AUDIT_LIMIT || q.length > 80) throw new RangeError("Invalid audit filters");
+  const enabled = auditEnabled(env);
+  const entries = enabled ? (await read3(env)).data.entries : [];
+  entries.sort((a, b) => b.at - a.at || b.id.localeCompare(a.id));
+  const matched = entries.filter((e) => (category === "all" || e.category === category) && (result === "all" || e.result === result) && e.at >= from && e.at <= to && (!q || `${e.ip} ${e.target} ${e.action} ${e.detail.filename ?? ""} ${e.detail.visitorId ?? ""}`.toLowerCase().includes(q)));
+  return { enabled, retentionDays: AUDIT_DAYS, maxEntries: AUDIT_LIMIT, total: matched.length, offset, limit, rows: matched.slice(offset, offset + limit) };
+}
+__name(queryAudit, "queryAudit");
+
+// src/api-auth.ts
+var identities = /* @__PURE__ */ new WeakMap();
+var apiIdentity = /* @__PURE__ */ __name((c) => identities.get(c), "apiIdentity");
+var isApiPath = /* @__PURE__ */ __name((path) => path === "/api/v1" || path.startsWith("/api/v1/"), "isApiPath");
+function transferPath(path, method) {
+  if (method === "POST" && path === "/api/v1/shares") return "/api/shares/text";
+  return path.startsWith("/api/v1/") ? "/api/" + path.slice("/api/v1/".length) : path;
+}
+__name(transferPath, "transferPath");
+async function requireApiToken(c, next) {
+  c.header("Cache-Control", "no-store");
+  c.header("Vary", "Authorization");
+  if (!c.env.API_TOKEN) {
+    auditState(c).detail.reason = "api_disabled";
+    return c.json({ error: "api_disabled", message: "\u672A\u914D\u7F6E API_TOKEN\uFF0C\u811A\u672C\u63A5\u53E3\u672A\u542F\u7528" }, 503);
+  }
+  const origin = c.req.header("Origin");
+  if (origin && origin !== new URL(c.req.url).origin) return c.json({ error: "forbidden", message: "\u8BF7\u6C42\u6765\u6E90\u4E0D\u5339\u914D" }, 403);
+  const ip = loginIP(c);
+  await enforceSecurity(c.env, ip, "login");
+  await checkLogin(c.env, ip);
+  const match2 = /^Bearer ([^\s]+)$/i.exec(c.req.header("Authorization") || "");
+  const valid = !!match2 && await safeEqual(match2[1], c.env.API_TOKEN);
+  await recordLogin(c.env, ip, valid);
+  if (!valid) {
+    auditState(c).detail.reason = "unauthorized";
+    c.header("WWW-Authenticate", 'Bearer realm="file-relay-api"');
+    return c.json({ error: "unauthorized", message: "API Token \u65E0\u6548\u6216\u7F3A\u5931" }, 401);
+  }
+  const bytes = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`file-relay-api-visitor-v1:${c.env.API_TOKEN}`))).slice(0, 16);
+  bytes[6] = bytes[6] & 15 | 64;
+  bytes[8] = bytes[8] & 63 | 128;
+  const hex2 = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  identities.set(c, `${hex2.slice(0, 8)}-${hex2.slice(8, 12)}-${hex2.slice(12, 16)}-${hex2.slice(16, 20)}-${hex2.slice(20)}`);
+  auditState(c).authenticated = true;
+  auditState(c).actor = "token";
+  await next();
+}
+__name(requireApiToken, "requireApiToken");
+
+// ../../node_modules/hono/dist/utils/cookie.js
+var algorithm = { name: "HMAC", hash: "SHA-256" };
+var getCryptoKey = /* @__PURE__ */ __name(async (secret) => {
+  const secretBuf = typeof secret === "string" ? new TextEncoder().encode(secret) : secret;
+  return await crypto.subtle.importKey("raw", secretBuf, algorithm, false, ["sign", "verify"]);
+}, "getCryptoKey");
+var makeSignature = /* @__PURE__ */ __name(async (value, secret) => {
+  const key = await getCryptoKey(secret);
+  const signature = await crypto.subtle.sign(algorithm.name, key, new TextEncoder().encode(value));
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
+}, "makeSignature");
+var verifySignature = /* @__PURE__ */ __name(async (base64Signature, value, secret) => {
+  try {
+    const signatureBinStr = atob(base64Signature);
+    const signature = new Uint8Array(signatureBinStr.length);
+    for (let i = 0, len = signatureBinStr.length; i < len; i++) {
+      signature[i] = signatureBinStr.charCodeAt(i);
+    }
+    return await crypto.subtle.verify(algorithm, secret, signature, new TextEncoder().encode(value));
+  } catch {
+    return false;
+  }
+}, "verifySignature");
+var validCookieNameRegEx = /^[\w!#$%&'*.^`|~+-]+$/;
+var relaxedCookieNameRegEx = /^[!#-:<>-[\]-~]+$/;
+var validCookieValueRegEx = /^[ !#-:<-[\]-~]*$/;
+var trimCookieWhitespace = /* @__PURE__ */ __name((value) => {
+  let start = 0;
+  let end = value.length;
+  while (start < end) {
+    const charCode = value.charCodeAt(start);
+    if (charCode !== 32 && charCode !== 9) {
+      break;
+    }
+    start++;
+  }
+  while (end > start) {
+    const charCode = value.charCodeAt(end - 1);
+    if (charCode !== 32 && charCode !== 9) {
+      break;
+    }
+    end--;
+  }
+  return start === 0 && end === value.length ? value : value.slice(start, end);
+}, "trimCookieWhitespace");
+var parse4 = /* @__PURE__ */ __name((cookie, name) => {
+  if (name && cookie.indexOf(name) === -1) {
+    return {};
+  }
+  const pairs = cookie.split(";");
+  const parsedCookie = /* @__PURE__ */ Object.create(null);
+  for (const pairStr of pairs) {
+    const valueStartPos = pairStr.indexOf("=");
+    if (valueStartPos === -1) {
+      continue;
+    }
+    const cookieName = trimCookieWhitespace(pairStr.substring(0, valueStartPos));
+    if (name && name !== cookieName || !relaxedCookieNameRegEx.test(cookieName) || cookieName in parsedCookie) {
+      continue;
+    }
+    let cookieValue = trimCookieWhitespace(pairStr.substring(valueStartPos + 1));
+    if (cookieValue.startsWith('"') && cookieValue.endsWith('"')) {
+      cookieValue = cookieValue.slice(1, -1);
+    }
+    if (validCookieValueRegEx.test(cookieValue)) {
+      parsedCookie[cookieName] = tryDecodeURIComponent(cookieValue);
+      if (name) {
+        break;
+      }
+    }
+  }
+  return parsedCookie;
+}, "parse");
+var parseSigned = /* @__PURE__ */ __name(async (cookie, secret, name) => {
+  const parsedCookie = /* @__PURE__ */ Object.create(null);
+  const secretKey = await getCryptoKey(secret);
+  for (const [key, value] of Object.entries(parse4(cookie, name))) {
+    const signatureStartPos = value.lastIndexOf(".");
+    if (signatureStartPos < 0) {
+      continue;
+    }
+    const signedValue = value.substring(0, signatureStartPos);
+    const signature = value.substring(signatureStartPos + 1);
+    if (signature.length !== 44 || !signature.endsWith("=")) {
+      continue;
+    }
+    const isVerified = await verifySignature(signature, signedValue, secretKey);
+    parsedCookie[key] = isVerified ? signedValue : false;
+  }
+  return parsedCookie;
+}, "parseSigned");
+var _serialize = /* @__PURE__ */ __name((name, value, opt = {}) => {
+  if (!validCookieNameRegEx.test(name)) {
+    throw new Error("Invalid cookie name");
+  }
+  let cookie = `${name}=${value}`;
+  if (name.startsWith("__Secure-") && !opt.secure) {
+    throw new Error("__Secure- Cookie must have Secure attributes");
+  }
+  if (name.startsWith("__Host-")) {
+    if (!opt.secure) {
+      throw new Error("__Host- Cookie must have Secure attributes");
+    }
+    if (opt.path !== "/") {
+      throw new Error('__Host- Cookie must have Path attributes with "/"');
+    }
+    if (opt.domain) {
+      throw new Error("__Host- Cookie must not have Domain attributes");
+    }
+  }
+  for (const key of ["domain", "path", "sameSite", "priority"]) {
+    if (opt[key] && /[;\r\n]/.test(opt[key])) {
+      throw new Error(`${key} must not contain ";", "\\r", or "\\n"`);
+    }
+  }
+  if (opt && typeof opt.maxAge === "number" && opt.maxAge >= 0) {
+    if (opt.maxAge > 3456e4) {
+      throw new Error(
+        "Cookies Max-Age SHOULD NOT be greater than 400 days (34560000 seconds) in duration."
+      );
+    }
+    cookie += `; Max-Age=${opt.maxAge | 0}`;
+  }
+  if (opt.domain && opt.prefix !== "host") {
+    cookie += `; Domain=${opt.domain}`;
+  }
+  if (opt.path) {
+    cookie += `; Path=${opt.path}`;
+  }
+  if (opt.expires) {
+    if (opt.expires.getTime() - Date.now() > 3456e7) {
+      throw new Error(
+        "Cookies Expires SHOULD NOT be greater than 400 days (34560000 seconds) in the future."
+      );
+    }
+    cookie += `; Expires=${opt.expires.toUTCString()}`;
+  }
+  if (opt.httpOnly) {
+    cookie += "; HttpOnly";
+  }
+  if (opt.secure) {
+    cookie += "; Secure";
+  }
+  if (opt.sameSite) {
+    cookie += `; SameSite=${opt.sameSite.charAt(0).toUpperCase() + opt.sameSite.slice(1)}`;
+  }
+  if (opt.priority) {
+    cookie += `; Priority=${opt.priority.charAt(0).toUpperCase() + opt.priority.slice(1)}`;
+  }
+  if (opt.partitioned) {
+    if (!opt.secure) {
+      throw new Error("Partitioned Cookie must have Secure attributes");
+    }
+    cookie += "; Partitioned";
+  }
+  return cookie;
+}, "_serialize");
+var serialize = /* @__PURE__ */ __name((name, value, opt) => {
+  value = encodeURIComponent(value);
+  return _serialize(name, value, opt);
+}, "serialize");
+var serializeSigned = /* @__PURE__ */ __name(async (name, value, secret, opt = {}) => {
+  const signature = await makeSignature(value, secret);
+  value = `${value}.${signature}`;
+  value = encodeURIComponent(value);
+  return _serialize(name, value, opt);
+}, "serializeSigned");
+
+// ../../node_modules/hono/dist/helper/cookie/index.js
+var getCookie = /* @__PURE__ */ __name((c, key, prefix) => {
+  const cookie = c.req.raw.headers.get("Cookie");
+  if (typeof key === "string") {
+    if (!cookie) {
+      return void 0;
+    }
+    let finalKey = key;
+    if (prefix === "secure") {
+      finalKey = "__Secure-" + key;
+    } else if (prefix === "host") {
+      finalKey = "__Host-" + key;
+    }
+    const obj2 = parse4(cookie, finalKey);
+    return obj2[finalKey];
+  }
+  if (!cookie) {
+    return {};
+  }
+  const obj = parse4(cookie);
+  return obj;
+}, "getCookie");
+var getSignedCookie = /* @__PURE__ */ __name(async (c, secret, key, prefix) => {
+  const cookie = c.req.raw.headers.get("Cookie");
+  if (typeof key === "string") {
+    if (!cookie) {
+      return void 0;
+    }
+    let finalKey = key;
+    if (prefix === "secure") {
+      finalKey = "__Secure-" + key;
+    } else if (prefix === "host") {
+      finalKey = "__Host-" + key;
+    }
+    const obj2 = await parseSigned(cookie, secret, finalKey);
+    return obj2[finalKey];
+  }
+  if (!cookie) {
+    return {};
+  }
+  const obj = await parseSigned(cookie, secret);
+  return obj;
+}, "getSignedCookie");
+var generateCookie = /* @__PURE__ */ __name((name, value, opt) => {
+  let cookie;
+  if (opt?.prefix === "secure") {
+    cookie = serialize("__Secure-" + name, value, { path: "/", ...opt, secure: true });
+  } else if (opt?.prefix === "host") {
+    cookie = serialize("__Host-" + name, value, {
+      ...opt,
+      path: "/",
+      secure: true,
+      domain: void 0
+    });
+  } else {
+    cookie = serialize(name, value, { path: "/", ...opt });
+  }
+  return cookie;
+}, "generateCookie");
+var setCookie = /* @__PURE__ */ __name((c, name, value, opt) => {
+  const cookie = generateCookie(name, value, opt);
+  c.header("Set-Cookie", cookie, { append: true });
+}, "setCookie");
+var generateSignedCookie = /* @__PURE__ */ __name(async (name, value, secret, opt) => {
+  let cookie;
+  if (opt?.prefix === "secure") {
+    cookie = await serializeSigned("__Secure-" + name, value, secret, {
+      path: "/",
+      ...opt,
+      secure: true
+    });
+  } else if (opt?.prefix === "host") {
+    cookie = await serializeSigned("__Host-" + name, value, secret, {
+      ...opt,
+      path: "/",
+      secure: true,
+      domain: void 0
+    });
+  } else {
+    cookie = await serializeSigned(name, value, secret, { path: "/", ...opt });
+  }
+  return cookie;
+}, "generateSignedCookie");
+var setSignedCookie = /* @__PURE__ */ __name(async (c, name, value, secret, opt) => {
+  const cookie = await generateSignedCookie(name, value, secret, opt);
+  c.header("set-cookie", cookie, { append: true });
+}, "setSignedCookie");
+var deleteCookie = /* @__PURE__ */ __name((c, name, opt) => {
+  const deletedCookie = getCookie(c, name, opt?.prefix);
+  setCookie(c, name, "", { ...opt, maxAge: 0 });
+  return deletedCookie;
+}, "deleteCookie");
+
+// src/upload-source.ts
+var COOKIE = "relay_visitor";
+var MAX_AGE = 365 * 24 * 60 * 60;
+var ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+var visitors = /* @__PURE__ */ new WeakMap();
+async function ensureVisitor(c) {
+  const api = apiIdentity(c);
+  if (api) return api;
+  const existing = visitors.get(c);
+  if (existing) return existing;
+  const id = await resolveVisitor(c);
+  visitors.set(c, id);
+  return id;
+}
+__name(ensureVisitor, "ensureVisitor");
+async function resolveVisitor(c) {
+  if (!c.env.ADMIN_TOKEN) return crypto.randomUUID();
+  const secret = `upload-source:${c.env.ADMIN_TOKEN}`;
+  const value = await getSignedCookie(c, secret, COOKIE);
+  if (value) {
+    const [id2, expires] = value.split(".");
+    if (ID.test(id2) && Number(expires) > Date.now() && Number(expires) <= Date.now() + MAX_AGE * 1e3) return id2;
+  }
+  const id = crypto.randomUUID();
+  await setSignedCookie(c, COOKIE, `${id}.${Date.now() + MAX_AGE * 1e3}`, secret, {
+    httpOnly: true,
+    secure: c.req.url.startsWith("https:"),
+    sameSite: "Lax",
+    path: "/",
+    maxAge: MAX_AGE
+  });
+  return id;
+}
+__name(resolveVisitor, "resolveVisitor");
+function location(value) {
+  if (typeof value !== "string") return null;
+  let result = "";
+  for (const char of value.trim().replace(/[\u0000-\u001f\u007f]/g, "")) {
+    if (new TextEncoder().encode(result + char).length > 48) break;
+    result += char;
+  }
+  return result || null;
+}
+__name(location, "location");
+async function captureSource(c) {
+  const cf = c.req.raw.cf;
+  const rawIP = cf ? c.req.header("CF-Connecting-IP") : void 0;
+  const ip = rawIP && /^[0-9a-fA-F:.]{3,45}$/.test(rawIP) ? rawIP : null;
+  return {
+    visitorId: await ensureVisitor(c),
+    ip,
+    asn: typeof cf?.asn === "number" && Number.isSafeInteger(cf.asn) && cf.asn > 0 ? cf.asn : null,
+    organization: boundedText(cf?.asOrganization, 120),
+    userAgent: boundedText(c.req.header("User-Agent"), 256),
+    country: typeof cf?.country === "string" && /^[A-Z]{2}$/.test(cf.country) ? cf.country : null,
+    region: location(cf?.region),
+    city: location(cf?.city),
+    capturedAt: Date.now()
+  };
+}
+__name(captureSource, "captureSource");
+function boundedText(value, max) {
+  return typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, max) || null : null;
+}
+__name(boundedText, "boundedText");
+function parseSubmission(body) {
+  const displayName = body.displayName ?? "";
+  const description = body.description ?? "";
+  if (typeof displayName !== "string" || displayName.length > 40 || /[\u0000-\u001f\u007f]/.test(displayName) || typeof description !== "string" || description.length > 300 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(description)) return null;
+  return { displayName: displayName.trim(), description: description.trim() };
+}
+__name(parseSubmission, "parseSubmission");
+function sourceSummary(source) {
+  if (!source) return null;
+  const { visitorId, country, region, city, capturedAt } = source;
+  return { visitorId, country, region, city, capturedAt };
+}
+__name(sourceSummary, "sourceSummary");
 
 // src/code.ts
 var CODE_SPACE = 1e6;
@@ -9251,6 +9238,29 @@ function createD1Store(db) {
         expected.pickupCount,
         expected.maxPickups,
         expected.expireAt,
+        cleanupCutoff
+      ).first();
+      return row ? toRec(row) : null;
+    },
+    async updateShare(code, expected, update, cleanupCutoff) {
+      const row = await db.prepare(`UPDATE shares SET filename=?1, text=?2, size=?3, pickup_count=?4, max_pickups=?5, expire_at=?6
+        WHERE code=?7 AND id=?8 AND pickup_count=?9 AND max_pickups IS ?10 AND expire_at IS ?11
+          AND filename IS ?12 AND text IS ?13 AND size=?14 AND (expire_at IS NULL OR expire_at>?15)
+        RETURNING ${SHARE_COLUMNS}`).bind(
+        update.filename,
+        update.text,
+        update.size,
+        update.pickupCount,
+        update.maxPickups,
+        update.expireAt,
+        code,
+        expected.id,
+        expected.pickupCount,
+        expected.maxPickups,
+        expected.expireAt,
+        expected.filename,
+        expected.text,
+        expected.size,
         cleanupCutoff
       ).first();
       return row ? toRec(row) : null;
@@ -9467,6 +9477,13 @@ function createKVStore(kv) {
       await kv.put(SHARE_PREFIX + code, JSON.stringify(updated), { metadata: metaOf(updated) });
       return updated;
     },
+    async updateShare(code, expected, update, cleanupCutoff) {
+      const record = await kv.get(SHARE_PREFIX + code, "json");
+      if (!record || !sameShareContent(record, expected) || record.expireAt !== null && record.expireAt <= cleanupCutoff) return null;
+      const updated = { ...record, ...update };
+      await kv.put(SHARE_PREFIX + code, JSON.stringify(updated), { metadata: metaOf(updated) });
+      return updated;
+    },
     async tryPickup(code, opts) {
       const v = await kv.get(SHARE_PREFIX + code, "json");
       if (!v) return null;
@@ -9570,6 +9587,10 @@ function sameShareRules(record, expected) {
   return record.id === expected.id && record.pickupCount === expected.pickupCount && record.maxPickups === expected.maxPickups && record.expireAt === expected.expireAt;
 }
 __name(sameShareRules, "sameShareRules");
+function sameShareContent(record, expected) {
+  return sameShareRules(record, expected) && record.filename === expected.filename && record.text === expected.text && record.size === expected.size;
+}
+__name(sameShareContent, "sameShareContent");
 function shareStatusOf(expireAt, maxPickups, pickupCount, now) {
   if (expireAt !== null && expireAt <= now) return "expired";
   if (maxPickups !== null && pickupCount >= maxPickups) return "exhausted";
@@ -9582,6 +9603,20 @@ function getStore(env) {
   throw new Error("\u672A\u7ED1\u5B9A KV \u6216 D1:\u8BF7\u5728 wrangler.jsonc \u914D\u7F6E\u4E8C\u9009\u4E00\u7684\u5143\u6570\u636E\u5E93");
 }
 __name(getStore, "getStore");
+
+// src/share-edit.ts
+var MAX_PICKUP_COUNT = 2147483647;
+var MAX_EXPIRY_TIME = 253402300799999;
+function validShareRules(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const v = value;
+  return Number.isSafeInteger(v.pickupCount) && v.pickupCount >= 0 && v.pickupCount <= MAX_PICKUP_COUNT && (v.maxPickups === null || Number.isSafeInteger(v.maxPickups) && v.maxPickups >= 1 && v.maxPickups <= MAX_PICKUP_COUNT) && (v.expireAt === null || Number.isSafeInteger(v.expireAt) && v.expireAt >= 0 && v.expireAt <= MAX_EXPIRY_TIME);
+}
+__name(validShareRules, "validShareRules");
+function validShareBase(value) {
+  return validShareRules(value) && typeof value.id === "string" && value.id.length > 0 && value.id.length <= 64;
+}
+__name(validShareBase, "validShareBase");
 
 // src/limits.ts
 var KV_VALUE_MAX = 25 * 1024 ** 2;
@@ -9814,6 +9849,117 @@ async function deleteFile(env, key) {
 }
 __name(deleteFile, "deleteFile");
 
+// src/public-audit.ts
+var bounded = /* @__PURE__ */ __name((value, max = 80) => typeof value === "string" ? value.replace(/[\u0000-\u001f\u007f]/g, "").slice(0, max) : "", "bounded");
+function transferAudit(c, record) {
+  const detail = auditState(c).detail;
+  if (record.filename) detail.filename = bounded(record.filename, 160);
+  detail[record.kind === "text" ? "textLength" : "sizeBytes"] = record.size;
+  if (record.kind) detail.kind = record.kind;
+  if (record.source) detail.visitorId = record.source.visitorId;
+}
+__name(transferAudit, "transferAudit");
+function uploadSessionAudit(c, session) {
+  transferAudit(c, { ...session, kind: "file" });
+}
+__name(uploadSessionAudit, "uploadSessionAudit");
+function publicRejection(c, error) {
+  const detail = auditState(c).detail;
+  detail.securityReason = error.reason;
+  detail.newBan = error.newBan;
+  if (error.retryAt) detail.bannedUntil = error.retryAt;
+}
+__name(publicRejection, "publicRejection");
+function select(path, method) {
+  if (method === "POST" && ["/api/shares/file", "/api/shares/text"].includes(path))
+    return { category: "upload", stage: path.endsWith("/text") ? "text" : "direct", action: "upload" };
+  if (method === "POST" && path === "/api/uploads/init")
+    return { category: "upload", stage: "init", action: "upload" };
+  const session = /^\/api\/uploads\/([^/]+)\/(complete|abort|parts\/[^/]+)$/.exec(path);
+  if (session && (method === "POST" && ["complete", "abort"].includes(session[2]) || method === "PUT" && session[2].startsWith("parts/")))
+    return {
+      category: "upload",
+      stage: session[2].startsWith("parts/") ? "part" : session[2],
+      action: session[2] === "abort" ? "uploadCancel" : "upload",
+      session: session[1]
+    };
+  if (method === "POST" && path === "/api/pickup")
+    return { category: "pickup", stage: "lookup", action: "pickup" };
+  if (["GET", "HEAD"].includes(method) && /^\/api\/pickup\/[^/]+\/download$/.test(path))
+    return { category: "pickup", stage: "download", action: method === "HEAD" ? "downloadProbe" : "publicDownload" };
+}
+__name(select, "select");
+async function publicAudit(c, next) {
+  const selected = select(transferPath(c.req.path, c.req.method), c.req.method), start = Date.now();
+  await next();
+  if (!selected || !auditEnabled(c.env) || isApiPath(c.req.path) && !apiIdentity(c)) return;
+  try {
+    await recordPublicAudit(c, selected, start);
+  } catch {
+    console.warn("Public audit record could not be prepared");
+    c.header("X-Audit-Status", "unavailable");
+  }
+}
+__name(publicAudit, "publicAudit");
+async function recordPublicAudit(c, selected, start) {
+  const status = c.res.status;
+  const state = auditState(c);
+  if (status < 400 && (["init", "part"].includes(selected.stage) || selected.stage === "abort" && !state.detail.cancelled)) return;
+  if (c.error instanceof SecurityError) publicRejection(c, c.error);
+  const detail = { ...state.detail };
+  const securityReason = state.detail.securityReason;
+  const newBan = state.detail.newBan;
+  delete detail.securityReason;
+  delete detail.newBan;
+  delete detail.cancelled;
+  let reason = typeof detail.reason === "string" ? detail.reason : "";
+  if (status >= 400 && c.req.method !== "HEAD" && c.res.headers.get("Content-Type")?.includes("application/json")) {
+    const error = await c.res.clone().json();
+    reason ||= bounded(error.error, 64);
+  }
+  let category = selected.category, action = selected.action;
+  const blocked = status === 403 || status === 429;
+  let target = bounded(state.target);
+  if (typeof securityReason === "string") {
+    category = "security";
+    action = newBan ? "ban" : "accessBlocked";
+    target = selected.category;
+    for (const key of Object.keys(detail)) if (key !== "bannedUntil") delete detail[key];
+    detail.scope = selected.category;
+    reason = securityReason;
+    if (typeof state.detail.bannedUntil === "number") detail.bannedUntil = state.detail.bannedUntil;
+  } else {
+    detail.stage = selected.stage;
+    detail.visitorId = await ensureVisitor(c);
+    if ("session" in selected && selected.session) {
+      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(selected.session));
+      detail.uploadRef = Array.from(new Uint8Array(digest).slice(0, 8), (b) => b.toString(16).padStart(2, "0")).join("");
+    }
+  }
+  if (reason) detail.reason = reason;
+  const cf = c.req.raw.cf;
+  const event = {
+    id: crypto.randomUUID(),
+    at: start,
+    category,
+    action,
+    result: blocked ? "blocked" : status < 400 ? "success" : "failed",
+    actor: apiIdentity(c) ? "token" : "anonymous",
+    ip: loginIP(c),
+    country: bounded(cf?.country, 2),
+    region: bounded(cf?.region),
+    city: bounded(cf?.city),
+    method: c.req.method,
+    status,
+    target,
+    agent: bounded(c.req.header("User-Agent"), 200),
+    durationMs: Math.max(0, Date.now() - start),
+    detail
+  };
+  if (!await appendAudit(c.env, event, status >= 400 && !newBan)) c.header("X-Audit-Status", "unavailable");
+}
+__name(recordPublicAudit, "recordPublicAudit");
+
 // src/upload-policy.ts
 var SETTINGS_KEY = "sys:guest-upload-policy";
 var USAGE_KEY = "__file-relay/guest-uploads-v1.json";
@@ -9940,7 +10086,7 @@ async function weeklyUsage(env, source, limit, debit) {
 __name(weeklyUsage, "weeklyUsage");
 async function uploadAccess(c) {
   const source = await captureSource(c);
-  const noted = !!(await getStore(c.env).getVisitorNote(source.visitorId)).trim();
+  const noted = !!apiIdentity(c) || !!(await getStore(c.env).getVisitorNote(source.visitorId)).trim();
   const limits = await getGuestLimits(c.env);
   return { source, noted, limits, maxFileSize: fileMaxSize(c.env) };
 }
@@ -9989,188 +10135,33 @@ async function checkUploadSession(c, session) {
 }
 __name(checkUploadSession, "checkUploadSession");
 
-// src/upload.ts
-var uploadRoutes = new Hono2();
-uploadRoutes.onError((e, c) => {
-  const rejection = policyErrorResponse(c, e) ?? securityResponse(c, e);
-  if (rejection) return rejection;
-  if (e instanceof CapacityError) return c.json({ error: "capacity_exceeded", message: e.message, remainingBytes: e.remainingBytes, capacityBytes: R2_CAPACITY_MAX }, 507);
-  console.error("Upload failed", e);
-  return c.json({ error: "internal", message: "\u4E0A\u4F20\u670D\u52A1\u6682\u4E0D\u53EF\u7528,\u8BF7\u7A0D\u540E\u91CD\u8BD5" }, 503);
-});
-uploadRoutes.use("*", async (c, next) => {
-  if (fileMode(c.env) !== "r2") {
-    return err(c, 400, "config", "\u5F53\u524D\u4E3A\u5C0F\u5B58\u50A8\u6A21\u5F0F(KV),\u8BF7\u4F7F\u7528\u76F4\u4F20\u63A5\u53E3 /api/shares/file");
-  }
-  await next();
-});
-uploadRoutes.post("/init", async (c) => {
-  const body = await c.req.json().catch(() => null);
-  if (!body) return err(c, 400, "bad_request", "\u8BF7\u6C42\u4F53\u5FC5\u987B\u662F JSON");
-  const submission = parseSubmission(body);
-  if (!submission) return err(c, 400, "bad_request", "\u79F0\u547C\u9650 40 \u5B57\uFF0C\u8BF4\u660E\u9650 300 \u5B57");
-  const { filename, size, mime: mime2, expiry, maxPickups } = body;
-  const maxSize = fileMaxSize(c.env);
-  const partSize = uploadPartSize(c.env);
-  const maxParts = uploadMaxParts(c.env);
-  if (typeof filename !== "string" || !filename.trim()) return err(c, 400, "bad_request", "\u6587\u4EF6\u540D\u4E0D\u80FD\u4E3A\u7A7A");
-  if (typeof size !== "number" || !Number.isSafeInteger(size) || size < 1) return err(c, 400, "bad_request", "\u6587\u4EF6\u5927\u5C0F\u975E\u6CD5");
-  transferAudit(c, { filename, size, kind: "file" });
-  if (size > maxSize) {
-    return err(c, 413, "too_large", `\u6587\u4EF6\u8D85\u8FC7\u4E0A\u9650 ${maxSize} \u5B57\u8282`);
-  }
-  const expMs = parseExpiry(expiry);
-  if (expMs === void 0) return err(c, 400, "bad_request", "\u6709\u6548\u671F\u53C2\u6570\u975E\u6CD5");
-  const mp = parseMaxPickups(maxPickups);
-  if (mp === void 0) return err(c, 400, "bad_request", "\u53D6\u4EF6\u6B21\u6570\u53C2\u6570\u975E\u6CD5");
-  const parts = Math.ceil(size / partSize);
-  if (parts > maxParts) return err(c, 413, "too_large", "\u6587\u4EF6\u8FC7\u5927(\u5206\u7247\u6570\u8D85\u9650)");
-  const contentType = typeof mime2 === "string" && mime2 ? mime2 : "application/octet-stream";
-  const id = crypto.randomUUID();
-  const r2Key = crypto.randomUUID();
-  const access = await uploadAccess(c);
-  checkUploadOptions(access, size, expMs, mp);
-  await admitFile(c.env, access);
-  const source = { ...access.source, submission, uploadTier: access.noted ? "noted" : "guest" };
-  const capacity = await reserveCapacity(c.env, r2Key, size);
-  let mpu;
-  try {
-    mpu = await c.env.BUCKET.createMultipartUpload(r2Key, {
-      httpMetadata: { contentType },
-      storageClass: "Standard"
-    });
-    await getStore(c.env).createSession({
-      source,
-      id,
-      uploadId: mpu.uploadId,
-      r2Key,
-      filename: filename.slice(0, 255),
-      mime: contentType,
-      size,
-      parts,
-      expiry: typeof expiry === "string" ? expiry : null,
-      maxPickups: mp,
-      createdAt: Date.now()
-    });
-  } catch (e) {
-    if (mpu) await mpu.abort();
-    await releaseCapacity(c.env, [r2Key]);
-    throw e;
-  }
-  return c.json({ uploadId: id, partSize, parts, size, ...capacity });
-});
-uploadRoutes.put("/:id/parts/:n", async (c) => {
-  const id = c.req.param("id");
-  const n = Number(c.req.param("n"));
-  const sess = await getStore(c.env).getSession(id);
-  if (!sess) return err(c, 404, "not_found", "\u4E0A\u4F20\u4F1A\u8BDD\u4E0D\u5B58\u5728\u6216\u5DF2\u8FC7\u671F");
-  await checkUploadSession(c, sess);
-  uploadSessionAudit(c, sess);
-  if (sess.size > fileMaxSize(c.env)) return err(c, 413, "too_large", "\u6587\u4EF6\u8D85\u8FC7\u5F53\u524D\u5355\u6587\u4EF6\u4E0A\u9650,\u8BF7\u91CD\u65B0\u4E0A\u4F20");
-  if (!Number.isInteger(n) || n < 1 || n > sess.parts) return err(c, 400, "bad_request", "\u5206\u7247\u5E8F\u53F7\u975E\u6CD5");
-  const partSize = uploadPartSize(c.env);
-  const contentLength = Number(c.req.raw.headers.get("content-length") || 0);
-  if (contentLength && contentLength > partSize) return err(c, 400, "bad_request", "\u5206\u7247\u8FC7\u5927");
-  const body = c.req.raw.body;
-  if (!body) return err(c, 400, "bad_request", "\u8BF7\u6C42\u4F53\u4E3A\u7A7A");
-  if (Math.ceil(sess.size / partSize) !== sess.parts) return err(c, 400, "bad_request", "\u5206\u7247\u914D\u7F6E\u5DF2\u53D8\u66F4,\u8BF7\u91CD\u65B0\u4E0A\u4F20");
-  const expected = Math.min(partSize, sess.size - (n - 1) * partSize);
-  if (contentLength && contentLength !== expected) return err(c, 400, "bad_request", "\u5206\u7247\u5927\u5C0F\u4E0E\u58F0\u660E\u4E0D\u4E00\u81F4");
-  await reserveCapacity(c.env, sess.r2Key, sess.size);
-  const abort = new AbortController();
-  try {
-    const mpu = c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId);
-    const stream = new FixedLengthStream(expected);
-    const [part] = await Promise.all([
-      mpu.uploadPart(n, stream.readable),
-      body.pipeTo(stream.writable, { signal: abort.signal })
-    ]);
-    return c.json({ partNumber: part.partNumber, etag: part.etag });
-  } catch {
-    return err(c, 500, "internal", "\u5206\u7247\u5199\u5165\u5931\u8D25,\u8BF7\u91CD\u8BD5");
-  } finally {
-    abort.abort();
-  }
-});
-uploadRoutes.post("/:id/complete", async (c) => {
-  const id = c.req.param("id");
-  const body = await c.req.json().catch(() => null);
-  const store = getStore(c.env);
-  const sess = await store.getSession(id);
-  if (!sess) return err(c, 404, "not_found", "\u4E0A\u4F20\u4F1A\u8BDD\u4E0D\u5B58\u5728\u6216\u5DF2\u8FC7\u671F");
-  await checkUploadSession(c, sess);
-  uploadSessionAudit(c, sess);
-  if (sess.size > fileMaxSize(c.env)) return err(c, 413, "too_large", "\u6587\u4EF6\u8D85\u8FC7\u5F53\u524D\u5355\u6587\u4EF6\u4E0A\u9650,\u8BF7\u91CD\u65B0\u4E0A\u4F20");
-  const parts = body?.parts;
-  if (!Array.isArray(parts) || parts.length !== sess.parts) return err(c, 400, "bad_request", "\u5206\u7247\u5217\u8868\u4E0D\u5B8C\u6574");
-  const seen = /* @__PURE__ */ new Set();
-  const r2parts = [];
-  for (const p of parts) {
-    const rec = p;
-    if (!rec || typeof rec.partNumber !== "number" || typeof rec.etag !== "string") {
-      return err(c, 400, "bad_request", "\u5206\u7247\u5217\u8868\u683C\u5F0F\u975E\u6CD5");
-    }
-    if (!Number.isInteger(rec.partNumber) || rec.partNumber < 1 || rec.partNumber > sess.parts || seen.has(rec.partNumber)) {
-      return err(c, 400, "bad_request", "\u5206\u7247\u5E8F\u53F7\u975E\u6CD5");
-    }
-    seen.add(rec.partNumber);
-    r2parts.push({ partNumber: rec.partNumber, etag: rec.etag });
-  }
-  let obj;
-  await reserveCapacity(c.env, sess.r2Key, sess.size);
-  try {
-    const mpu = c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId);
-    obj = await mpu.complete(r2parts);
-  } catch {
-    return err(c, 400, "bad_request", "\u5408\u5E76\u5206\u7247\u5931\u8D25,\u8BF7\u91CD\u8BD5");
-  }
-  if (obj.size > fileMaxSize(c.env) || obj.size !== sess.size) {
-    await c.env.BUCKET.delete(sess.r2Key);
-    await releaseCapacity(c.env, [sess.r2Key]);
-    await store.deleteSession(id);
-    if (obj.size > fileMaxSize(c.env)) return err(c, 413, "too_large", "\u6587\u4EF6\u8D85\u8FC7\u5F53\u524D\u5355\u6587\u4EF6\u4E0A\u9650");
-    return err(c, 400, "bad_request", "\u6587\u4EF6\u5927\u5C0F\u6821\u9A8C\u5931\u8D25");
-  }
-  const parsed = parseExpiry(sess.expiry);
-  const expMs = parsed === void 0 ? 7 * 864e5 : parsed;
-  const expireAt = expMs === null ? null : Date.now() + expMs;
-  const created = await store.createShare(
-    {
-      kind: "file",
-      source: sess.source ?? null,
-      filename: sess.filename,
-      size: sess.size,
-      mime: sess.mime,
-      r2Key: sess.r2Key,
-      maxPickups: sess.maxPickups,
-      expireAt
-    },
-    id
-  );
-  auditState(c).target = created.code;
-  return c.json({
-    code: created.code,
-    kind: "file",
-    size: sess.size,
-    expireAt,
-    maxPickups: sess.maxPickups,
-    pickupUrl: `/pickup?code=${created.code}`
-  });
-});
-uploadRoutes.post("/:id/abort", async (c) => {
-  const store = getStore(c.env);
-  const sess = await store.getSession(c.req.param("id"));
-  if (sess) {
-    const source = await captureSource(c);
-    if (!sess.source || source.visitorId !== sess.source.visitorId) throw new UploadPolicyError(403, "upload_session_owner", "\u4E0A\u4F20\u4F1A\u8BDD\u4E0D\u5C5E\u4E8E\u5F53\u524D\u8BBF\u5BA2");
-    uploadSessionAudit(c, sess);
-    await c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId).abort();
-    if (!await c.env.BUCKET.head(sess.r2Key)) await releaseCapacity(c.env, [sess.r2Key]);
-    await store.deleteSession(sess.id);
-    auditState(c).detail.cancelled = true;
-  }
-  return c.json({ ok: true });
-});
+// src/util.ts
+var EXPIRY_MS = {
+  "1d": 864e5,
+  "7d": 7 * 864e5,
+  "30d": 30 * 864e5
+};
+function parseExpiry(v) {
+  if (v === "forever") return null;
+  if (typeof v === "string" && v in EXPIRY_MS) return EXPIRY_MS[v];
+  return void 0;
+}
+__name(parseExpiry, "parseExpiry");
+function parseMaxPickups(v) {
+  if (v === null || v === void 0) return null;
+  if (typeof v === "number" && Number.isInteger(v) && v >= 1 && v <= 999) return v;
+  return void 0;
+}
+__name(parseMaxPickups, "parseMaxPickups");
+function err(c, status, code, message) {
+  return c.json({ error: code, message }, status);
+}
+__name(err, "err");
+function contentDisposition(name) {
+  const fallback = name.replace(/[^\x20-\x7e]/g, "").replace(/["\\]/g, "_").trim() || "file";
+  return `attachment; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(name)}`;
+}
+__name(contentDisposition, "contentDisposition");
 
 // src/share.ts
 var shareRoutes = new Hono2();
@@ -10180,7 +10171,7 @@ shareRoutes.onError((error, c) => {
   console.error("Share request failed", error);
   return c.json({ error: "internal", message: "\u5206\u4EAB\u670D\u52A1\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5" }, 503);
 });
-shareRoutes.post("/shares/text", async (c) => {
+async function createTextShare(c) {
   const body = await c.req.json().catch(() => null);
   if (!body) return err(c, 400, "bad_request", "\u8BF7\u6C42\u4F53\u5FC5\u987B\u662F JSON");
   const submission = parseSubmission(body);
@@ -10219,8 +10210,10 @@ shareRoutes.post("/shares/text", async (c) => {
     },
     201
   );
-});
-shareRoutes.post("/shares/file", async (c) => {
+}
+__name(createTextShare, "createTextShare");
+shareRoutes.post("/shares/text", createTextShare);
+async function createKVFileShare(c) {
   if (fileMode(c.env) !== "kv") {
     return err(c, 400, "config", "\u5F53\u524D\u4E3A R2 \u5927\u5B58\u50A8\u6A21\u5F0F,\u8BF7\u4F7F\u7528\u5206\u7247\u4E0A\u4F20(/api/uploads/init)");
   }
@@ -10307,7 +10300,9 @@ shareRoutes.post("/shares/file", async (c) => {
     await deleteFile(c.env, storageKey);
     throw e;
   }
-});
+}
+__name(createKVFileShare, "createKVFileShare");
+shareRoutes.post("/shares/file", createKVFileShare);
 shareRoutes.post("/pickup", async (c) => {
   const body = await c.req.json().catch(() => ({}));
   const code = String(body?.code ?? "").trim();
@@ -10560,20 +10555,6 @@ async function getKVUsage(env) {
 }
 __name(getKVUsage, "getKVUsage");
 
-// src/share-edit.ts
-var MAX_PICKUP_COUNT = 2147483647;
-var MAX_EXPIRY_TIME = 253402300799999;
-function validShareRules(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  const v = value;
-  return Number.isSafeInteger(v.pickupCount) && v.pickupCount >= 0 && v.pickupCount <= MAX_PICKUP_COUNT && (v.maxPickups === null || Number.isSafeInteger(v.maxPickups) && v.maxPickups >= 1 && v.maxPickups <= MAX_PICKUP_COUNT) && (v.expireAt === null || Number.isSafeInteger(v.expireAt) && v.expireAt >= 0 && v.expireAt <= MAX_EXPIRY_TIME);
-}
-__name(validShareRules, "validShareRules");
-function validShareBase(value) {
-  return validShareRules(value) && typeof value.id === "string" && value.id.length > 0 && value.id.length <= 64;
-}
-__name(validShareBase, "validShareBase");
-
 // src/admin.ts
 var adminRoutes = new Hono2();
 adminRoutes.use("*", auditRequest);
@@ -10589,18 +10570,6 @@ __name(adminPath, "adminPath");
 var enc = new TextEncoder();
 var DAY_MS = 864e5;
 var hex = /* @__PURE__ */ __name((buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join(""), "hex");
-var sha2562 = /* @__PURE__ */ __name((s) => crypto.subtle.digest("SHA-256", enc.encode(s)), "sha256");
-async function safeEqual(a, b) {
-  const [da, db] = await Promise.all([sha2562(a), sha2562(b)]);
-  const subtle = crypto.subtle;
-  if (typeof subtle.timingSafeEqual === "function") return subtle.timingSafeEqual(da, db);
-  const xa = new Uint8Array(da);
-  const xb = new Uint8Array(db);
-  let diff = 0;
-  for (let i = 0; i < xa.length; i++) diff |= xa[i] ^ xb[i];
-  return diff === 0;
-}
-__name(safeEqual, "safeEqual");
 async function hmacHex(key, msg) {
   const k = await crypto.subtle.importKey("raw", enc.encode(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return hex(await crypto.subtle.sign("HMAC", k, enc.encode(msg)));
@@ -10908,8 +10877,8 @@ adminRoutes.get("/shares/:code/preview", async (c) => {
   }
   return c.json(preview);
 });
-adminRoutes.get("/shares/:code/download", async (c) => {
-  const code = c.req.param("code");
+async function downloadShare(c) {
+  const code = c.req.param("code") ?? "";
   if (!/^\d{6}$/.test(code)) return err(c, 400, "bad_request", "\u53E3\u4EE4\u975E\u6CD5");
   const record = await getStore(c.env).getByCode(code);
   if (!record) return err(c, 404, "not_found", "\u5206\u4EAB\u4E0D\u5B58\u5728");
@@ -10926,7 +10895,9 @@ adminRoutes.get("/shares/:code/download", async (c) => {
     "Cache-Control": "no-store",
     "X-Content-Type-Options": "nosniff"
   });
-});
+}
+__name(downloadShare, "downloadShare");
+adminRoutes.get("/shares/:code/download", downloadShare);
 adminRoutes.get("/shares/:code/source", async (c) => {
   const code = c.req.param("code");
   if (!/^\d{6}$/.test(code)) return err(c, 400, "bad_request", "\u53E3\u4EE4\u975E\u6CD5");
@@ -11001,6 +10972,455 @@ adminRoutes.post("/cleanup", async (c) => {
   return c.json({ ok: true, ...result });
 });
 
+// src/upload.ts
+var uploadRoutes = new Hono2();
+uploadRoutes.onError((e, c) => {
+  const rejection = policyErrorResponse(c, e) ?? securityResponse(c, e);
+  if (rejection) return rejection;
+  if (e instanceof CapacityError) return c.json({ error: "capacity_exceeded", message: e.message, remainingBytes: e.remainingBytes, capacityBytes: R2_CAPACITY_MAX }, 507);
+  console.error("Upload failed", e);
+  return c.json({ error: "internal", message: "\u4E0A\u4F20\u670D\u52A1\u6682\u4E0D\u53EF\u7528,\u8BF7\u7A0D\u540E\u91CD\u8BD5" }, 503);
+});
+uploadRoutes.use("*", async (c, next) => {
+  if (fileMode(c.env) !== "r2") {
+    return err(c, 400, "config", "\u5F53\u524D\u4E3A\u5C0F\u5B58\u50A8\u6A21\u5F0F(KV),\u8BF7\u4F7F\u7528\u76F4\u4F20\u63A5\u53E3 /api/shares/file");
+  }
+  await next();
+});
+uploadRoutes.post("/init", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  if (!body) return err(c, 400, "bad_request", "\u8BF7\u6C42\u4F53\u5FC5\u987B\u662F JSON");
+  const submission = parseSubmission(body);
+  if (!submission) return err(c, 400, "bad_request", "\u79F0\u547C\u9650 40 \u5B57\uFF0C\u8BF4\u660E\u9650 300 \u5B57");
+  const { filename, size, mime: mime2, expiry, maxPickups } = body;
+  const maxSize = fileMaxSize(c.env);
+  const partSize = uploadPartSize(c.env);
+  const maxParts = uploadMaxParts(c.env);
+  if (typeof filename !== "string" || !filename.trim()) return err(c, 400, "bad_request", "\u6587\u4EF6\u540D\u4E0D\u80FD\u4E3A\u7A7A");
+  if (typeof size !== "number" || !Number.isSafeInteger(size) || size < 1) return err(c, 400, "bad_request", "\u6587\u4EF6\u5927\u5C0F\u975E\u6CD5");
+  transferAudit(c, { filename, size, kind: "file" });
+  if (size > maxSize) {
+    return err(c, 413, "too_large", `\u6587\u4EF6\u8D85\u8FC7\u4E0A\u9650 ${maxSize} \u5B57\u8282`);
+  }
+  const expMs = parseExpiry(expiry);
+  if (expMs === void 0) return err(c, 400, "bad_request", "\u6709\u6548\u671F\u53C2\u6570\u975E\u6CD5");
+  const mp = parseMaxPickups(maxPickups);
+  if (mp === void 0) return err(c, 400, "bad_request", "\u53D6\u4EF6\u6B21\u6570\u53C2\u6570\u975E\u6CD5");
+  const parts = Math.ceil(size / partSize);
+  if (parts > maxParts) return err(c, 413, "too_large", "\u6587\u4EF6\u8FC7\u5927(\u5206\u7247\u6570\u8D85\u9650)");
+  const contentType = typeof mime2 === "string" && mime2 ? mime2 : "application/octet-stream";
+  const id = crypto.randomUUID();
+  const r2Key = crypto.randomUUID();
+  const access = await uploadAccess(c);
+  checkUploadOptions(access, size, expMs, mp);
+  await admitFile(c.env, access);
+  const source = { ...access.source, submission, uploadTier: access.noted ? "noted" : "guest" };
+  const capacity = await reserveCapacity(c.env, r2Key, size);
+  let mpu;
+  try {
+    mpu = await c.env.BUCKET.createMultipartUpload(r2Key, {
+      httpMetadata: { contentType },
+      storageClass: "Standard"
+    });
+    await getStore(c.env).createSession({
+      source,
+      id,
+      uploadId: mpu.uploadId,
+      r2Key,
+      filename: filename.slice(0, 255),
+      mime: contentType,
+      size,
+      parts,
+      expiry: typeof expiry === "string" ? expiry : null,
+      maxPickups: mp,
+      createdAt: Date.now()
+    });
+  } catch (e) {
+    if (mpu) await mpu.abort();
+    await releaseCapacity(c.env, [r2Key]);
+    throw e;
+  }
+  return c.json({ uploadId: id, partSize, parts, size, ...capacity });
+});
+uploadRoutes.put("/:id/parts/:n", async (c) => {
+  const id = c.req.param("id");
+  const n = Number(c.req.param("n"));
+  const sess = await getStore(c.env).getSession(id);
+  if (!sess) return err(c, 404, "not_found", "\u4E0A\u4F20\u4F1A\u8BDD\u4E0D\u5B58\u5728\u6216\u5DF2\u8FC7\u671F");
+  await checkUploadSession(c, sess);
+  uploadSessionAudit(c, sess);
+  if (sess.size > fileMaxSize(c.env)) return err(c, 413, "too_large", "\u6587\u4EF6\u8D85\u8FC7\u5F53\u524D\u5355\u6587\u4EF6\u4E0A\u9650,\u8BF7\u91CD\u65B0\u4E0A\u4F20");
+  if (!Number.isInteger(n) || n < 1 || n > sess.parts) return err(c, 400, "bad_request", "\u5206\u7247\u5E8F\u53F7\u975E\u6CD5");
+  const partSize = uploadPartSize(c.env);
+  const contentLength = Number(c.req.raw.headers.get("content-length") || 0);
+  if (contentLength && contentLength > partSize) return err(c, 400, "bad_request", "\u5206\u7247\u8FC7\u5927");
+  const body = c.req.raw.body;
+  if (!body) return err(c, 400, "bad_request", "\u8BF7\u6C42\u4F53\u4E3A\u7A7A");
+  if (Math.ceil(sess.size / partSize) !== sess.parts) return err(c, 400, "bad_request", "\u5206\u7247\u914D\u7F6E\u5DF2\u53D8\u66F4,\u8BF7\u91CD\u65B0\u4E0A\u4F20");
+  const expected = Math.min(partSize, sess.size - (n - 1) * partSize);
+  if (contentLength && contentLength !== expected) return err(c, 400, "bad_request", "\u5206\u7247\u5927\u5C0F\u4E0E\u58F0\u660E\u4E0D\u4E00\u81F4");
+  await reserveCapacity(c.env, sess.r2Key, sess.size);
+  const abort = new AbortController();
+  try {
+    const mpu = c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId);
+    const stream = new FixedLengthStream(expected);
+    const [part] = await Promise.all([
+      mpu.uploadPart(n, stream.readable),
+      body.pipeTo(stream.writable, { signal: abort.signal })
+    ]);
+    return c.json({ partNumber: part.partNumber, etag: part.etag });
+  } catch {
+    return err(c, 500, "internal", "\u5206\u7247\u5199\u5165\u5931\u8D25,\u8BF7\u91CD\u8BD5");
+  } finally {
+    abort.abort();
+  }
+});
+uploadRoutes.post("/:id/complete", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json().catch(() => null);
+  const store = getStore(c.env);
+  const sess = await store.getSession(id);
+  if (!sess) return err(c, 404, "not_found", "\u4E0A\u4F20\u4F1A\u8BDD\u4E0D\u5B58\u5728\u6216\u5DF2\u8FC7\u671F");
+  await checkUploadSession(c, sess);
+  uploadSessionAudit(c, sess);
+  if (sess.size > fileMaxSize(c.env)) return err(c, 413, "too_large", "\u6587\u4EF6\u8D85\u8FC7\u5F53\u524D\u5355\u6587\u4EF6\u4E0A\u9650,\u8BF7\u91CD\u65B0\u4E0A\u4F20");
+  const parts = body?.parts;
+  if (!Array.isArray(parts) || parts.length !== sess.parts) return err(c, 400, "bad_request", "\u5206\u7247\u5217\u8868\u4E0D\u5B8C\u6574");
+  const seen = /* @__PURE__ */ new Set();
+  const r2parts = [];
+  for (const p of parts) {
+    const rec = p;
+    if (!rec || typeof rec.partNumber !== "number" || typeof rec.etag !== "string") {
+      return err(c, 400, "bad_request", "\u5206\u7247\u5217\u8868\u683C\u5F0F\u975E\u6CD5");
+    }
+    if (!Number.isInteger(rec.partNumber) || rec.partNumber < 1 || rec.partNumber > sess.parts || seen.has(rec.partNumber)) {
+      return err(c, 400, "bad_request", "\u5206\u7247\u5E8F\u53F7\u975E\u6CD5");
+    }
+    seen.add(rec.partNumber);
+    r2parts.push({ partNumber: rec.partNumber, etag: rec.etag });
+  }
+  let obj;
+  await reserveCapacity(c.env, sess.r2Key, sess.size);
+  try {
+    const mpu = c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId);
+    obj = await mpu.complete(r2parts);
+  } catch {
+    return err(c, 400, "bad_request", "\u5408\u5E76\u5206\u7247\u5931\u8D25,\u8BF7\u91CD\u8BD5");
+  }
+  if (obj.size > fileMaxSize(c.env) || obj.size !== sess.size) {
+    await c.env.BUCKET.delete(sess.r2Key);
+    await releaseCapacity(c.env, [sess.r2Key]);
+    await store.deleteSession(id);
+    if (obj.size > fileMaxSize(c.env)) return err(c, 413, "too_large", "\u6587\u4EF6\u8D85\u8FC7\u5F53\u524D\u5355\u6587\u4EF6\u4E0A\u9650");
+    return err(c, 400, "bad_request", "\u6587\u4EF6\u5927\u5C0F\u6821\u9A8C\u5931\u8D25");
+  }
+  const parsed = parseExpiry(sess.expiry);
+  const expMs = parsed === void 0 ? 7 * 864e5 : parsed;
+  const expireAt = expMs === null ? null : Date.now() + expMs;
+  const created = await store.createShare(
+    {
+      kind: "file",
+      source: sess.source ?? null,
+      filename: sess.filename,
+      size: sess.size,
+      mime: sess.mime,
+      r2Key: sess.r2Key,
+      maxPickups: sess.maxPickups,
+      expireAt
+    },
+    id
+  );
+  auditState(c).target = created.code;
+  return c.json({
+    code: created.code,
+    kind: "file",
+    size: sess.size,
+    expireAt,
+    maxPickups: sess.maxPickups,
+    pickupUrl: `/pickup?code=${created.code}`
+  });
+});
+uploadRoutes.post("/:id/abort", async (c) => {
+  const store = getStore(c.env);
+  const sess = await store.getSession(c.req.param("id"));
+  if (sess) {
+    const source = await captureSource(c);
+    if (!sess.source || source.visitorId !== sess.source.visitorId) throw new UploadPolicyError(403, "upload_session_owner", "\u4E0A\u4F20\u4F1A\u8BDD\u4E0D\u5C5E\u4E8E\u5F53\u524D\u8BBF\u5BA2");
+    uploadSessionAudit(c, sess);
+    await c.env.BUCKET.resumeMultipartUpload(sess.r2Key, sess.uploadId).abort();
+    if (!await c.env.BUCKET.head(sess.r2Key)) await releaseCapacity(c.env, [sess.r2Key]);
+    await store.deleteSession(sess.id);
+    auditState(c).detail.cancelled = true;
+  }
+  return c.json({ ok: true });
+});
+
+// src/config.ts
+async function configResponse(c) {
+  c.header("Cache-Control", "no-store");
+  return c.json({
+    fileBackend: fileMode(c.env) ?? "none",
+    metadataBackend: c.env.fileKV ? "kv" : "d1",
+    ...await publicUploadPolicy(c),
+    maxTextLength: num(c.env.MAX_TEXT_LENGTH, 65536),
+    partSize: uploadPartSize(c.env)
+  });
+}
+__name(configResponse, "configResponse");
+
+// src/api.ts
+var apiRoutes = new Hono2();
+apiRoutes.onError((error, c) => {
+  const rejected = policyErrorResponse(c, error) ?? loginProtectionResponse(c, error) ?? securityResponse(c, error);
+  if (rejected) return rejected;
+  if (error instanceof CapacityError) return c.json({ error: "capacity_exceeded", message: error.message, remainingBytes: error.remainingBytes, capacityBytes: R2_CAPACITY_MAX }, 507);
+  console.error("Script API request failed", error);
+  return c.json({ error: "internal", message: "\u63A5\u53E3\u6682\u4E0D\u53EF\u7528\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5" }, 503);
+});
+var jsonLimit = bodyLimit({ maxSize: 1048576, onError: /* @__PURE__ */ __name((c) => c.json({ error: "too_large", message: "JSON \u8BF7\u6C42\u8D85\u8FC7 1 MiB \u4E0A\u9650" }, 413), "onError") });
+apiRoutes.use("*", async (c, next) => {
+  const jsonRequest = c.req.method === "PATCH" || c.req.method === "POST" && (c.req.path === "/api/v1/shares" || /^\/api\/v1\/uploads\/(init|[^/]+\/complete)$/.test(c.req.path));
+  if (jsonRequest) {
+    if (!c.req.header("Content-Type")?.startsWith("application/json")) return c.json({ error: "bad_request", message: "\u8BF7\u4F7F\u7528 JSON" }, 415);
+    return jsonLimit(c, next);
+  }
+  await next();
+});
+apiRoutes.get("/config", configResponse);
+apiRoutes.post("/shares", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).some((key) => !["text", "expiry", "maxPickups", "displayName", "description"].includes(key)))
+    return c.json({ error: "bad_request", message: "\u6587\u672C\u521B\u5EFA\u53C2\u6570\u65E0\u6548\u6216\u542B\u4E0D\u652F\u6301\u7684\u5B57\u6BB5" }, 400);
+  return createTextShare(c);
+});
+apiRoutes.post("/shares/file", createKVFileShare);
+apiRoutes.route("/uploads", uploadRoutes);
+function view(record) {
+  return {
+    id: record.id,
+    code: record.code,
+    kind: record.kind,
+    filename: record.filename,
+    size: record.size,
+    mime: record.mime,
+    text: record.text,
+    pickupCount: record.pickupCount,
+    maxPickups: record.maxPickups,
+    expireAt: record.expireAt,
+    createdAt: record.createdAt,
+    status: shareStatusOf(record.expireAt, record.maxPickups, record.pickupCount, Date.now()),
+    pickupUrl: `/pickup?code=${record.code}`,
+    downloadUrl: record.kind === "file" ? `/api/v1/shares/${record.code}/download` : null
+  };
+}
+__name(view, "view");
+async function version(record) {
+  const bytes = new TextEncoder().encode(JSON.stringify([
+    record.id,
+    record.kind,
+    record.filename,
+    record.text,
+    record.size,
+    record.pickupCount,
+    record.maxPickups,
+    record.expireAt
+  ]));
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return '"' + Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("") + '"';
+}
+__name(version, "version");
+async function reply(c, record) {
+  c.header("ETag", await version(record));
+  return c.json(view(record));
+}
+__name(reply, "reply");
+apiRoutes.get("/shares", async (c) => {
+  const limit = Number(c.req.query("limit") || 20), offset = Number(c.req.query("offset") || 0);
+  const kind = c.req.query("kind") || "all", status = c.req.query("status") || "all", q = (c.req.query("q") || "").trim();
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100 || !Number.isSafeInteger(offset) || offset < 0 || q.length > 80 || !["all", "file", "text"].includes(kind) || !["all", "active", "expired", "exhausted"].includes(status))
+    return c.json({ error: "bad_request", message: "\u5206\u9875\u6216\u7B5B\u9009\u53C2\u6570\u65E0\u6548" }, 400);
+  const filter = {
+    q,
+    ...kind !== "all" ? { kind } : {},
+    ...status !== "all" ? { status } : {}
+  };
+  const { total, rows } = await getStore(c.env).listShares(limit, offset, filter);
+  return c.json({ total, limit, offset, rows: rows.map((r) => ({
+    id: r.id,
+    code: r.code,
+    kind: r.kind,
+    filename: r.filename,
+    size: r.size,
+    textPreview: r.textPreview,
+    pickupCount: r.pickupCount,
+    maxPickups: r.maxPickups,
+    expireAt: r.expireAt,
+    createdAt: r.createdAt,
+    status: shareStatusOf(r.expireAt, r.maxPickups, r.pickupCount, Date.now())
+  })) });
+});
+apiRoutes.get("/shares/:code", async (c) => {
+  const code = c.req.param("code");
+  if (!/^\d{6}$/.test(code)) return c.json({ error: "bad_request", message: "\u53D6\u4EF6\u7801\u5FC5\u987B\u4E3A\u516D\u4F4D\u6570\u5B57" }, 400);
+  const record = await getStore(c.env).getByCode(code);
+  if (!record) return c.json({ error: "not_found", message: "\u5206\u4EAB\u4E0D\u5B58\u5728" }, 404);
+  const etag = await version(record);
+  c.header("ETag", etag);
+  if (c.req.header("If-None-Match") === etag) return c.body(null, 304);
+  return c.json(view(record));
+});
+apiRoutes.patch("/shares/:code", async (c) => {
+  const code = c.req.param("code");
+  if (!/^\d{6}$/.test(code)) return c.json({ error: "bad_request", message: "\u53D6\u4EF6\u7801\u5FC5\u987B\u4E3A\u516D\u4F4D\u6570\u5B57" }, 400);
+  if (!c.req.header("Content-Type")?.startsWith("application/json")) return c.json({ error: "bad_request", message: "\u8BF7\u4F7F\u7528 JSON" }, 415);
+  const store = getStore(c.env), record = await store.getByCode(code);
+  if (!record) return c.json({ error: "not_found", message: "\u5206\u4EAB\u4E0D\u5B58\u5728" }, 404);
+  const etag = c.req.header("If-Match");
+  if (!etag) return c.json({ error: "precondition_required", message: "\u8BF7\u5148\u67E5\u8BE2\u8BE6\u60C5\u5E76\u901A\u8FC7 If-Match \u63D0\u4EA4 ETag" }, 428);
+  if (etag !== await version(record)) return c.json({ error: "precondition_failed", message: "\u5206\u4EAB\u5DF2\u53D8\u66F4\uFF0C\u8BF7\u91CD\u65B0\u8BFB\u53D6\u540E\u4FEE\u6539" }, 412);
+  const body = await c.req.json().catch(() => null);
+  const allowed = ["filename", "text", "pickupCount", "maxPickups", "expireAt"];
+  if (!body || typeof body !== "object" || Array.isArray(body) || !Object.keys(body).length || Object.keys(body).some((k) => !allowed.includes(k)))
+    return c.json({ error: "bad_request", message: "\u4FEE\u6539\u5B57\u6BB5\u4E3A\u7A7A\u6216\u5305\u542B\u4E0D\u652F\u6301\u7684\u5B57\u6BB5" }, 400);
+  const patch = body;
+  const update = {
+    filename: record.filename,
+    text: record.text,
+    size: record.size,
+    pickupCount: record.pickupCount,
+    maxPickups: record.maxPickups,
+    expireAt: record.expireAt
+  };
+  for (const key of ["pickupCount", "maxPickups", "expireAt"]) if (key in patch) update[key] = patch[key];
+  if (!validShareRules(update)) return c.json({ error: "bad_request", message: "\u6B21\u6570\u6216\u8FC7\u671F\u65F6\u95F4\u65E0\u6548" }, 400);
+  if ("filename" in patch) {
+    if (record.kind !== "file" || typeof patch.filename !== "string" || !patch.filename.trim() || patch.filename.length > 255 || /[\u0000-\u001f\u007f]/.test(patch.filename))
+      return c.json({ error: "bad_request", message: "\u4EC5\u6587\u4EF6\u53EF\u4FEE\u6539\u6587\u4EF6\u540D\uFF0C\u957F\u5EA6\u4E3A 1\u2013255 \u5B57\u7B26" }, 400);
+    update.filename = patch.filename.trim();
+  }
+  if ("text" in patch) {
+    if (record.kind !== "text" || typeof patch.text !== "string" || !patch.text.trim() || patch.text.length > num(c.env.MAX_TEXT_LENGTH, 65536))
+      return c.json({ error: "bad_request", message: "\u6587\u672C\u5185\u5BB9\u6216\u7C7B\u578B\u65E0\u6548" }, 400);
+    update.text = patch.text;
+    update.size = patch.text.length;
+  }
+  const cutoff = Date.now() - await getRetentionDays(c.env) * RETENTION_DAY_MS;
+  if (record.expireAt !== null && record.expireAt <= cutoff) return c.json({ error: "cleanup_pending", message: "\u5206\u4EAB\u5DF2\u8FDB\u5165\u6E05\u7406\u671F\uFF0C\u4E0D\u80FD\u4FEE\u6539" }, 409);
+  if (record.kind === "file") {
+    const storage = await inspectFile(c.env, record.r2Key);
+    if (storage.state === "missing") return c.json({ error: "gone", message: "\u6587\u4EF6\u5DF2\u88AB\u6E05\u7406" }, 410);
+    if (storage.state !== "available") return c.json({ error: "storage_unavailable", message: "\u65E0\u6CD5\u786E\u8BA4\u6587\u4EF6\u72B6\u6001" }, 503);
+  }
+  const updated = await store.updateShare(code, record, update, cutoff);
+  if (!updated) return c.json({ error: "share_conflict", message: "\u8BB0\u5F55\u5DF2\u88AB\u53D6\u4EF6\u6216\u4FEE\u6539\uFF0C\u8BF7\u91CD\u65B0\u8BFB\u53D6\u540E\u63D0\u4EA4" }, 409);
+  auditState(c).detail.changedFields = Object.keys(patch).join(",");
+  if (["pickupCount", "maxPickups", "expireAt"].some((key) => key in patch)) {
+    const rules = /* @__PURE__ */ __name((r) => ({ pickupCount: r.pickupCount, maxPickups: r.maxPickups, expireAt: r.expireAt }), "rules");
+    auditState(c).detail.beforeRules = JSON.stringify(rules(record));
+    auditState(c).detail.afterRules = JSON.stringify(rules(updated));
+  }
+  if (updated.kind === "file") auditState(c).detail.filename = (updated.filename || "").slice(0, 160);
+  return reply(c, updated);
+});
+apiRoutes.get("/shares/:code/download", downloadShare);
+apiRoutes.delete("/shares/:code", async (c) => {
+  const code = c.req.param("code");
+  if (!/^\d{6}$/.test(code)) return c.json({ error: "bad_request", message: "\u53D6\u4EF6\u7801\u5FC5\u987B\u4E3A\u516D\u4F4D\u6570\u5B57" }, 400);
+  const store = getStore(c.env), record = await store.getByCode(code);
+  if (!record) {
+    auditState(c).detail.alreadyDeleted = true;
+    return c.json({ ok: true, already: true });
+  }
+  if (record.r2Key && (isKvFileKey(record.r2Key) ? !c.env.fileKV : !c.env.BUCKET))
+    return c.json({ error: "storage_unavailable", message: "\u6587\u4EF6\u5B58\u50A8\u7ED1\u5B9A\u4E0D\u53EF\u7528\uFF0C\u672A\u5220\u9664\u5206\u4EAB" }, 503);
+  if (record.kind === "file") await deleteFile(c.env, record.r2Key);
+  await store.deleteByCode(code);
+  if (record.kind === "file") auditState(c).detail.filename = (record.filename || "").slice(0, 160);
+  return c.json({ ok: true });
+});
+
+// src/api-audit.ts
+async function apiAudit(c, next) {
+  const start = Date.now();
+  await next();
+  if (!auditEnabled(c.env)) return;
+  const authenticated = !!apiIdentity(c), state = auditState(c), path = c.req.path;
+  let action = "apiAuth";
+  const item = /^\/api\/v1\/shares\/([^/]+)(?:\/(download))?$/.exec(path);
+  if (authenticated) {
+    if (c.req.method === "GET" && path === "/api/v1/shares") action = "apiList";
+    else if (item) action = item[2] ? "apiDownload" : { GET: "apiRead", HEAD: "apiRead", PATCH: "apiEdit", DELETE: "apiDelete" }[c.req.method] || "";
+    else return;
+    if (!action) return;
+  }
+  const protection = c.error instanceof LoginProtectionError ? c.error : null;
+  const security = c.error instanceof SecurityError ? c.error : null;
+  const detail = { ...state.detail };
+  if (protection?.retryAt) detail.bannedUntil = protection.retryAt;
+  if (security) detail.reason = security.reason;
+  if (protection?.newBan) {
+    action = "ban";
+    detail.scope = "login";
+  }
+  const bounded2 = /* @__PURE__ */ __name((v, n = 80) => typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, "").slice(0, n) : "", "bounded");
+  const cf = c.req.raw.cf, status = c.res.status;
+  const entry = {
+    id: crypto.randomUUID(),
+    at: start,
+    category: authenticated ? "operation" : "security",
+    action,
+    result: [403, 429].includes(status) ? "blocked" : status < 400 ? "success" : "failed",
+    actor: authenticated ? "token" : "anonymous",
+    ip: loginIP(c),
+    country: bounded2(cf?.country, 2),
+    region: bounded2(cf?.region),
+    city: bounded2(cf?.city),
+    method: c.req.method,
+    status,
+    target: authenticated && item && /^\d{6}$/.test(item[1]) ? item[1] : "",
+    agent: bounded2(c.req.header("User-Agent"), 200),
+    durationMs: Math.max(0, Date.now() - start),
+    detail
+  };
+  if (!await appendAudit(c.env, entry, !authenticated && !protection?.newBan)) c.header("X-Audit-Status", "unavailable");
+}
+__name(apiAudit, "apiAudit");
+
+// src/security-middleware.ts
+async function publicSecurity(c, next) {
+  const path = transferPath(c.req.path, c.req.method), method = c.req.method;
+  const upload = path.startsWith("/api/uploads/") || path === "/api/shares/file" || path === "/api/shares/text";
+  const pickup = path === "/api/pickup" || /^\/api\/pickup\/[^/]+\/download$/.test(path);
+  if (!upload && !pickup)
+    return next();
+  if (upload && path.endsWith("/abort"))
+    return next();
+  const scope = upload ? "upload" : "pickup", ip = loginIP(c);
+  const country = typeof c.req.raw.cf?.country === "string" ? c.req.raw.cf.country : "";
+  const region = typeof c.req.raw.cf?.regionCode === "string" ? c.req.raw.cf.regionCode : "";
+  const count = upload && method === "POST" && ["/api/uploads/init", "/api/shares/file", "/api/shares/text"].includes(path);
+  const reject = /* @__PURE__ */ __name(async (error) => {
+    if (!(error instanceof SecurityError))
+      throw error;
+    publicRejection(c, error);
+    return securityResponse(c, error);
+  }, "reject");
+  try {
+    await enforceSecurity(c.env, ip, scope, country, region, count);
+  } catch (error) {
+    return reject(error);
+  }
+  await next();
+  if (pickup && [400, 404].includes(c.res.status) && ["POST", "GET", "HEAD"].includes(method)) {
+    try {
+      await enforceSecurity(c.env, ip, scope, country, region, true);
+    } catch (error) {
+      c.res = await reject(error);
+    }
+  }
+}
+__name(publicSecurity, "publicSecurity");
+
 // src/index.ts
 var app = new Hono2();
 app.onError((error, c) => {
@@ -11023,6 +11443,8 @@ app.use("*", async (c, next) => {
   await next();
 });
 app.use("/api/*", publicAudit);
+app.use("/api/v1/*", apiAudit);
+app.use("/api/v1/*", requireApiToken);
 app.use("/api/*", async (c, next) => {
   if (!c.env.DB && !c.env.fileKV) {
     return c.json({ error: "config", message: "\u672A\u7ED1\u5B9A\u5143\u6570\u636E\u5E93:\u8BF7\u5728 wrangler.jsonc \u914D\u7F6E KV \u6216 D1(\u4E8C\u9009\u4E00)" }, 500);
@@ -11035,17 +11457,8 @@ app.get("/", (c, next) => {
   c.executionCtx.waitUntil(cleanupIfDue(c.env));
   return next();
 });
-app.get("/api/config", async (c) => {
-  c.header("Cache-Control", "no-store");
-  const policy = await publicUploadPolicy(c);
-  return c.json({
-    fileBackend: fileMode(c.env) ?? "none",
-    metadataBackend: c.env.fileKV ? "kv" : "d1",
-    ...policy,
-    maxTextLength: num(c.env.MAX_TEXT_LENGTH, 65536),
-    partSize: uploadPartSize(c.env)
-  });
-});
+app.get("/api/config", configResponse);
+app.route("/api/v1", apiRoutes);
 app.route("/api/uploads", uploadRoutes);
 app.route("/api", shareRoutes);
 app.route("/api/admin", adminRoutes);

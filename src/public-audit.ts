@@ -1,3 +1,4 @@
+import { apiIdentity, isApiPath, transferPath } from './api-auth';
 import type { Context } from 'hono';
 import type { Env } from './types';
 import type { SessionRecord, ShareRecord } from './store';
@@ -46,9 +47,9 @@ function select(path: string, method: string) {
 
 /** Outermost API middleware: observes the final response, including pre-handler protection failures. */
 export async function publicAudit(c: Context<{ Bindings: Env }>, next: () => Promise<void>) {
-  const selected = select(c.req.path, c.req.method), start = Date.now();
+  const selected = select(transferPath(c.req.path, c.req.method), c.req.method), start = Date.now();
   await next();
-  if (!selected || !auditEnabled(c.env)) return;
+  if (!selected || !auditEnabled(c.env) || isApiPath(c.req.path) && !apiIdentity(c)) return;
   try { await recordPublicAudit(c, selected, start); }
   catch {
     // Preparation errors must not replace a completed transfer response either.
@@ -94,7 +95,7 @@ async function recordPublicAudit(c: Context<{ Bindings: Env }>, selected: NonNul
   if (reason) detail.reason = reason;
   const cf = c.req.raw.cf;
   const event: AuditEntry = { id: crypto.randomUUID(), at: start, category, action,
-    result: blocked ? 'blocked' : status < 400 ? 'success' : 'failed', actor: 'anonymous', ip: loginIP(c),
+    result: blocked ? 'blocked' : status < 400 ? 'success' : 'failed', actor: apiIdentity(c) ? 'token' : 'anonymous', ip: loginIP(c),
     country: bounded(cf?.country, 2), region: bounded(cf?.region), city: bounded(cf?.city),
     method: c.req.method, status, target, agent: bounded(c.req.header('User-Agent'), 200),
     durationMs: Math.max(0, Date.now() - start), detail };

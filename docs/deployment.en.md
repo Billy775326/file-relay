@@ -41,6 +41,10 @@ R2/D1 enables login, operation, upload, pickup and security audit logs without a
 
 KV usage analytics is optional: set `CF_ACCOUNT_ID`, `CF_KV_NAMESPACE_ID` and Secret `CF_ANALYTICS_TOKEN` with Account Analytics Read permission. See [setup and daily-peak semantics (Chinese)](kv-usage.md).
 
+### Optional: script API
+
+Set an independent Secret `API_TOKEN` and redeploy to enable `/api/v1` share CRUD. Without it, script routes return an explicit disabled response; browser/admin behavior stays unchanged. It does not authenticate admin settings endpoints. See [usage and permissions (Chinese)](script-api.md) and [OpenAPI](openapi.json).
+
 ### Prepare the admin token
 
 Generate a strong random string using a password manager. Save it later as the `ADMIN_TOKEN` Secret. It signs in to this application's admin page; **it is not a Cloudflare API Token**.

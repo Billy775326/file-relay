@@ -1,16 +1,17 @@
+import { apiRoutes } from './api';
+import { apiAudit } from './api-audit';
+import { requireApiToken } from './api-auth';
+import { configResponse } from './config';
 import { securityResponse } from './security';
 import { publicSecurity } from './security-middleware';
 import { publicAudit } from './public-audit';
 import { Hono } from 'hono';
 import type { Env } from './types';
-import { num } from './types';
 import { uploadRoutes } from './upload';
 import { shareRoutes } from './share';
 import { adminRoutes, adminPath } from './admin';
 import { runCleanup, cleanupIfDue } from './cleanup';
-import { fileMode } from './filestore';
-import { uploadPartSize } from './limits';
-import { publicUploadPolicy, policyErrorResponse } from './upload-policy';
+import { policyErrorResponse } from './upload-policy';
 import { serveAsset } from './asset-resolver';
 import { loginProtectionResponse } from './login-protection';
 
@@ -43,6 +44,8 @@ app.use('*', async (c, next) => {
 
 // 元数据库前置检查:D1/KV 至少绑一个(都没绑时给出可读错误而非路由内炸 500)
 app.use('/api/*', publicAudit);
+app.use('/api/v1/*', apiAudit);
+app.use('/api/v1/*', requireApiToken);
 app.use('/api/*', async (c, next) => {
   if (!c.env.DB && !c.env.fileKV) {
     return c.json({ error: 'config', message: '未绑定元数据库:请在 wrangler.jsonc 配置 KV 或 D1(二选一)' }, 500);
@@ -66,17 +69,8 @@ app.get('/', (c, next) => {
 });
 
 /** 前端据此选择上传方式:fileBackend=r2 走分片,kv 走单请求直传 */
-app.get('/api/config', async (c) => {
-  c.header('Cache-Control', 'no-store');
-  const policy = await publicUploadPolicy(c);
-  return c.json({
-    fileBackend: fileMode(c.env) ?? 'none',
-    metadataBackend: c.env.fileKV ? 'kv' : 'd1',
-    ...policy,
-    maxTextLength: num(c.env.MAX_TEXT_LENGTH, 65_536),
-    partSize: uploadPartSize(c.env),
-  });
-});
+app.get('/api/config', configResponse);
+app.route('/api/v1', apiRoutes);
 app.route('/api/uploads', uploadRoutes);
 app.route('/api', shareRoutes);
 app.route('/api/admin', adminRoutes);

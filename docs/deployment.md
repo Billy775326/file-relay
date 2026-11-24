@@ -41,6 +41,10 @@ Pages 创建时选择 Git 集成或 Direct Upload。Direct Upload 项目不能�
 
 KV 具体用量统计为可选功能：另配 `CF_ACCOUNT_ID`、`CF_KV_NAMESPACE_ID` 和具备 Account Analytics Read 权限的 Secret `CF_ANALYTICS_TOKEN`。[配置步骤与日峰值含义](kv-usage.md)。
 
+### 可选：启用脚本 API
+
+需外部脚本管理分享时，添加独立 Secret `API_TOKEN`，保存并重新部署。不配置时 `/api/v1` 返回未启用；原网页与后台不受影响。Token 不替代管理员 Cookie，不开放全局设置接口。[调用方式与权限](script-api.md)。
+
 ### 准备管理员令牌
 
 使用密码管理器生成强随机字符串，稍后保存为 `ADMIN_TOKEN` Secret。这个令牌用于本项目管理员登录，**不是 Cloudflare API Token**。

@@ -2,3 +2,6 @@
 # Production: set ADMIN_TOKEN as a Secret in Cloudflare project settings.
 ADMIN_TOKEN=replace-with-your-local-random-token
 # ADMIN_PATH=panel-local
+
+# Optional independent secret for /api/v1 script CRUD; never reuse the admin token.
+# API_TOKEN=replace-with-an-independent-random-token

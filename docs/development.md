@@ -95,6 +95,7 @@ npm run test:quota
 | 静态资源版本与缓存 | `npm run test:asset-version` | 构建标识、HTML/模块依赖版本 |
 | 初始布局与刷新 | `npm run test:first-paint` | 暂停脚本加载时的布局、恢复后的交互 |
 | 文件列表与分页 | `npm run test:admin-layout`、`npm run test:admin-filters` | 偏好、筛选、翻页、迟到响应、手机布局 |
+| 脚本 Token CRUD | `npm run test:api` | 独立鉴权、文本/文件操作、ETag 并发、分片、容量回收与审计 |
 | 审计 | `npm run test:audit` | 后台与公开业务日志、并发合并、筛选导出、保留、权限和写失败 |
 | 安全防护 | `npm run test:security`、`npm run test:login-protection` | IP/地区/范围、限流、解封、并发与故障拒绝 |
 | 来源与备注 | `npm run test:source` | 签名 Cookie、来源快照、迁移、隐私投影、弹窗 |

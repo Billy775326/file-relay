@@ -113,7 +113,7 @@ curl -X POST 'https://your-domain.example/api/shares/text' \
   -d '{"text":"hello file-relay","expiry":"7d","maxPickups":5}'
 ```
 
-公开接口不返回上传来源；分片客户端必须保留访客 Cookie。完整路径、输入输出、错误、管理鉴权和日志筛选见[API 参考](docs/api.md)。
+公开接口不返回上传来源；分片客户端必须保留访客 Cookie。外部脚本可使用独立 `API_TOKEN` 调用 [`/api/v1` 增删查改接口](docs/script-api.md)，支持文本、文件及 R2 分片，无需后台 Cookie。完整网页/后台路径、错误和日志筛选见[API 参考](docs/api.md)。
 
 ## 命令速查
 

@@ -155,6 +155,17 @@ export function createD1Store(db: D1Database): ShareStore {
       return row ? toRec(row) : null;
     },
 
+    async updateShare(code, expected, update, cleanupCutoff) {
+      const row = await db.prepare(`UPDATE shares SET filename=?1, text=?2, size=?3, pickup_count=?4, max_pickups=?5, expire_at=?6
+        WHERE code=?7 AND id=?8 AND pickup_count=?9 AND max_pickups IS ?10 AND expire_at IS ?11
+          AND filename IS ?12 AND text IS ?13 AND size=?14 AND (expire_at IS NULL OR expire_at>?15)
+        RETURNING ${SHARE_COLUMNS}`)
+        .bind(update.filename, update.text, update.size, update.pickupCount, update.maxPickups, update.expireAt,
+          code, expected.id, expected.pickupCount, expected.maxPickups, expected.expireAt,
+          expected.filename, expected.text, expected.size, cleanupCutoff).first<ShareRow>();
+      return row ? toRec(row) : null;
+    },
+
     /** 原子取件计数:0 行 = 不存在/失效/textOnly 撞上文件,交回调用方分类 */
     async tryPickup(code, opts) {
       const kindCond = opts?.textOnly ? `AND kind = 'text'` : '';

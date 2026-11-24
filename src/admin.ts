@@ -1,3 +1,4 @@
+import { safeEqual } from './auth';
 import { securityEnabled, securityState, enforceSecurity, editSecurity, SecurityError, canonicalIP, evaluate, exempt, SCOPES, type Scope } from './security';
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
@@ -40,22 +41,6 @@ const DAY_MS = 86_400_000;
 
 const hex = (buf: ArrayBuffer): string =>
   [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
-
-const sha256 = (s: string): Promise<ArrayBuffer> => crypto.subtle.digest('SHA-256', enc.encode(s));
-
-/** 常量时间字符串比较:先 sha256 归一化长度,优先用 Workers 扩展 timingSafeEqual */
-async function safeEqual(a: string, b: string): Promise<boolean> {
-  const [da, db] = await Promise.all([sha256(a), sha256(b)]);
-  const subtle = crypto.subtle as SubtleCrypto & {
-    timingSafeEqual?: (x: ArrayBuffer, y: ArrayBuffer) => boolean;
-  };
-  if (typeof subtle.timingSafeEqual === 'function') return subtle.timingSafeEqual(da, db);
-  const xa = new Uint8Array(da);
-  const xb = new Uint8Array(db);
-  let diff = 0;
-  for (let i = 0; i < xa.length; i++) diff |= xa[i] ^ xb[i];
-  return diff === 0;
-}
 
 async function hmacHex(key: string, msg: string): Promise<string> {
   const k = await crypto.subtle.importKey('raw', enc.encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
@@ -360,8 +345,8 @@ adminRoutes.get('/shares/:code/preview', async c => {
 });
 
 /** Admin downloads read retained files without consuming public pickup limits. */
-adminRoutes.get('/shares/:code/download', async (c) => {
-  const code = c.req.param('code');
+export async function downloadShare(c: AdminContext) {
+  const code = c.req.param('code') ?? '';
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
   const record = await getStore(c.env).getByCode(code);
   if (!record) return err(c, 404, 'not_found', '分享不存在');
@@ -378,7 +363,8 @@ adminRoutes.get('/shares/:code/download', async (c) => {
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
   });
-});
+}
+adminRoutes.get('/shares/:code/download', downloadShare);
 
 /** Full IP is returned only here, behind the admin middleware. */
 adminRoutes.get('/shares/:code/source', async (c) => {

@@ -1,3 +1,4 @@
+import { apiIdentity } from './api-auth';
 import type { Context } from 'hono';
 import type { Env } from './types';
 import type { UploadSource, SessionRecord } from './store';
@@ -123,7 +124,7 @@ async function weeklyUsage(env: Env, source: UploadSource, limit: number, debit:
 
 export async function uploadAccess(c: Context<{ Bindings: Env }>) {
   const source = await captureSource(c);
-  const noted = !!(await getStore(c.env).getVisitorNote(source.visitorId)).trim();
+  const noted = !!apiIdentity(c) || !!(await getStore(c.env).getVisitorNote(source.visitorId)).trim();
   const limits = await getGuestLimits(c.env);
   return { source, noted, limits, maxFileSize: fileMaxSize(c.env) };
 }
