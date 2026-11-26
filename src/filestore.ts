@@ -9,6 +9,7 @@
 import { num, type Env } from './types';
 import { DEFAULT_MAX_FILE_SIZE, KV_VALUE_MAX, r2FileMax } from './limits';
 import { releaseCapacity } from './quota';
+import type { ShareFile, ShareRecord } from './store';
 
 export const KV_FILE_PREFIX = 'f:';
 /** 文件以原始字节存储,分享元数据单独存键,无需扣除编码余量。 */
@@ -119,4 +120,62 @@ export async function deleteFile(env: Env, key: string | null): Promise<void> {
     await env.BUCKET.delete(key);
     await releaseCapacity(env, [key]);
   }
+}
+
+
+/** Legacy file records use the same selectors as batch members. */
+export function shareFile(record: ShareRecord, index?: string): ShareFile | null {
+  if (record.files) return index && /^[1-9][0-9]*$/.test(index) ? record.files[Number(index) - 1] ?? null : null;
+  if (index !== undefined || record.kind !== 'file' || !record.r2Key) return null;
+  return { key: record.r2Key, filename: record.filename || 'file', size: record.size, mime: record.mime || 'application/octet-stream' };
+}
+
+export function describeFiles(record: ShareRecord, base: string) {
+  return record.files?.map(({ filename, size, mime }, index) => ({
+    index: index + 1, filename, size, mime, downloadUrl: `${base}/files/${index + 1}/download`,
+  }));
+}
+
+export async function inspectShareFiles(env: Env, record: ShareRecord) {
+  if (!record.files) return inspectFile(env, record.r2Key);
+  const files = await Promise.all(record.files.map(file => inspectFile(env, file.key)));
+  const state = files.some(f => f.state === 'unknown') ? 'unknown'
+    : files.some(f => f.state === 'missing') ? 'missing' : 'available';
+  return { state, size: null, uploadedAt: null } as FileStorageInfo;
+}
+
+/** Remove bytes before releasing their reservations or deleting the share record. */
+export async function deleteFileKeys(env: Env, keys: string[]) {
+  if (keys.some(key => isKvFileKey(key) ? !env.fileKV : !env.BUCKET)) return false;
+  const r2 = keys.filter(key => !isKvFileKey(key));
+  if (r2.length) {
+    for (let i = 0; i < r2.length; i += 1000) await env.BUCKET!.delete(r2.slice(i, i + 1000));
+    await releaseCapacity(env, r2);
+  }
+  for (const key of keys.filter(isKvFileKey)) await env.fileKV!.delete(key);
+  return true;
+}
+
+export function shareFileKeys(record: { r2Key: string | null; files?: ShareFile[] }) {
+  return record.files?.map(file => file.key) ?? (record.r2Key ? [record.r2Key] : []);
+}
+
+/** An absent or inaccurate Content-Length must not bypass the byte limit. */
+export async function readUploadBytes(body: ReadableStream<Uint8Array>, limit: number) {
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > limit) { await reader.cancel(); return null; }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return bytes;
 }

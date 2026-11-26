@@ -1356,6 +1356,116 @@
           }
         ]
       }
+    },
+    "/api/v1/shares/{code}/files/{index}/download": {
+      "get": {
+        "operationId": "downloadBatchFile",
+        "summary": "下载批次中的指定文件",
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "请求失败；具体 error / message 见响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "请求失败；具体 error / message 见响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "请求失败；具体 error / message 见响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "请求失败；具体 error / message 见响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求失败；具体 error / message 见响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "请求失败；具体 error / message 见响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "请求失败；具体 error / message 见响应",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{6}$"
+            }
+          },
+          {
+            "name": "index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1474,6 +1584,12 @@
               "string",
               "null"
             ]
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchFile"
+            }
           }
         },
         "additionalProperties": true,
@@ -1695,6 +1811,11 @@
                     "string",
                     "null"
                   ]
+                },
+                "fileCount": {
+                  "type": "integer",
+                  "minimum": 2,
+                  "maximum": 10
                 }
               },
               "additionalProperties": true
@@ -1768,6 +1889,10 @@
           },
           "fileUploadAvailable": {
             "type": "boolean"
+          },
+          "maxBatchFiles": {
+            "type": "integer",
+            "minimum": 2
           }
         },
         "additionalProperties": true
@@ -1903,6 +2028,36 @@
         "additionalProperties": true,
         "required": [
           "ok"
+        ]
+      },
+      "BatchFile": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "filename": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "downloadUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "filename",
+          "size",
+          "mime",
+          "downloadUrl"
         ]
       }
     }

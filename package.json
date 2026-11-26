@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:batch": "node test/batch_shares.mjs",
     "test:admin-text": "node test/admin_text.mjs",
     "test:api": "node test/api_crud.mjs",
     "test:preview": "node test/file_preview.mjs",

@@ -1,6 +1,7 @@
 import { num, type Env } from './types';
-import { getStore } from './store';
-import { deleteFile, isKvFileKey } from './filestore';
+import { getStore, type SessionRecord } from './store';
+import { deleteFileKeys, shareFileKeys, isKvFileKey } from './filestore';
+import { DRAFT_CLEANUP_GRACE } from './batch';
 import { releaseCapacity } from './quota';
 import { getRetentionDays, RETENTION_DAY_MS } from './settings';
 
@@ -22,28 +23,57 @@ export async function runCleanup(env: Env): Promise<{ deletedShares: number; abo
     const expired = await store.listExpiredShares(cutoff, 100);
     if (expired.length === 0) break;
 
-    const r2Keys = expired.filter((r) => r.r2Key && !isKvFileKey(r.r2Key)).map((r) => r.r2Key as string);
-    if (r2Keys.length > 0 && env.BUCKET) {
-      await env.BUCKET.delete(r2Keys);
-      await releaseCapacity(env, r2Keys);
-    }
-    await Promise.all(expired.filter((r) => r.r2Key && isKvFileKey(r.r2Key)).map((r) => deleteFile(env, r.r2Key)));
-    await store.deleteByCodes(expired.map((r) => r.code));
-    deletedShares += expired.length;
+    const ready = expired.filter(record => shareFileKeys(record).every(key => isKvFileKey(key) ? !!env.fileKV : !!env.BUCKET));
+    if (!ready.length) break;
+    await deleteFileKeys(env, ready.flatMap(shareFileKeys));
+    await store.deleteByCodes(ready.map(record => record.code));
+    deletedShares += ready.length;
+    if (ready.length < expired.length) break;
   }
 
   const ttl = num(env.SESSION_TTL_MS, 86_400_000);
   const stale = await store.listStaleSessions(now, ttl);
-  for (const s of stale) {
+  const aborted = new Set<string>();
+  async function closeSession(s: SessionRecord, draft: boolean) {
+    if (aborted.has(s.id)) return true;
+    if (s.batchCode && !env.BUCKET) return false;
+    let objectExists = false;
     try {
       // 大存储模式的会话;若部署已切走(BUCKET 未绑)则跳过 abort,仅清台账
-      await env.BUCKET?.resumeMultipartUpload(s.r2Key, s.uploadId).abort();
+      objectExists = s.batchCode ? !!await env.BUCKET?.head(s.r2Key) : false;
+      if (!objectExists) {
+        await env.BUCKET?.resumeMultipartUpload(s.r2Key, s.uploadId).abort();
+      }
     } catch {
-      continue; // Keep the session and reservation so a later cleanup can retry.
+      return false; // Keep the session and reservation for a later retry.
     }
-    if (env.BUCKET && !(await env.BUCKET.head(s.r2Key))) await releaseCapacity(env, [s.r2Key]);
+    if (!draft && env.BUCKET && !objectExists && !(await env.BUCKET.head(s.r2Key))) await releaseCapacity(env, [s.r2Key]);
     await store.deleteSession(s.id);
-    abortedSessions++;
+    aborted.add(s.id);
+    if (!objectExists) abortedSessions++;
+    return true;
+  }
+  const batchDeadlines = new Map<string, number | null>();
+  for (const session of stale) {
+    const code = session.batchCode;
+    if (code && !batchDeadlines.has(code)) {
+      batchDeadlines.set(code, (await store.getBatch(code))?.draftUntil ?? null);
+    }
+    // Batch deadlines are fixed at admission, even if the operator changes the session TTL.
+    if (code && batchDeadlines.get(code)) continue;
+    await closeSession(session, false);
+  }
+
+  // Leave a propagation window after the upload deadline before deleting staged bytes.
+  for (const draft of await store.listExpiredDrafts(now - DRAFT_CLEANUP_GRACE, 4)) {
+    let canDelete = true;
+    for (const file of draft.files ?? []) {
+      if (!file.sessionId || aborted.has(file.sessionId)) continue;
+      const session = await store.getSession(file.sessionId);
+      if (session && !await closeSession(session, true)) { canDelete = false; break; }
+    }
+    if (!canDelete) continue;
+    if (await deleteFileKeys(env, shareFileKeys(draft))) await store.deleteByCode(draft.code);
   }
 
   return { deletedShares, abortedSessions };

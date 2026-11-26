@@ -105,6 +105,7 @@ npm run test:quota
 | 文件下载与状态 | `npm run test:admin-download` | 存储检查、管理员下载、不消耗取件次数 |
 | 文件预览 | `npm run test:preview` | 有限读取、编码/图片边界、权限与界面 |
 | 编辑分享 | `npm run test:share-edit` | 状态联动、快照冲突、时区与失败输入保留 |
+| 批次分享 | `npm run test:batch` | KV/R2 传输、D1 迁移、访客限额、发布、选择下载、后台整批管理与文本发送 |
 | 后台文本管理 | `npm run test:admin-text` | 全文/复制、正文编辑、字符上限、API/后台并发、审计隐私、来源导航和手机布局 |
 | KV 用量 | `npm run test:kv-usage` | GraphQL 响应、状态、缓存及展示 |
 

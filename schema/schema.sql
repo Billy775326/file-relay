@@ -5,6 +5,8 @@
 -- 分享主表:文本与文件共用一张表,靠 kind 区分。
 -- 不设 status 列:有效/过期/取完由 expire_at / pickup_count / max_pickups 惰性计算。
 CREATE TABLE IF NOT EXISTS shares (
+  files_json TEXT,                           -- 多文件分享清单，旧记录为空
+  draft_until INTEGER,                       -- 非空时仅上传者可访问
   source_json  TEXT,                         -- 上传来源快照,仅管理接口展示
   id           TEXT PRIMARY KEY,             -- crypto.randomUUID()
   code         TEXT NOT NULL UNIQUE,         -- 6 位数字口令,UNIQUE 是防碰撞的最终裁决
@@ -19,12 +21,14 @@ CREATE TABLE IF NOT EXISTS shares (
   created_at   INTEGER NOT NULL,             -- epoch 毫秒
   expire_at    INTEGER                       -- NULL = 永久
 );
+CREATE INDEX IF NOT EXISTS idx_shares_draft ON shares(draft_until) WHERE draft_until IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_shares_expire  ON shares(expire_at);      -- 清理扫描用
 CREATE INDEX IF NOT EXISTS idx_shares_created ON shares(created_at DESC); -- 管理列表用
 
 -- 分片上传会话表:孤儿 multipart 的台账,cron 据此 abort。
 -- 客户端只持有 id(session token),拿不到 upload_id / r2_key。
 CREATE TABLE IF NOT EXISTS upload_sessions (
+  batch_code TEXT,
   source_json TEXT,
   id          TEXT PRIMARY KEY,
   upload_id   TEXT NOT NULL,                 -- R2 multipart uploadId

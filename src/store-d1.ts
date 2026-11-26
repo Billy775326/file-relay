@@ -7,6 +7,7 @@ import { sourceSummary } from './upload-source';
 import { randCode, isUniqueViolation } from './code';
 import type {
   NewShare,
+  ShareFile,
   SessionRecord,
   ShareListRow,
   ShareRecord,
@@ -15,6 +16,8 @@ import type {
 } from './store';
 
 interface ShareRow {
+  files_json: string | null;
+  draft_until: number | null;
   source_json: string | null;
   id: string;
   code: string;
@@ -31,6 +34,7 @@ interface ShareRow {
 }
 
 interface SessionRow {
+  batch_code: string | null;
   source_json: string | null;
   id: string;
   upload_id: string;
@@ -46,9 +50,11 @@ interface SessionRow {
 
 const MAX_CODE_RETRIES = 8;
 const SHARE_COLUMNS =
-  'id, code, kind, filename, size, mime, r2_key, text, max_pickups, pickup_count, created_at, expire_at, source_json';
+  'id, code, kind, filename, size, mime, r2_key, text, max_pickups, pickup_count, created_at, expire_at, source_json, files_json, draft_until';
 
 const toRec = (r: ShareRow): ShareRecord => ({
+  files: r.files_json ? JSON.parse(r.files_json) : undefined,
+  draftUntil: r.draft_until,
   source: r.source_json ? JSON.parse(r.source_json) : null,
   id: r.id,
   code: r.code,
@@ -65,6 +71,7 @@ const toRec = (r: ShareRow): ShareRecord => ({
 });
 
 const toSession = (r: SessionRow): SessionRecord => ({
+  batchCode: r.batch_code,
   source: r.source_json ? JSON.parse(r.source_json) : null,
   id: r.id,
   uploadId: r.upload_id,
@@ -82,12 +89,13 @@ function insertShareStmt(db: D1Database, id: string, code: string, s: NewShare, 
   return db
     .prepare(
       `INSERT INTO shares
-        (id, code, kind, filename, size, mime, r2_key, text, max_pickups, pickup_count, created_at, expire_at, source_json)
-       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,0,?10,?11,?12)`,
+        (id, code, kind, filename, size, mime, r2_key, text, max_pickups, pickup_count, created_at, expire_at, source_json, files_json, draft_until)
+       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,0,?10,?11,?12,?13,?14)`,
     )
     .bind(
       id, code, s.kind, s.filename ?? null, s.size, s.mime ?? null,
       s.r2Key ?? null, s.text ?? null, s.maxPickups, now, s.expireAt, s.source ? JSON.stringify(s.source) : null,
+      s.files ? JSON.stringify(s.files) : null, s.draftUntil ?? null,
     );
 }
 
@@ -95,7 +103,7 @@ export function createD1Store(db: D1Database): ShareStore {
   return {
     async visitorShares(visitorId) {
       const rows = await db.prepare(`SELECT ${SHARE_COLUMNS} FROM shares
-        WHERE json_extract(source_json, '$.visitorId') = ?1 ORDER BY created_at DESC, code ASC LIMIT 10`)
+        WHERE draft_until IS NULL AND json_extract(source_json, '$.visitorId') = ?1 ORDER BY created_at DESC, code ASC LIMIT 10`)
         .bind(visitorId).all<ShareRow>();
       return (rows.results ?? []).map(toRec);
     },
@@ -141,8 +149,23 @@ export function createD1Store(db: D1Database): ShareStore {
     },
 
     async getByCode(code) {
-      const r = await db.prepare(`SELECT ${SHARE_COLUMNS} FROM shares WHERE code = ?1`).bind(code).first<ShareRow>();
+      const r = await db.prepare(`SELECT ${SHARE_COLUMNS} FROM shares WHERE code = ?1 AND draft_until IS NULL`).bind(code).first<ShareRow>();
       return r ? toRec(r) : null;
+    },
+
+    async getBatch(code) {
+      const row = await db.prepare(`SELECT ${SHARE_COLUMNS} FROM shares WHERE code=?1 AND files_json IS NOT NULL`)
+        .bind(code).first<ShareRow>();
+      return row ? toRec(row) : null;
+    },
+
+    async publishBatch(code, id) {
+      const now = Date.now();
+      const row = await db.prepare(`UPDATE shares SET draft_until=NULL, created_at=?1,
+        expire_at=CASE WHEN expire_at IS NULL THEN NULL ELSE ?1 + expire_at - created_at END
+        WHERE code=?2 AND id=?3 AND draft_until>?1 RETURNING ${SHARE_COLUMNS}`)
+        .bind(now, code, id).first<ShareRow>();
+      return row ? toRec(row) : null;
     },
 
     async updateRules(code, expected, rules, cleanupCutoff) {
@@ -168,22 +191,23 @@ export function createD1Store(db: D1Database): ShareStore {
 
     /** 原子取件计数:0 行 = 不存在/失效/textOnly 撞上文件,交回调用方分类 */
     async tryPickup(code, opts) {
-      const kindCond = opts?.textOnly ? `AND kind = 'text'` : '';
+      const kind = opts?.textOnly ? 'text' : opts?.kind ?? null;
       const r = await db
         .prepare(
           `UPDATE shares SET pickup_count = pickup_count + 1
-             WHERE code = ?1 ${kindCond}
+             WHERE code = ?1 AND draft_until IS NULL
+               AND (?3 IS NULL OR kind=?3) AND (?4 IS NULL OR id=?4)
                AND (expire_at IS NULL OR expire_at > ?2)
                AND (max_pickups IS NULL OR pickup_count < max_pickups)
              RETURNING ${SHARE_COLUMNS}`,
         )
-        .bind(code, Date.now())
+        .bind(code, Date.now(), kind, opts?.id ?? null)
         .first<ShareRow>();
       return r ? toRec(r) : null;
     },
 
     async listShares(limit, offset, filter = {}) {
-      const clauses: string[] = [], values: (string | number)[] = [];
+      const clauses: string[] = ['draft_until IS NULL'], values: (string | number)[] = [];
       if (filter.kind) { clauses.push('kind = ?'); values.push(filter.kind); }
       if (filter.status) {
         clauses.push(`(CASE WHEN expire_at IS NOT NULL AND expire_at <= ? THEN 'expired'
@@ -202,14 +226,15 @@ export function createD1Store(db: D1Database): ShareStore {
       const rows = await db
         .prepare(
           `SELECT id, code, kind, filename, size, pickup_count, max_pickups, expire_at, created_at, source_json,
-                  CASE WHEN kind = 'text' THEN substr(text, 1, 50) ELSE NULL END AS text_preview
+                  CASE WHEN kind = 'text' THEN substr(text, 1, 50) ELSE NULL END AS text_preview,
+                  json_array_length(files_json) AS file_count
            FROM shares${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
         )
         .bind(...values, limit, offset)
         .all<{
           id: string; code: string; kind: 'text' | 'file'; filename: string | null; size: number;
           pickup_count: number; max_pickups: number | null; expire_at: number | null; created_at: number;
-          text_preview: string | null; source_json: string | null;
+          text_preview: string | null; file_count: number | null; source_json: string | null;
         }>();
       return {
         total,
@@ -217,7 +242,7 @@ export function createD1Store(db: D1Database): ShareStore {
           source: sourceSummary(r.source_json ? JSON.parse(r.source_json) : null),
           id: r.id, code: r.code, kind: r.kind, filename: r.filename, size: r.size,
           pickupCount: r.pickup_count, maxPickups: r.max_pickups,
-          expireAt: r.expire_at, createdAt: r.created_at, textPreview: r.text_preview,
+          expireAt: r.expire_at, createdAt: r.created_at, textPreview: r.text_preview, fileCount: r.file_count ?? undefined,
         })),
       };
     },
@@ -227,18 +252,18 @@ export function createD1Store(db: D1Database): ShareStore {
       const s = await db
         .prepare(
           `SELECT COUNT(*) AS total,
-                  COALESCE(SUM(CASE WHEN kind='file' THEN 1 ELSE 0 END), 0) AS files,
+                  COALESCE(SUM(CASE WHEN kind='file' THEN COALESCE(json_array_length(files_json),1) ELSE 0 END), 0) AS files,
                   COALESCE(SUM(CASE WHEN kind='text' THEN 1 ELSE 0 END), 0) AS texts,
                   COALESCE(SUM(size), 0) AS totalBytes,
                   SUM(CASE WHEN (expire_at IS NULL OR expire_at > ?1)
                             AND (max_pickups IS NULL OR pickup_count < max_pickups)
                            THEN 1 ELSE 0 END) AS active
-           FROM shares`,
+           FROM shares WHERE draft_until IS NULL`,
         )
         .bind(now)
         .first<{ total: number; files: number; texts: number; totalBytes: number; active: number | null }>();
       const t = await db
-        .prepare('SELECT COUNT(*) AS n FROM shares WHERE created_at >= ?1')
+        .prepare('SELECT COUNT(*) AS n FROM shares WHERE created_at >= ?1 AND draft_until IS NULL')
         .bind(todayStart)
         .first<{ n: number }>();
       return {
@@ -258,10 +283,10 @@ export function createD1Store(db: D1Database): ShareStore {
     async createSession(s) {
       await db
         .prepare(
-          `INSERT INTO upload_sessions (id, upload_id, r2_key, filename, mime, size, parts, expiry, max_pickups, created_at, source_json)
-           VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)`,
+          `INSERT INTO upload_sessions (id, upload_id, r2_key, filename, mime, size, parts, expiry, max_pickups, created_at, source_json, batch_code)
+           VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)`,
         )
-        .bind(s.id, s.uploadId, s.r2Key, s.filename, s.mime, s.size, s.parts, s.expiry, s.maxPickups, s.createdAt, s.source ? JSON.stringify(s.source) : null)
+        .bind(s.id, s.uploadId, s.r2Key, s.filename, s.mime, s.size, s.parts, s.expiry, s.maxPickups, s.createdAt, s.source ? JSON.stringify(s.source) : null, s.batchCode ?? null)
         .run();
     },
 
@@ -276,10 +301,16 @@ export function createD1Store(db: D1Database): ShareStore {
 
     async listExpiredShares(now, limit) {
       const rows = await db
-        .prepare('SELECT code, kind, r2_key FROM shares WHERE expire_at IS NOT NULL AND expire_at <= ?1 LIMIT ?2')
+        .prepare('SELECT code, kind, r2_key, files_json FROM shares WHERE draft_until IS NULL AND expire_at IS NOT NULL AND expire_at <= ?1 LIMIT ?2')
         .bind(now, limit)
-        .all<{ code: string; kind: string; r2_key: string | null }>();
-      return (rows.results ?? []).map((r) => ({ code: r.code, r2Key: r.kind === 'file' ? r.r2_key : null }));
+        .all<{ code: string; kind: string; r2_key: string | null; files_json: string | null }>();
+      return (rows.results ?? []).map((r) => ({ code: r.code, r2Key: r.kind === 'file' ? r.r2_key : null, files: r.files_json ? JSON.parse(r.files_json) as ShareFile[] : undefined }));
+    },
+
+    async listExpiredDrafts(now, limit) {
+      const rows = await db.prepare(`SELECT ${SHARE_COLUMNS} FROM shares WHERE draft_until<=?1 LIMIT ?2`)
+        .bind(now, limit).all<ShareRow>();
+      return rows.results.map(toRec);
     },
 
     async deleteByCodes(codes) {

@@ -238,6 +238,8 @@ The security workspace and audit logs reuse R2/D1 bindings without adding share-
 
 If the source columns are absent, export a backup and apply [the source migration](../schema/migrations/0001-upload-source.sql) once before deploying source tracking. Fresh databases use the complete schema; do not also run this migration. KV deployments need no migration. See [upgrade commands and behavior](upload-sources.md).
 
+For existing **D1 metadata** deployments, back up the database and apply the [batch metadata migration](../schema/migrations/0002-batch-shares.sql) once before deploying batch support. Verify `shares.files_json`, `shares.draft_until` and `upload_sessions.batch_code` first. Fresh D1 databases use the full schema. KV metadata requires no migration.
+
 ## UI startup and update checks
 
 Verify the production commit and the HTML/CSS/JS `X-File-Relay-Build` values after updating. Cache rules may override response policies. Architecture and regression commands are in the [development guide (Chinese)](development.md#页面启动与资源版本); live troubleshooting is in [operations (Chinese)](operations.md#页面更新与缓存).

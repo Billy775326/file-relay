@@ -134,7 +134,7 @@ async function statsAfterDelete(r) {
   if (!lastStats) return;
   const s = { ...lastStats };
   s.total = Math.max(0, s.total - 1);
-  if (r.kind === 'file') s.files = Math.max(0, s.files - 1);
+  if (r.kind === 'file') s.files = Math.max(0, s.files - (r.file_count ?? 1));
   else s.texts = Math.max(0, s.texts - 1);
   s.totalBytes = Math.max(0, s.totalBytes - r.size);
   if (r.status === 'active') s.active = Math.max(0, s.active - 1);
@@ -152,6 +152,13 @@ async function statsAfterDelete(r) {
 /* ---------- 列表 ---------- */
 const STATUS_KEY = { active: 'ad.st.active', expired: 'ad.st.expired', exhausted: 'ad.st.exhausted' };
 const KIND_KEY = { file: 'ad.kind.file', text: 'ad.kind.text' };
+function shareLabel(row) {
+  if (row.kind === 'text') return row.text_preview || row.textPreview || t('ad.textFallback');
+  const name = row.filename || t('ad.unnamed');
+  const count = row.file_count ?? row.fileCount;
+  return count > 1 ? t('batch.label', name, count) : name;
+}
+
 
 async function loadList() {
   const request = ++listRequest;
@@ -170,7 +177,7 @@ async function loadList() {
     const rows = data.rows ?? [];
     tbody.replaceChildren();
     for (const r of rows) {
-      const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));
+      const content = shareLabel(r);
       tbody.append(
         el('tr', {},
           el('td', { class: 'mono' }, r.code),
@@ -228,12 +235,13 @@ const delTarget = $('#del-target');
 let delResolve = null;
 
 function confirmDelete(r) {
-  const content = r.kind === 'text' ? (r.text_preview || t('ad.textFallback')) : (r.filename || t('ad.unnamed'));
+  const content = shareLabel(r);
   delTarget.replaceChildren(
     el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.code')), el('b', { class: 'mono' }, r.code)),
     el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.content')), el('span', {}, content)),
     el('div', { class: 'del-line' }, el('span', { class: 'muted' }, t('ad.th.size')),
       el('span', {}, r.kind === 'text' ? t('ad.chars', r.size) : fmtBytes(r.size))),
+    r.file_count ? el('small', { class: 'muted' }, t('batch.delete', r.file_count)) : null,
   );
   delMask.showModal();
   $('#del-cancel').focus();
@@ -397,8 +405,8 @@ async function loadSourceHistory() {
     if (request !== sourceRequest || !sourceDialog.open) return;
     list.replaceChildren(...rows.map(row => el('div', { class: 'source-activity' },
       el('div', { class: 'activity-head' },
-        el('button', { type: 'button', class: 'source-link', title: row.kind === 'file' ? row.filename || t('ad.unnamed') : t('ad.textDetails'),
-          onclick: () => { closeSource(); openFileDetails(row.code); } }, row.kind === 'file' ? row.filename || t('ad.unnamed') : t('ad.textFallback')),
+        el('button', { type: 'button', class: 'source-link', title: shareLabel(row),
+          onclick: () => { closeSource(); openFileDetails(row.code); } }, shareLabel(row)),
         el('span', { class: `badge ${row.status}` }, t(STATUS_KEY[row.status]))),
       el('small', { class: 'muted' }, `${fmtDate(row.createdAt)} · ${row.kind === 'file' ? fmtBytes(row.size) : t('ad.chars', row.size)} · ${row.code}`),
       row.ip || row.country || row.region || row.city
@@ -477,20 +485,21 @@ async function openFileDetails(code) {
     if (request !== fileRequest || !fileDialog.open) return;
     activeFileDetail = detail;
     const isText = detail.kind === 'text';
-    $('#file-title').textContent = t(isText ? 'ad.textDetails' : 'ad.fileDetails');
+    const isBatch = Array.isArray(detail.files);
+    $('#file-title').textContent = t(isText ? 'ad.textDetails' : isBatch ? 'batch.details' : 'ad.fileDetails');
     const state = detail.storage?.state || 'unknown';
     const storageLabels = { available: 'ad.fileState.available', missing: 'ad.fileState.missing', unknown: 'ad.fileState.unknown' };
     const source = detail.source;
     const sourceButton = source ? el('button', { type: 'button', class: 'source-link file-source-link',
       title: t('ad.source'), onclick: () => {
         closeFileDetails(); openSource({ code }, code);
-        $('#source-back').textContent = t(isText ? 'ad.backText' : 'ad.backFile');
+        $('#source-back').textContent = t(isText ? 'ad.backText' : isBatch ? 'batch.back' : 'ad.backFile');
       },
     }, sourceLabel(source)) : t('ad.sourceUnrecorded');
     if (source) sourceButton.dataset.visitor = source.visitorId;
     fileDetail.replaceChildren(
       el('div', { class: 'file-identity file-wide' },
-        !isText ? el('strong', {}, detail.filename || t('ad.unnamed')) : null,
+        !isText ? el('strong', {}, isBatch ? t('batch.files', detail.files.length) : detail.filename || t('ad.unnamed')) : null,
         el('div', { class: 'file-summary' },
           isText ? el('span', {}, t('ad.chars', detail.size))
             : el('span', { title: t('ad.exactBytes', detail.size.toLocaleString()) }, fmtBytes(detail.size)),
@@ -500,14 +509,14 @@ async function openFileDetails(code) {
         ariaLabel: t('ad.textContent') }, detail.text ?? '')] : []),
       ...(detail.description ? [el('div', { class: 'file-description file-wide' },
         el('small', { class: 'muted' }, t(isText ? 'ad.textDescription' : 'ad.fileDescription')), el('p', {}, detail.description))] : []),
-      ...(!isText && state === 'available' ? [(activePreview = createFilePreview(code, detail.filename || '')).element] : []),
+      ...(isBatch ? [renderBatchFiles(detail)] : !isText && state === 'available' ? [(activePreview = createFilePreview(code, detail.filename || '')).element] : []),
       fileField(t('ad.source'), sourceButton),
       fileField(t('ad.th.pickups'), `${detail.pickupCount} / ${detail.maxPickups ?? '∞'}`),
       fileField(t('ad.th.created'), fmtDate(detail.createdAt)),
       fileField(t('ad.th.expire'), detail.expireAt === null ? t('ad.forever') : fmtDate(detail.expireAt)),
 
     );
-    if (!isText) {
+    if (!isText && !isBatch) {
       fileDownload.href = `/api/admin/shares/${code}/download`;
       fileDownload.download = detail.filename || 'file';
       fileDownload.textContent = t(state === 'unknown' ? 'ad.tryDownload' : 'ad.download');
@@ -521,6 +530,23 @@ async function openFileDetails(code) {
     if (request === fileRequest) fileDetail.textContent = error.message || t('ad.loadFail');
   }
 }
+function renderBatchFiles(detail) {
+  const previewHost = el('div', { class: 'file-wide' });
+  const list = el('ul', { class: 'batch-file-list file-wide' }, ...detail.files.map(file =>
+    el('li', { class: 'batch-file-row' },
+      el('span', { class: 'batch-file-name', title: file.filename }, file.filename),
+      el('small', { class: 'muted' }, fmtBytes(file.size)),
+      el('span', { class: 'batch-file-actions' },
+        el('button', { type: 'button', class: 'btn small ghost', ariaLabel: t('batch.preview', file.filename), onclick: () => {
+          activePreview?.dispose();
+          activePreview = createFilePreview(detail.code, file.filename, file.index);
+          previewHost.replaceChildren(activePreview.element);
+        } }, t('preview.title')),
+        el('a', { class: 'btn small', href: file.downloadUrl, download: file.filename,
+          ariaLabel: t('batch.download', file.filename) }, t('ad.download'))))));
+  return el('div', { class: 'batch-files file-wide' }, list, previewHost);
+}
+
 function closeFileDetails() {
   if (shareEditBusy) return;
   activeFileDetail = null;

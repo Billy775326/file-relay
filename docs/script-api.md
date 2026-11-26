@@ -31,6 +31,7 @@ Authorization: Bearer your-api-token
 | 查详情 | `GET /shares/{code}` | 文件或文本详情及 ETag，不消耗取件次数 |
 | 改分享 | `PATCH /shares/{code}` | 修改内容/名称/规则，必须携带 `If-Match` |
 | 删分享 | `DELETE /shares/{code}` | 删除文件及记录、释放容量预留，重复删除安全 |
+| 下批次文件 | `GET /shares/{code}/files/{index}/download` | 按详情中的序号下载单个批次成员 |
 | 下文件 | `GET /shares/{code}/download` | 管理下载，不消耗取件次数，可下载仍保留的过期文件 |
 | 初始化 R2 | `POST /uploads/init` | 校验并预留完整文件大小 |
 | 传 R2 分片 | `PUT /uploads/{id}/parts/{n}` | 原始字节，序号从 1 开始 |
@@ -73,6 +74,8 @@ curl -i "$FILE_RELAY_BASE_URL/api/v1/shares/246810" \
 详情统一使用 camelCase，包含 `id`、`code`、`kind`、`filename`、`mime`、`size`、`text`、`pickupCount`、`maxPickups`、`expireAt`、`createdAt`、`status`、`pickupUrl`、`downloadUrl`。文件 `text` 为 `null`，文本没有下载地址；不返回 IP、Cookie、Token、内部文件键或来源对象。文本大小是 JavaScript 字符串长度，文件大小是字节数。
 
 详情响应头的 **ETag** 代表持久化内容和规则，不包含随时间变化的显示状态。`If-None-Match` 精确匹配时返回 304。GET/HEAD 查询都不计取件次数。
+
+网页创建的批次在列表中给出 `fileCount`，详情的 `files` 列出各文件的 `index`、大小、名称、类型与管理下载地址。批次不接受 `filename` 修改，修改规则或删除作用于整批。
 
 ### 3. 修改
 

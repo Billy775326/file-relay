@@ -26,10 +26,16 @@ const els = {
 };
 
 const MAX_SIZE_FALLBACK = 25 * 1024 * 1024;
-const MAX_BATCH = 10;
+const DEFAULT_BATCH_LIMIT = 10;
+const DEFAULT_TEXT_LIMIT = 65_536;
 let cfg = { fileBackend: 'kv', maxFileSize: MAX_SIZE_FALLBACK }; // /api/config 加载后覆盖
 let MAX_SIZE = MAX_SIZE_FALLBACK;
 let policyReady = false;
+let textLimit = DEFAULT_TEXT_LIMIT;
+let batchLimit = DEFAULT_BATCH_LIMIT;
+let batch = null;
+let textSent = false;
+const descriptions = { file: '', text: '' };
 
 let files = []; // 待上传队列(File[])
 let queueUI = new Map(); // File → { row, bar, status }
@@ -38,13 +44,19 @@ let session = null; // 进行中的 R2 分片会话 { uploadId, partSize, parts 
 let currentXhr = null;
 let cancelled = false;
 let uploading = false;
-let lastResults = [];
+let lastResult = null;
 const securityFeedback = createSecurityFeedback($('.form-card'), 'upload', () =>
   $('#panel-text').hidden ? startUpload() : submitText());
 
 /* 服务端配置:决定走分片上传(R2 大存储)还是单请求直传(KV 小存储) */
+function isTextTab() { return !$('#panel-text').hidden; }
+function pendingFiles() { return files.filter(file => !queueState.get(file)?.done); }
+function quotaShortfall() {
+  return !batch && Number.isSafeInteger(cfg.uploadsRemaining) && pendingFiles().length > cfg.uploadsRemaining;
+}
 function canUploadFiles() {
-  return policyReady && cfg.fileBackend !== 'none' && cfg.fileUploadAvailable !== false && cfg.uploadsRemaining !== 0;
+  return policyReady && cfg.fileBackend !== 'none' && cfg.fileUploadAvailable !== false &&
+    (batch || cfg.uploadsRemaining !== 0) && !quotaShortfall();
 }
 function updateHint() {
   els.dzHint.textContent = t('dz.hintMax', fmtBytes(MAX_SIZE));
@@ -52,24 +64,34 @@ function updateHint() {
     ['seg-expiry', 'forever', cfg.allowPermanent === true, '7d'],
     ['seg-pickups', 'null', cfg.allowUnlimited === true, '5'],
   ]) {
-    const button = $(`#${id} [data-v="${value}"]`);
-    button.disabled = !allowed;
-    if (!allowed && button.classList.contains('active')) {
+    const button = $('#' + id + ' [data-v="' + value + '"]');
+    if (!allowed && !batch && button.classList.contains('active')) {
       button.classList.remove('active');
-      $(`#${id} [data-v="${fallback}"]`).classList.add('active');
+      $('#' + id + ' [data-v="' + fallback + '"]').classList.add('active');
     }
   }
-  $('#upload-policy-hint').textContent = !policyReady ? t('policy.unavailable')
-    : cfg.fileUploadAvailable === false ? t('policy.contact')
-    : cfg.weeklyFileLimit !== null && cfg.weeklyFileLimit !== undefined
-      ? t('policy.remaining', cfg.uploadsRemaining, cfg.weeklyFileLimit, fmtDate(cfg.uploadsResetAt)) : '';
   $$('.seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));
+  const hint = $('#upload-policy-hint');
+  hint.textContent = !policyReady ? t('policy.unavailable')
+    : isTextTab() ? ''
+    : batch ? t('batch.resumeHint')
+    : cfg.fileUploadAvailable === false ? t('policy.contact')
+    : cfg.uploadsRemaining > 0 && quotaShortfall() ? t('batch.quota', pendingFiles().length, cfg.uploadsRemaining)
+    : Number.isSafeInteger(cfg.weeklyFileLimit)
+      ? t('policy.remaining', cfg.uploadsRemaining, cfg.weeklyFileLimit, fmtDate(cfg.uploadsResetAt)) : '';
+  hint.hidden = !hint.textContent;
+  els.textCounter.textContent = t('text.counter', els.textInput.value.length, textLimit);
+  $('#upload-description-label').textContent = t(isTextTab() ? 'ad.textDescription' : 'context.description');
+  $('#upload-description').placeholder = t(isTextTab() ? 'text.descriptionPh' : 'context.descriptionPh');
 }
 async function refreshPolicy() {
   try {
     cfg = await api('/api/config');
     if (!Number.isSafeInteger(cfg.maxFileSize) || (cfg.maxFileSize < 0 || (cfg.maxFileSize === 0 && cfg.fileBackend !== 'none'))) throw new Error('Invalid upload policy');
     MAX_SIZE = cfg.maxFileSize;
+    textLimit = Number.isSafeInteger(cfg.maxTextLength) && cfg.maxTextLength > 0 ? cfg.maxTextLength : DEFAULT_TEXT_LIMIT;
+    els.textInput.maxLength = textLimit;
+    batchLimit = Number.isSafeInteger(cfg.maxBatchFiles) && cfg.maxBatchFiles > 1 ? cfg.maxBatchFiles : DEFAULT_BATCH_LIMIT;
     policyReady = true;
   } catch { policyReady = false; }
   updateHint();
@@ -85,22 +107,25 @@ if (els.capDate) els.capDate.textContent = fmtDate(Date.now()).split(' ')[0];
 onLangChange(() => {
   if (cfg.maxFileSize) updateHint();
   renderQueue();
-  if (lastResults.length) showResults(lastResults);
+  if (lastResult) showResult(lastResult, false);
 });
 
 /* ---------- tabs ---------- */
 $$('.tab').forEach((tb) =>
   tb.addEventListener('click', () => {
-    if (uploading) return; // 上传中禁止切换
+    if (uploading || batch) return; // A draft owns the currently selected rules.
     $$('.tab').forEach((x) => x.classList.toggle('active', x === tb));
     const tab = tb.dataset.tab;
+    descriptions[isTextTab() ? 'text' : 'file'] = $('#upload-description').value;
+    $('#upload-description').value = descriptions[tab];
+    $('#description-count').textContent = $('#upload-description').value.length + ' / 300';
     $('#panel-file').hidden = tab !== 'file';
     $('#panel-text').hidden = tab !== 'text';
-    $('#upload-description-field').hidden = tab !== 'file';
     $$('.tab').forEach(x => x.setAttribute('aria-pressed', String(x === tb)));
     els.btnUpload.hidden = tab !== 'file';
     els.btnText.hidden = tab !== 'text';
-    hideResult();
+    updateHint();
+    setBusy(false);
   }),
 );
 
@@ -120,7 +145,7 @@ function readOptions() {
   const pk = $('#seg-pickups .active').dataset.v;
   return { expiry: exp, maxPickups: pk === 'null' ? null : Number(pk),
     displayName: $('#upload-name').value.trim(),
-    description: $('#panel-file').hidden ? '' : $('#upload-description').value.trim() };
+    description: $('#upload-description').value.trim() };
 }
 $$('.tab, .seg button').forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('active'))));
 $('#upload-description').addEventListener('input', e => {
@@ -162,13 +187,13 @@ window.addEventListener('drop', (e) => {
 
 /* 粘贴智能路由:粘贴文件→文件页;文件页粘贴纯文本→自动切到文本页 */
 document.addEventListener('paste', (e) => {
-  if (e.target?.closest?.('textarea, input')) return; // 输入框内粘贴走默认行为
+  if (uploading || e.target?.closest?.('textarea, input')) return; // 输入框内粘贴走默认行为
   if (e.clipboardData?.files?.length) {
     setFiles([...e.clipboardData.files]);
     return;
   }
   const text = e.clipboardData?.getData('text/plain');
-  if (text && $('#panel-text').hidden) {
+  if (text && $('#panel-text').hidden && !batch) {
     showTab('text');
     els.textInput.value = text;
     els.textInput.dispatchEvent(new Event('input'));
@@ -183,19 +208,23 @@ function setFiles(list) {
     if (f.size < 1) { toast(t('err.empty'), 'error'); continue; }
     ok.push(f);
   }
-  if (ok.length > MAX_BATCH) {
-    toast(t('err.tooMany', MAX_BATCH), 'error');
-    ok.length = MAX_BATCH;
+  if (ok.length > batchLimit) {
+    toast(t('err.tooMany', batchLimit), 'error');
+    ok.length = batchLimit;
   }
-  files = ok; // 替换语义:再次选择即重置队列
+  batch = null;
+  files = ok; // Replacing the queue abandons the private draft.
+  showTab('file');
   queueState = new Map(files.map((f) => [f, 'idle']));
   renderQueue();
-  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();
+  updateHint();
+  setBusy(false);
   hideResult();
 }
 
 function statusText(f, st) {
   if (st === 'fail') return '✗';
+  if (st === 'staged') return t('batch.ready');
   if (st && st.done) return `✓ ${st.done}`;
   return fmtBytes(f.size);
 }
@@ -220,7 +249,7 @@ function renderQueue() {
       el('button', { class: 'icon-btn fr-remove', title: t('remove'), type: 'button', onclick: () => removeFile(f) }, '✕'),
       bar,
     );
-    if (st && st.done) bar.style.width = '100%';
+    if (st === 'staged' || st?.done) bar.style.width = '100%';
     queueUI.set(f, { row, bar, status });
     els.fileList.append(row);
   });
@@ -231,15 +260,24 @@ function renderQueue() {
 function removeFile(f) {
   if (uploading) return;
   files = files.filter((x) => x !== f);
-  queueState.delete(f);
+  if (batch) { batch = null; queueState = new Map(); }
+  else queueState.delete(f);
   renderQueue();
-  els.btnUpload.disabled = files.length === 0 || !canUploadFiles();
+  updateHint();
+  setBusy(false);
 }
 
 /* ---------- 文本输入 ---------- */
 els.textInput.addEventListener('input', () => {
-  els.textCounter.textContent = t('text.counter', els.textInput.value.length, 65536);
-  els.btnText.disabled = !policyReady || !els.textInput.value.trim();
+  textSent = false;
+  updateHint();
+  setBusy(uploading);
+});
+els.textInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.isComposing) {
+    e.preventDefault();
+    if (!els.btnText.disabled) submitText();
+  }
 });
 
 /* ---------- 上传:队列顺序逐个,聚合进度 + 每行迷你进度 ---------- */
@@ -285,11 +323,12 @@ async function putPartWithRetry(uploadId, n, blob, onProgress) {
   return null;
 }
 
-function xhrJson(method, url, blob, onProgress, context) {
+function xhrJson(method, url, blob, onProgress, context, batchId) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     currentXhr = xhr;
     xhr.open(method, url);
+    if (batchId) xhr.setRequestHeader('X-Batch-ID', batchId);
     if (context) xhr.setRequestHeader('X-Upload-Context', encodeURIComponent(JSON.stringify(context)));
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
@@ -337,69 +376,98 @@ function setPending(on) {
 }
 
 async function startUpload() {
-  if (!files.length || uploading || !canUploadFiles() || !securityFeedback.canRetry()) return;
-  // A retry must not re-upload files already accepted earlier in the batch.
-  const pendingFiles = files.filter(file => !queueState.get(file)?.done);
-  if (!pendingFiles.length) return;
+  const selected = pendingFiles();
+  if (!selected.length || uploading || !canUploadFiles() || !securityFeedback.canRetry()) return;
   securityFeedback.clear();
   uploading = true;
   cancelled = false;
+  const grouped = selected.length > 1 || batch !== null;
   speedState = { t: 0, loaded: 0, speed: 0 };
-  curFileIdx = 0;
-  curFileTotal = pendingFiles.length;
+  curFileTotal = selected.length;
   const opts = readOptions();
-  const responses = [];
-  const totalBytes = pendingFiles.reduce((s, f) => s + f.size, 0);
+  const totalBytes = selected.reduce((sum, file) => sum + file.size, 0);
   let baseBytes = 0;
+  let currentFile;
   setBusy(true);
   els.progress.hidden = false;
+  els.btnCancel.disabled = false;
+  els.btnCancel.textContent = t(grouped ? 'batch.pause' : 'btn.cancel');
   els.progressFill.style.width = '0%';
   setPending(false);
   els.progressText.textContent = t('prog.preparing');
-
-  for (let i = 0; i < pendingFiles.length; i++) {
-    if (cancelled) break;
-    const f = pendingFiles[i];
-    const ui = queueUI.get(f);
-    ui.row.classList.remove('fail');
-    curFileIdx = i + 1;
-    ui.row.classList.add('uploading');
-    els.progressText.textContent = t('prog.uploading');
-    const onProgress = (loaded) => {
-      ui.bar.style.width = Math.min(100, (loaded / f.size) * 100) + '%';
-      updateAggregate(baseBytes + loaded, totalBytes);
-    };
-    try {
-      const res = cfg.fileBackend === 'kv'
-        ? await directUpload(f, opts, onProgress)
-        : await multipartUpload(f, opts, onProgress);
-      responses.push(res);
-      baseBytes += f.size;
-      queueState.set(f, { done: res.code });
-      ui.bar.style.width = '100%';
-      ui.row.classList.add('done');
-      ui.status.textContent = `✓ ${res.code}`;
-    } catch (e) {
-      await abortUpload();
-      queueState.set(f, 'fail');
-      ui.row.classList.add('fail');
-      ui.status.textContent = '✗';
-      if (e.code === 'capacity_exceeded') {
-        window.alert(Number.isSafeInteger(e.remainingBytes) && e.remainingBytes >= 0
-          ? t('err.capacityRemaining', (e.remainingBytes / 1e9).toFixed(3), e.remainingBytes.toLocaleString())
-          : t('err.capacity'));
-      } else if (!cancelled && !securityFeedback.show(e)) toast(`${f.name}: ${e.message || t('err.upload')}`, 'error');
-      break; // 一个失败即停,保留队列便于处理
+  try {
+    if (grouped && !batch) {
+      const manifest = selected.map(f => ({ filename: f.name, size: f.size, mime: f.type }));
+      batch = await api('/api/batches/init', { method: 'POST', body: { ...opts, files: manifest } });
     }
+    let result;
+    for (const [index, f] of selected.entries()) {
+      if (cancelled) return;
+      if (queueState.get(f) === 'staged') { baseBytes += f.size; continue; }
+      currentFile = f;
+      curFileIdx = index + 1;
+      const ui = queueUI.get(f);
+      ui.row.classList.remove('fail');
+      ui.row.classList.add('uploading');
+      els.progressText.textContent = t('prog.uploading');
+      const onProgress = loaded => {
+        ui.bar.style.width = Math.min(100, loaded / f.size * 100) + '%';
+        updateAggregate(baseBytes + loaded, totalBytes);
+      };
+      if (batch) {
+        if (batch.slots.length) await multipartUpload(f, opts, onProgress, batch.slots[index]);
+        else await stageDirect(f, index + 1, onProgress);
+        queueState.set(f, 'staged');
+        ui.status.textContent = t('batch.ready');
+      } else {
+        result = cfg.fileBackend === 'kv' ? await directUpload(f, opts, onProgress) : await multipartUpload(f, opts, onProgress);
+      }
+      baseBytes += f.size;
+      currentFile = null;
+    }
+    if (cancelled && !result) return;
+    if (batch) {
+      els.btnCancel.disabled = true;
+      setPending(true);
+      els.progressText.textContent = t('batch.publishing');
+      const { draft, id } = batch;
+      result = await api('/api/batches/' + draft + '/complete', { method: 'POST', headers: { 'X-Batch-ID': id } });
+      batch = null;
+    }
+    for (const f of selected) queueState.set(f, { done: result.code });
+    showResult(result);
+  } catch (error) {
+    await abortUpload();
+    if (currentFile && !cancelled) queueState.set(currentFile, 'fail');
+    if (error.code === 'batch_expired' || (batch && batch.draftUntil <= Date.now())) {
+      batch = null;
+      queueState = new Map();
+    }
+    if (!cancelled) {
+      if (error.code === 'capacity_exceeded') {
+        window.alert(Number.isSafeInteger(error.remainingBytes) && error.remainingBytes >= 0
+          ? t('err.capacityRemaining', (error.remainingBytes / 1e9).toFixed(3), error.remainingBytes.toLocaleString())
+          : t('err.capacity'));
+      } else if (!securityFeedback.show(error)) {
+        toast(error.message || t('err.upload'), 'error');
+      }
+    }
+  } finally {
+    uploading = false;
+    currentXhr = null;
+    els.progress.hidden = true;
+    setPending(false);
+    renderQueue();
+    updateHint();
+    setBusy(false);
+    if (cancelled) toast(t(batch ? 'batch.paused' : 'toast.cancelled'));
+    await refreshPolicy();
   }
+}
 
-  uploading = false;
-  els.progress.hidden = true;
-  setPending(false);
-  setBusy(false);
-  if (cancelled) toast(t('toast.cancelled'));
-  if (responses.length) showResults([...lastResults, ...responses]);
-  await refreshPolicy();
+async function stageDirect(file, index, onProgress) {
+  const response = await xhrJson('PUT', '/api/batches/' + batch.draft + '/files/' + index, file, onProgress, null, batch.id);
+  if (!response?.staged) throw new Error(t('err.upload'));
 }
 
 /* ---------- 小存储模式(KV):单请求直传,失败整文件重发 ---------- */
@@ -426,15 +494,16 @@ async function directUpload(f, opts, onProgress) {
 }
 
 /* ---------- 大存储模式(R2):分片上传 ---------- */
-async function multipartUpload(f, opts, onProgress) {
+async function multipartUpload(f, opts, onProgress, prepared = null) {
   setPending(true);
   els.progressText.textContent = t('prog.init');
-  const init = await api('/api/uploads/init', {
+  const init = prepared ?? await api('/api/uploads/init', {
     method: 'POST',
     body: { filename: f.name, size: f.size, mime: f.type || 'application/octet-stream', ...opts },
   });
-  session = init;
+  if (!prepared) session = init;
   setPending(false);
+  if (cancelled) throw new Error('cancelled');
 
   const etags = [];
   let doneBytes = 0;
@@ -483,9 +552,18 @@ async function abortUpload() {
 }
 
 function setBusy(busy) {
-  for (const field of [$('#upload-name'), $('#upload-description')]) field.disabled = busy;
-  els.btnUpload.disabled = busy || files.length === 0 || !canUploadFiles();
-  els.btnText.disabled = busy || !policyReady || !els.textInput.value.trim();
+  const optionsLocked = busy || !!batch;
+  for (const field of [$('#upload-name'), $('#upload-description')]) field.disabled = optionsLocked;
+  for (const tab of $$('.tab')) tab.disabled = optionsLocked;
+  for (const button of $$('.seg button')) {
+    const allowed = button.dataset.v === 'forever' ? cfg.allowPermanent
+      : button.dataset.v === 'null' ? cfg.allowUnlimited : true;
+    button.disabled = optionsLocked || !allowed;
+  }
+  for (const button of $$('.fr-remove')) button.disabled = busy;
+  els.textInput.disabled = busy;
+  els.btnUpload.disabled = busy || !pendingFiles().length || !canUploadFiles();
+  els.btnText.disabled = busy || textSent || !policyReady || !els.textInput.value.trim() || els.textInput.value.length > textLimit;
 }
 
 /* 刷新/关页时尽力通知服务端放弃(不是断点续传) */
@@ -496,20 +574,25 @@ window.addEventListener('pagehide', () => {
 /* ---------- 文本分享 ---------- */
 async function submitText() {
   const text = els.textInput.value;
-  if (!text.trim() || !policyReady || !securityFeedback.canRetry()) return;
+  if (els.btnText.disabled || uploading || !isTextTab() || !securityFeedback.canRetry()) return;
   securityFeedback.clear();
+  uploading = true;
   setBusy(true);
+  els.btnText.textContent = t('text.sending');
   try {
     const res = await api('/api/shares/text', { method: 'POST', body: { text, ...readOptions() } });
-    showResults([res]);
+    textSent = true;
+    showResult(res);
   } catch (e) {
     if (!securityFeedback.show(e)) toast(e.message || t('err.submit'), 'error');
   } finally {
+    uploading = false;
+    els.btnText.textContent = t('btn.genCode');
     setBusy(false);
   }
 }
 
-/* ---------- 结果卡片(多文件时逐张堆叠 + 批量头部) ---------- */
+/* ---------- 取件凭证 ---------- */
 function qrSvgFor(url) {
   /* Vendored ES module; no parser-blocking classic script or global dependency. */
   try {
@@ -529,15 +612,15 @@ function metaText(r) {
     : t('meta.forever'));
   parts.push(r.maxPickups === null || r.maxPickups === undefined ? t('meta.unlimited') : t('meta.pickups', r.maxPickups));
   if (r.kind === 'file' && r.size) parts.push(fmtBytes(r.size));
+  if (r.kind === 'text') parts.push(t('pk.textChars', r.size));
   return parts.join(' · ');
 }
 
 /* 结果卡片 = 取件凭证票据:票头(标题+№) → 票身(口令+二维码) → 撕票线 → 票脚(操作) */
-function buildResultCard(r, compact) {
+function buildResultCard(r) {
   const link = `${location.origin}/pickup?code=${r.code}`;
   const qr = qrSvgFor(link);
   const col = el('div', { class: 'result-col' },
-    compact && r.kind === 'file' && r.filename ? el('div', { class: 'result-file-name' }, r.filename) : null,
     el('div', { class: 'code' }, ...r.code.split('').map((d) => el('span', {}, d))),
     el('div', { class: 'result-link' }, link),
     el('div', { class: 'result-meta' }, metaText(r)),
@@ -552,51 +635,38 @@ function buildResultCard(r, compact) {
       el('span', { class: 'tk-no' }, t('ticket.no', r.code)),
     ),
     el('div', { class: 'tk-body' },
-      compact ? null : el('p', { class: 'result-title' }, t('result.ok')),
+      el('p', { class: 'result-title' }, r.fileCount ? t('batch.result', r.fileCount) : t('result.ok')),
       main,
     ),
     el('div', { class: 'tk-tear' }),
     el('div', { class: 'tk-foot' },
       el('button', { class: 'btn primary', type: 'button', onclick: (e) => copyBtn(e.currentTarget, r.code, t('label.code')) }, t('btn.copyCode')),
       el('button', { class: 'btn', type: 'button', onclick: (e) => copyBtn(e.currentTarget, link, t('label.link')) }, t('btn.copyLink')),
-      compact ? null : el('button', { class: 'btn ghost', type: 'button', onclick: resetAll }, t('btn.again')),
+      el('button', { class: 'btn ghost', type: 'button', onclick: resetAll }, t('btn.again')),
     ),
   );
 }
 
-function showResults(list) {
-  lastResults = list;
+function showResult(result, scroll = true) {
+  lastResult = result;
   if (els.placeholder) els.placeholder.hidden = true;
-  els.results.replaceChildren();
-  if (list.length > 1) {
-    els.results.append(
-      el('div', { class: 'result-batch-head' },
-        el('p', { class: 'result-title batch' }, t('result.okBatch', list.length)),
-        el('div', { class: 'btn-row' },
-          el('button', {
-            class: 'btn small', type: 'button',
-            onclick: async (e) => {
-              const ok = await copyText(list.map((r) => r.code).join('\n'));
-              toast(ok ? t('copied', t('label.code')) : t('copy.fail'), ok ? 'ok' : 'error');
-            },
-          }, t('btn.copyAll')),
-          el('button', { class: 'btn small ghost', type: 'button', onclick: resetAll }, t('btn.again')),
-        ),
-      ),
-    );
-  }
-  for (const r of list) els.results.append(buildResultCard(r, list.length > 1));
-  els.results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  els.results.replaceChildren(buildResultCard(result));
+  if (scroll) els.results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function resetAll() {
   files = [];
+  batch = null;
+  textSent = false;
   queueState = new Map();
   renderQueue();
   els.btnUpload.disabled = true;
   els.textInput.value = '';
-  els.textCounter.textContent = t('text.counter', 0, 65536);
-  els.btnText.disabled = true;
+  descriptions.file = descriptions.text = '';
+  $('#upload-description').value = '';
+  $('#description-count').textContent = '0 / 300';
+  updateHint();
+  setBusy(false);
   hideResult();
 }
 
@@ -611,7 +681,7 @@ async function copyBtn(btn, text, label) {
 }
 
 function hideResult() {
-  lastResults = [];
+  lastResult = null;
   if (els.placeholder) els.placeholder.hidden = false;
   els.results.replaceChildren();
 }

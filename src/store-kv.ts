@@ -28,6 +28,8 @@ const MAX_CODE_RETRIES = 8;
  *  字符串字段(n/p)必须纯 ASCII——KV metadata 经 HTTP 头传输,Unicode 会触发
  *  workerd 警告甚至报错,故统一 base64(UTF-8) 编码。 */
 interface ShareMeta {
+  d?: number; // Draft deadline; excluded from public and admin listings.
+  f?: number;
   o?: string; // Base64 source summary; full IP stays only in the private record.
   id: string;
   k: 'text' | 'file';
@@ -58,6 +60,8 @@ function b64decode(s: string): string {
 
 function metaOf(v: ShareRecord): ShareMeta {
   return {
+    d: v.draftUntil ?? undefined,
+    f: v.files?.length,
     o: v.source ? b64encode(JSON.stringify(sourceSummary(v.source))) : undefined,
     id: v.id,
     k: v.kind,
@@ -90,10 +94,10 @@ export function createKVStore(kv: KVNamespace): ShareStore {
   return {
     async visitorShares(visitorId) {
       const matches = (await scanShareMeta(kv))
-        .filter(({ m }) => m.o && JSON.parse(b64decode(m.o)).visitorId === visitorId)
+        .filter(({ m }) => !m.d && m.o && JSON.parse(b64decode(m.o)).visitorId === visitorId)
         .sort((a, b) => b.m.t - a.m.t || a.code.localeCompare(b.code)).slice(0, 10);
       const records = await Promise.all(matches.map(({ code }) => kv.get<ShareRecord>(SHARE_PREFIX + code, 'json')));
-      return records.filter((record): record is ShareRecord => !!record && record.source?.visitorId === visitorId);
+      return records.filter((record): record is ShareRecord => !!record && !record.draftUntil && record.source?.visitorId === visitorId);
     },
     async getVisitorNotes(ids) {
       const notes = new Map<string, string>();
@@ -115,6 +119,8 @@ export function createKVStore(kv: KVNamespace): ShareStore {
         const code = randCode();
         if ((await kv.get(SHARE_PREFIX + code)) !== null) continue; // 先查后写,尽力防碰撞
         const rec: ShareRecord = {
+          files: s.files,
+          draftUntil: s.draftUntil,
           source: s.source ?? null,
           id: crypto.randomUUID(),
           code,
@@ -137,12 +143,28 @@ export function createKVStore(kv: KVNamespace): ShareStore {
     },
 
     async getByCode(code) {
-      return kv.get<ShareRecord>(SHARE_PREFIX + code, 'json');
+      const record = await kv.get<ShareRecord>(SHARE_PREFIX + code, 'json');
+      return record?.draftUntil ? null : record;
+    },
+
+    async getBatch(code) {
+      const record = await kv.get<ShareRecord>(SHARE_PREFIX + code, 'json');
+      return record?.files ? record : null;
+    },
+
+    async publishBatch(code, id) {
+      const record = await kv.get<ShareRecord>(SHARE_PREFIX + code, 'json');
+      const now = Date.now();
+      if (record?.id !== id || !record.draftUntil || record.draftUntil <= now) return null;
+      const updated = { ...record, draftUntil: null, createdAt: now,
+        expireAt: record.expireAt === null ? null : now + record.expireAt - record.createdAt };
+      await kv.put(SHARE_PREFIX + code, JSON.stringify(updated), { metadata: metaOf(updated) });
+      return updated;
     },
 
     async updateRules(code, expected, rules, cleanupCutoff) {
       const record = await kv.get<ShareRecord>(SHARE_PREFIX + code, 'json');
-      if (!record || !sameShareRules(record, expected) ||
+      if (!record || record.draftUntil || !sameShareRules(record, expected) ||
           (record.expireAt !== null && record.expireAt <= cleanupCutoff)) return null;
       const updated = { ...record, ...rules };
       await kv.put(SHARE_PREFIX + code, JSON.stringify(updated), { metadata: metaOf(updated) });
@@ -151,7 +173,7 @@ export function createKVStore(kv: KVNamespace): ShareStore {
 
     async updateShare(code, expected, update, cleanupCutoff) {
       const record = await kv.get<ShareRecord>(SHARE_PREFIX + code, 'json');
-      if (!record || !sameShareContent(record, expected) ||
+      if (!record || record.draftUntil || !sameShareContent(record, expected) ||
           (record.expireAt !== null && record.expireAt <= cleanupCutoff)) return null;
       const updated = { ...record, ...update };
       await kv.put(SHARE_PREFIX + code, JSON.stringify(updated), { metadata: metaOf(updated) });
@@ -160,7 +182,7 @@ export function createKVStore(kv: KVNamespace): ShareStore {
 
     async tryPickup(code, opts) {
       const v = await kv.get<ShareRecord>(SHARE_PREFIX + code, 'json');
-      if (!v) return null;
+      if (!v || v.draftUntil || (opts?.id && opts.id !== v.id) || (opts?.kind && opts.kind !== v.kind)) return null;
       if (opts?.textOnly && v.kind !== 'text') return null;
       const now = Date.now();
       if (v.expireAt !== null && v.expireAt <= now) return null;
@@ -174,6 +196,7 @@ export function createKVStore(kv: KVNamespace): ShareStore {
       const scanned = await scanShareMeta(kv);
       const now = Date.now(), q = filter.q?.trim().toLowerCase();
       const all = scanned.filter(({ code, m }) => {
+        if (m.d) return false;
         if (filter.kind && m.k !== filter.kind) return false;
         if (filter.status && shareStatusOf(m.e, m.m, m.c, now) !== filter.status) return false;
         if (!q) return true;
@@ -196,7 +219,7 @@ export function createKVStore(kv: KVNamespace): ShareStore {
         source: m.o ? sourceSummary(JSON.parse(b64decode(m.o))) : null,
         id: m.id, code, kind: m.k,
         filename: m.n ? b64decode(m.n) : null,
-        size: m.s,
+        size: m.s, fileCount: m.f,
         pickupCount: m.c, maxPickups: m.m, expireAt: m.e, createdAt: m.t,
         textPreview: m.p ? b64decode(m.p) : null,
       }));
@@ -208,8 +231,9 @@ export function createKVStore(kv: KVNamespace): ShareStore {
       const now = Date.now();
       const stats: ShareStats = { total: 0, files: 0, texts: 0, totalBytes: 0, active: 0, todayCreated: 0 };
       for (const { m } of await scanShareMeta(kv)) {
+        if (m.d) continue;
         stats.total++;
-        if (m.k === 'file') stats.files++;
+        if (m.k === 'file') stats.files += m.f ?? 1;
         else stats.texts++;
         stats.totalBytes += m.s;
         if ((m.e === null || m.e > now) && (m.m === null || m.c < m.m)) stats.active++;
@@ -236,10 +260,25 @@ export function createKVStore(kv: KVNamespace): ShareStore {
 
     async listExpiredShares(now, limit) {
       const all = await scanShareMeta(kv);
-      return all
-        .filter(({ m }) => m.e !== null && m.e <= now)
-        .slice(0, limit)
-        .map(({ code, m }) => ({ code, r2Key: m.k === 'file' ? m.r : null }));
+      const expired = all.filter(({ m }) => !m.d && m.e !== null && m.e <= now).slice(0, limit);
+      const keys = expired.filter(({ m }) => m.f).map(({ code }) => SHARE_PREFIX + code);
+      const manifests = keys.length ? await kv.get(keys, 'json') : new Map();
+      return expired.flatMap(({ code, m }) => {
+        const record = manifests.get(SHARE_PREFIX + code) as ShareRecord | null;
+        if (m.f && (!record?.files || record.draftUntil || record.expireAt === null || record.expireAt > now)) return [];
+        return [{ code, r2Key: m.k === 'file' ? m.r : null, files: record?.files }];
+      });
+    },
+
+    async listExpiredDrafts(now, limit) {
+      const keys = (await scanShareMeta(kv)).filter(({ m }) => m.d && m.d <= now)
+        .slice(0, limit).map(({ code }) => SHARE_PREFIX + code);
+      if (!keys.length) return [];
+      const records = await kv.get(keys, 'json');
+      return [...records.values()].filter((record): record is ShareRecord => {
+        const draft = record as ShareRecord | null;
+        return !!draft?.draftUntil && draft.draftUntil <= now;
+      });
     },
 
     async deleteByCodes(codes) {

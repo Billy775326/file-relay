@@ -1,4 +1,5 @@
 import { securityResponse } from './security';
+import { openBatchSlot } from './batch';
 import { auditState } from './audit';
 import { transferAudit, uploadSessionAudit } from './public-audit';
 import { captureSource, parseSubmission } from './upload-source';
@@ -100,6 +101,7 @@ uploadRoutes.put('/:id/parts/:n', async (c) => {
   const sess = await getStore(c.env).getSession(id);
   if (!sess) return err(c, 404, 'not_found', '上传会话不存在或已过期');
   await checkUploadSession(c, sess);
+  if (!await openBatchSlot(c, sess)) return err(c, 409, 'batch_expired', '上传批次已结束');
   uploadSessionAudit(c, sess);
   if (sess.size > fileMaxSize(c.env)) return err(c, 413, 'too_large', '文件超过当前单文件上限,请重新上传');
   if (!Number.isInteger(n) || n < 1 || n > sess.parts) return err(c, 400, 'bad_request', '分片序号非法');
@@ -113,6 +115,10 @@ uploadRoutes.put('/:id/parts/:n', async (c) => {
   if (Math.ceil(sess.size / partSize) !== sess.parts) return err(c, 400, 'bad_request', '分片配置已变更,请重新上传');
   const expected = Math.min(partSize, sess.size - (n - 1) * partSize);
   if (contentLength && contentLength !== expected) return err(c, 400, 'bad_request', '分片大小与声明不一致');
+  if (sess.batchCode && (await c.env.BUCKET!.head(sess.r2Key))?.size === sess.size) {
+    await body.cancel();
+    return c.json({ partNumber: n, etag: 'already-staged' });
+  }
   await reserveCapacity(c.env, sess.r2Key, sess.size);
 
   const abort = new AbortController();
@@ -141,6 +147,7 @@ uploadRoutes.post('/:id/complete', async (c) => {
   const sess = await store.getSession(id);
   if (!sess) return err(c, 404, 'not_found', '上传会话不存在或已过期');
   await checkUploadSession(c, sess);
+  if (!await openBatchSlot(c, sess)) return err(c, 409, 'batch_expired', '上传批次已结束');
   uploadSessionAudit(c, sess);
   if (sess.size > fileMaxSize(c.env)) return err(c, 413, 'too_large', '文件超过当前单文件上限,请重新上传');
 
@@ -165,7 +172,8 @@ uploadRoutes.post('/:id/complete', async (c) => {
   await reserveCapacity(c.env, sess.r2Key, sess.size);
   try {
     const mpu = c.env.BUCKET!.resumeMultipartUpload(sess.r2Key, sess.uploadId);
-    obj = await mpu.complete(r2parts);
+    const staged = sess.batchCode ? await c.env.BUCKET!.head(sess.r2Key) : null;
+    obj = staged ?? await mpu.complete(r2parts);
   } catch {
     return err(c, 400, 'bad_request', '合并分片失败,请重试');
   }
@@ -177,6 +185,11 @@ uploadRoutes.post('/:id/complete', async (c) => {
     await store.deleteSession(id);
     if (obj.size > fileMaxSize(c.env)) return err(c, 413, 'too_large', '文件超过当前单文件上限');
     return err(c, 400, 'bad_request', '文件大小校验失败');
+  }
+
+  if (sess.batchCode) {
+    auditState(c).detail.staged = true;
+    return c.json({ staged: true });
   }
 
   const parsed = parseExpiry(sess.expiry);
@@ -215,6 +228,7 @@ uploadRoutes.post('/:id/abort', async (c) => {
   if (sess) {
     const source = await captureSource(c);
     if (!sess.source || source.visitorId !== sess.source.visitorId) throw new UploadPolicyError(403, 'upload_session_owner', '上传会话不属于当前访客');
+    if (sess.batchCode) return err(c, 409, 'bad_request', '批次会话保留至批次结束');
     uploadSessionAudit(c, sess);
     // Do not release capacity when removal could not be confirmed.
     await c.env.BUCKET!.resumeMultipartUpload(sess.r2Key, sess.uploadId).abort();

@@ -10,8 +10,8 @@ Designed for personal and small-group use within Cloudflare Free-plan constraint
 
 ## Features
 
-- File and text sharing; select up to ten files, upload sequentially and generate a separate code for each. Progress, cancellation and failed-upload retries are supported.
-- One-, seven- or thirty-day expiry. Unnoted visitors default to five file-upload admissions per week; noted visitors may create permanent or unlimited-pickup shares.
+- File and text sharing; select up to ten files to share under one pickup code. Recipients choose individual files from the resulting list.
+- One-, seven- or thirty-day expiry. Unnoted visitors default to five files per week, counted individually in a batch; noted visitors may create permanent or unlimited-pickup shares.
 - Direct small-file uploads to KV and multipart large-file uploads to R2, with file-size and capacity checks.
 - Admin filtering, file details, bounded previews, downloads, share-rule editing and deletion. Admin downloads do not consume public pickup counts.
 - Text details show the full body with copy, content editing and share-rule controls, without consuming public pickup counts.

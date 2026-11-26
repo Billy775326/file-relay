@@ -114,7 +114,7 @@ export async function auditRequest(c: Context<{ Bindings: Env }>, next: () => Pr
   const path = c.req.path;
   let selected = routes[`${c.req.method} ${path}`];
   let target = state.target ?? '';
-  const share = /^\/api\/admin\/shares\/(\d{6})(?:\/(source(?:\/activity)?|download|preview))?$/.exec(path);
+  const share = /^\/api\/admin\/shares\/(\d{6})(?:\/(?:files\/\d+\/)?(source(?:\/activity)?|download|preview))?$/.exec(path);
   if (share) {
     target = share[1];
     if (c.req.method === 'DELETE' && !share[2]) selected = ['operation', 'delete'];

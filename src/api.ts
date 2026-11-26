@@ -6,7 +6,7 @@ import { num } from './types';
 import { getStore, shareStatusOf, type ShareRecord, type ShareUpdate, type ShareListFilter } from './store';
 import { getRetentionDays, RETENTION_DAY_MS } from './settings';
 import { validShareRules, shareVersion as version } from './share-edit';
-import { deleteFile, inspectFile, isKvFileKey } from './filestore';
+import { deleteFileKeys, shareFileKeys, inspectShareFiles, describeFiles } from './filestore';
 import { createTextShare, createKVFileShare } from './share';
 import { downloadShare } from './admin';
 import { uploadRoutes } from './upload';
@@ -50,7 +50,8 @@ function view(record: ShareRecord) {
     mime: record.mime, text: record.text, pickupCount: record.pickupCount, maxPickups: record.maxPickups,
     expireAt: record.expireAt, createdAt: record.createdAt,
     status: shareStatusOf(record.expireAt, record.maxPickups, record.pickupCount, Date.now()),
-    pickupUrl: `/pickup?code=${record.code}`, downloadUrl: record.kind === 'file' ? `/api/v1/shares/${record.code}/download` : null };
+    pickupUrl: `/pickup?code=${record.code}`, files: describeFiles(record, `/api/v1/shares/${record.code}`),
+    downloadUrl: record.kind === 'file' && !record.files ? `/api/v1/shares/${record.code}/download` : null };
 }
 async function reply(c: Context<{ Bindings: Env }>, record: ShareRecord) {
   c.header('ETag', await version(record));
@@ -66,7 +67,7 @@ apiRoutes.get('/shares', async c => {
     ...(status !== 'all' ? { status: status as 'active' | 'expired' | 'exhausted' } : {}) };
   const { total, rows } = await getStore(c.env).listShares(limit, offset, filter);
   return c.json({ total, limit, offset, rows: rows.map(r => ({ id: r.id, code: r.code, kind: r.kind, filename: r.filename,
-    size: r.size, textPreview: r.textPreview, pickupCount: r.pickupCount, maxPickups: r.maxPickups,
+    size: r.size, fileCount: r.fileCount, textPreview: r.textPreview, pickupCount: r.pickupCount, maxPickups: r.maxPickups,
     expireAt: r.expireAt, createdAt: r.createdAt, status: shareStatusOf(r.expireAt, r.maxPickups, r.pickupCount, Date.now()) })) });
 });
 apiRoutes.get('/shares/:code', async c => {
@@ -98,8 +99,8 @@ apiRoutes.patch('/shares/:code', async c => {
   for (const key of ['pickupCount', 'maxPickups', 'expireAt'] as const) if (key in patch) (update as Record<string, unknown>)[key] = patch[key];
   if (!validShareRules(update)) return c.json({ error: 'bad_request', message: '次数或过期时间无效' }, 400);
   if ('filename' in patch) {
-    if (record.kind !== 'file' || typeof patch.filename !== 'string' || !patch.filename.trim() || patch.filename.length > 255 || /[\u0000-\u001f\u007f]/.test(patch.filename))
-      return c.json({ error: 'bad_request', message: '仅文件可修改文件名，长度为 1–255 字符' }, 400);
+    if (record.kind !== 'file' || record.files || typeof patch.filename !== 'string' || !patch.filename.trim() || patch.filename.length > 255 || /[\u0000-\u001f\u007f]/.test(patch.filename))
+      return c.json({ error: 'bad_request', message: '仅单文件分享可修改文件名，长度为 1–255 字符' }, 400);
     update.filename = patch.filename.trim();
   }
   if ('text' in patch) {
@@ -110,7 +111,7 @@ apiRoutes.patch('/shares/:code', async c => {
   const cutoff = Date.now() - await getRetentionDays(c.env) * RETENTION_DAY_MS;
   if (record.expireAt !== null && record.expireAt <= cutoff) return c.json({ error: 'cleanup_pending', message: '分享已进入清理期，不能修改' }, 409);
   if (record.kind === 'file') {
-    const storage = await inspectFile(c.env, record.r2Key);
+    const storage = await inspectShareFiles(c.env, record);
     if (storage.state === 'missing') return c.json({ error: 'gone', message: '文件已被清理' }, 410);
     if (storage.state !== 'available') return c.json({ error: 'storage_unavailable', message: '无法确认文件状态' }, 503);
   }
@@ -126,15 +127,15 @@ apiRoutes.patch('/shares/:code', async c => {
   return reply(c, updated);
 });
 apiRoutes.get('/shares/:code/download', downloadShare);
+apiRoutes.get('/shares/:code/files/:index/download', downloadShare);
 apiRoutes.delete('/shares/:code', async c => {
   const code = c.req.param('code');
   if (!/^\d{6}$/.test(code)) return c.json({ error: 'bad_request', message: '取件码必须为六位数字' }, 400);
   const store = getStore(c.env), record = await store.getByCode(code);
   if (!record) { auditState(c).detail.alreadyDeleted = true; return c.json({ ok: true, already: true }); }
-  if (record.r2Key && (isKvFileKey(record.r2Key) ? !c.env.fileKV : !c.env.BUCKET))
+  if (record.kind === 'file' && !await deleteFileKeys(c.env, shareFileKeys(record)))
     return c.json({ error: 'storage_unavailable', message: '文件存储绑定不可用，未删除分享' }, 503);
-  // Reuse storage removal and capacity release for both file backends.
-  if (record.kind === 'file') await deleteFile(c.env, record.r2Key);
+  if (record.files) auditState(c).detail.fileCount = record.files.length;
   await store.deleteByCode(code);
   if (record.kind === 'file') auditState(c).detail.filename = (record.filename || '').slice(0, 160);
   return c.json({ ok: true });

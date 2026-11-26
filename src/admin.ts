@@ -8,7 +8,7 @@ import { num, type Env } from './types';
 import { err, contentDisposition } from './util';
 import { getStore, shareStatusOf, sameShareRules } from './store';
 import type { ShareListFilter } from './store';
-import { deleteFile, readFileStream, inspectFile } from './filestore';
+import { readFileStream, inspectShareFiles, describeFiles, shareFile, shareFileKeys, deleteFileKeys } from './filestore';
 import { previewFile } from './file-preview';
 import { sourceSummary } from './upload-source';
 import { runCleanup } from './cleanup';
@@ -250,6 +250,7 @@ adminRoutes.get('/shares', async (c) => {
       code: r.code,
       kind: r.kind,
       filename: r.filename,
+      file_count: r.fileCount,
       size: r.size,
       pickup_count: r.pickupCount,
       max_pickups: r.maxPickups,
@@ -264,13 +265,13 @@ adminRoutes.get('/shares', async (c) => {
 
 /** Full file names and text bodies are loaded privately on demand, without pickup. */
 adminRoutes.get('/shares/:code', async (c) => {
-  const code = c.req.param('code');
+  const code = c.req.param('code') ?? '';
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
   const store = getStore(c.env);
   const record = await store.getByCode(code);
   if (!record) return err(c, 404, 'not_found', '分享不存在');
   const [days, storage, note] = await Promise.all([
-    getRetentionDays(c.env), record.kind === 'file' ? inspectFile(c.env, record.r2Key) : Promise.resolve(null),
+    getRetentionDays(c.env), record.kind === 'file' ? inspectShareFiles(c.env, record) : Promise.resolve(null),
     record.source ? store.getVisitorNote(record.source.visitorId) : Promise.resolve(''),
   ]);
   const evaluatedAt = Date.now();
@@ -287,7 +288,8 @@ adminRoutes.get('/shares/:code', async (c) => {
     source: record.source ? { ...sourceSummary(record.source), note } : null,
     pickupCount: record.pickupCount, maxPickups: record.maxPickups,
     status: shareStatusOf(record.expireAt, record.maxPickups, record.pickupCount, evaluatedAt),
-    downloadUrl: record.kind === 'file' ? `/api/admin/shares/${code}/download` : null,
+    files: describeFiles(record, `/api/admin/shares/${code}`),
+    downloadUrl: record.kind === 'file' && !record.files ? `/api/admin/shares/${code}/download` : null,
   });
 });
 
@@ -297,7 +299,7 @@ adminRoutes.put('/shares/:code', bodyLimit({ maxSize: 1_048_576,
   const origin = c.req.header('Origin');
   if (origin && origin !== new URL(c.req.url).origin) return err(c, 403, 'forbidden', '请求来源不匹配');
   if (!c.req.header('Content-Type')?.startsWith('application/json')) return err(c, 415, 'bad_request', '请使用 JSON');
-  const code = c.req.param('code');
+  const code = c.req.param('code') ?? '';
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
   const raw = await c.req.text();
   let body; try { body = JSON.parse(raw); } catch { return err(c, 400, 'bad_request', 'JSON 格式无效'); }
@@ -313,7 +315,7 @@ adminRoutes.put('/shares/:code', bodyLimit({ maxSize: 1_048_576,
   if (record.expireAt !== null && record.expireAt <= cutoff)
     return err(c, 409, 'cleanup_pending', '分享已进入清理期，不能修改；请先备份内容后重新分享');
   if (!isText) {
-    const storage = await inspectFile(c.env, record.r2Key);
+    const storage = await inspectShareFiles(c.env, record);
     if (storage.state === 'missing') return err(c, 410, 'gone', '文件已被清理');
     if (storage.state !== 'available') return err(c, 503, 'storage_unavailable', '无法确认文件存储状态，请稍后重试');
   }
@@ -338,14 +340,16 @@ adminRoutes.put('/shares/:code', bodyLimit({ maxSize: 1_048_576,
 });
 
 /** Private bounded previews leave share state and pickup counts untouched. */
-adminRoutes.get('/shares/:code/preview', async c => {
-  const code = c.req.param('code');
+async function previewShare(c: AdminContext) {
+  const code = c.req.param('code') ?? '';
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
   const record = await getStore(c.env).getByCode(code);
   if (!record) return err(c, 404, 'not_found', '分享不存在');
   if (record.kind !== 'file') return err(c, 400, 'bad_request', '此分享不是文件');
-  if (!record.r2Key) return err(c, 410, 'gone', '文件已被清理');
-  const preview = await previewFile(c.env, record.r2Key, record.filename || '', record.size);
+  const file = shareFile(record, c.req.param('index'));
+  if (!file) return err(c, 410, 'gone', '文件不存在');
+  auditState(c).detail.filename = file.filename.slice(0, 160);
+  const preview = await previewFile(c.env, file.key, file.filename, file.size);
   if (!preview) return err(c, 410, 'gone', '文件已被清理');
   c.header('X-Content-Type-Options', 'nosniff');
   c.header('Content-Security-Policy', "default-src 'none'; sandbox");
@@ -357,7 +361,9 @@ adminRoutes.get('/shares/:code/preview', async c => {
     return c.body(new Uint8Array(preview.bytes).buffer);
   }
   return c.json(preview);
-});
+}
+adminRoutes.get('/shares/:code/preview', previewShare);
+adminRoutes.get('/shares/:code/files/:index/preview', previewShare);
 
 /** Admin downloads read retained files without consuming public pickup limits. */
 export async function downloadShare(c: AdminContext) {
@@ -365,25 +371,28 @@ export async function downloadShare(c: AdminContext) {
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
   const record = await getStore(c.env).getByCode(code);
   if (!record) return err(c, 404, 'not_found', '分享不存在');
-  auditState(c).detail.filename = (record.filename || '').slice(0, 160);
-  auditState(c).detail.sizeBytes = record.size;
   if (record.kind !== 'file') return err(c, 400, 'bad_request', '此分享不是文件');
-  if (!record.r2Key) return err(c, 410, 'gone', '文件已被清理');
-  const body = await readFileStream(c.env, record.r2Key);
+  const file = shareFile(record, c.req.param('index'));
+  if (!file) return err(c, 410, 'gone', '文件不存在，请选择批次中的文件');
+  auditState(c).detail.filename = file.filename.slice(0, 160);
+  auditState(c).detail.sizeBytes = file.size;
+  if (record.files) auditState(c).detail.fileIndex = Number(c.req.param('index'));
+  const body = await readFileStream(c.env, file.key);
   if (!body) return err(c, 410, 'gone', '文件已被清理');
   return c.body(body, 200, {
-    'Content-Type': record.mime || 'application/octet-stream',
-    'Content-Length': String(record.size),
-    'Content-Disposition': contentDisposition(record.filename || 'file'),
+    'Content-Type': file.mime,
+    'Content-Length': String(file.size),
+    'Content-Disposition': contentDisposition(file.filename),
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
   });
 }
 adminRoutes.get('/shares/:code/download', downloadShare);
+adminRoutes.get('/shares/:code/files/:index/download', downloadShare);
 
 /** Full IP is returned only here, behind the admin middleware. */
 adminRoutes.get('/shares/:code/source', async (c) => {
-  const code = c.req.param('code');
+  const code = c.req.param('code') ?? '';
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
   const store = getStore(c.env);
   const record = await store.getByCode(code);
@@ -396,14 +405,15 @@ adminRoutes.get('/shares/:code/source', async (c) => {
 
 /** On-demand history is bounded and excludes deleted shares and file descriptions. */
 adminRoutes.get('/shares/:code/source/activity', async c => {
-  const code = c.req.param('code');
+  const code = c.req.param('code') ?? '';
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
   const store = getStore(c.env);
   const record = await store.getByCode(code);
   if (!record) return err(c, 404, 'not_found', '分享不存在');
   const rows = record.source ? await store.visitorShares(record.source.visitorId) : [];
   return c.json({ limit: 10, rows: rows.map(row => ({ code: row.code, kind: row.kind,
-    filename: row.filename, size: row.size, createdAt: row.createdAt,
+    filename: row.filename, fileCount: row.files?.length, textPreview: row.kind === 'text' ? row.text?.slice(0, 50) : undefined,
+    size: row.size, createdAt: row.createdAt,
     status: shareStatusOf(row.expireAt, row.maxPickups, row.pickupCount, Date.now()),
     ip: row.source?.ip ?? null, country: row.source?.country ?? null,
     region: row.source?.region ?? null, city: row.source?.city ?? null,
@@ -414,7 +424,7 @@ adminRoutes.put('/shares/:code/source', async (c) => {
   const origin = c.req.header('Origin');
   if (origin && origin !== new URL(c.req.url).origin) return c.json({ error: 'forbidden', message: '请求来源不匹配' }, 403);
   if (!c.req.header('Content-Type')?.startsWith('application/json')) return c.json({ error: 'bad_request', message: '请使用 JSON' }, 415);
-  const code = c.req.param('code');
+  const code = c.req.param('code') ?? '';
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
   const body = await c.req.json().catch(() => null) as { note?: unknown } | null;
   if (typeof body?.note !== 'string' || body.note.length > 64 || /[\u0000-\u001f\u007f]/.test(body.note)) {
@@ -433,7 +443,7 @@ adminRoutes.put('/shares/:code/source', async (c) => {
 /** 删除分享:按口令删(D1/KV 通吃),文件的先删存储对象(R2/KV 按键前缀路由)再删元数据。
  *  幂等:口令不存在(含 KV list 索引滞后窗口里的幽灵行重复删除)同样返回 ok */
 adminRoutes.delete('/shares/:code', async (c) => {
-  const code = c.req.param('code');
+  const code = c.req.param('code') ?? '';
   if (!/^\d{6}$/.test(code)) return err(c, 400, 'bad_request', '口令非法');
 
   const store = getStore(c.env);
@@ -442,7 +452,9 @@ adminRoutes.delete('/shares/:code', async (c) => {
   auditState(c).detail.filename = (rec.filename || '').slice(0, 160);
   auditState(c).detail.sizeBytes = rec.size;
 
-  if (rec.kind === 'file') await deleteFile(c.env, rec.r2Key);
+  if (rec.files) auditState(c).detail.fileCount = rec.files.length;
+  if (rec.kind === 'file' && !await deleteFileKeys(c.env, shareFileKeys(rec)))
+    return err(c, 503, 'storage_unavailable', '文件存储绑定不可用，未删除分享');
   await store.deleteByCode(code);
   return c.json({ ok: true });
 });

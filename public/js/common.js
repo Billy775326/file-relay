@@ -26,7 +26,7 @@ export function initDialogs() {
 export async function api(path, opts = {}) {
   const res = await fetch(path, {
     method: opts.method || 'GET',
-    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : {},
+    headers: { ...(opts.body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...opts.headers },
     body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
   });
   if (res.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));

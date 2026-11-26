@@ -30,6 +30,7 @@
 | `fileBackend` | `r2`、`kv`；仅 D1 且无文件后端时为 `none` |
 | `metadataBackend` | `kv` 或 `d1`；同时绑定时为 `kv` |
 | `maxFileSize`、`maxTextLength`、`partSize` | 有效文件上限、文本字符上限、分片字节数 |
+| `maxBatchFiles` | 每个批次最大文件数，当前为 10 |
 | `allowPermanent`、`allowUnlimited` | 当前访客能否创建永久／不限次分享 |
 | `weeklyFileLimit`、`uploadsRemaining` | 周文件上限、可用次数；已备注访客为 `null` |
 | `uploadsResetAt` | 下次北京时间周一重置的时间戳，或 `null` |
@@ -64,7 +65,7 @@ JSON 请求示例：
 }
 ```
 
-`text` 为非空字符串，不能超过 `MAX_TEXT_LENGTH`。成功返回 HTTP **201**：
+`text` 为非空字符串，不能超过 `MAX_TEXT_LENGTH`，JSON 请求体最多 1 MiB。成功返回 HTTP **201**：
 
 ```json
 {
@@ -113,6 +114,19 @@ JSON 请求示例：
 }
 ```
 
+### 多文件批次
+
+网页使用下列接口上传 2–10 个文件。发起、传输和完成请求须保留同一个签名访客 Cookie。每个文件计一份周额度及上传频率。R2 预留整批声明的字节数，向上传者返回剩余额度。
+
+| 步骤 | 接口 | 输入 / 成功响应 |
+|---|---|---|
+| 建立批次 | `POST /api/batches/init` | JSON `{ files: [{ filename, size, mime? }], expiry, maxPickups, displayName?, description? }` → 201 `{ draft, id, slots, draftUntil, remainingBytes?, capacityBytes? }` |
+| 上传 KV 文件 | `PUT /api/batches/:draft/files/:index` | 原始字节和头 `X-Batch-ID: <id>` → `{ staged: true }` |
+| 上传 R2 文件 | `PUT /api/uploads/:id/parts/:n` 与 `POST /api/uploads/:id/complete` | 按 `slots` 的顺序使用每个 `uploadId`、`partSize`、`parts`。单文件完成返回 `{ staged: true }` |
+| 发布批次 | `POST /api/batches/:draft/complete` | 头 `X-Batch-ID: <id>` → 201 `{ code, kind, fileCount, size, expireAt, maxPickups, pickupUrl }`，已发布的同一批次重试返回原口令和 200 |
+
+`index` 从 1 开始，`slots` 在 KV 模式为空。发布前批次无法取件，后台也不列出。文件尚未全部就绪返回 409。网页可暂停或继续同一批次，离开页面后未发布数据由定期清理回收。保管 `id` 和各 `uploadId`，成功后分享最终取件码。发起请求回执不明时不要自动重建批次。
+
 ## 公开取件与下载
 
 ### `POST /api/pickup`
@@ -122,7 +136,8 @@ JSON 请求示例：
 | 内容 | 成功响应 | 是否计数 |
 |---|---|---|
 | 文本 | `{ kind, text, size, expireAt, pickupsLeft }` | 查看时计数 |
-| 文件 | `{ kind, filename, size, mime, expireAt, pickupsLeft, downloadUrl }` | 只读元数据，不计数 |
+| 单文件 | `{ kind, filename, size, mime, expireAt, pickupsLeft, downloadUrl }` | 只读元数据，不计数 |
+| 批次 | `{ kind, files, size, expireAt, pickupsLeft, downloadUntil }` | 首次打开计一次，下载许可有效期间再次打开不计数 |
 
 成功 HTTP **200**，`pickupsLeft: null` 表示不限次。公开响应不包含来源、备注、文件说明或内部存储键。
 
@@ -130,7 +145,11 @@ JSON 请求示例：
 
 返回附件文件流，并增加公开取件次数。过期或次数耗尽返回 410；文件已被清理也返回 410。下载开始后断开、取消或浏览器保存失败不会退回次数。审计中的成功只表示服务端开始返回文件流。
 
-实现也接受 GET 路由对应的 HEAD 请求，审计标为“检查下载”。它沿用当前下载处理流程，不能把 HEAD 当作不消耗取件次数的探测接口；无副作用的文件元数据查询应使用 `/api/pickup`。
+HEAD 只验证附件可读取，不消耗次数。找不到附件字节也不计次。
+
+### `GET /api/pickup/:code/files/:index/download`
+
+批次的 `files` 各含 `index`、`filename`、`size`、`mime` 和 `downloadUrl`。打开批次后服务端签发浏览器许可，有效期最长 15 分钟，且不超过分享有效期。客户端须带回 Cookie，许可过期后重新打开批次，仍受剩余次数限制。在有效许可内可下载任意成员，重复下载不另计次。
 
 ## 管理登录、统计与列表
 
@@ -154,6 +173,8 @@ R2 `storage` 为 `{ usedBytes, capacityBytes }`，包含对象、系统状态及
 | `GET /api/admin/shares/:code` | 文件或文本完整详情，不消耗取件次数 |
 | `PUT /api/admin/shares/:code` | 修改分享规则及文本正文，校验原快照与最终状态 |
 | `GET /api/admin/shares/:code/preview` | 管理员有限预览，不增加公开取件次数 |
+| `GET /api/admin/shares/:code/files/:index/preview` | 批次成员预览，不计次 |
+| `GET /api/admin/shares/:code/files/:index/download` | 批次成员下载，不计次 |
 | `GET /api/admin/shares/:code/download` | 管理员下载，不增加公开取件次数；支持仍保留的过期文件 |
 | `DELETE /api/admin/shares/:code` | 删除分享与可访问的对应文件；记录不存在也返回成功 |
 | `GET /api/admin/shares/:code/source` | 完整来源或 `{ source: null }` |
@@ -167,6 +188,8 @@ R2 `storage` 为 `{ usedBytes, capacityBytes }`，包含对象、系统状态及
 详情新增 `kind` 区分 `file|text`。文本还包含完整 `text`、用于修改校验的 `version` 与 `maxTextLength`，`size` 为 JavaScript 字符串长度，`storage` / `downloadUrl` 为 `null`；文本仍不支持文件下载及预览接口。详情响应禁止缓存，不增加取件次数。
 
 另含诊断字段：`cleanupAfter`、`retentionDays`、`evaluatedAt`、`cleanupStatus`（`permanent|active|retained|pending`）、`storage.state`（`available|missing|unknown`）和可取得的存储大小/时间。界面不展示清理日期，但接口仍返回这些字段。完整 IP、浏览器与存储键不放进文件详情。
+
+批次详情包含 `files` 清单，列表包含 `file_count`。批次的 `size` 为文件大小合计，`downloadUrl` 为 `null`。编辑规则和删除均按口令作用于整批。
 
 ### 编辑分享请求
 

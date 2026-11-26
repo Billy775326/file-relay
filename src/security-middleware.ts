@@ -9,8 +9,8 @@ export async function publicSecurity(c: Context<{
     Bindings: Env;
 }>, next: () => Promise<void>) {
     const path = transferPath(c.req.path, c.req.method), method = c.req.method;
-    const upload = path.startsWith('/api/uploads/') || path === '/api/shares/file' || path === '/api/shares/text';
-    const pickup = path === '/api/pickup' || /^\/api\/pickup\/[^/]+\/download$/.test(path);
+    const upload = (path.startsWith('/api/uploads/') || path.startsWith('/api/batches/')) || path === '/api/shares/file' || path === '/api/shares/text';
+    const pickup = path === '/api/pickup' || /^\/api\/pickup\/[^/]+(?:\/files\/[^/]+)?\/download$/.test(path);
     if (!upload && !pickup)
         return next();
     // Aborting an owned upload remains possible after a ban, so reserved space can be released.
@@ -19,7 +19,7 @@ export async function publicSecurity(c: Context<{
     const scope: Scope = upload ? 'upload' : 'pickup', ip = loginIP(c);
     const country = typeof c.req.raw.cf?.country === 'string' ? c.req.raw.cf.country : '';
     const region = typeof c.req.raw.cf?.regionCode === 'string' ? c.req.raw.cf.regionCode : '';
-    const count = upload && method === 'POST' && ['/api/uploads/init', '/api/shares/file', '/api/shares/text'].includes(path);
+    const count = upload && method === 'POST' && ['/api/uploads/init', '/api/batches/init', '/api/shares/file', '/api/shares/text'].includes(path);
     const reject = async (error: unknown) => {
         if (!(error instanceof SecurityError))
             throw error;

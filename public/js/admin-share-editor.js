@@ -67,7 +67,7 @@ export function createShareEditor(detail, { onSaved, onCancel, onBusy }) {
   const cancel = el('button', { type: 'button', class: 'btn ghost', onclick: onCancel }, t('ad.editCancel'));
   form.append(isText ? el('div', { class: 'text-edit-field' },
     el('div', { class: 'text-edit-heading' }, el('label', { htmlFor: text.id }, t('ad.textContent')), textCount), text)
-    : el('strong', { class: 'share-edit-filename', title: detail.filename || '' }, detail.filename || t('ad.unnamed')),
+    : el('strong', { class: 'share-edit-filename', title: detail.filename || '' }, detail.files ? t('batch.files', detail.files.length) : detail.filename || t('ad.unnamed')),
     el('div', { class: 'share-edit-grid' }, field(t('ad.editCount'), count), limitField, field(t('ad.th.status'), status), expiryField),
     linked, error, reload, el('div', { class: 'share-edit-actions' }, cancel, save));
   function values() {

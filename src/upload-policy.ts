@@ -99,7 +99,7 @@ async function subjects(env: Env, source: UploadSource, week: number): Promise<s
 }
 
 /** Both counters change in one conditional write. Denied admissions never debit. */
-async function weeklyUsage(env: Env, source: UploadSource, limit: number, debit: boolean) {
+async function weeklyUsage(env: Env, source: UploadSource, limit: number, count: number) {
   for (let attempt = 0; attempt < 5; attempt++) {
     if (attempt) await new Promise(resolve => setTimeout(resolve, 1100 + Math.random() * 200));
     const week = uploadWeek(Date.now());
@@ -107,14 +107,15 @@ async function weeklyUsage(env: Env, source: UploadSource, limit: number, debit:
     const { ledger, previous } = await readLedger(env, week);
     const used = Math.max(...keys.map(key => ledger.counts[key] ?? 0));
     const resetsAt = week + WEEK;
-    if (!debit) return { remaining: Math.max(0, limit - used), resetsAt };
-    if (used >= limit) throw new UploadPolicyError(429, 'weekly_upload_limit', '本周上传额度已用完，请下周再试或联系管理员', resetsAt);
+    if (count === 0) return { remaining: Math.max(0, limit - used), resetsAt };
+    if (used + count > limit) throw new UploadPolicyError(429, 'weekly_upload_limit',
+      `本周剩余 ${Math.max(0, limit - used)} 个文件额度，本次需 ${count} 个，请减少文件数量或下周重试`, resetsAt);
     if (Object.keys(ledger.counts).length + keys.filter(key => ledger.counts[key] === undefined).length > MAX_SUBJECTS) {
       throw new UploadPolicyError(503, 'upload_policy_unavailable', '上传服务繁忙，请稍后重试');
     }
-    for (const key of keys) ledger.counts[key] = (ledger.counts[key] ?? 0) + 1;
+    for (const key of keys) ledger.counts[key] = (ledger.counts[key] ?? 0) + count;
     try {
-      if (await writeLedger(env, ledger, previous)) return { remaining: limit - used - 1, resetsAt };
+      if (await writeLedger(env, ledger, previous)) return { remaining: limit - used - count, resetsAt };
     } catch (error) {
       if (!/429|rate|too many/i.test(String(error))) throw error;
     }
@@ -136,8 +137,8 @@ export function checkUploadOptions(access: UploadAccess, size: number | null, ex
     throw new UploadPolicyError(403, 'restricted_share_options', '当前仅支持限时、限次分享，请选择有效期和取件次数');
   }
 }
-export async function admitFile(env: Env, access: UploadAccess) {
-  if (!access.noted) await weeklyUsage(env, access.source, access.limits.weeklyFileLimit, true);
+export async function admitFile(env: Env, access: UploadAccess, count = 1) {
+  if (!access.noted) await weeklyUsage(env, access.source, access.limits.weeklyFileLimit, count);
 }
 export async function publicUploadPolicy(c: Context<{ Bindings: Env }>) {
   const access = await uploadAccess(c);
@@ -145,7 +146,7 @@ export async function publicUploadPolicy(c: Context<{ Bindings: Env }>) {
   if (access.noted) return { ...base, weeklyFileLimit: null, uploadsRemaining: null, uploadsResetAt: null, fileUploadAvailable: access.maxFileSize > 0 };
   if (!c.env.BUCKET && !c.env.DB) return { ...base, weeklyFileLimit: access.limits.weeklyFileLimit, uploadsRemaining: 0,
     uploadsResetAt: null, fileUploadAvailable: false };
-  const usage = await weeklyUsage(c.env, access.source, access.limits.weeklyFileLimit, false);
+  const usage = await weeklyUsage(c.env, access.source, access.limits.weeklyFileLimit, 0);
   return { ...base, weeklyFileLimit: access.limits.weeklyFileLimit, uploadsRemaining: usage.remaining,
     uploadsResetAt: usage.resetsAt, fileUploadAvailable: access.maxFileSize > 0 };
 }

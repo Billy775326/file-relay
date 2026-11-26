@@ -33,15 +33,19 @@ export function publicRejection(c: Context, error: SecurityError) {
 function select(path: string, method: string) {
   if (method === 'POST' && ['/api/shares/file', '/api/shares/text'].includes(path))
     return { category: 'upload' as const, stage: path.endsWith('/text') ? 'text' : 'direct', action: 'upload' };
-  if (method === 'POST' && path === '/api/uploads/init')
+  if (method === 'POST' && ['/api/uploads/init', '/api/batches/init'].includes(path))
     return { category: 'upload' as const, stage: 'init', action: 'upload' };
+  if (method === 'POST' && /^\/api\/batches\/[^/]+\/complete$/.test(path))
+    return { category: 'upload' as const, stage: 'complete', action: 'upload' };
+  if (method === 'PUT' && /^\/api\/batches\/[^/]+\/files\/[^/]+$/.test(path))
+    return { category: 'upload' as const, stage: 'part', action: 'upload' };
   const session = /^\/api\/uploads\/([^/]+)\/(complete|abort|parts\/[^/]+)$/.exec(path);
   if (session && (method === 'POST' && ['complete', 'abort'].includes(session[2]) || method === 'PUT' && session[2].startsWith('parts/')))
     return { category: 'upload' as const, stage: session[2].startsWith('parts/') ? 'part' : session[2],
       action: session[2] === 'abort' ? 'uploadCancel' : 'upload', session: session[1] };
   if (method === 'POST' && path === '/api/pickup')
     return { category: 'pickup' as const, stage: 'lookup', action: 'pickup' };
-  if (['GET', 'HEAD'].includes(method) && /^\/api\/pickup\/[^/]+\/download$/.test(path))
+  if (['GET', 'HEAD'].includes(method) && /^\/api\/pickup\/[^/]+(?:\/files\/[^/]+)?\/download$/.test(path))
     return { category: 'pickup' as const, stage: 'download', action: method === 'HEAD' ? 'downloadProbe' : 'publicDownload' };
 }
 
@@ -62,7 +66,7 @@ async function recordPublicAudit(c: Context<{ Bindings: Env }>, selected: NonNul
   const status = c.res.status;
   // A multipart success means the completed share, not each accepted part/init or an idempotent abort.
   const state = auditState(c);
-  if (status < 400 && (['init', 'part'].includes(selected.stage) || selected.stage === 'abort' && !state.detail.cancelled)) return;
+  if (status < 400 && (state.detail.staged || state.detail.replayed || ['init', 'part'].includes(selected.stage) || selected.stage === 'abort' && !state.detail.cancelled)) return;
   if (c.error instanceof SecurityError) publicRejection(c, c.error);
   const detail = { ...state.detail };
   const securityReason = state.detail.securityReason;

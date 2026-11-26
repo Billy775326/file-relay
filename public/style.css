@@ -1202,3 +1202,17 @@ button:focus-visible, summary:focus-visible, input:focus-visible, textarea:focus
   .settings-dialog .source-body { padding: 0 12px; }
   #file-detail .file-field { grid-column: 1 / -1; grid-template-columns: 88px minmax(0, 1fr); }
 }
+
+.batch-files { display: grid; gap: 8px; min-width: 0; }
+.batch-files > :empty { display: none; }
+.batch-file-list { list-style: none; margin: 0; padding: 0; border-block: 1px solid var(--line); }
+.batch-file-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; min-height: 42px; padding: 6px 0; }
+.batch-file-row + .batch-file-row { border-top: 1px dashed var(--line); }
+.batch-file-name { overflow-wrap: anywhere; font-weight: 600; }
+.batch-file-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.batch-pickup-timing { display: block; margin-top: 10px; }
+@media (max-width: 480px) {
+  .batch-file-row { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; }
+  .batch-file-row > .batch-file-name { grid-column: 1 / -1; }
+  .batch-file-row .btn { min-height: 40px; }
+}

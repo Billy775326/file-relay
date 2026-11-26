@@ -11,7 +11,7 @@ export async function apiAudit(c: Context<{ Bindings: Env }>, next: () => Promis
   if (!auditEnabled(c.env)) return;
   const authenticated = !!apiIdentity(c), state = auditState(c), path = c.req.path;
   let action = 'apiAuth';
-  const item = /^\/api\/v1\/shares\/([^/]+)(?:\/(download))?$/.exec(path);
+  const item = /^\/api\/v1\/shares\/([^/]+)(?:\/(?:files\/\d+\/)?(download))?$/.exec(path);
   if (authenticated) {
     if (c.req.method === 'GET' && path === '/api/v1/shares') action = 'apiList';
     else if (item) action = item[2] ? 'apiDownload' : ({ GET: 'apiRead', HEAD: 'apiRead', PATCH: 'apiEdit', DELETE: 'apiDelete' }[c.req.method] || '');

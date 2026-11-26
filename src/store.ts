@@ -26,7 +26,17 @@ export interface UploadSource {
 }
 export type SourceSummary = Pick<UploadSource, 'visitorId' | 'country' | 'region' | 'city' | 'capturedAt'>;
 
+export interface ShareFile {
+  sessionId?: string; // Only used to clean up incomplete R2 batches.
+  filename: string;
+  size: number;
+  mime: string;
+  key: string;
+}
+
 export interface ShareRecord {
+  files?: ShareFile[];
+  draftUntil?: number | null;
   source?: UploadSource | null;
   id: string;
   code: string;
@@ -43,6 +53,8 @@ export interface ShareRecord {
 }
 
 export interface NewShare {
+  files?: ShareFile[];
+  draftUntil?: number;
   source?: UploadSource | null;
   kind: 'text' | 'file';
   filename?: string | null;
@@ -55,6 +67,7 @@ export interface NewShare {
 }
 
 export interface SessionRecord {
+  batchCode?: string | null;
   source?: UploadSource | null;
   id: string;
   uploadId: string;
@@ -70,6 +83,7 @@ export interface SessionRecord {
 
 /** 管理列表行(字段够算状态 + 文本预览即可) */
 export interface ShareListRow {
+  fileCount?: number;
   source?: SourceSummary | null;
   id: string;
   code: string;
@@ -118,6 +132,8 @@ export interface ShareStore {
   /** 创建分享(内部处理口令碰撞重试);closeSessionId 非空时原子关闭上传会话 */
   createShare(s: NewShare, closeSessionId?: string): Promise<{ id: string; code: string }>;
   getByCode(code: string): Promise<ShareRecord | null>;
+  getBatch(code: string): Promise<ShareRecord | null>;
+  publishBatch(code: string, id: string): Promise<ShareRecord | null>;
   /** Reject stale edits, including downloads since the form was opened. KV remains best-effort. */
   updateRules(code: string, expected: ShareEditBase, rules: ShareRules, cleanupCutoff: number): Promise<ShareRecord | null>;
   /** Conditional content/rule update; preserve identity, provenance and file storage keys. */
@@ -126,7 +142,7 @@ export interface ShareStore {
    * 取件计数并返回记录(已 +1);返回 null = 未取走(口令不存在 / 已失效 /
    * textOnly 时口令对应的不是文本分享),具体原因由调用方 getByCode 后分类。
    */
-  tryPickup(code: string, opts?: { textOnly?: boolean }): Promise<ShareRecord | null>;
+  tryPickup(code: string, opts?: { textOnly?: boolean; kind?: 'file'; id?: string }): Promise<ShareRecord | null>;
   listShares(limit: number, offset: number, filter?: ShareListFilter): Promise<{ total: number; rows: ShareListRow[] }>;
   stats(todayStart: number): Promise<ShareStats>;
   deleteByCode(code: string): Promise<void>;
@@ -134,7 +150,8 @@ export interface ShareStore {
   getSession(id: string): Promise<SessionRecord | null>;
   deleteSession(id: string): Promise<void>;
   /** cron 专用:过期分享(含 R2 键)与孤儿会话 */
-  listExpiredShares(now: number, limit: number): Promise<Array<{ code: string; r2Key: string | null }>>;
+  listExpiredShares(now: number, limit: number): Promise<Array<{ code: string; r2Key: string | null; files?: ShareFile[] }>>;
+  listExpiredDrafts(now: number, limit: number): Promise<ShareRecord[]>;
   deleteByCodes(codes: string[]): Promise<void>;
   listStaleSessions(now: number, ttlMs: number): Promise<SessionRecord[]>;
 }

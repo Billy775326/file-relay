@@ -25,7 +25,7 @@ export function csvExcerpt(text, truncated) {
   return { rows, clipped };
 }
 
-export function createFilePreview(code, filename) {
+export function createFilePreview(code, filename, index) {
   const scope = el('small', { class: 'muted' });
   const body = el('div', { class: 'file-preview-body' });
   const element = el('section', { class: 'file-preview file-wide', 'aria-label': t('preview.title') },
@@ -38,7 +38,7 @@ export function createFilePreview(code, filename) {
     const timeout = setTimeout(() => current.abort(), 15000);
     body.textContent = t('ad.loading'); scope.textContent = '';
     try {
-      const response = await fetch(`/api/admin/shares/${code}/preview`, { signal: current.signal });
+      const response = await fetch(`/api/admin/shares/${code}${index ? '/files/' + index : ''}/preview`, { signal: current.signal });
       if (response.headers.get('X-Audit-Status') === 'unavailable') window.dispatchEvent(new Event('audit-write-failed'));
       if (!response.ok) throw new Error(t(response.status === 410 || response.status === 404 ? 'ad.fileState.missing' : 'ad.loadFail'));
       if (response.headers.get('Content-Type')?.startsWith('image/')) {

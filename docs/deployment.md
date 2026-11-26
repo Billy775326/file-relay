@@ -226,6 +226,8 @@ curl -X POST 'https://your-domain.example/api/admin/cleanup' \
 
 旧库尚无来源字段时，先导出备份，再执行一次 [来源字段迁移](../schema/migrations/0001-upload-source.sql)，最后部署新代码。新建数据库直接使用完整 schema，不重复执行此迁移。KV 部署无需迁移。命令和回退边界见 [上传来源与升级说明](upload-sources.md)。
 
+现有 **以 D1 保存分享元数据** 的站点还需在部署批次功能前备份并执行一次 [批次字段迁移](../schema/migrations/0002-batch-shares.sql)。确认 `shares.files_json`、`shares.draft_until` 和 `upload_sessions.batch_code` 已存在后再更新应用。新建 D1 使用完整 schema。以 KV 保存分享元数据的站点无需此迁移。
+
 ## 更新与常见问题
 
 | 情况 | 处理方法 |

@@ -102,7 +102,7 @@ function render(res, code) {
   resultCard.replaceChildren();
 
   if (res.kind === 'text') {
-    const pre = el('pre', { class: 'text-body' });
+    const pre = el('pre', { class: 'text-body', tabIndex: 0, ariaLabel: t('ad.textContent') });
     pre.textContent = res.text ?? '';
     resultCard.append(
       el('div', { class: 'share-card' },
@@ -115,6 +115,19 @@ function render(res, code) {
           (await copyText(res.text)) ? toast(t('copied.text'), 'ok') : toast(t('copy.fail'), 'error');
         } }, t('pk.copyAllText')),
       ),
+    );
+  } else if (res.files) {
+    resultCard.append(
+      el('div', { class: 'share-card' }, el('span', { class: 'sc-icon' }, '📦'),
+        el('div', { class: 'sc-meta' }, el('b', {}, t('batch.files', res.files.length)),
+          el('small', {}, fmtBytes(res.size)))),
+      el('ul', { class: 'batch-file-list' }, ...res.files.map(file =>
+        el('li', { class: 'batch-file-row' },
+          el('span', { class: 'batch-file-name', title: file.filename },
+            el('span', {}, iconFor(file.filename, file.mime)), ' ', file.filename),
+          el('small', { class: 'muted' }, fmtBytes(file.size)),
+          el('a', { class: 'btn small primary', href: file.downloadUrl, ariaLabel: t('batch.download', file.filename) }, t('pk.download'))))),
+      el('small', { class: 'muted batch-pickup-timing' }, t('batch.downloadUntil', fmtDate(res.downloadUntil))),
     );
   } else {
     resultCard.append(

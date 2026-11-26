@@ -187,7 +187,7 @@ export function evaluate(d: SecurityState, ip: string, scope: Scope, country = '
         return { blocked: true, reason: '命中地区封禁规则', publicReason: 'region' as const, retryAt: geo.until ?? undefined, status: 403 as const };
     return { blocked: false, reason: exempt(d, ip, scope) ? '命中允许名单' : '防护放行', retryAt: undefined };
 }
-export async function enforceSecurity(env: Env, ip: string, scope: Scope, country = '', region = '', count = false) {
+export async function enforceSecurity(env: Env, ip: string, scope: Scope, country = '', region = '', count: boolean | number = false) {
     if (!securityEnabled(env))
         return;
     const check = (d: SecurityState) => { const result = evaluate(d, ip, scope, country, region); if (result.blocked)
@@ -196,6 +196,7 @@ export async function enforceSecurity(env: Env, ip: string, scope: Scope, countr
         check(await securityState(env));
         return;
     }
+    const attempts = Number(count);
     let retryAt: number | undefined;
     await change(env, (d, now) => {
         retryAt = undefined;
@@ -210,9 +211,9 @@ export async function enforceSecurity(env: Env, ip: string, scope: Scope, countr
             counter = { ip, scope, times: [] };
             d.counters.push(counter);
         }
-        if (d.counters.reduce((n, c) => n + c.times.length, 0) >= 20000)
+        if (d.counters.reduce((n, c) => n + c.times.length, 0) + attempts > 20000)
             throw new SecurityError(503, '防护计数容量已满，请稍后重试');
-        counter.times.push(now);
+        for (let i = 0; i < attempts; i++) counter.times.push(now);
         if (counter.times.length >= rule.limit) {
             if (d.bans.length >= 1000)
                 throw new SecurityError(503, '防护记录容量已满，请稍后重试');

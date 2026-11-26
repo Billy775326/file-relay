@@ -22,9 +22,13 @@ with sync_playwright() as p:
         calls.append(path)
         if path.endswith('/abort'):route.fulfill(json={'ok':True});return
         if state['part'] and path=='/api/uploads/init':route.fulfill(json={'uploadId':'fixture','partSize':3,'parts':1});return
-        if state['batch'] and (len([c for c in calls if c=='/api/shares/file'])==1 or state['allow']):
-            filename=parse_qs(urlparse(route.request.url).query)['filename'][0]
-            route.fulfill(json={'code':'123456' if filename=='first.txt' else '234567','kind':'file','filename':filename,'size':3,'expireAt':None,'maxPickups':5});return
+        if state['batch']:
+            if path == '/api/batches/init':
+                route.fulfill(status=201,json={'draft':'123456','id':'fixture-batch','slots':[],'draftUntil':int(time.time()*1000)+60000});return
+            if path.endswith('/files/1') or path.endswith('/files/2') and state['allow']:
+                route.fulfill(json={'staged':True});return
+            if path.endswith('/complete') and state['allow']:
+                route.fulfill(status=201,json={'code':'123456','kind':'file','fileCount':2,'size':6,'expireAt':None,'maxPickups':5});return
         route.fulfill(status=state['status'],json=rejection())
     page.route('**/api/**',api)
     page.goto(base+'/pickup')
@@ -67,13 +71,17 @@ with sync_playwright() as p:
     calls.clear();page.goto(base+'/')
     page.set_input_files('#file-input',[{'name':'first.txt','mimeType':'text/plain','buffer':b'abc'},{'name':'second.txt','mimeType':'text/plain','buffer':b'abc'}])
     page.click('#btn-upload');expect(notice).to_be_visible()
-    expect(page.locator('#results')).to_contain_text('123456')
-    assert calls.count('/api/shares/file')==2
+    expect(page.locator('#results .result')).to_have_count(0)
+    assert calls.count('/api/batches/123456/files/1')==1
+    assert calls.count('/api/batches/123456/files/2')==1
     state['allow']=True
     notice.get_by_role('button',name='重新尝试',exact=True).click()
-    expect(notice).to_be_hidden();expect(page.locator('#results')).to_contain_text('234567')
+    expect(notice).to_be_hidden()
+    expect(page.locator('#results .result')).to_have_count(1)
     expect(page.locator('#results')).to_contain_text('123456')
-    assert calls.count('/api/shares/file')==3,'completed file must not be uploaded twice'
+    assert calls.count('/api/batches/init')==1
+    assert calls.count('/api/batches/123456/files/1')==1,'staged file must not be uploaded twice'
+    assert calls.count('/api/batches/123456/files/2')==2
     # A multipart 503 stops immediately and releases the owned session.
     state.update(batch=False,part=True,status=503,reason='service_unavailable')
     config['fileBackend']='r2';calls.clear();page.reload()

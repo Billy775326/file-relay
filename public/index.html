@@ -57,7 +57,7 @@
     </div>
 
     <div id="panel-text" class="panel" hidden>
-      <textarea id="text-input" rows="6" maxlength="65536" data-i18n-aria="tab.text" aria-label="发文本" data-i18n-ph="text.placeholder" placeholder="粘贴或输入要分享的文本…"></textarea>
+      <textarea id="text-input" rows="6" maxlength="65536" data-i18n-aria="tab.text" aria-label="发文本" aria-describedby="text-counter" data-i18n-ph="text.placeholder" placeholder="粘贴或输入要分享的文本…"></textarea>
       <div class="row-between"><small class="muted" id="text-counter">0 / 65536</small></div>
     </div>
 
@@ -69,7 +69,7 @@
           <input id="upload-name" type="text" maxlength="40" autocomplete="nickname" data-i18n-ph="context.namePh" placeholder="填写你常用的称呼">
         </div>
         <div id="upload-description-field" class="context-row">
-          <div class="context-label"><label for="upload-description" data-i18n="context.description">文件说明</label><small id="description-count" class="muted">0 / 300</small></div>
+          <div class="context-label"><label id="upload-description-label" for="upload-description" data-i18n="context.description">文件说明</label><small id="description-count" class="muted">0 / 300</small></div>
           <textarea id="upload-description" rows="2" maxlength="300" aria-describedby="description-count" data-i18n-ph="context.descriptionPh" placeholder="简述文件内容，同批文件共用"></textarea>
         </div>
       </div>

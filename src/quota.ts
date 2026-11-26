@@ -71,18 +71,29 @@ export async function getCapacityUsage(env: Env) {
  * undercount them. Existing/unmanaged bucket objects are included in every admission scan.
  */
 export async function reserveCapacity(env: Env, key: string, size: number): Promise<{ remainingBytes: number; capacityBytes: number } | undefined> {
+  return reserveFiles(env, [{ key, size }]);
+}
+
+export async function reserveFiles(env: Env, files: { key: string; size: number }[]) {
   const bucket = env.BUCKET!;
   for (let attempt = 0; attempt < 5; attempt++) {
     await retryDelay(attempt);
     const { object, ledger } = await readLedger(bucket);
-    if (ledger.files[key] === size) return; // Already reserved, including uploads finishing at the cap.
-    if (ledger.files[key] !== undefined) throw new Error('R2 reservation size mismatch');
+    const fresh = files.filter(({ key, size }) => {
+      if (ledger.files[key] === size) return false;
+      if (ledger.files[key] !== undefined) throw new Error('R2 reservation size mismatch');
+      return true;
+    });
+    if (!fresh.length) return;
 
     const { sizes, used, overhead } = await scanCapacity(env, ledger, !!object);
-    ledger.files[key] = size;
+    let addition = 0;
+    for (const { key, size } of fresh) {
+      ledger.files[key] = size;
+      if (!sizes.has(key)) addition += size;
+    }
     // Include the bookkeeping object's bytes too, reserving fixed-length revision space.
     const nextOverhead = new TextEncoder().encode(JSON.stringify({ ...ledger, revision: '0'.repeat(36) })).byteLength;
-    const addition = sizes.has(key) ? 0 : size;
     if (used + overhead >= R2_CAPACITY_MAX || used + addition + Math.max(overhead, nextOverhead) > R2_CAPACITY_MAX) {
       throw new CapacityError(Math.max(0, R2_CAPACITY_MAX - used - Math.max(overhead, nextOverhead)));
     }

@@ -32,9 +32,11 @@ with sync_playwright() as p:
                 if lang == 'zh' and theme == 'dark' and width in [390, 1135]:
                     page.locator('.upload-context').screenshot(path=f'.wrangler/upload-context-{backend}-{width}.png')
     page.click('#lang-btn')
-    # Text mode hides file-only description without losing it on returning to files.
+    # Text and files keep separate optional notes.
     page.click('[data-tab="text"]')
-    expect(page.locator('#upload-description-field')).to_be_hidden()
+    expect(page.locator('#upload-description-field')).to_be_visible()
+    expect(page.locator('#upload-description')).to_have_value('')
+    page.locator('#upload-description').fill('Note for text only')
     expect(page.locator('#upload-name')).to_have_value('同事 <img src=x>')
     page.click('[data-tab="file"]')
     expect(page.locator('#upload-description')).to_have_value(description)
@@ -43,14 +45,16 @@ with sync_playwright() as p:
         {'name': 'second.txt', 'mimeType': 'text/plain', 'buffer': b'def'},
     ])
     page.click('#btn-upload')
-    expect(page.locator('#results .result .code')).to_have_count(2)
+    expect(page.locator('#results .result .code')).to_have_count(1)
     codes = [''.join(item.inner_text().split()) for item in page.locator('#results .result .code').all()]
     page.goto(base + '/admin')
     page.fill('#admin-token', 'source-test-only')
     page.click('#btn-login')
     expect(page.locator('#admin-panel')).to_be_visible()
     for code in codes:
-        assert page.request.get(base + f'/api/admin/shares/{code}').json()['description'] == description
+        detail = page.request.get(base + f'/api/admin/shares/{code}').json()
+        assert detail['description'] == description
+        assert len(detail['files']) == 2
         source = page.request.get(base + f'/api/admin/shares/{code}/source').json()['source']
         assert source['displayName'] == '同事 <img src=x>'
         assert 'submission' not in source and 'description' not in source

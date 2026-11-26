@@ -8,6 +8,7 @@ import { publicAudit } from './public-audit';
 import { Hono } from 'hono';
 import type { Env } from './types';
 import { uploadRoutes } from './upload';
+import { batchRoutes } from './batch';
 import { shareRoutes } from './share';
 import { adminRoutes, adminPath } from './admin';
 import { runCleanup, cleanupIfDue } from './cleanup';
@@ -72,6 +73,7 @@ app.get('/', (c, next) => {
 app.get('/api/config', configResponse);
 app.route('/api/v1', apiRoutes);
 app.route('/api/uploads', uploadRoutes);
+app.route('/api/batches', batchRoutes);
 app.route('/api', shareRoutes);
 app.route('/api/admin', adminRoutes);
 

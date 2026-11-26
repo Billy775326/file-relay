@@ -26,7 +26,7 @@ export function parseMaxPickups(v: unknown): number | null | undefined {
   return undefined;
 }
 
-export type ErrCode = 'not_found' | 'expired' | 'exhausted' | 'too_large' | 'bad_request' | 'unauthorized' | 'gone' | 'internal' | 'config' | 'forbidden' | 'cleanup_pending' | 'storage_unavailable' | 'share_conflict';
+export type ErrCode = 'not_found' | 'expired' | 'exhausted' | 'too_large' | 'bad_request' | 'unauthorized' | 'gone' | 'internal' | 'config' | 'forbidden' | 'cleanup_pending' | 'storage_unavailable' | 'share_conflict' | 'batch_expired';
 
 export function err(c: Context, status: 400 | 401 | 403 | 404 | 409 | 410 | 413 | 415 | 500 | 503, code: ErrCode, message: string) {
   return c.json({ error: code, message }, status);
